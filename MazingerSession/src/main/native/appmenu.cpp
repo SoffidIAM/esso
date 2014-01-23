@@ -148,6 +148,15 @@ void RecursiveRemoveDirectory (LPCSTR achName)
 
 #endif
 
+bool FileExists (const char *fileName)
+{
+	if ((0xFFFFFFFF == GetFileAttributes(fileName))
+			&& (GetLastError() == ERROR_FILE_NOT_FOUND))
+		return false;
+
+	return true;
+}
+
 std::string iconLocation (std::string appid)
 {
 	std::string location;				// Icon image installation path
@@ -160,28 +169,31 @@ std::string iconLocation (std::string appid)
 		location.append("\\SoffidESSO\\icons\\");
 		iconFileName = location + appid + ".ico";
 
-		CreateDirectory(location.c_str(), NULL);
-
-		SeyconService service;
-		SeyconResponse *response = service.sendUrlMessage(
-				L"/getapplicationicon?appID=%hs", appid.c_str());
-
-		if (response != NULL)
+		// Check previous existing file
+		if (!FileExists(iconFileName.c_str()))
 		{
-			std::string status = response->getToken(0);
-			if (status == "OK")
-			{
-				std::string image = response->getToken(1);
+			CreateDirectory(location.c_str(), NULL);
 
-				std::string binary = SeyconCommon::fromBase64(image.c_str());
-				FILE *f = fopen(iconFileName.c_str(), "wb+");
-				fwrite(binary.c_str(), binary.length(), 1, f);
-				fclose(f);
-				MessageBox(NULL, location.c_str(), "Status OK", MB_OK);
+			SeyconService service;
+			SeyconResponse *response = service.sendUrlMessage(
+					L"/getapplicationicon?appID=%hs", appid.c_str());
+
+			if (response != NULL)
+			{
+				std::string status = response->getToken(0);
+				if (status == "OK")
+				{
+					std::string image = response->getToken(1);
+
+					std::string binary = SeyconCommon::fromBase64(image.c_str());
+					FILE *f = fopen(iconFileName.c_str(), "wb+");
+					fwrite(binary.c_str(), binary.length(), 1, f);
+					fclose(f);
+				}
 			}
 		}
 	}
-	return location;
+	return iconFileName;
 }
 
 static
@@ -238,7 +250,7 @@ int parseAndStoreApp (SeyconResponse *response, int &pos, const char* dir)
 		pShellLink->SetDescription(name.c_str());
 
 		std::string location = iconLocation(id);
-		pShellLink->SetIconLocation(location.c_str(), 1);
+		pShellLink->SetIconLocation(location.c_str(), 0);
 //		pShellLink->SetIconLocation(getLauncherFile(), 1);
 
 		IPersistFile *pPersistFile;
@@ -428,7 +440,7 @@ if (id == "MENU")
 	chown (fileName.c_str(), pwd->pw_uid, pwd->pw_gid);
 
 	SeyconCommon::debug("Creating dir %s", name.c_str());
-	// Crear archivo .menu
+// Crear archivo .menu
 	std::string shortName = "mazinger-";
 	shortName.append (achPos);
 	shortName.append (".menu");
@@ -448,7 +460,7 @@ if (id == "MENU")
 		fclose (f);
 		chmod(fileName.c_str(), 0755);
 	}
-	// Anotar menu en el merge
+// Anotar menu en el merge
 	fprintf (fMerge, "%s<Menu>\n"
 			"%s<Name>%s</Name>\n"
 			"%s<Directory>%s</Directory>\n"
@@ -478,7 +490,7 @@ else
 	mkdir (fileName.c_str(), 0755);
 	chown (fileName.c_str(), pwd->pw_uid, pwd->pw_gid);
 
-	// Crear archivo .menu
+// Crear archivo .menu
 	std::string shortName ="mazinger-";
 	shortName += id;
 	shortName += ".desktop";
@@ -499,7 +511,7 @@ else
 		fclose (f);
 		chmod(fileName.c_str(), 0755);
 	}
-	// Anotar menu en el merge
+// Anotar menu en el merge
 	fprintf (fMerge, "%s<Include>\n"
 			"%s\t<Filename>%s</Filename>\n"
 			"%s</Include>\n",
