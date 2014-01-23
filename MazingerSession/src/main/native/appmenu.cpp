@@ -51,11 +51,8 @@ static const char* getMazingerDir ()
 	{
 		TCHAR szPath[MAX_PATH];
 
-		if (SUCCEEDED(SHGetFolderPath(NULL,
-						CSIDL_PROGRAM_FILES|CSIDL_FLAG_CREATE,
-						NULL,
-						0,
-						szPath)))
+		if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PROGRAM_FILES | CSIDL_FLAG_CREATE,
+						NULL, 0, szPath)))
 		{
 			strMazingerDir = szPath;
 			strMazingerDir += "\\SoffidESSO";
@@ -151,13 +148,49 @@ void RecursiveRemoveDirectory (LPCSTR achName)
 
 #endif
 
+std::string iconLocation (std::string appid)
+{
+	std::string location;				// Icon image installation path
+	std::string iconFileName;	// Icon image name
+	TCHAR achDir[MAX_PATH];
+	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+					NULL, 0, achDir)))
+	{
+		location.assign(achDir);
+		location.append("\\SoffidESSO\\icons\\");
+		iconFileName = location + appid + ".ico";
+
+		CreateDirectory(location.c_str(), NULL);
+
+		SeyconService service;
+		SeyconResponse *response = service.sendUrlMessage(
+				L"/getapplicationicon?appID=%hs", appid.c_str());
+
+		if (response != NULL)
+		{
+			std::string status = response->getToken(0);
+			if (status == "OK")
+			{
+				std::string image = response->getToken(1);
+
+				std::string binary = SeyconCommon::fromBase64(image.c_str());
+				FILE *f = fopen(iconFileName.c_str(), "wb+");
+				fwrite(binary.c_str(), binary.length(), 1, f);
+				fclose(f);
+				MessageBox(NULL, location.c_str(), "Status OK", MB_OK);
+			}
+		}
+	}
+	return location;
+}
+
 static
 int parseAndStoreApp (SeyconResponse *response, int &pos, const char* dir)
 {
 	std::string id = response->getToken(pos);
 	std::string name = response->getToken(pos + 1);
-
 	std::string fileName;
+
 	fileName.assign(dir);
 	fileName.append("\\");
 	fileName.append(name.c_str());
@@ -203,7 +236,10 @@ int parseAndStoreApp (SeyconResponse *response, int &pos, const char* dir)
 		pShellLink->SetPath(getLauncherFile()); // Path to the object we are referring to
 		pShellLink->SetArguments(cmdLine.c_str()); // Path to the object we are referring to
 		pShellLink->SetDescription(name.c_str());
-		pShellLink->SetIconLocation(getLauncherFile(), 1);
+
+		std::string location = iconLocation(id);
+		pShellLink->SetIconLocation(location.c_str(), 1);
+//		pShellLink->SetIconLocation(getLauncherFile(), 1);
 
 		IPersistFile *pPersistFile;
 
@@ -237,8 +273,7 @@ static HANDLE createMailSlot ()
 	return hCurrentMailSlot;
 }
 
-static
-void doLaunch (const char *lpszId, SeyconSession *session)
+static void doLaunch (const char *lpszId, SeyconSession *session)
 {
 
 	SeyconService service;
@@ -297,8 +332,7 @@ void doLaunch (const char *lpszId, SeyconSession *session)
 	}
 }
 
-static
-void LeerMailSlot (SeyconSession *session)
+static void LeerMailSlot (SeyconSession *session)
 {
 	DWORD cbRead;
 	CHAR achMessage[10024];
@@ -331,17 +365,15 @@ static DWORD WINAPI doGenerateMenus (LPVOID lpv)
 
 	TCHAR achDir[MAX_PATH];
 
-	if (SUCCEEDED(SHGetFolderPath(NULL,
-					CSIDL_PROGRAMS|CSIDL_FLAG_CREATE,
-					NULL,
-					0,
-					achDir)))
+	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PROGRAMS | CSIDL_FLAG_CREATE,
+					NULL, 0, achDir)))
 	{
 		DEBUG
 		SeyconService service;
 		DEBUG
 		SeyconResponse *response = service.sendUrlMessage(
-				L"/getapplications?user=%hs&key=%hs", session->getSoffidUser(), szSessionId);
+				L"/getapplications?user=%hs&key=%hs", session->getSoffidUser(),
+				szSessionId);
 		if (response != NULL)
 		{
 			DEBUG
@@ -355,7 +387,6 @@ static DWORD WINAPI doGenerateMenus (LPVOID lpv)
 		}
 		delete response;
 	}
-
 }
 
 DEBUG
