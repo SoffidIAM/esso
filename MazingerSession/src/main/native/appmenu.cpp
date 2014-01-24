@@ -13,7 +13,7 @@
 #include <shlobj.h>
 #include <shlguid.h>
 #include <dirent.h>
-
+#include <sstream>
 #else
 
 #include <pwd.h>
@@ -148,6 +148,23 @@ void RecursiveRemoveDirectory (LPCSTR achName)
 
 #endif
 
+/** @brief Check existing file
+ *
+ * Method that checks if the specified file exists
+ * @param fileName Path of file to check.
+ * @return
+ * <ul>
+ * 		<li>
+ * 			@code TRUE @endcode
+ * 			If the specified file exists.
+ * 		</li>
+ *
+ * 		<li>
+ * 			@code FALSE @endcode
+ * 			If the specified file does not exists.
+ * 		</li>
+ * 	</ul>.
+ */
 bool FileExists (const char *fileName)
 {
 	if ((0xFFFFFFFF == GetFileAttributes(fileName))
@@ -157,6 +174,49 @@ bool FileExists (const char *fileName)
 	return true;
 }
 
+/** @brief Checks if creation date is greater than the specified days.
+ *
+ * Method that checks if the creation date is greater than the specified days.
+ * @param fileName Path of file to obtain the days.
+ * @param days Number of days to check the creation date.
+ * @return Number of days of file creation.
+ */
+bool CheckDaysFileCreation (const char *fileName, int days)
+{
+	bool daysOK = false;
+	WIN32_FIND_DATA limit;										// Finder data handler
+	SYSTEMTIME current;												// System current date
+	FILETIME currentFileTime;										// Current file time
+	HANDLE hFind = FindFirstFile(fileName, &limit);	// File handler
+
+	if (hFind != INVALID_HANDLE_VALUE )
+	{
+		ULONGLONG qwResult = (((ULONGLONG) limit.ftCreationTime.dwHighDateTime) << 32)
+				+ limit.ftCreationTime.dwLowDateTime;
+		qwResult += days * (24 * 60 * 60 * ((__int64) 10000000));
+
+		limit.ftCreationTime.dwLowDateTime = (DWORD) (qwResult & 0xFFFFFFFF);
+		limit.ftCreationTime.dwHighDateTime = (DWORD) (qwResult >> 32);
+
+		GetSystemTime(&current);
+		SystemTimeToFileTime(&current, &currentFileTime);
+
+		// Check limit date
+		if (CompareFileTime(&currentFileTime, &limit.ftCreationTime) == -1)
+			daysOK = true;
+	}
+
+	FindClose(hFind);
+
+	return daysOK;
+}
+
+/** @brief Gets the application icon location
+ *
+ * Method that obtain the application icon location.
+ * @param appid Application ID.
+ * @return Application icon location.
+ */
 std::string iconLocation (std::string appid)
 {
 	std::string location;				// Icon image installation path
@@ -169,8 +229,9 @@ std::string iconLocation (std::string appid)
 		location.append("\\SoffidESSO\\icons\\");
 		iconFileName = location + appid + ".ico";
 
-		// Check previous existing file
-		if (!FileExists(iconFileName.c_str()))
+		// Check previous existing file or period to rechecks icon file
+		if (!FileExists(iconFileName.c_str())
+				|| !CheckDaysFileCreation(iconFileName.c_str(), 15))
 		{
 			CreateDirectory(location.c_str(), NULL);
 
@@ -193,6 +254,7 @@ std::string iconLocation (std::string appid)
 			}
 		}
 	}
+
 	return iconFileName;
 }
 
