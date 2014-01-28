@@ -30,6 +30,7 @@ BEGIN
  	24,		"Passwords mismatch"
  	25,		"The password is not updated"
  	26,		"Password changed correctly"
+	27,		"Session not started"
 	 
  	1000,	"Notice"
 	1001,	"Soffid Enterprise Single Sign on"
@@ -166,6 +167,8 @@ IDR_POPUPMENU MENU DISCARDABLE
 BEGIN
     POPUP "eQUEMPLO"
     BEGIN
+	MENUITEM 	"", IDM_USER_ESSO
+ 	MENUITEM 	SEPARATOR
         MENUITEM	"Disable ESSO",	IDM_DISABLE_ESSO
         MENUITEM 	"Enable ESSO",	IDM_ENABLE_ESSO
         MENUITEM 	SEPARATOR
