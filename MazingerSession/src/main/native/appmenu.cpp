@@ -222,12 +222,12 @@ std::string iconLocation (std::string appid)
 	std::string location;				// Icon image installation path
 	std::string iconFileName;	// Icon image name
 	TCHAR achDir[MAX_PATH];
+
 	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
 					NULL, 0, achDir)))
 	{
 		location.assign(achDir);
 		location.append("\\SoffidESSO\\icons\\");
-		iconFileName = location + appid + ".ico";
 
 		// Check previous existing file or period to rechecks icon file
 		if (!FileExists(iconFileName.c_str())
@@ -242,11 +242,12 @@ std::string iconLocation (std::string appid)
 			if (response != NULL)
 			{
 				std::string status = response->getToken(0);
-				if (status == "OK")
+				std::string image = response->getToken(1);
+				if ((status == "OK") && (image != ""))
 				{
-					std::string image = response->getToken(1);
-
 					std::string binary = SeyconCommon::fromBase64(image.c_str());
+
+					iconFileName = location + appid + ".ico";
 					FILE *f = fopen(iconFileName.c_str(), "wb+");
 					fwrite(binary.c_str(), binary.length(), 1, f);
 					fclose(f);
@@ -307,13 +308,17 @@ int parseAndStoreApp (SeyconResponse *response, int &pos, const char* dir)
 			return 0;
 		}
 
-		pShellLink->SetPath(getLauncherFile()); // Path to the object we are referring to
-		pShellLink->SetArguments(cmdLine.c_str()); // Path to the object we are referring to
+		pShellLink->SetPath(getLauncherFile());				// Path to the object we are referring to
+		pShellLink->SetArguments(cmdLine.c_str());	// Path to the object we are referring to
 		pShellLink->SetDescription(name.c_str());
 
 		std::string location = iconLocation(id);
-		pShellLink->SetIconLocation(location.c_str(), 0);
-//		pShellLink->SetIconLocation(getLauncherFile(), 1);
+
+		if (location != "")
+			pShellLink->SetIconLocation(location.c_str(), 0);
+
+		else
+			pShellLink->SetIconLocation(getLauncherFile(), 1);
 
 		IPersistFile *pPersistFile;
 
