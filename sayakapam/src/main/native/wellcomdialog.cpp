@@ -1,0 +1,27 @@
+#include "sayaka.h"
+
+const char *achMessage =
+		"\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n"
+		"\r\n\r\n\r\n\r\n\r\n\r\n"
+		"Aquesta estació de feina li permetrà accedir a la xarxa Intranet del Govern de les Illes Balears"
+		"\r\n\r\n"
+		"L'ús d'aquest equipament, els serveis i sistemes d'informació "
+		"disponibles a la Intranet, així com l'accés a Internet son exclusivament "
+		"per a l'exercici de les funcions assignades al seu lloc de treball.\r\n\r\n"
+		"Els mecanismes d'autenticació, tals com contrasenyes o targetes criptogràfiques "
+		"son d'ús exclusiu i intransferible del seu titular.\r\n\r\n"
+		"D'acord amb allò establert a l'article 23 del R.D. 3/2010, "
+		"de 8 de gener, es registraran les seves activitats, retenguent la informació "
+		"necessària per tal de monitoritzar, analitzar, investigar i documentar "
+		"activitats indebudes o no autoritzades, permetent identificar en cada moment qui actua, "
+		"sempre d'acord amb la normativa sobre protecció de dades personals, de funció pública o laboral, "
+		"i la resta de disposicions que resultin d'aplicació.\r\n\r\n"
+		"En particular, pot exercir els drets d'accés, rectificació, cancel·lació i oposició "
+		"recollits a la Llei Orgànica de Protecció de Dades, mitjançant escrit "
+		"adreçat a:\r\n\r\nDirector General de Tecnologia i Comunicacions\r\nCarrer Sant Pere, 7\r\n07012 Palma\r\n\r\n"
+		"En cas de detectar anomalíes o incidències de seguretat, les heu de notificar per "
+		"correu electrònic a l'adreça seguretat@dgtic.caib.es\r\n\r\n\r\n"
+		"\r\n\r\n\r\n\r\n\r\n\r\n"
+		"Pijau INTRO per comtinuar."
+		"\r\n\r\n";
+

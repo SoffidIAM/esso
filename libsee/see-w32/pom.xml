@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.soffid.iam.esso.w32</groupId>
+	<artifactId>libsee</artifactId>
+	<packaging>a</packaging>
+	<name>Motor	 ECMA script (Windows 32 bits)</name>
+	<parent>
+		<artifactId>libsee</artifactId>
+		<groupId>com.soffid.iam.esso.pom</groupId>
+		<version>1.4.0</version>
+	</parent>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>native-maven-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>
+					<compilerProvider>generic</compilerProvider>
+					<compilerExecutable>${cc.32w}</compilerExecutable>
+					<compilerMiddleOptions>
+						<compilerMiddleOption>-Wall</compilerMiddleOption>
+						<compilerMiddleOption>-g3</compilerMiddleOption>
+						<compilerMiddleOption>-O0</compilerMiddleOption>
+						<compilerMiddleOption>-DHAVE_CONFIG_H</compilerMiddleOption>
+						<compilerMiddleOption>-D_WIN32_WINNT=0x0500</compilerMiddleOption>
+					</compilerMiddleOptions>
+					<linkerProvider>ar</linkerProvider>
+					<linkerExecutable>${ar.32w}</linkerExecutable>
+					<linkerStartOptions>
+						<linkerStartOption>-s</linkerStartOption>
+						<linkerStartOption>-r</linkerStartOption>
+					</linkerStartOptions>
+					<sources>
+						<source>
+							<!-- relative to your project directory -->
+							<directory>../src/main/native</directory>
+							<includes>
+								<include>**/*.c</include>
+							</includes>
+							<excludes>
+								<exclude>**/*.h</exclude>
+							</excludes>
+
+							<deployable>false</deployable>
+							<dependencyAnalysisParticipation>false</dependencyAnalysisParticipation>
+						</source>
+						<!-- additional system include path -->
+						<source>
+							<directory>../src/main/include/api</directory>
+							<deployable>true</deployable>
+							<dependencyAnalysisParticipation>true</dependencyAnalysisParticipation>
+						</source>
+						<source>
+							<directory>../src/main/include/internal</directory>
+							<dependencyAnalysisParticipation>false</dependencyAnalysisParticipation>
+						</source>
+					</sources>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>com.soffid.iam.esso.w32</groupId>
+			<artifactId>libpcreposix</artifactId>
+			<version>${pom.version}</version>
+			<type>inczip</type>
+		</dependency>
+	</dependencies>
+</project>

@@ -1,0 +1,35 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+// Spanish (Castilian) resources
+
+
+#include <windows.h>
+
+// Catalan / catalan
+// LANGUAGE LANG_CATALAN, SUBLANG_CATALAN_CATALAN 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG1 DIALOG DISCARDABLE  0, 0, 262, 137
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ha de canviar la contrassenya"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT           "Domini:",IDC_STATIC,14,13,22,8,SS_NOPREFIX
+    CTEXT           "Domini",IDC_DOMINI,124,13,125,8,SS_NOPREFIX
+    LTEXT           "Nova contrassenya",IDC_STATIC,14,41,62,8
+    EDITTEXT        IDC_PASSWORD1,124,36,125,15,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "Confirmi la nova contrassenya",IDC_STATIC,14,71,95,8
+    EDITTEXT        IDC_PASSWORD2,124,66,125,15,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Acceptar",IDOK,124,111,50,14
+    PUSHBUTTON      "Cancel·lar",IDCANCEL,199,111,50,14
+END
+
+#include "engine/resources/engine-resources.rc"
+

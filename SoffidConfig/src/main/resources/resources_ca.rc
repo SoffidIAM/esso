@@ -1,0 +1,69 @@
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Language definition
+LANGUAGE LANG_CATALAN, SUBLANG_CATALAN_CATALAN
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+	1,			"Certificat descarregat correctament"
+	2			"Error a la URL del servidor o en l'obtenció del certificat.\nSi us plau, comprova la configuració"
+	3			"S'ha produït un error en la càrrega de la seva configuració.\nComproveu la configuració"
+	4			"Configuració carregada correctament"
+	5			"La configuració no és correcta.\nSi us plau, comprovi els paràmetres introduïts"
+	6			"No loguejat com a usuari administrador. \nNomés un usuari administrador pot realitzar modificacions en la configuració"
+	7			"Els seus canvis es guardaran\nVoleu continuar?"
+	8			"Error en analitzar la URL del servidor"
+	
+	1000	"Informació"
+	1001	"Error"
+	1002	"Avis"
+END
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Dialog resources
+//
+IDD_DIALOG_ESSO_CONFIG DIALOG 0, 0, 439, 278
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+CAPTION "Eina de configuració de Soffid ESSO"
+FONT 8, "Ms Shell Dlg"
+{
+	DEFPUSHBUTTON		"Accepta", IDOK, 304, 257, 50, 14
+	PUSHBUTTON				"Cancel·la", IDCANCEL, 375, 257, 50, 14
+	LTEXT							"Des d'aquesta pantalla es podrà configurar diferents aspectes per al Soffid ESSO",
+										IDC_MSG_INFO, 100, 9, 325, 40, SS_LEFT
+	CONTROL						IDB_BITMAP_SOFFID_IMG, IDC_IMG_SOFFIDLOG, WC_STATIC,
+										SS_BITMAP, 17, 7, 47, 43
+	AUTOCHECKBOX			"Utilitza pantalla de accés de Soffid", IDC_CHECKBOX_SOFFID_GINA,
+										27, 244, 180, 8, BS_LEFT
+	GROUPBOX					"Estil del login", IDC_GROUPBOX_GINA, 17, 201, 198, 57
+	LTEXT							"Si desmarca esta característica, se utilizará la pantalla de acceso por defecto de Windows",
+										IDC_MSG_LOGIN_GINA_INFO, 27, 216, 180, 25, SS_LEFT
+	GROUPBOX					"Login a l'inici", IDC_GROUPBOX_LOGIN_STARTUP,
+										17, 130, 198, 65
+	LTEXT							"Marqueu si voleu permetre l'accés a l'inici del sistema",
+										IDC_MSG_LOGIN_STARTUP_INFO, 27, 140, 180, 20, SS_LEFT
+	AUTOCHECKBOX			"Forçar login a l'inici", IDC_CHECKBOX_FORCE_LOGIN,
+										27, 165, 180, 8
+	GROUPBOX					"Tancar sessió", IDC_GROUPBOX_CLOSE_SESSION,
+										227, 51, 198, 57
+	LTEXT							"Si seleccioneu aquesta opció, els usuaris podran tancar la sessió en el sistema operatiu",
+										IDC_MSG_CLOSE_SESION_INFO, 237, 66, 180, 25, SS_LEFT
+	AUTOCHECKBOX			"Tancar sessió per l'usuari", IDC_CHECKBOX_CLOSE_SESSION,
+										237, 91, 180, 8, BS_LEFT
+	LTEXT							"Si canvia la URL del servidor, haurà de recuperar el certificat del servidor",
+										IDC_MSG_CLOSE_SERVER_INFO, 27, 66, 180, 20, SS_LEFT
+	GROUPBOX 					"URL del servidor ESSO", IDC_GROUPBOX_SERVER,
+										17, 51, 198, 57
+	EDITTEXT						IDC_EDIT_SERVER_URL, 72, 89, 135, 12, ES_AUTOHSCROLL
+	LTEXT							"URL:", IDC_TXT_SERVER_URL, 27, 91, 40, 8, SS_LEFT
+	PUSHBUTTON				"Recuperar certificat", IDC_BUTTON_RETRIEVE_CERT, 135, 112, 80, 14
+	GROUPBOX					"Tipus d'accés", IDC_GROUPBOX_LOGIN_TYPE, 227, 130, 198, 65
+	LTEXT							"Seleccioneu el tipus de connexió per a l'accés",
+										IDC_MSG_LOGIN_TYPE_INFO, 237, 140, 180, 20, SS_LEFT
+	AUTORADIOBUTTON	"Login amb Kerberos", IDC_RADIO_KERBEROS, 237, 168, 80, 8,
+										WS_GROUP
+	AUTORADIOBUTTON	"Login manual", IDC_RADIO_MANUAL, 237, 181, 80, 8
+	AUTORADIOBUTTON	"Ambdós*", IDC_RADIO_BOTH, 237, 153, 80, 8
+	LTEXT							"*Intenta la identificació amb Kerberos. Si no és possible es sol·licita usuari i contrasenya",
+										 IDC_MSG_BOTH_INFO, 325, 153, 95, 35, SS_LEFT
+}

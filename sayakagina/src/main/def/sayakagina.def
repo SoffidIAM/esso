@@ -1,0 +1,21 @@
+LIBRARY SAYAKAGINA
+EXPORTS
+    WlxActivateUserShell 
+    WlxNegotiate
+	WlxInitialize
+    WlxDisplaySASNotice
+    WlxLoggedOutSAS
+    WlxLoggedOnSAS
+    WlxDisplayLockedNotice
+    WlxWkstaLockedSAS
+    WlxIsLockOk
+    WlxIsLogoffOk
+    WlxLogoff 
+    WlxShutdown
+    WlxScreenSaverNotify 
+    WlxStartApplication
+	WlxDisplayStatusMessage 
+	WlxGetStatusMessage
+	WlxNetworkProviderLoad 
+	WlxRemoveStatusMessage 
+	WlxGetConsoleSwitchCredentials

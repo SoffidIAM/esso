@@ -1,0 +1,33 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.soffid.iam.esso.pom</groupId>
+	<artifactId>MazingerInstaller</artifactId>
+	<name>Instal·lador de MAZINGER</name>
+	<version>1.4.0</version>
+	<packaging>pom</packaging>
+	<parent>
+		<artifactId>root</artifactId>
+		<groupId>com.soffid.iam.esso.pom</groupId>
+		<version>1.4.0</version>
+	</parent>
+	<issueManagement>
+		<system>RTIR</system>
+		<url>https://rtir.caib.es</url>
+	</issueManagement>
+	<modules>
+		<module>installer-l32</module>
+		<module>installer-l64</module>
+	</modules>
+	<properties>
+		<ffextension>usr/lib/firefox-addons/extensions</ffextension>
+		<ffuid>{df382936-f24b-11df-96e1-9bf54f13e327}</ffuid>
+		<deb.dir>${project.basedir}/target/debian/assembled-pkg</deb.dir>
+		<architecture.lib>a</architecture.lib>
+		<architecture.dll>so</architecture.dll>
+		<architecture.implib>so</architecture.implib>
+		<architecture.exe>uexe</architecture.exe>
+		<architecture.libPrefix>lib</architecture.libPrefix>
+		<deb.priority>optional</deb.priority>
+		<deb.section>admin</deb.section>
+	</properties>
+</project>

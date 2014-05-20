@@ -1,0 +1,34 @@
+
+/*
+ * JavaNativeComponent
+ *
+ *  Created on: 15/02/2010
+ *      Author: u07286
+ */
+
+#ifndef JAVANATIVECOMPONENT_H_
+#define JAVANATIVECOMPONENT_H_
+
+#include "NativeComponent.h"
+
+class JavaNativeComponent:public NativeComponent {
+public:
+	JavaNativeComponent (JNIEnv* pEnv, jobject object);
+
+	virtual const char* getClass();
+	virtual NativeComponent* getParent ();
+	virtual std::vector<NativeComponent*>  getChildren ();
+	virtual void getAttribute (const char* name, std::string &value);
+	virtual void setAttribute (const char* attribute, const char* value) ;
+	virtual int equals (NativeComponent &component);
+	virtual NativeComponent *clone();
+	virtual void setFocus();
+	virtual void click();
+
+private:
+	jstring getObjectClass ();
+	jobject object;
+	JNIEnv *pEnv;
+};
+
+#endif

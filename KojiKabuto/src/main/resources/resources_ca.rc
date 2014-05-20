@@ -1,0 +1,177 @@
+
+// Language definition
+LANGUAGE LANG_CATALAN, SUBLANG_CATALAN_CATALAN
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+	1,			"SEGURETAT"
+	2,			"DOPLER"
+	3,			"De què va disfressat Sheldon Cooper?"
+	4,			"MAZINGER"
+	5,			"Quin reconegut artista interpretó la cançó de Mazinger Z, a la versió doblada a Espanya?"
+ 	6,			"IBMPC"
+ 	7,			"Quin sistema operatiu era considerat l'estàndard per a PC l'any 1981, any d'aparició del primer IBM PC?"
+ 	8,			"La resposta és del tot, absolutament i completament errònia"
+	9,			"Imposible ejecutar"
+	10,		"El seu equip no té activat el bloqueig automàtic.\n\nAquesta característica és necessària per tal de donar compliment a l'article 91 del R.D. 1720/2007, de data 13 de desembre.\n\nVol activar ara el bloqueig automàtic de l'equip?"
+	11,		"Intranet corporativa"
+	12,		"El seu equip té assignat un temps de bloqueig automàtic superior a quinze minuts.\n\nPer tal de donar compliment a l'article 91 del R.D. 1720/2007, de data 13 de desembre,\nes recomana que l'equip es bloquegi després de 10 minuts de no activitat\n\nVol activar ara el bloqueig automàtic de l'equip als 10 minuts?"
+	13,		"Accedint a la xarxa ..."
+	14,		"Configuració actualitzada"
+	15,		"Hola"
+	16,		"Mazinger"
+	17,		"Argument invàlid %s"
+	18,		"S'ha actualitzat la configuració"
+ 	19,		"Activat"
+ 	20,		"Inactiu"
+ 	21,		"(Versió %s)"
+ 	22,		"Accedint a la xarxa"
+ 	23,		"Les contrasenyes no poden ser buides"
+ 	24,		"Les contrasenyes no coincideixen"
+ 	25,		"La contrasenya no s'ha actualitzat"
+ 	26,		"Contrasenya canviada correctament" 
+ 	1000,	"Avís"
+	1001,	"Soffid Enterprise Single Sign on"
+	1002,	"Koji Kabuto"
+END
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WAIT DIALOG DISCARDABLE  0, 0, 156, 38
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT		"Iniciant sessió", IDC_STATIC, 7, 7, 142, 8
+    CTEXT      "",IDC_TEXT,7,20,142,11
+END
+
+IDD_CARD DIALOGEX 0, 0, 199, 87
+STYLE DS_ABSALIGN | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Targeta d'autentificació"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    EDITTEXT        			IDC_VALOR,69,65,37,15,ES_AUTOHSCROLL,WS_EX_RIGHT
+    DEFPUSHBUTTON   "Acceptar",IDOK,142,7,50,14
+    PUSHBUTTON      	"Cancel·lar",IDCANCEL,142,24,50,14
+    LTEXT           			"Per favor, consulti la targeta número",IDC_STATIC,7,7, 115,8
+    LTEXT           			"i intruduïu el valor de la cel·la",IDC_STATIC,8,33,93,8
+    EDITTEXT        			IDC_TARGETA,7,15,126,15,ES_AUTOHSCROLL | NOT WS_TABSTOP,
+                    				WS_EX_DLGMODALFRAME | WS_EX_RIGHT
+    EDITTEXT        			IDC_CELLA,107,30,26,15,ES_AUTOHSCROLL | NOT WS_TABSTOP,
+                    				WS_EX_DLGMODALFRAME | WS_EX_RIGHT
+    LTEXT           			"Valor:",IDC_STATIC,48,67,19,8
+END
+
+IDD_CREDITS1 DIALOG DISCARDABLE  0, 0, 276, 172
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Crèdits"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT           			"Per poder accedir als crèdits heu d'assolir el nivell C de FRIKI.\nPer tal de provar la vostra capacitació, heu de respondre correctament\nla següent qüestió:",
+                    				IDC_STATIC,7,7,262,28
+    CTEXT           			"",IDC_QUESTIO,27,40,209,19
+    CONTROL         		"",IDC_BITMAP,"Static",SS_BITMAP | SS_CENTERIMAGE,71,60,
+                    				126,82
+    EDITTEXT        			IDC_TEXT,7,151,206,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON	"Acceptau",IDOK,219,151,50,14
+END
+
+IDD_CREDITS2 DIALOG DISCARDABLE  0, 0, 391, 225
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Crédits"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT           			"El sistema SEU-SEYCON-Mazinger ha sigut desenvolupat pel servei de seguretat de la Direcció General d'Innovació i Desenvolupament Tecnològic.",
+                    				IDC_STATIC,7,8,373,16
+    CTEXT           			"Desenvolupament: Alejandro Usero / Cristina Miranzo",
+                    				IDC_STATIC,7,24,373,8
+    CTEXT           			"Proves: Andrés Solomando / Pere Joseph / Sara Aizcorbe / Damià Andreu Verger" ,
+                    				IDC_STATIC,7,32,373,8
+    CTEXT           			"Direcció: Gabriel Buades",IDC_STATIC,7,40,373,8
+    CONTROL         		"SEGURETAT",IDC_BITMAP,"Static",SS_BITMAP | 
+                    				SS_CENTERIMAGE,0,60,391,125
+    LTEXT           			"Moltes gràcies a tots",IDC_STATIC,9,206,209,13
+    DEFPUSHBUTTON	"Acceptau",IDOK,337,204,50,14
+END
+
+IDD_CLOSEDIALOG DIALOG DISCARDABLE  0, 0, 231, 79
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Tancament remot de la sessió"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON	"Tancau sessió",IDOK,174,7,50,14
+    PUSHBUTTON      	"Cancel·lau",IDCANCEL,174,24,50,14
+    LTEXT           			"S'ha rebut una petió per a tancar la sessió actual. Si dessitja tancar-la pitjau el botó ""Tancau sessió"". En cas contrari, pitjau ""Cancel·lau""",
+                    				IDC_STATIC,7,9,150,35
+    LTEXT           			"Si no indicau res, el sistema es tancarà automàticament",
+                    				IDC_STATIC,8,48,167,21
+    LTEXT           			"30",IDC_CONTADOR,212,58,9,8
+END
+
+IDD_TOOMANYSESSIONS DIALOG DISCARDABLE  0, 0, 265, 82
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Tancament remot de la sessió"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON	"Tancau sessió remota",IDC_CLOSE_REMOTE,175,7,83,14
+    PUSHBUTTON      	"Reintentau-lo",IDC_WAITBUTTON,175,24,83,14
+    LTEXT           			"Ja disposa d'una sessió oberta. No podrà continuar fins que l'anterior sessió sigui tancada",
+                    				-1,7,9,150,26
+    LTEXT           			"",IDC_HOST,8,48,167,21
+    PUSHBUTTON      	"Cancel-lau",IDCANCEL,175,42,83,14
+END
+
+IDD_LOGINDIALOG DIALOGEX 0, 0, 314, 186
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Iniciar sessió a l'Intranet"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        			IDC_USER,88,74,184,14,ES_AUTOHSCROLL
+    EDITTEXT        			IDC_PASSWORD,88,93,184,14,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON	"Acceptau",IDOK,88,165,50,14
+    PUSHBUTTON      	"Cancel·lau",IDCANCEL,155,165,50,14
+    CONTROL         		"SOFFID_LOGO",IDC_BITMAP,"Static",SS_BITMAP | SS_CENTERIMAGE,
+                    				0,0,314,71,WS_EX_TRANSPARENT
+    LTEXT           			"Codi d'usuari:",IDC_STATIC,16,78,45,8
+    LTEXT           			"Contrasenya:",IDC_STATIC,16,96,67,10
+END
+
+IDD_NEWPASS_DIALOG DIALOGEX 0, 0, 279, 119
+STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+CAPTION "Canviar contrasenya"
+FONT 8, "MS Sans Serif", 0, 0, 1
+BEGIN
+	EDITTEXT					IDC_PASSWORD, 115, 43, 120, 14, ES_AUTOHSCROLL | ES_PASSWORD
+	EDITTEXT					IDC_REPEATPASSWORD, 115, 62, 120, 14, ES_AUTOHSCROLL | ES_PASSWORD
+	DEFPUSHBUTTON	"Aceptar", IDOK, 88, 95, 50, 14
+	PUSHBUTTON      	"Cancelar", IDCANCEL, 155, 95, 50, 14
+	LTEXT           			"", IDC_REASON, 10, 9, 260, 26, SS_CENTER
+	LTEXT           			"Nova contrasenya:", IDC_STATIC, 43, 47, 65, 8, SS_LEFT
+	LTEXT           			"Repeteixi contrasenya:", IDC_STATIC, 43, 65, 67, 10, SS_LEFT
+END
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_POPUPMENU MENU DISCARDABLE 
+BEGIN
+	POPUP "eQUEMPLO"
+	BEGIN
+		MENUITEM	"Desactivar ESSO",	IDM_DISABLE_ESSO
+		MENUITEM 	"Activar ESSO",		IDM_ENABLE_ESSO
+		MENUITEM 	SEPARATOR
+		MENUITEM 	"Actualitzau",			IDM_UPDATE
+		MENUITEM	"Acces usuari",		IDM_LOGIN
+		MENUITEM	"Tancau sesió",		IDM_LOGOFF
+//		MENUITEM 	SEPARATOR
+//		MENUITEM 	"Crèdits",					IDM_CREDITS
+	END
+END

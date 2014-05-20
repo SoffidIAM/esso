@@ -1,0 +1,178 @@
+
+// Language definition
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+	1,			"SEGURIDAD"
+	2,			"DOPLER"
+	3,			"¿De qué va disfrazado Sheldon Cooper?"
+	4,			"MAZINGER"
+	5,			"¿Qué reconocido artista interpretó la canción de Mazinger Z, en la versión doblada en España?"
+ 	6,			"IBMPC"
+ 	7,			"¿Qué sistema operativo era considerado el estandar del PC en el año 1982, año de aparición del primer IBM PC?"
+ 	8,			"La respuesta es del todo, absoluta y completamente errónea"
+	9,			"Imposible ejecutar"
+	10,		"Su equipo no tiene activado el bloqueo automático.\n\nEsta característica es necesaria para dar cumplimiento al artículo 91 del R.D. 1720/2007, del 13 de diciembre.\n\n¿Quiere activar ahora el bloqueo automático?"
+	11,		"Intranet corporativa"
+	12,		"Su equipo tiene asignado un tiempo de bloqueo automático superior a 15 minutos.\n\nPara dar cumplimiento al artí­culo 91 del R.D. 1720/2007, del 13 de diciembre,\nse recomienda que el equipo se bloquee después de 10 minutos de inactividad\n\n¿Quiere activar ahora el bloqueo automático del equipo a los 10 minutos?"
+	13,		"Accediendo a la red ..."
+	14,		"Configuración actualizada"
+	15,		"Hola"
+	16,		"Mazinger"
+	17,		"Argumento inválido %s"
+	18,		"Se ha actualizado la configuración"
+ 	19,		"Activado"
+ 	20,		"Inactivo"
+ 	21,		"(Versión %s)"
+ 	22,		"Accediendo a la red"
+ 	23,		"Las contraseñas no pueden ser vacías"
+ 	24,		"Las contraseñas no coinciden"
+ 	25,		"La contraseña no se ha actualizado"
+ 	26,		"Contraseña cambiada correctamente"
+ 	
+	1000,	"Aviso"
+	1001,	"Soffid Enterprise Single Sign on"
+	1002,	"Koji Kabuto"
+END
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WAIT DIALOG DISCARDABLE  0, 0, 156, 38
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT		"Iniciando sesión", IDC_STATIC, 7, 7, 142, 8
+    CTEXT		"", IDC_TEXT, 7, 20, 142, 11
+END
+
+IDD_CARD DIALOGEX 0, 0, 199, 87
+STYLE DS_ABSALIGN | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Tarjeta de autentificación"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    EDITTEXT        			IDC_VALOR, 69, 65, 37, 15, ES_AUTOHSCROLL, WS_EX_RIGHT
+    DEFPUSHBUTTON	"Aceptar", IDOK, 142, 7, 50, 14
+    PUSHBUTTON      	"Cancelar", IDCANCEL, 142, 24, 50, 14
+    LTEXT           			"Por favor, consulte la tarjeta número", IDC_STATIC, 7, 7, 115, 8
+    LTEXT           			"e introduzca el valor de la celda", IDC_STATIC, 8, 33, 93, 8
+    EDITTEXT        			IDC_TARGETA,7,15,126,15,ES_AUTOHSCROLL | NOT WS_TABSTOP,
+                    				WS_EX_DLGMODALFRAME | WS_EX_RIGHT
+    EDITTEXT        			IDC_CELLA,107,30,26,15,ES_AUTOHSCROLL | NOT WS_TABSTOP,
+                    				WS_EX_DLGMODALFRAME | WS_EX_RIGHT
+    LTEXT           			"Valor:",IDC_STATIC,48,67,19,8
+END
+
+IDD_CREDITS1 DIALOG DISCARDABLE  0, 0, 276, 172
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Créditos"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT           			"Para poder acceder a los créditos tiene que acceder al nivel C de FRIKI.\nCon tal de probar su capacidad, deberá responder correctamente la siguiente pregunta:",
+                    				IDC_STATIC, 7, 7, 262, 28
+    CTEXT           			"",IDC_QUESTIO, 27, 40, 209, 19
+    CONTROL         		"",IDC_BITMAP,"Static",SS_BITMAP | SS_CENTERIMAGE,71,60,
+                    				126,82
+    EDITTEXT        			IDC_TEXT,7,151,206,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON	"Aceptar",IDOK,219,151,50,14
+END
+
+IDD_CREDITS2 DIALOG DISCARDABLE  0, 0, 391, 225
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Créditos"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT           			"El sistema SEU-SEYCON-Mazinger ha sido desarrollado por el servicio de seguridad de la Dirección General de Innovación y Desarrollo Tecnológico.",
+                    				IDC_STATIC,7,8,373,16
+    CTEXT           			"Desarrollo: Alejandro Usero / Cristina Miranzo",
+                    				IDC_STATIC,7,24,373,8
+    CTEXT           			"Pruebas: Andrés Solomando / Pere Joseph / Sara Aizcorbe / Damià Andreu Verger",
+                    				IDC_STATIC,7,32,373,8
+    CTEXT           			"Dirección: Gabriel Buades",IDC_STATIC,7,40,373,8
+    CONTROL         		"SEGURIDAD",IDC_BITMAP,"Static",SS_BITMAP | 
+                    				SS_CENTERIMAGE,0,60,391,125
+    LTEXT           			"Muchas gracias a todos",IDC_STATIC,9,206,209,13
+    DEFPUSHBUTTON	"Aceptar",IDOK,337,204,50,14
+END
+
+IDD_CLOSEDIALOG DIALOG DISCARDABLE  0, 0, 231, 79
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Cierre remoto de la sesión"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON	"Cerrar sesión",IDOK,174,7,50,14
+    PUSHBUTTON      	"Cancelar",IDCANCEL,174,24,50,14
+    LTEXT           			"Se ha recibido una petición para cerrar la sesión actual. Si desea cerrarla pulse el botón ""Cerrar sesión"". En caso contrario, pulse ""Cancelar""",
+                    				IDC_STATIC,7,9,150,35
+    LTEXT           			"Si no indica nada, el sistema se cerrará automáticamente",
+                    				IDC_STATIC,8,48,167,21
+    LTEXT           			"30",IDC_CONTADOR,212,58,9,8
+END
+
+IDD_TOOMANYSESSIONS DIALOG DISCARDABLE  0, 0, 265, 82
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Cierre remoto de la sesión"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON	"Cerrar sesión remota",IDC_CLOSE_REMOTE,175,7,83,14
+    PUSHBUTTON      	"Reinténtelo",IDC_WAITBUTTON,175,24,83,14
+    LTEXT           			"Ya dispone de una sesión abierta. No podrá continuar hasta que la sesión anterior sea cerrada",
+                    				-1,7,9,150,26
+    LTEXT           			"",IDC_HOST,8,48,167,21
+    PUSHBUTTON      	"Cancelar",IDCANCEL,175,42,83,14
+END
+
+IDD_LOGINDIALOG DIALOGEX 0, 0, 314, 186
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Iniciar sesión en la Intranet"
+FONT 8, "MS Sans Serif"
+BEGIN
+	EDITTEXT					IDC_USER,88,74,184,14,ES_AUTOHSCROLL
+	EDITTEXT					IDC_PASSWORD,88,93,184,14,ES_PASSWORD | ES_AUTOHSCROLL
+	DEFPUSHBUTTON	"Aceptar",IDOK,88,165,50,14
+	PUSHBUTTON			"Cancelar",IDCANCEL,155,165,50,14
+	CONTROL					"SOFFID_LOGO",IDC_BITMAP,"Static",SS_BITMAP | SS_CENTERIMAGE,
+									0,0,314,71,WS_EX_TRANSPARENT
+	LTEXT						"Código de usuario:", IDC_STATIC, 16, 78, 65, 8
+	LTEXT						"Contraseña:",IDC_STATIC,16,96,67,10
+END
+
+IDD_NEWPASS_DIALOG DIALOGEX 0, 0, 279, 119
+STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+CAPTION "Cambiar contraseña"
+FONT 8, "MS Sans Serif", 0, 0, 1
+BEGIN
+	EDITTEXT					IDC_PASSWORD, 115, 43, 120, 14, ES_AUTOHSCROLL | ES_PASSWORD
+	EDITTEXT					IDC_REPEATPASSWORD, 115, 62, 120, 14, ES_AUTOHSCROLL | ES_PASSWORD
+	DEFPUSHBUTTON	"Aceptar", IDOK, 88, 95, 50, 14
+	PUSHBUTTON			"Cancelar", IDCANCEL, 155, 95, 50, 14
+	LTEXT						"", IDC_REASON, 10, 9, 260, 26, SS_CENTER
+	LTEXT						"Nueva contraseña:", IDC_STATIC, 43, 47, 65, 8, SS_LEFT
+	LTEXT						"Repita contraseña:", IDC_STATIC, 43, 65, 67, 10, SS_LEFT
+END
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_POPUPMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "eQUEMPLO"
+    BEGIN
+        MENUITEM	"Desactivar ESSO",	IDM_DISABLE_ESSO
+        MENUITEM 	"Activar ESSO",		IDM_ENABLE_ESSO
+        MENUITEM 	SEPARATOR
+        MENUITEM 	"Actualizar",			IDM_UPDATE
+        MENUITEM	"Acceso usuario",	IDM_LOGIN
+        MENUITEM	"Cerrar sesión",		IDM_LOGOFF
+//        MENUITEM 	SEPARATOR
+//        MENUITEM 	"Créditos",        		IDM_CREDITS
+    END
+END

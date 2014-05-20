@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Getting Started Extension's Popup</title>
+    <style>
+      body {
+        min-width: 357px;
+        overflow-x: hidden;
+      }
+
+    </style>
+    <script type="text/javascript" src="popup.js">
+    </script>
+
+  </head>
+  <body>
+    <p id="label">
+	Testing plugin status
+    </p>
+    <p id="labelError" style="display: none; color: red;" >
+	Error testing Soffid plugin: <span id="textError">xxx</span>
+    </p>
+    <p id="labelSuccess" style="display: none" >
+	Soffid plugin is well configured.
+    </p>
+    <embed type="application/soffid-sso-plugin" id="pluginId" style="visibility: hidden; width:1px; height: 1px;">
+  </body>
+
+
+</html>
+

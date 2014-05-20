@@ -1,0 +1,164 @@
+/*
+ * ComponentSpec.cpp
+ *
+ *  Created on: 16/02/2010
+ *      Author: u07286
+ */
+
+#include "ComponentSpec.h"
+#include "Action.h"
+#include "ComponentMatcher.h"
+#include "MazingerInternal.h"
+#include "MazingerHook.h"
+#include <stdlib.h>
+#include "include/jni.h"
+using namespace std;
+
+#undef TRACE
+#define TRACE NULL
+
+ComponentSpec::ComponentSpec():
+	m_actions (0),
+	m_children(0)
+{
+	dwDialogId = 0;
+	fullMatch = 0;
+	m_pMatchedComponent = NULL;
+	m_parent = NULL;
+	szName = NULL;
+	szClass = NULL;
+	szTitle = NULL;
+	szId = NULL;
+	szText = NULL;
+	reClass = reTitle = reText = reName = NULL;
+
+}
+
+ComponentSpec::~ComponentSpec() {
+	for (unsigned int i= 0; i <m_actions.size(); i++)
+	{
+//		delete m_actions[i];
+	}
+	for (unsigned int i= 0; i <m_children.size(); i++)
+	{
+//		delete m_children[i];
+	}
+	setMatchedComponent(NULL);
+}
+
+void ComponentSpec::setMatchedComponent (NativeComponent *component) {
+	if (m_pMatchedComponent != NULL)
+	{
+//		delete m_pMatchedComponent;
+	}
+
+	m_pMatchedComponent = component == NULL ? NULL : component->clone();
+}
+
+NativeComponent* ComponentSpec::getMatchedComponent () {
+	return m_pMatchedComponent;
+}
+
+void ComponentSpec::dump ()
+{
+	if (szName != NULL)
+		MZNSendDebugMessage("Required name=%s", szName);
+	if (szClass != NULL)
+		MZNSendDebugMessage("Required class=%s", szClass);
+	if (szTitle != NULL)
+		MZNSendDebugMessage("Required title=%s", szTitle);
+	if (szText != NULL)
+		MZNSendDebugMessage("Required text=%s", szText);
+}
+
+int ComponentSpec::matchAttribute (regex_t *expr, NativeComponent &native, const char*attributeName) {
+	if (expr != NULL)
+	{
+		string attribute;
+		native.getAttribute(attributeName, attribute);
+		if (regexec (expr, attribute.c_str(), (size_t) 0, NULL, 0 ) != 0 )
+		{
+			dump();
+			MZNSendDebugMessage("Failed: attribute %s = %s", attributeName, attribute.c_str());
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static void clearVector (std::vector<NativeComponent*> &v)
+{
+	for (vector<NativeComponent*>::iterator it = v.begin(); it != v.end(); it++)
+	{
+//		delete *it;
+	}
+}
+
+int ComponentSpec::match (NativeComponent &component, ComponentMatcher &matcher)
+{
+	if ( ! matchAttribute (reClass, component, "class") ||
+			! matchAttribute (reText, component, "text") ||
+			! matchAttribute (reName, component, "name") ||
+			! matchAttribute (reTitle, component, "title"))
+	{
+		matcher.m_failedComponents.clear();
+//		matcher.m_failedComponents.push_back(FailureReason(this, &component));
+		return FALSE;
+	}
+
+	// Recuperar los hijos
+	vector<NativeComponent*> children = component.getChildren();
+	if (fullMatch)
+	{
+		unsigned int it;
+		for (it = 0; it < m_children.size() && it < children.size(); it++)
+		{
+			if ( ! m_children[it]->match(*children[it], matcher))
+			{
+//				matcher.m_failedComponents.push_back(FailureReason(this, it));
+				clearVector(children);
+				return 0;
+			}
+		}
+		if (it < m_children.size())
+		{
+			matcher.m_failedComponents.clear();
+//			matcher.m_failedComponents.push_back(FailureReason(m_children[it]));
+//			matcher.m_failedComponents.push_back(FailureReason(this, it));
+			clearVector(children);
+			return 0;
+		}
+		if (it < children.size())
+		{
+			MZNSendDebugMessage("Failed due to unexpected component");
+			matcher.m_failedComponents.clear();
+//			matcher.m_failedComponents.push_back(FailureReason(children[it]));
+//			matcher.m_failedComponents.push_back(FailureReason(this, it));
+			clearVector(children);
+			return 0;
+		}
+	} else {
+		unsigned int itNative = 0;
+		unsigned int itSpec = 0;
+		while (itNative < children.size() && itSpec < m_children.size())
+		{
+			if (m_children[itSpec]->match(*children[itNative], matcher))
+			{
+				itSpec ++;
+			}
+			itNative ++;
+		}
+		if (itSpec != m_children.size())
+		{
+//			matcher.m_failedComponents.push_back(FailureReason(m_children[itSpec]));
+//			matcher.m_failedComponents.push_back(FailureReason(this, itSpec));
+			clearVector(children);
+			return 0;
+		}
+	}
+
+	clearVector(children);
+	matcher.notifyMatch (*this, component);
+
+	return 1;
+}

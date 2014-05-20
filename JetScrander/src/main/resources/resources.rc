@@ -1,0 +1,14 @@
+//Microsoft Developer Studio generated resource script.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+1               ICON    DISCARDABLE     "soffid.ico"
+0               ICON    DISCARDABLE     "jetscrander.ico"
+
+// #include "engine/resources/engine-resources.rc"
+

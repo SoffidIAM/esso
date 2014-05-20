@@ -1,0 +1,6 @@
+#!/bin/bash
+/usr/sbin/pam-auth-update --package
+
+# Configurar preload
+result=$(fgrep -v /usr/lib/libMazingerPreload.so /etc/ld.so.preload) 
+echo $result >>/etc/ld.so.preload

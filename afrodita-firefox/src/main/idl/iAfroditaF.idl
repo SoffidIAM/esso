@@ -1,0 +1,12 @@
+#include "nsISupports.idl"
+
+interface nsIDOMDocument;
+
+[scriptable, uuid(d0ac7576-134d-4064-b315-d75eb14d7427)]
+interface caibIAfroditaF : nsISupports
+{
+    void notify (in nsIDOMDocument doc);
+};
+
+
+ 

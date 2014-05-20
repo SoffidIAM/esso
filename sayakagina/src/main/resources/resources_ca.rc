@@ -1,0 +1,203 @@
+
+// Language definition
+LANGUAGE LANG_CATALAN, SUBLANG_CATALAN_CATALAN
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+	1,			"Iniciar sessió a l'Intranet - "
+	2,			"No te accés al servidor. No se pot iniciar sessió"
+	3,			"Error a la targeta criptogràfica. No s'ha pogut signar la sol·licitud d'inici de sessió"
+	4,			"No te accés a la xarxa Intranet. No se pot iniciar sessió"
+	5,			"El servidor ha rebutjat la petició d'inici de sesió: "
+	6,			"Error accedint al servidor: "
+	7,			"El sistema no disposa de les credenciasl necessàries. Contacti amb el centre de suport"
+	8,			"La contrasenya i la seva confirmació no coincidèixen. Per favor, torni a escriure-les"
+	9,			"L'usuari no te permís per canviar la contrasenya"
+	10,		"La contrasenya antiga no és correcta"
+	11,		"El servidor no respon"
+	12,		"El servidor seleccionat no és un controlador de domini"
+	13,		"Hi ha hagut un error no previst. El sistema no coneix el codi d'usuari"
+	14,		"La contrasenya no compleix els requisits de seguretat, o és una contrasenya ja utilitzada.\n Per favor, intenti-ho una altra vegada"
+	15,		"Carregant perfil d'usuari"
+	16,		"Connectant unitat privada"
+	17,		"Tancant sessió"
+	18,		"Aturant l'equip"
+	19,		"Impossible iniciar sessió"
+	20,		"DNI electrònic"
+	21,		"Targeta de funcionari"
+	22,		"Targeta criptogràfica "
+	23,		"Ha de sel·leccionar un certificat"
+	24,		"L'estació només pot ser desbloquetjada per l'usuari "
+	25,		" o per un administrador"
+	26,		"No es pot desbloquetjar l'equip"
+	27,		"Ha de canviar la seva contrasenya"
+	28,		"Contrasenya caducada"
+	29,		"Validant el certificat electrónic"
+	30,		"No s'ha trobat cap certificat a la targeta"
+	31,		"Accés a la Intranet"
+	32,		"La seva contrasenya caduca avui"
+	33,		"La seva contrasenya caduca demá"
+	34,		"La seva contrasenya caduca en "
+	35,		" dies"
+	36,		". Dessitja canviar-la ara?"
+	37,		"Iniciant sessió"
+	38,		"No es pot iniciar la sessió"
+	39,		"Ha de sel·leccionar una opció"
+	40,		"Ha de introduïr un PIN"
+	41,		"Tipus de targeta desconeguda: "
+	42,		"La constrasenya s'ha canviat correctament."
+	43,		"Canvi de contrasenya"
+	44,		" com a Administador Local "
+ 	
+	1000,	"Atenció"
+	1001,	"Aví­s"
+	1002	"Ha hagut un error no previst."
+	1003,	"Error"
+	1004,	"Aturar"		
+	1005,	"Reiniciar"
+	1006,	"Suspendre"
+	1007,	"Hibernar"
+END
+
+////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SELCERT DIALOG DISCARDABLE  0, 0, 299, 175
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION |
+	WS_SYSMENU
+CAPTION "Accés a la Intranet"
+FONT 8, "MS Sans Serif"
+BEGIN
+	LISTBOX					IDC_LIST1,7,22,230,146,LBS_NOINTEGRALHEIGHT | WS_VSCROLL |
+									WS_TABSTOP | 0x2000
+	DEFPUSHBUTTON	"Sel·eccionau",IDOK,242,25,50,14
+	PUSHBUTTON			"Cancel·lau",IDCANCEL,242,46,50,14
+	LTEXT						"Sel·leccioni un certificat electrònic",IDC_STATIC,7,7, 136,10
+END
+
+IDD_ENTERPIN DIALOG DISCARDABLE  0, 0, 280, 61
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | 
+	WS_SYSMENU
+CAPTION "Accés a la Intranet"
+FONT 8, "MS Sans Serif"
+BEGIN
+	EDITTEXT					IDC_PIN,65,28,133,12,ES_PASSWORD | ES_AUTOHSCROLL
+	DEFPUSHBUTTON	"Acceptau",IDOK,223,7,50,14
+	PUSHBUTTON			"Cancel·lau",IDCANCEL,223,28,50,14
+	LTEXT						"Introduïu el PIN d'accés a la tarja criptogràfica",
+									IDC_STATIC,65,7,156,11
+	CONTROL					"TARJA",IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE |
+									SS_REALSIZEIMAGE,7,7,52,47
+END
+
+IDD_CHANGEPASS DIALOG DISCARDABLE  0, 0, 262, 113
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Canvi de contrasenya"
+FONT 8, "MS Sans Serif"
+BEGIN
+	CTEXT           			"Usuari:",IDC_STATIC,14,12,22,8,SS_NOPREFIX
+	LTEXT           			"Contrasenya actual:",IDC_STATIC,14,32,86,8
+	EDITTEXT        			IDC_PASSWORD0,124,28,125,15,ES_PASSWORD | ES_AUTOHSCROLL
+	LTEXT           			"Nova contrasenya:",IDC_STATIC,14,52,62,8
+	EDITTEXT        			IDC_PASSWORD1,124,48,125,15,ES_PASSWORD | ES_AUTOHSCROLL
+	LTEXT           			"Confirmi la nova contrasenya:",IDC_STATIC,14,72,95,8
+	EDITTEXT        			IDC_PASSWORD2,124,68,125,15,ES_PASSWORD | ES_AUTOHSCROLL
+	DEFPUSHBUTTON	"Acceptau",IDOK,124,92,50,14
+	PUSHBUTTON      	"Cancel·lau",IDCANCEL,199,92,50,14
+	EDITTEXT        			IDC_DOMINI,124,9,125,14,ES_AUTOHSCROLL | ES_READONLY
+END
+
+IDD_LOGGEDIN DIALOG DISCARDABLE  0, 0, 344, 170
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Seguretat del sistema"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON	"Bl&oquejau l'equip",IDC_LOCK_BUTTON,7,125,107,16
+    PUSHBUTTON      	"Tancau la sessió",IDC_LOGOUT_BUTTON,118,125,107,16
+    PUSHBUTTON      	"Aturau l'equip",IDC_SHUTDOWN_BUTTON,229,125,107,16
+    PUSHBUTTON      	"Canviar contrasenya",IDC_PASSWORD_BUTTON,7,147,107,16
+    PUSHBUTTON      	"Administrau tasques",IDC_TASKMGR_BUTTON,118,147,107,16
+    PUSHBUTTON      	"Cancel·lau",IDC_CANCEL,229,147,107,16
+    CONTROL         		"SOFFID_LOGO",IDC_BITMAP,"Static",SS_BITMAP | 
+                    				SS_REALSIZEIMAGE, 7, 3, 330, 44
+    GROUPBOX        		"Informació d'inici de sessió",IDC_STATIC,7,74,330,44
+    LTEXT           			"Heu iniciat la sessió com a:",IDC_STATIC,13,89,93,8
+    LTEXT           			"",IDC_USERNAME,112,89,169,8
+    LTEXT           			"Data d'inici de sessió:",IDC_STATIC,13,105,93,8
+    LTEXT           			"",IDC_LOGINTIME,111,105,169,8
+END
+
+IDD_SHUTDOWN DIALOG DISCARDABLE  0, 0, 190, 71
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Aturar l'equip"
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        		IDC_COMBO1,7,22,176,54,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    				WS_TABSTOP
+    DEFPUSHBUTTON	"Acceptau",IDC_OK,70,48,50,14
+    PUSHBUTTON      	"Cancel·lau",IDC_CANCEL,133,48,50,14
+    LTEXT           			"Confirmau que voleu aturar l'equip?",IDC_STATIC,7,7,135, 12
+END
+
+IDD_LOCKED DIALOG DISCARDABLE  0, 0, 330, 108
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Accés a la xarxa corporativa"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL		"LOCKED_CA",IDC_BITMAP,"Static",SS_BITMAP | 
+                    	SS_REALSIZEIMAGE,0,0,330,118
+END
+
+IDD_MESSAGE DIALOG DISCARDABLE  0, 0, 330, 98
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Accés a la xarxa corporativa"
+FONT 8, "MS Sans Serif"
+BEGIN
+	CONTROL		"SOFFID_LOGO", IDC_BITMAP, "Static",SS_BITMAP | SS_REALSIZEIMAGE,
+						0,	0,	330,	50
+	LTEXT			"", IDC_MESSAGE, 13, 79, 324, 8
+END
+
+IDD_LOGOUT DIALOG DISCARDABLE  0, 0, 330, 108
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Accés a la xarxa corporativa"
+FONT 8, "MS Sans Serif"
+BEGIN
+	CONTROL		"WELCOME_CA", IDC_WELCOME, "Static", SS_BITMAP, 0,	0,	330,	118
+END
+
+//IDD_LOGOUT DIALOGEX 0, 0, 389, 255
+//STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+//CAPTION "Accés a la xarxa corporativa"
+//FONT 8, "MS Sans Serif", 0, 0, 0x1
+//BEGIN
+//	CONTROL		"SOFFID_LOGO", IDC_BITMAP, "Static", SS_BITMAP | SS_CENTERIMAGE,
+//						0, 0, 389, 71, WS_EX_TRANSPARENT
+//	EDITTEXT		IDC_EDIT1,11,78,366,168,ES_MULTILINE | ES_READONLY |
+//						ES_WANTRETURN | NOT WS_BORDER | WS_VSCROLL | NOT WS_TABSTOP
+//END
+
+IDD_LOGINDIALOG DIALOGEX 0, 0, 314, 186
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Iniciar sessió a l'Intranet"
+FONT 8, "MS Sans Serif"
+BEGIN
+	EDITTEXT        			IDC_USER,88,74,184,14,ES_AUTOHSCROLL
+	EDITTEXT        			IDC_PASSWORD1,88,93,184,14,ES_PASSWORD | ES_AUTOHSCROLL
+	LTEXT           			"Si disposau de targeta cripotogràfica o DNI electrònic,\nel podeu introduir ara al lector",
+	                				IDC_STATIC,88,131,184,22
+	CONTROL         		"Iniciar com a Administrador Local de l'equip",
+	                				IDC_ADMIN_CHECK,"Button",BS_AUTOCHECKBOX | BS_LEFT | 
+	                				WS_TABSTOP,89,114,184,10
+	DEFPUSHBUTTON	"Acceptau",IDOK,88,165,50,14
+	PUSHBUTTON      	"Cancel·lau",IDCANCEL,155,165,50,14
+	PUSHBUTTON      	"Aturau",IDC_SHUTDOWN_BUTTON,222,165,50,14
+	CONTROL         		"SOFFID_LOGO",IDC_BITMAP,"Static",SS_BITMAP | SS_CENTERIMAGE,
+	                				0,0,314,71,WS_EX_TRANSPARENT
+	LTEXT           			"Codi d'usuari:",IDC_STATIC,16,78,45,8
+	LTEXT           			"Contrasenya:",IDC_STATIC,16,96,67,10
+	CONTROL         		"TARJA",IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+	                				SS_REALSIZEIMAGE,16,131,52,47
+END

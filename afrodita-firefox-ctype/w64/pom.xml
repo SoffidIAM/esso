@@ -1,0 +1,119 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.soffid.iam.esso.w64</groupId>
+	<artifactId>afrodita-firefox-ctype</artifactId>
+	<packaging>dll</packaging>
+	<name>Dll per a injecció d'Usuaris i Passwords al Firefox 4 (Windows 64 bits)</name>
+	<parent>
+		<artifactId>afrodita-firefox-ctype</artifactId>
+		<groupId>com.soffid.iam.esso</groupId>
+		<version>3.0.1-SNAPSHOT</version>
+	</parent>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<configuration>
+					<preparationGoals>clean verify</preparationGoals>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>compile</id>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<inherited>false</inherited>
+						<configuration>
+							<tasks>
+								<mkdir dir="target/objs" />
+								<exec executable="i586-mingw32msvc-windres">
+									<arg value="-i../src/main/resources/Templ1.rc" />
+									<arg value="-Itarget/native/include" />
+									<arg value="-otarget/objs/resources.o" />
+								</exec>
+							</tasks>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>native-maven-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>
+					<compilerProvider>generic</compilerProvider>
+					<compilerExecutable>i586-mingw32msvc-g++</compilerExecutable>
+					<linkerProvider>generic</linkerProvider>
+					<linkerExecutable>i586-mingw32msvc-g++</linkerExecutable>
+					<compilerMiddleOptions>
+						<compilerMiddleOption>-Wall</compilerMiddleOption>
+						<compilerMiddleOption>-g3</compilerMiddleOption>
+						<compilerMiddleOption>-O0</compilerMiddleOption>
+						<compilerMiddleOption>-D_WIN32_WINNT=0x0500</compilerMiddleOption>
+						<compilerMiddleOption>-DWIN32</compilerMiddleOption>
+					</compilerMiddleOptions>
+					<linkerMiddleOptions>
+						<linkerMiddleOption>../src/main/def/AfroditaFC64.def</linkerMiddleOption>
+						<linkerMiddleOption>-s</linkerMiddleOption>
+						<linkerMiddleOption>-Xlinker</linkerMiddleOption>
+						<linkerMiddleOption>--strip-all</linkerMiddleOption>
+						<linkerMiddleOption>-shared</linkerMiddleOption>
+						<linkerMiddleOption>target/objs/resources.o</linkerMiddleOption>
+						<linkerMiddleOption>-shared</linkerMiddleOption>
+						<linkerMiddleOption>-static-libgcc</linkerMiddleOption>
+						<linkerMiddleOption>-static-libstdc++</linkerMiddleOption>
+					</linkerMiddleOptions>
+					<linkerEndOptions>
+						<linkerMiddleOption>-lpcreposix</linkerMiddleOption>
+						<linkerMiddleOption>-lwsock32</linkerMiddleOption>
+						<linkerMiddleOption>-lsee</linkerMiddleOption>
+						<linkerMiddleOption>-lgdi32</linkerMiddleOption>
+						<linkerMiddleOption>-lmpr</linkerMiddleOption>
+						<linkerMiddleOption>-lcrypt32</linkerMiddleOption>
+						<linkerMiddleOption>-lwinhttp</linkerMiddleOption>
+					</linkerEndOptions>
+					<sources>
+						<source>
+							<!-- relative to your project directory -->
+							<directory>../src/main/native</directory>
+							<includes>
+								<include>**/*.cpp</include>
+							</includes>
+							<excludes>
+								<exclude>**/*.h</exclude>
+							</excludes>
+
+							<deployable>false</deployable>
+							<dependencyAnalysisParticipation>false</dependencyAnalysisParticipation>
+						</source>
+						<!-- additional system include path -->
+						<source>
+							<directory>../src/main/include</directory>
+							<deployable>true</deployable>
+							<dependencyAnalysisParticipation>true</dependencyAnalysisParticipation>
+						</source>
+					</sources>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>com.soffid.iam.esso.w32</groupId>
+			<artifactId>libmazinger-engine</artifactId>
+			<version>${pom.version}</version>
+			<type>inczip</type>
+		</dependency>
+		<dependency>
+			<groupId>com.soffid.iam.esso.w32</groupId>
+			<artifactId>libmazinger-engine</artifactId>
+			<version>${pom.version}</version>
+			<type>a</type>
+		</dependency>
+	</dependencies>
+</project>

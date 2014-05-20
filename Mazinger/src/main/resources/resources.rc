@@ -1,0 +1,13 @@
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+100               ICON    DISCARDABLE     "mzn1.ico"
+
+1 MESSAGETABLE target/resources/MSG00001.bin
+
+#include "engine/resources/engine-resources.rc"
