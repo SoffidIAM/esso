@@ -1,0 +1,7 @@
+LIBRARY SayakaF
+
+
+EXPORTS
+                NSGetModule
+                NSModule
+                

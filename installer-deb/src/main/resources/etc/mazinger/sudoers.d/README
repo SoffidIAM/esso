@@ -1,0 +1,13 @@
+#
+# /etc/sudoers file created on installation of the sudo package
+#
+# mazinger package adds the following line:
+# 
+# 	#includedir /etc/mazinger/sudoers.d
+# 
+# This will cause sudo to read and parse any files in the /etc/mazinger/sudoers.d 
+# directory that do not end in '~' or contain a '.' character
+#
+# Note that there must be at least one file in the sudoers.d directory (this
+# one will do), and all files in this directory should be mode 0440.
+ 

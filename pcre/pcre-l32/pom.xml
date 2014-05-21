@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.soffid.iam.esso.l32</groupId>
+	<artifactId>libpcreposix</artifactId>
+	<packaging>a</packaging>
+	<name>Avaluació d'expressions regulars (Linux 32 bits)</name>
+	<parent>
+		<artifactId>libpcreposix</artifactId>
+		<groupId>com.soffid.iam.esso.pom</groupId>
+		<version>1.4.0</version>
+	</parent>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>native-maven-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>
+					<compilerProvider>generic</compilerProvider>
+					<compilerExecutable>g++</compilerExecutable>
+					<compilerMiddleOptions>
+						<compilerMiddleOption>-m32</compilerMiddleOption>
+						<compilerMiddleOption>-Wall</compilerMiddleOption>
+						<compilerMiddleOption>-g3</compilerMiddleOption>
+						<compilerMiddleOption>-O0</compilerMiddleOption>
+						<compilerMiddleOption>-DHAVE_CONFIG_H</compilerMiddleOption>
+						<compilerMiddleOption>-DHAVE_DIRENT_H</compilerMiddleOption>
+						<compilerMiddleOption>-DHAVE_UNISTD_H</compilerMiddleOption>
+					</compilerMiddleOptions>
+					<linkerProvider>ar</linkerProvider>
+					<linkerExecutable>ar</linkerExecutable>
+					<linkerStartOptions>
+						<linkerStartOption>-s</linkerStartOption>
+						<linkerStartOption>-r</linkerStartOption>
+					</linkerStartOptions>
+					<classifier>${platform.classifier}</classifier>
+					<sources>
+						<source>
+							<!-- relative to your project directory -->
+							<directory>../src/main/native</directory>
+							<includes>
+								<include>**/*.c</include>
+							</includes>
+							<excludes>
+								<exclude>**/*.h</exclude>
+							</excludes>
+
+							<deployable>false</deployable>
+							<dependencyAnalysisParticipation>false</dependencyAnalysisParticipation>
+						</source>
+						<!-- additional system include path -->
+						<source>
+							<directory>../src/main/include/api</directory>
+							<deployable>true</deployable>
+							<dependencyAnalysisParticipation>true</dependencyAnalysisParticipation>
+						</source>
+						<source>
+							<directory>../src/main/include/private</directory>
+							<dependencyAnalysisParticipation>false</dependencyAnalysisParticipation>
+						</source>
+					</sources>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

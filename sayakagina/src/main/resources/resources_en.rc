@@ -1,0 +1,202 @@
+
+// Language definition
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+	1,			"Start session on Intranet - "
+	2,			"Can not access server. Unable login"
+	3,			"Error on cryptographic card. Unable to sign application logon"
+	4,			"You have no access to the Intranet. Unable to login"
+	5,			"The server has rejected the logon request"
+	6,			"Error accessing to server: "
+	7,			"The system does not have the necessary credentials. Contact with the support center"
+	8,			"The password and confirmation do not match. Please re-enter"
+	9,			"The user does not have permission to change password"
+	10,		"Incorrect last password"
+	12,		"The server is not responding"
+	13,		"The selected server is not a domain controller"
+	14,		"The password does not meet the safety requirements, or a password is already in use.\n Unexpected error. The system does not know the user code"
+	15,		"Loading user profile"
+	16,		"Connecting private unity"
+	17,		"Closing session"
+	18,		"Shutting down"
+	19,		"Can not login"
+	20,		"National ID card"
+	21,		"Employer card"
+	22,		"Cryptographic card "
+	23,		"You must select a certificate"
+	24,		"The station can only be unlocked by the user "
+	25,		" or by administrator"
+	26,		"Cannot unblock the machine"
+	27,		"You must change your password"
+	28,		"Password expired"
+	29,		"Validating electronic certificate"
+	30,		"Can not found any certificate in the card"
+	31,		"Access to Intranet"
+	32,		"Your password expires today"
+	33,		"Your password will expire tomorrow"
+	34,		"Your password will expire in "
+	35,		" days"
+	36,		". You want change the password now?"
+	37,		"Starting session"
+	38,		"Cannot start session"
+	39,		"You must choose an option"
+	40,		"You must enter a PIN"
+	41,		"Unknown card type: "
+	42,		"The password has been changed succesfully."
+	43,		"Change password"
+	44,		" as Local Admin"
+	
+	1000,	"Warning"
+	1001,	"Notice"
+	1002,	"Please, retry"
+	1003,	"Error"
+	1004,	"Shut down"		
+	1005,	"Restart"
+	1006,	"Suspend"
+	1007,	"Sleep"
+END
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SELCERT DIALOG DISCARDABLE  0, 0, 299, 175
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | 
+	WS_SYSMENU
+CAPTION "Access to Intranet"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LISTBOX         			IDC_LIST1,7,22,230,146,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | 
+                    				WS_TABSTOP | 0x2000
+    DEFPUSHBUTTON	"Select",IDOK,242,25,50,14
+    PUSHBUTTON      	"Cancel",IDCANCEL,242,46,50,14
+    LTEXT           			"Select a electronic certificate",IDC_STATIC, 7, 7, 136, 10
+END
+
+IDD_ENTERPIN DIALOG DISCARDABLE  0, 0, 280, 61
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Access to Intranet"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        			IDC_PIN,65,28,133,12,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON	"Accept",IDOK,223,7,50,14
+    PUSHBUTTON      	"Cancel",IDCANCEL,223,28,50,14
+    LTEXT           			"Enter the PIN for access to cryptographic card",
+                    				IDC_STATIC,65,7,156,11
+    CONTROL         		"CARD",IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+                    				SS_REALSIZEIMAGE,7,7,52,47
+END
+
+IDD_CHANGEPASS DIALOG DISCARDABLE  0, 0, 262, 113
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Change password"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT           			"User:",IDC_STATIC,14,12,22,8,SS_NOPREFIX
+    LTEXT           			"Current password",IDC_STATIC,14,32,86,8
+    EDITTEXT        			IDC_PASSWORD0,124,28,125,15,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           			"New password",IDC_STATIC,14,52,62,8
+    EDITTEXT        			IDC_PASSWORD1,124,48,125,15,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           			"Confirm new password",IDC_STATIC,14,72,95,8
+    EDITTEXT        			IDC_PASSWORD2,124,68,125,15,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON	"Accept",IDOK,124,92,50,14
+    PUSHBUTTON      	"Cancel",IDCANCEL,199,92,50,14
+    EDITTEXT        			IDC_DOMINI,124,9,125,14,ES_AUTOHSCROLL | ES_READONLY
+END
+
+IDD_LOGGEDIN DIALOG DISCARDABLE  0, 0, 344, 170
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "System security"
+FONT 8, "MS Sans Serif"
+BEGIN
+	DEFPUSHBUTTON	"L&ock screen",IDC_LOCK_BUTTON,7,125,107,16
+	PUSHBUTTON      	"Log out",IDC_LOGOUT_BUTTON,118,125,107,16
+	PUSHBUTTON      	"Shut down computer",IDC_SHUTDOWN_BUTTON,229,125,107,16
+	PUSHBUTTON      	"Change password",IDC_PASSWORD_BUTTON,7,147,107,16
+	PUSHBUTTON      	"Task manager",IDC_TASKMGR_BUTTON,118,147,107,16
+	PUSHBUTTON      	"Cancel",IDC_CANCEL,229,147,107,16
+	CONTROL         		"SOFFID_LOGO",IDC_BITMAP,"Static",SS_BITMAP | 
+                    				SS_REALSIZEIMAGE, 7, 3, 330, 44
+	GROUPBOX        		"Logon information",IDC_STATIC,7,74,330,44
+	LTEXT           			"You are logged as:",IDC_STATIC,13,89,93,8
+	LTEXT           			"",IDC_USERNAME,112,89,169,8
+	LTEXT           			"Login date:",IDC_STATIC,13,105,93,8
+	LTEXT           			"",IDC_LOGINTIME,111,105,169,8
+END
+
+IDD_SHUTDOWN DIALOG DISCARDABLE  0, 0, 190, 71
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Shut down"
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        		IDC_COMBO1,7,22,176,54,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    				WS_TABSTOP
+    DEFPUSHBUTTON	"Accept",IDC_OK,70,48,50,14
+    PUSHBUTTON      	"Cancel",IDC_CANCEL,133,48,50,14
+    LTEXT           			"Are you sure you want shut down?",IDC_STATIC,7,7,135, 12
+END
+
+IDD_LOCKED DIALOG DISCARDABLE  0, 0, 330, 108
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Access to corporate network"
+FONT 8, "MS Sans Serif"
+BEGIN
+	CONTROL		"LOCKED_EN",IDC_BITMAP,"Static",SS_BITMAP | SS_REALSIZEIMAGE,
+						0,	0,	330,	118
+END
+
+IDD_MESSAGE DIALOG DISCARDABLE  0, 0, 330, 98
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Access to corporate network"
+FONT 8, "MS Sans Serif"
+BEGIN
+	CONTROL		"SOFFID_LOGO", IDC_BITMAP, "Static",SS_BITMAP | SS_REALSIZEIMAGE,
+						0,	0,	330,	50
+	LTEXT			"", IDC_MESSAGE, 13, 79, 324, 8
+END
+
+IDD_LOGOUT DIALOG DISCARDABLE  0, 0, 330, 108
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Access to corporate network"
+FONT 8, "MS Sans Serif"
+BEGIN
+	CONTROL		"WELCOME_EN", IDC_WELCOME, "Static", SS_BITMAP, 0,	0,	330,	118
+END
+
+//IDD_LOGOUT DIALOGEX 0, 0, 389, 255
+//STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+//CAPTION "Access to corporate network"
+//FONT 8, "MS Sans Serif", 0, 0, 0x1
+//BEGIN
+//	CONTROL		"SOFFID_LOGO",IDC_BITMAP,"Static",SS_BITMAP | SS_CENTERIMAGE,
+//						0,0,389,71,WS_EX_TRANSPARENT
+//	EDITTEXT		IDC_EDIT1,11,78,366,168,ES_MULTILINE | ES_READONLY | 
+//						ES_WANTRETURN | NOT WS_BORDER | WS_VSCROLL | NOT WS_TABSTOP
+//END
+
+IDD_LOGINDIALOG DIALOGEX 0, 0, 314, 186
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Log on to Intranet"
+FONT 8, "MS Sans Serif"
+BEGIN
+	EDITTEXT        			IDC_USER,88,74,184,14,ES_AUTOHSCROLL
+	EDITTEXT        			IDC_PASSWORD1,88,93,184,14,ES_PASSWORD | ES_AUTOHSCROLL
+	LTEXT           			"If you have a cryptographic card or national ID card,\nyou can introduce it into the reader",
+	                				IDC_STATIC,88,131,184,22
+	CONTROL         		"Login as Administrador",
+	                				IDC_ADMIN_CHECK,"Button",BS_AUTOCHECKBOX | BS_LEFT | 
+	                				WS_TABSTOP,89,114,184,10
+	DEFPUSHBUTTON	"Accept",IDOK,88,165,50,14
+	PUSHBUTTON      	"Cancel",IDCANCEL,155,165,50,14
+	PUSHBUTTON      	"Shut down",IDC_SHUTDOWN_BUTTON,222,165,50,14
+	CONTROL         		"SOFFID_LOGO",IDC_BITMAP,"Static",SS_BITMAP | SS_CENTERIMAGE,
+	                				0,0,314,71,WS_EX_TRANSPARENT
+	LTEXT           			"User name :",IDC_STATIC,16,78,45,8
+	LTEXT           			"Password:",IDC_STATIC,16,96,67,10
+	CONTROL         		"CARD",IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+	                				SS_REALSIZEIMAGE,16,131,52,47
+END

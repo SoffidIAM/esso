@@ -1,0 +1,246 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.soffid.iam.esso.${architecture}</groupId>
+	<artifactId>ShiroKabuto</artifactId>
+	<packaging>${architecture.exe}</packaging>
+	<name>Executable per a restricció d'usuaris locals</name>
+	<version>1.4.0</version>
+	<parent>
+		<artifactId>root</artifactId>
+		<groupId>com.soffid.iam.esso.pom</groupId>
+		<version>1.4.0</version>
+	</parent>
+	<issueManagement>
+		<system>RTIR</system>
+		<url>https://rtir.caib.es</url>
+	</issueManagement>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<configuration>
+					<preparationGoals>clean verify</preparationGoals>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>com.soffid.iam.esso.${architecture}</groupId>
+			<artifactId>libmazinger-session</artifactId>
+			<type>${architecture.lib}</type>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.soffid.iam.esso.${architecture}</groupId>
+			<artifactId>libmazinger-session</artifactId>
+			<type>inczip</type>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.soffid.iam.esso.${architecture}</groupId>
+			<artifactId>libmazinger-engine</artifactId>
+			<type>inczip</type>
+			<version>${pom.version}</version>
+		</dependency>
+	</dependencies>
+	<profiles>
+		<profile>
+			<id>gcc-x86</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>compile</id>
+								<phase>process-sources</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<inherited>false</inherited>
+								<configuration>
+									<tasks>
+										<mkdir dir="target/objs" />
+										<mkdir dir="target/resources" />
+										<mkdir dir="target/include" />
+										<exec executable="${windmc.32w}">
+											<arg value="-rtarget/resources" />
+											<arg value="-htarget/include" />
+											<arg value="src/main/resources/msg.mc" />
+										</exec>
+										<exec executable="${windres.32w}">
+											<arg value="-Isrc/main/include" />
+											<arg value="-Itarget/native/include" />
+											<arg value="-isrc/main/resources/resources.rc" />
+											<arg value="-otarget/objs/resources.o" />
+										</exec>
+									</tasks>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>native-maven-plugin</artifactId>
+						<extensions>true</extensions>
+						<configuration>
+							<compilerProvider>generic</compilerProvider>
+							<compilerExecutable>${cpp.32w}</compilerExecutable>
+							<linkerProvider>generic</linkerProvider>
+							<linkerExecutable>${cpp.32w}</linkerExecutable>
+							<linkerMiddleOptions>
+								<linkerMiddleOption>target/objs/resources.o</linkerMiddleOption>
+								<linkerMiddleOption>-Xlinker</linkerMiddleOption>
+								<linkerMiddleOption>--strip-all</linkerMiddleOption>
+								<linkerStartOption>src/main/def/mazinger.def</linkerStartOption>
+								<linkerMiddleOption>-lmazinger-session</linkerMiddleOption>
+								<linkerMiddleOption>-lnetapi32</linkerMiddleOption>
+								<linkerMiddleOption>-static-libgcc</linkerMiddleOption>
+						<linkerMiddleOption>-static-libgcc</linkerMiddleOption>
+						<linkerMiddleOption>-static-libstdc++</linkerMiddleOption>
+							</linkerMiddleOptions>
+							<linkerEndOptions>
+								<linkerEndOption>-lwsock32</linkerEndOption>
+								<linkerEndOption>-ladvapi32</linkerEndOption>
+								<linkerEndOption>-lsecur32</linkerEndOption>
+								<linkerEndOption>-static</linkerEndOption>
+							</linkerEndOptions>
+							<sources>
+								<source>
+									<!-- relative to your project directory -->
+									<directory>src/main/native</directory>
+									<includes>
+										<include>**/*.cpp</include>
+									</includes>
+									<excludes>
+										<exclude>**/*.h</exclude>
+									</excludes>
+
+									<deployable>false</deployable>
+									<dependencyAnalysisParticipation>false</dependencyAnalysisParticipation>
+								</source>
+								<!-- additional system include path -->
+								<source>
+									<directory>target/include</directory>
+									<deployable>true</deployable>
+									<dependencyAnalysisParticipation>true</dependencyAnalysisParticipation>
+								</source>
+								<source>
+									<directory>src/main/include</directory>
+									<deployable>true</deployable>
+									<dependencyAnalysisParticipation>true</dependencyAnalysisParticipation>
+								</source>
+								<source>
+									<directory>src/main/include-deps</directory>
+									<dependencyAnalysisParticipation>false</dependencyAnalysisParticipation>
+								</source>
+							</sources>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+			<properties>
+				<architecture>w32</architecture>
+				<architecture.lib>a</architecture.lib>
+				<architecture.dll>dll</architecture.dll>
+				<architecture.implib>dll</architecture.implib>
+				<architecture.exe>exe</architecture.exe>
+			</properties>
+		</profile>
+		<profile>
+			<id>msvc-x86</id>
+			<activation>
+				<os>
+					<family>Windows</family>
+				</os>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>compile</id>
+								<phase>process-sources</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<inherited>false</inherited>
+								<configuration>
+									<tasks>
+										<mkdir dir="target/objs" />
+										<exec executable="rc">
+											<arg value="/fotarget/objs/resources.res" />
+											<arg value="src\\main\\resources\\resources.rc" />
+										</exec>
+									</tasks>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>native-maven-plugin</artifactId>
+						<extensions>true</extensions>
+						<configuration>
+							<compilerProvider>msvc</compilerProvider>
+							<compilerExecutable>cl.exe</compilerExecutable>
+							<linkerProvider>msvc</linkerProvider>
+							<linkerMiddleOptions>
+								<linkerMiddleOption>uuid.lib</linkerMiddleOption>
+								<linkerMiddleOption>shell32.lib</linkerMiddleOption>
+								<linkerMiddleOption>crypt32.lib</linkerMiddleOption>
+								<linkerMiddleOption>winhttp.lib</linkerMiddleOption>
+								<linkerMiddleOption>user32.lib</linkerMiddleOption>
+								<linkerMiddleOption>ole32.lib</linkerMiddleOption>
+								<linkerMiddleOption>wsock32.lib</linkerMiddleOption>
+								<linkerMiddleOption>secur32.lib</linkerMiddleOption>
+								<linkerMiddleOption>advapi32.lib</linkerMiddleOption>
+								<linkerMiddleOption>target/objs/resources.res</linkerMiddleOption>
+							</linkerMiddleOptions>
+							<sources>
+								<source>
+									<!-- relative to your project directory -->
+									<directory>src/main/native</directory>
+									<includes>
+										<include>**/*.cpp</include>
+									</includes>
+									<excludes>
+										<exclude>**/*.h</exclude>
+									</excludes>
+
+									<deployable>false</deployable>
+									<dependencyAnalysisParticipation>false</dependencyAnalysisParticipation>
+								</source>
+								<!-- additional system include path -->
+								<source>
+									<directory>src/main/include</directory>
+									<deployable>true</deployable>
+									<dependencyAnalysisParticipation>true</dependencyAnalysisParticipation>
+								</source>
+								<source>
+									<directory>src/main/include-deps</directory>
+									<dependencyAnalysisParticipation>false</dependencyAnalysisParticipation>
+								</source>
+							</sources>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+			<modules>
+			</modules>
+			<properties>
+				<architecture>w32msvc</architecture>
+				<architecture.dll>dll</architecture.dll>
+				<architecture.implib>lib</architecture.implib>
+				<architecture.lib>lib</architecture.lib>
+				<architecture.exe>exe</architecture.exe>
+			</properties>
+		</profile>
+	</profiles>
+</project>

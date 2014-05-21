@@ -1,0 +1,28 @@
+#include <windows.h>
+#include "include/jni.h"
+#include "MazingerInternal.h"
+#include "MazingerHook.h"
+#include "NativeComponent.h"
+
+NativeComponent::NativeComponent() {
+
+}
+
+void NativeComponent::dumpAttribute  (const char *attribute) {
+	MZNSendDebugMessage("Dumping %s", attribute);
+	std::string value;
+	getAttribute(attribute, value);
+	if (value.length() != 0)
+	{
+		MZNSendDebugMessage("%s: [%s]", attribute, value.c_str());
+	}
+	TRACE;
+}
+
+void NativeComponent::dump () {
+
+	dumpAttribute ("class");
+	dumpAttribute ("name");
+	dumpAttribute ("title");
+	dumpAttribute ("text");
+}

@@ -1,0 +1,8 @@
+LIBRARY AfroditaE.dll
+
+
+EXPORTS
+	DllGetClassObject PRIVATE
+	DllCanUnloadNow PRIVATE
+	DllMain PRIVATE
+	

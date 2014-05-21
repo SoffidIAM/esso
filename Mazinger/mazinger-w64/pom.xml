@@ -1,0 +1,145 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.soffid.iam.esso.${architecture}</groupId>
+	<artifactId>Mazinger</artifactId>
+	<packaging>${architecture.exe}</packaging>
+	<name>Executable per a injecció d'Usuaris i Passwords (Windows 64 bits)</name>
+	<parent>
+		<groupId>com.soffid.iam.esso.pom</groupId>
+		<artifactId>Mazinger</artifactId>
+		<version>1.4.0</version>
+	</parent>
+	<dependencies>
+		<dependency>
+			<groupId>com.soffid.iam.esso.${architecture}</groupId>
+			<artifactId>${architecture.libPrefix}MazingerHook</artifactId>
+			<type>inczip</type>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.soffid.iam.esso.${architecture}</groupId>
+			<artifactId>${architecture.libPrefix}MazingerHook</artifactId>
+			<type>${architecture.implib}</type>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.soffid.iam.esso.${architecture}</groupId>
+			<artifactId>libmazinger-session</artifactId>
+			<type>${architecture.lib}</type>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.soffid.iam.esso.${architecture}</groupId>
+			<artifactId>libmazinger-session</artifactId>
+			<type>inczip</type>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.soffid.iam.esso.${architecture}</groupId>
+			<artifactId>libmazinger-engine</artifactId>
+			<type>inczip</type>
+			<version>${pom.version}</version>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>compile</id>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<inherited>false</inherited>
+						<configuration>
+							<tasks>
+								<mkdir dir="target/resources" />
+								<mkdir dir="target/include" />
+								<exec executable="${gcc.prefix}-windmc">
+									<arg value="-rtarget/resources" />
+									<arg value="-htarget/include" />
+									<arg value="../src/main/resources/mazinger_msg.mc" />
+								</exec>
+								<mkdir dir="target/objs" />
+								<exec executable="${gcc.prefix}-windres">
+									<arg value="-Isrc/main/include" />
+									<arg value="-Itarget/native/include" />
+									<arg value="-i../src/main/resources/resources.rc" />
+									<arg value="-otarget/objs/resources.o" />
+								</exec>
+							</tasks>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>native-maven-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>
+					<compilerProvider>generic</compilerProvider>
+					<compilerExecutable>${gcc.prefix}-g++</compilerExecutable>
+					<linkerProvider>generic</linkerProvider>
+					<linkerExecutable>${gcc.prefix}-g++</linkerExecutable>
+					<linkerMiddleOptions>
+						<linkerMiddleOption>target/objs/resources.o</linkerMiddleOption>
+						<linkerMiddleOption>-Xlinker</linkerMiddleOption>
+						<linkerMiddleOption>--strip-all</linkerMiddleOption>
+						<linkerStartOption>../src/main/def/mazinger64.def</linkerStartOption>
+						<linkerMiddleOption>-lMazingerHook</linkerMiddleOption>
+						<linkerMiddleOption>-lmazinger-session</linkerMiddleOption>
+						<linkerMiddleOption>-lmazinger-engine</linkerMiddleOption>
+						<linkerMiddleOption>-luuid</linkerMiddleOption>
+						<linkerMiddleOption>-lole32</linkerMiddleOption>
+						<linkerMiddleOption>-DWIN32</linkerMiddleOption>
+						<linkerMiddleOption>-static-libgcc</linkerMiddleOption>
+						<linkerMiddleOption>-static-libstdc++</linkerMiddleOption>
+					</linkerMiddleOptions>
+					<linkerEndOptions>
+						<linkerEndOption>-lwsock32</linkerEndOption>
+						<linkerEndOption>-ladvapi32</linkerEndOption>
+						<linkerEndOption>-lsecur32</linkerEndOption>
+						<linkerEndOption>-lmpr</linkerEndOption>
+						<linkerEndOption>-lgdi32</linkerEndOption>
+					</linkerEndOptions>
+					<sources>
+						<source>
+							<!-- relative to your project directory -->
+							<directory>../src/main/native</directory>
+							<includes>
+								<include>**/*.cpp</include>
+							</includes>
+							<excludes>
+								<exclude>**/*.h</exclude>
+							</excludes>
+
+							<deployable>false</deployable>
+							<dependencyAnalysisParticipation>false</dependencyAnalysisParticipation>
+						</source>
+						<!-- additional system include path -->
+						<source>
+							<directory>../src/main/include</directory>
+							<deployable>true</deployable>
+							<dependencyAnalysisParticipation>true</dependencyAnalysisParticipation>
+						</source>
+						<source>
+							<directory>../src/main/include-deps</directory>
+							<dependencyAnalysisParticipation>false</dependencyAnalysisParticipation>
+						</source>
+					</sources>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<properties>
+		<architecture>w64</architecture>
+		<architecture.lib>a</architecture.lib>
+		<architecture.dll>dll</architecture.dll>
+		<architecture.implib>dll</architecture.implib>
+		<architecture.exe>exe</architecture.exe>
+		<architecture.libPrefix />
+		<gcc.prefix>x86_64-w64-mingw32</gcc.prefix>
+	</properties>
+</project>

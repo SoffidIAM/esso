@@ -1,0 +1,206 @@
+
+// Language definition
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+	1,			"Iniciar sesión en la Intranet - "
+	2,			"No tiene acceso al servidor. No se puede iniciar la sesión"
+	3,			"Error en la tarjeta criptográfica. No se ha podido firmar la solicitud de inicio de sesión"
+	4,			"No tiene acceso a la Intranet. No se puede iniciar la sesión"
+	5,			"El servidor ha rechazado la petición de inicio de sesión"
+	6,			"Error accediendo al servidor: "
+	7,			"El sistema no dispone de los credenciales necesarios. Contacte con el centro de soporte"
+	8,			"La contraseña y su confirmación no coinciden. Por favor, vuelva a introducirla"
+	9,			"El usuario no tiene permisos para cambiar la contraseña"
+	10,		"La contraseña antigüa no es correcta"
+	11,		"El servidor no responde"
+	12,		"El servidor seleccionado no es un controlador de dominio"
+	13,		"Error imprevisto. El sistema no conoce el código del usuario"
+	14,		"La contraseña no cumple con los requisitos de seguridad, o es una contraseña ya utilizada.\n Por favor, inténtelo otra vez"
+	15,		"Cargando perfil de usuario"
+	16,		"Conectando unidad privada"
+	17,		"Cerrando sesión"
+	18,		"Apagando el equipo"
+	19,		"Imposible iniciar la sesión"
+	20,		"DNI electrónico"
+	21,		"Tarjeta de funcionario"
+	22,		"Tarjeta criptográfica "
+	23,		"Ha de seleccionar un certificado"
+	24,		"La estación sólo puede ser desbloqueada por el usuario "
+	25,		" o por un administrador"
+	26,		"No se puede desbloquear el equipo"
+	27,		"Ha de cambiar su contraseña"
+	28,		"Contraseña caducada"
+	29,		"Validando el certificado electrónico"
+	30,		"No se ha encontrado ningún certificado en la tarjeta"
+	31,		"Acceso a la Intranet"
+	32,		"Su contraseña caduca hoy"
+	33,		"Su contraseña caduca mañana"
+	34,		"Su contraseña caduca en "
+	35,		" días"
+	36,		". ¿Desea cambiarla ahora?"
+	37,		"Iniciando sesión"
+	38,		"No se puede iniciar la sesión"
+	39,		"Ha de seleccionar una opción"
+	40,		"Ha de introducir un PIN"
+	41,		"Tipo de tarjeta desconocida: "
+	42,		"La contraseña se ha cambiado correctamente."
+	43,		"Cambio de contraseña"
+	44,		" como Administador Local "
+
+	1000,	"Atención"
+	1001,	"Aviso"
+	1002,	"Hubo un error imprevisto."
+	1003,	"Error"
+	1004,	"Apagar"		
+	1005,	"Reiniciar"
+	1006,	"Suspender"
+	1007,	"Hibernar"
+END
+
+////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SELCERT DIALOG DISCARDABLE  0, 0, 299, 175
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION |
+	WS_SYSMENU
+CAPTION "Acceso a la Intranet"
+FONT 8, "MS Sans Serif"
+BEGIN
+	LISTBOX					IDC_LIST1, 7, 22, 230, 146, LBS_NOINTEGRALHEIGHT |
+									WS_VSCROLL | WS_TABSTOP | 0x2000
+	DEFPUSHBUTTON	"Seleccionar", IDOK, 242, 25, 50, 14
+	PUSHBUTTON			"Cancelar", IDCANCEL, 242, 46, 50, 14
+	LTEXT						"Seleccione un certificado electrónico", IDC_STATIC, 7, 7, 136, 10
+END
+
+IDD_ENTERPIN DIALOG DISCARDABLE  0, 0, 280, 61
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION |
+	WS_SYSMENU
+CAPTION "Acceso a la Intranet"
+FONT 8, "MS Sans Serif"
+BEGIN
+	EDITTEXT					IDC_PIN, 65, 28, 133, 12, ES_PASSWORD | ES_AUTOHSCROLL
+	DEFPUSHBUTTON	"Aceptar", IDOK, 223, 7, 50, 14
+	PUSHBUTTON			"Cancelar", IDCANCEL, 223, 28, 50, 14
+	LTEXT						"Introduzca el PIN de acceso a la tarjeta criptográfica",
+									IDC_STATIC, 65, 7, 156, 11
+	CONTROL					"TARJETA", IDC_STATIC, "Static", SS_BITMAP | SS_CENTERIMAGE |
+									SS_REALSIZEIMAGE, 7, 7, 52, 47
+END
+
+IDD_CHANGEPASS DIALOG DISCARDABLE  0, 0, 262, 113
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Cambio de contraseña"
+FONT 8, "MS Sans Serif"
+BEGIN
+	CTEXT						"Usuario:", IDC_STATIC, 14, 12, 25, 8, SS_NOPREFIX
+	LTEXT						"Contraseña actual:", IDC_STATIC, 14, 32, 86, 8
+	EDITTEXT					IDC_PASSWORD0, 124, 28, 125, 15, ES_PASSWORD |
+									ES_AUTOHSCROLL
+	LTEXT						"Nueva contraseña:", IDC_STATIC, 14, 52, 62, 8
+	EDITTEXT					IDC_PASSWORD1, 124, 48, 125, 15, ES_PASSWORD |
+									ES_AUTOHSCROLL
+	LTEXT						"Confirme la nueva contraseña:", IDC_STATIC, 14, 72, 105, 8
+	EDITTEXT					IDC_PASSWORD2, 124, 68, 125, 15, ES_PASSWORD |
+									ES_AUTOHSCROLL
+	DEFPUSHBUTTON	"Aceptar", IDOK, 124, 92, 50, 14
+	PUSHBUTTON			"Cancelar", IDCANCEL, 199, 92, 50, 14
+	EDITTEXT					IDC_DOMINI, 124, 9, 125, 14, ES_AUTOHSCROLL | ES_READONLY
+END
+
+IDD_LOGGEDIN DIALOG DISCARDABLE  0, 0, 344, 170
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Seguridad del sistema"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON	"Bl&oquear equipo",IDC_LOCK_BUTTON,7,125,107,16
+    PUSHBUTTON      	"Cerrar sesión",IDC_LOGOUT_BUTTON,118,125,107,16
+    PUSHBUTTON      	"Apagar equipo",IDC_SHUTDOWN_BUTTON,229,125,107,16
+    PUSHBUTTON      	"Cambiar contraseña",IDC_PASSWORD_BUTTON,7,147,107,16
+    PUSHBUTTON      	"Administrador de tareas",IDC_TASKMGR_BUTTON,118,147,107,16
+    PUSHBUTTON      	"Cancelar",IDC_CANCEL,229,147,107,16
+    CONTROL         		"SOFFID_LOGO",IDC_BITMAP,"Static",SS_BITMAP | 
+                    				SS_REALSIZEIMAGE, 7, 3, 330, 44
+    GROUPBOX        		"Información de inicio de sesión",IDC_STATIC,7,74,330,44
+    LTEXT           			"Ha iniciado la sesión como:",IDC_STATIC,13,89,93,8
+    LTEXT           			"",IDC_USERNAME,112,89,169,8
+    LTEXT           			"Fecha de inicio de la sesión:",IDC_STATIC,13,105,93,8
+    LTEXT           			"",IDC_LOGINTIME,111,105,169,8
+END
+
+IDD_SHUTDOWN DIALOG DISCARDABLE  0, 0, 190, 71
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Apagar equipo"
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        		IDC_COMBO1,7,22,176,54,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    				WS_TABSTOP
+    DEFPUSHBUTTON	"Aceptar",IDC_OK,70,48,50,14
+    PUSHBUTTON      	"Cancelar",IDC_CANCEL,133,48,50,14
+    LTEXT           			"¿Confirma que desea apagar el equipo?", IDC_STATIC, 7, 7, 135, 12
+END
+
+IDD_LOCKED DIALOG DISCARDABLE  0, 0, 330, 108
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Acceso a la red corporativa"
+FONT 8, "MS Sans Serif"
+BEGIN
+	CONTROL		"LOCKED_ES", IDC_BITMAP, "Static", SS_BITMAP | 	SS_REALSIZEIMAGE,
+						0, 0, 330, 118
+END
+
+IDD_MESSAGE DIALOG DISCARDABLE  0, 0, 330, 98
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Acceso a la red corporativa"
+FONT 8, "MS Sans Serif"
+BEGIN
+	CONTROL		"SOFFID_LOGO", IDC_BITMAP, "Static",SS_BITMAP | SS_REALSIZEIMAGE,
+						0,	0,	330,	50
+	LTEXT			"", IDC_MESSAGE, 13, 79, 324, 8
+END
+
+IDD_LOGOUT DIALOG DISCARDABLE  0, 0, 330, 108
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Acceso a la red corporativa"
+FONT 8, "MS Sans Serif"
+BEGIN
+	CONTROL		"WELCOME_ES", IDC_WELCOME, "Static", SS_BITMAP, 0,	0,	330,	118
+END
+
+//IDD_LOGOUT DIALOGEX 0, 0, 389, 255
+//STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+//CAPTION "Acceso a la red corporativa"
+//FONT 8, "MS Sans Serif", 0, 0, 0x1
+//BEGIN
+//	CONTROL		"SOFFID_LOGO",IDC_BITMAP,"Static",SS_BITMAP | SS_CENTERIMAGE,
+//						0,0,389,71,WS_EX_TRANSPARENT
+//	EDITTEXT		IDC_EDIT1,11,78,366,168,ES_MULTILINE | ES_READONLY |
+//						ES_WANTRETURN | NOT WS_BORDER | WS_VSCROLL | NOT WS_TABSTOP
+//END
+
+IDD_LOGINDIALOG DIALOGEX 0, 0, 314, 186
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Iniciar sesión en la Intranet"
+FONT 8, "MS Sans Serif"
+BEGIN
+	EDITTEXT					IDC_USER,88,74,184,14,ES_AUTOHSCROLL
+	EDITTEXT    				IDC_PASSWORD1,88,93,184,14,ES_PASSWORD | ES_AUTOHSCROLL
+	LTEXT						"Si dispone de tarjeta criptográgica o DNI electrónico,\nlo puede introducir ahora en el lector",
+									IDC_STATIC,88,131,184,22
+	CONTROL					"Iniciar como Administrador Local del equipo",
+									IDC_ADMIN_CHECK,"Button",BS_AUTOCHECKBOX | BS_LEFT | 
+									WS_TABSTOP,89,114,184,10
+	DEFPUSHBUTTON	"Aceptar",IDOK,88,165,50,14
+	PUSHBUTTON			"Cancelar",IDCANCEL,155,165,50,14
+	PUSHBUTTON			"Apagar",IDC_SHUTDOWN_BUTTON,222,165,50,14
+	CONTROL					"SOFFID_LOGO",IDC_BITMAP,"Static",
+									SS_BITMAP | SS_CENTERIMAGE, 0,0,314,71,WS_EX_TRANSPARENT
+	LTEXT						"Código de usuario:", IDC_STATIC, 16, 78, 65, 8
+	LTEXT						"Contraseña:",IDC_STATIC,16,96,67,10
+	CONTROL					"TARJETA",IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+									SS_REALSIZEIMAGE,16,131,52,47
+END

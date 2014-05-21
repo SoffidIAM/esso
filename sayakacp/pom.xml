@@ -1,0 +1,37 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.soffid.iam.esso.pom</groupId>
+	<artifactId>sayaka-cp</artifactId>
+	<packaging>pom</packaging>
+	<name>Dll per a login amb targeta a windows vista i superior</name>
+	<version>1.4.0</version>
+	<parent>
+		<artifactId>root</artifactId>
+		<groupId>com.soffid.iam.esso.pom</groupId>
+		<version>1.4.0</version>
+	</parent>
+	<issueManagement>
+		<system>RTIR</system>
+		<url>https://rtir.caib.es</url>
+	</issueManagement>
+	<modules>
+		<module>sayakacp-w32</module>
+		<module>sayakacp-w64</module>
+	</modules>
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-release-plugin</artifactId>
+					<configuration>
+						<preparationGoals>clean verify</preparationGoals>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+	<properties>
+		<gforge.project>seycon</gforge.project>
+	</properties>
+</project>

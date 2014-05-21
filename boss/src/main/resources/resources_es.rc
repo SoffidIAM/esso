@@ -1,0 +1,32 @@
+
+// Language definition
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+	1			"Imposible iniciar sesión"
+	2			"Ejecutar como Administrador - "
+	 
+	1000	"Error"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+IDD_LOGINDIALOG DIALOGEX 0, 0, 314, 186
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ejecutar como Administrador"
+FONT 8, "MS Sans Serif"
+BEGIN
+	EDITTEXT					IDC_USER,88,74,184,14,ES_AUTOHSCROLL
+	EDITTEXT					IDC_PASSWORD,88,93,184,14,ES_PASSWORD | ES_AUTOHSCROLL
+	DEFPUSHBUTTON	"Aceptar", IDOK, 88, 165, 50, 14
+	PUSHBUTTON			"Cancelar", IDCANCEL, 155, 165, 50, 14
+	CONTROL					"SOFFID_LOGO", IDC_BITMAP, "Static", SS_BITMAP | SS_CENTERIMAGE,
+									0, 0, 314, 71, WS_EX_TRANSPARENT
+	LTEXT						"Código de usuario:", IDC_STATIC, 16, 78, 65, 8
+	LTEXT						"Contraseña:", IDC_STATIC, 16, 96, 67, 10
+	LTEXT						"Programa:", IDC_STATIC, 16, 114, 67, 10
+	LTEXT						"-", IDC_PROGRAM, 89,114,210,20
+END

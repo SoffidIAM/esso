@@ -1,0 +1,48 @@
+#!/bin/bash
+chmod 440 /etc/mazinger/sudoers.d/README
+
+/usr/sbin/pam-auth-update --package
+changes=""
+armorfile=/etc/apparmor.d/abstractions/base
+if ! fgrep -q '/var/tmp/mazinger' $armorfile 
+then
+  changes=1 
+  echo '   /var/tmp/mazinger/*  r, '>>$armorfile
+fi
+if ! fgrep -q '/dev/shm/MazingerData' $armorfile 
+then
+  changes=1 
+  echo '   /dev/shm/MazingerData-*  r, '>>$armorfile
+fi
+if [[ "$changes" ]]
+then
+   service apparmor reload
+fi
+
+# Configurar preload
+machine=$(uname -m)
+if [[ "$machine" == "x86_64" ]]
+then
+   library='/$LIB/libMazingerPreload.so'
+else
+   library='/usr/lib/libMazingerPreload.so'
+fi
+
+if [[ -r /etc/ld.so.preload ]]
+then
+   if ! fgrep -q "$library" /etc/ld.so.preload 
+   then
+      printf "\n$library\n" >>/etc/ld.so.preload
+   fi
+else
+   printf "$library\n" >/etc/ld.so.preload
+fi
+
+# Configurar sudoers
+fgrep -q /etc/mazinger/sudoers.d /etc/sudoers ||
+(printf "\n# Added by Mazinger $(date)\n#includedir /etc/mazinger/sudoers.d\n" >>/etc/sudoers)
+
+# Configurar version
+cp /etc/mazinger/config /etc/mazinger/config.dpkg.orig
+sed -e '1 a MazingerVersion:${pom.version}
+/^MazingerVersion:.*$/ D' </etc/mazinger/config.dpkg.orig >/etc/mazinger/config

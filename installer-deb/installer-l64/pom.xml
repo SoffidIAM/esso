@@ -1,0 +1,209 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.soffid.iam.esso.${architecture}</groupId>
+	<artifactId>MazingerInstaller</artifactId>
+	<name>Instal·lador de MAZINGER 64 bits Ubuntu</name>
+	<parent>
+		<version>1.4.0</version>
+		<groupId>com.soffid.iam.esso.pom</groupId>
+		<artifactId>MazingerInstaller</artifactId>
+	</parent>
+	<packaging>jar</packaging>
+	<build>
+		<resources>
+			<resource>
+				<directory>../src/main/resources</directory>
+				<filtering>false</filtering>
+				<targetPath>${deb.dir}</targetPath>
+			</resource>
+			<resource>
+				<directory>../src/main/ffextension</directory>
+				<filtering>true</filtering>
+				<targetPath>${deb.dir}</targetPath>
+			</resource>
+		</resources>
+
+		<plugins>
+			<plugin>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>com.soffid.iam.esso.${architecture}</groupId>
+									<artifactId>KojiKabuto</artifactId>
+									<version>${pom.version}</version>
+									<type>${architecture.exe}</type>
+									<destFileName>usr/bin/kojikabuto</destFileName>
+								</artifactItem>
+								<artifactItem>
+									<groupId>com.soffid.iam.esso.${architecture}</groupId>
+									<artifactId>Mazinger</artifactId>
+									<version>${pom.version}</version>
+									<type>${architecture.exe}</type>
+									<destFileName>usr/bin/mazinger</destFileName>
+								</artifactItem>
+								<artifactItem>
+									<groupId>com.soffid.iam.esso.${architecture}</groupId>
+									<artifactId>${architecture.libPrefix}MazingerPreload</artifactId>
+									<version>${pom.version}</version>
+									<type>${architecture.dll}</type>
+									<destFileName>lib64/libMazingerPreload.so</destFileName>
+								</artifactItem>
+								<artifactItem>
+									<groupId>com.soffid.iam.esso.l32</groupId>
+									<artifactId>${architecture.libPrefix}MazingerPreload</artifactId>
+									<version>${pom.version}</version>
+									<type>${architecture.dll}</type>
+									<destFileName>lib32/libMazingerPreload.so</destFileName>
+								</artifactItem>
+								<artifactItem>
+									<groupId>com.soffid.iam.esso.${architecture}</groupId>
+									<artifactId>${architecture.libPrefix}MazingerHook</artifactId>
+									<version>${pom.version}</version>
+									<type>${architecture.dll}</type>
+									<destFileName>usr/lib/libMazingerHook.so</destFileName>
+								</artifactItem>
+								<artifactItem>
+									<groupId>com.soffid.iam.esso.l32</groupId>
+									<artifactId>${architecture.libPrefix}MazingerHook</artifactId>
+									<version>${pom.version}</version>
+									<type>${architecture.dll}</type>
+									<destFileName>usr/lib32/libMazingerHook.so</destFileName>
+								</artifactItem>
+								<artifactItem>
+									<groupId>com.soffid.iam.esso.java</groupId>
+									<artifactId>javahook</artifactId>
+									<version>${pom.version}</version>
+									<destFileName>usr/share/mazinger/ProfYumi.jar</destFileName>
+								</artifactItem>
+								<artifactItem>
+									<groupId>com.soffid.iam.esso.${architecture}</groupId>
+									<artifactId>${architecture.libPrefix}afrodita-chrome</artifactId>
+									<version>${pom.version}</version>
+									<type>${architecture.dll}</type>
+									<destFileName>/usr/lib/mozilla/plugins/libafroditac.so</destFileName>
+								</artifactItem>
+								<artifactItem>
+									<groupId>com.soffid.iam.esso.${architecture}</groupId>
+									<artifactId>${architecture.libPrefix}afrodita-firefox-ctype</artifactId>
+									<version>${pom.version}</version>
+									<type>${architecture.dll}</type>
+									<destFileName>/usr/lib/libafroditafc.so</destFileName>
+								</artifactItem>
+								<artifactItem>
+									<groupId>com.soffid.iam.esso.${architecture}</groupId>
+									<artifactId>pam_sayaka</artifactId>
+									<version>${pom.version}</version>
+									<type>${architecture.dll}</type>
+									<destFileName>/lib/security/pam_sayaka.so</destFileName>
+								</artifactItem>
+								<artifactItem>
+									<groupId>com.soffid.iam.esso.${architecture}</groupId>
+									<artifactId>JetScrander</artifactId>
+									<version>${pom.version}</version>
+									<type>uexe</type>
+									<destFileName>/usr/bin/jetscrander</destFileName>
+								</artifactItem>
+							</artifactItems>
+							<outputDirectory>${deb.dir}</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.6</version>
+				<executions>
+					<execution>
+						<phase> package </phase>
+						<configuration>
+							<target>
+								<exec executable="fakeroot">
+									<arg value="chmod" />
+									<arg value="755" />
+									<arg value="${deb.dir}/usr/bin/kojikabuto" />
+									<arg value="${deb.dir}/usr/bin/mazinger" />
+									<arg value="${deb.dir}/usr/bin/jetscrander" />
+									<arg value="${deb.dir}/DEBIAN/postinst" />
+									<arg value="${deb.dir}/DEBIAN/prerm" />
+								</exec>
+								<exec executable="fakeroot">
+									<arg value="chmod" />
+									<arg value="644" />
+									<arg value="${deb.dir}/etc/mazinger/seycon.pem" />
+									<arg value="${deb.dir}/etc/mazinger/config" />
+								</exec>
+								<exec executable="fakeroot">
+									<arg value="chmod" />
+									<arg value="440" />
+									<arg value="${deb.dir}/etc/mazinger/sudoers.d/README" />
+								</exec>
+								<exec executable="fakeroot">
+									<arg value="chmod" />
+									<arg value="555" />
+									<arg value="${deb.dir}/opt/google/chrome/extensions" />
+								</exec>
+								<!-- <mkdir dir="${deb.dir}/${ffextension}" /> <symlink link="${deb.dir}/${ffextension}/${ffuid}" resource="/usr/share/mazinger/ffextension" overwrite="true" /> -->
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>deb-maven-plugin</artifactId>
+				<configuration>
+                                        <description>Mazinger for Linux</description>
+                                        <maintainer>Soffid &lt;contact@soffid.com&gt;</maintainer>
+                                        <section>admin</section>
+                                        <priority>optional</priority>
+                                        <architecture>i386</architecture>
+                                        <packageName>mazinger</packageName>
+                                        <maintainerRevision>1</maintainerRevision>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>package-binary</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>prepare-sources</id>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>resources</goal>
+						</goals>
+						<configuration>
+							<encoding>ISO-8859-1</encoding>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<configuration>
+					<preparationGoals>clean verify</preparationGoals>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<properties>
+		<architecture>l64</architecture>
+	</properties>
+</project>

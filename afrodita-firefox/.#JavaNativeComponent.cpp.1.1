@@ -1,0 +1,219 @@
+#include <windows.h>
+#include <string>
+#include "include/jni.h"
+#include "MazingerInternal.h"
+#include "MazingerHook.h"
+#include "JavaNativeComponent.h"
+
+JavaNativeComponent::JavaNativeComponent(JNIEnv* pEnv, jobject objValue) {
+	this->object = objValue;
+	this->pEnv = pEnv;
+	MZNSendDebugMessage("Instanciado %d: %d %d", this, this->pEnv, this->object);
+	dump();
+}
+
+const char *JavaNativeComponent::getClass() {
+	return "JavaNativeComponent";
+}
+
+int JavaNativeComponent::equals (NativeComponent &component) {
+	if ( getClass() != component.getClass ())
+		return 0;
+	return pEnv->IsSameObject(object, ((JavaNativeComponent&)component).object);
+}
+
+NativeComponent* JavaNativeComponent::clone() {
+	MZNSendDebugMessage("Clonando %d: %d %d", this, this->pEnv, this->object);
+	JavaNativeComponent *result = new JavaNativeComponent(this->pEnv, this->object);
+	return result;
+}
+
+NativeComponent *JavaNativeComponent::getParent() {
+	jclass windowC = pEnv->FindClass("java/awt/Window");
+
+	if (windowC != NULL && pEnv->IsInstanceOf(object, windowC)) {
+		std::string className;
+		getAttribute("class", className);
+		MZNSendDebugMessage("Parent is of class %s",className.c_str());
+		return NULL;
+	}
+
+	jclass objectC = pEnv->GetObjectClass(object);
+	if (objectC == NULL) {
+		MZNSendDebugMessage("Object is null");
+		return NULL;
+	}
+	jmethodID getParent = pEnv->GetMethodID(objectC, "getParent",
+			"()Ljava/awt/Container;");
+	if (getParent == NULL) {
+		MZNSendDebugMessage("getParent() is missing");
+		std::string s;
+		getAttribute("class", s);
+		MZNSendDebugMessage("getParent() is missing for %s", s.c_str());
+		return NULL;
+	}
+	jobject parent = pEnv->CallObjectMethod(object, getParent);
+	if (parent == NULL)
+	{
+		MZNSendDebugMessage("getParent() returns null");
+		return NULL;
+	}
+	else
+	{
+		return new JavaNativeComponent (pEnv, parent);
+	}
+
+}
+
+
+
+void JavaNativeComponent::getAttribute(const char* attributeName, std::string &result) {
+//	MZNSendDebugMessage("getAttribute %s at %d: %d %d", attributeName, this, this->pEnv, this->object);
+	jstring value = NULL;
+	result.clear ();
+	if (strcmp(attributeName, "class") != 0) {
+//		TRACE;
+		jclass clazz = pEnv->GetObjectClass(object);
+		char achMethodName[1024] = "get";
+		strcat(achMethodName, attributeName);
+		achMethodName[3] = toupper(achMethodName[3]);
+		if (clazz != NULL) {
+			jmethodID m = pEnv->GetMethodID(clazz, achMethodName,
+					"()Ljava/lang/String;");
+			if (m != NULL) {
+//				TRACE;
+				value = (jstring) pEnv->CallObjectMethod(object, m);
+			}
+		}
+	} else {
+//		TRACE;
+		value = getObjectClass();
+	}
+
+	if (value != NULL) {
+		TRACE;
+		LPCSTR str = pEnv->GetStringUTFChars(value, NULL);
+		result.assign(str);
+		pEnv->ReleaseStringUTFChars(value, str);
+	}
+}
+
+jstring JavaNativeComponent::getObjectClass() {
+	jclass objectC = pEnv->GetObjectClass(object);
+	if (objectC == NULL) {
+		TRACE;
+		return NULL;
+	}
+	jmethodID getClass = pEnv->GetMethodID(objectC, "getClass",
+			"()Ljava/lang/Class;");
+	if (getClass == NULL) {
+		TRACE;
+		return NULL;
+	}
+	jobject objectClass = pEnv->CallObjectMethod(object, getClass);
+	if (objectClass == NULL) {
+		TRACE;
+		return NULL;
+	}
+	// name = objectClass.getName();
+	jclass classC = pEnv->GetObjectClass(objectClass);
+	jmethodID getName = pEnv->GetMethodID(classC, "getName",
+			"()Ljava/lang/String;");
+	if (getName == NULL) {
+		TRACE;
+		return NULL;
+	}
+
+	jstring name = (jstring) pEnv->CallObjectMethod(objectClass, getName);
+	return name;
+
+}
+
+std::vector<NativeComponent*> JavaNativeComponent::getChildren() {
+	std::vector<NativeComponent*> result;
+	jclass objectC = pEnv->GetObjectClass(object);
+	if (objectC != NULL) {
+		jmethodID getComponents = pEnv->GetMethodID(objectC, "getComponents",
+				"()[Ljava/awt/Component;");
+		if (getComponents != NULL) {
+			jobjectArray componentArray = (jobjectArray)(pEnv->CallObjectMethod(object, getComponents));
+			jsize elements = pEnv->GetArrayLength(componentArray);
+			for(jsize i = 0;i < elements;i++) {
+				jobject component = pEnv->GetObjectArrayElement(componentArray, i);
+				JavaNativeComponent *child = new JavaNativeComponent(pEnv, component);
+				result.push_back( child );
+			}
+		}
+	}
+	return result;
+}
+
+static jstring JNU_NewStringNative(JNIEnv *env, const char *str)
+{
+    jstring result;
+    jbyteArray bytes = 0;
+    int len;
+    if (env->EnsureLocalCapacity( 2) < 0) {
+        return NULL;
+    }
+    len = strlen(str);
+    bytes = env->NewByteArray(len);
+    if (bytes != NULL) {
+
+        env->SetByteArrayRegion(bytes, 0, len,
+                                   (jbyte *)str);
+
+        jclass strcl = env->FindClass("java/lang/String");
+        jmethodID constructor = env->GetMethodID(strcl, "<init>",
+				"([B)V");
+        result = (jstring) env->NewObject(strcl, constructor, bytes);
+        env->DeleteLocalRef(bytes);
+        return result;
+    }
+    return NULL;
+}
+
+void JavaNativeComponent::setAttribute(const char*attributeName, const char* value) {
+	jstring jstr = JNU_NewStringNative(pEnv, value);
+	char achMethodName[1024] = "set";
+	strcat(achMethodName, attributeName);
+	achMethodName[3] = toupper(achMethodName[3]);
+	jclass cl = pEnv->GetObjectClass(object);
+	jmethodID m = pEnv->GetMethodID(cl, achMethodName, "(Ljava/lang/String;)V");
+	if (m != NULL)
+	{
+		pEnv->CallObjectMethod(object, m, jstr);
+	}
+	else
+	{
+		MZNSendDebugMessageA("Warning: Component does not have %s method", achMethodName);
+	}
+}
+
+void JavaNativeComponent::setFocus() {
+	jclass clazz = pEnv->GetObjectClass(object);
+	jmethodID m = pEnv->GetMethodID(clazz, "requestFocusInWindow",
+				"()Z");
+	if (m == NULL) {
+		MZNSendDebugMessage("Method requestFocusInWindow not found");
+	} else {
+		pEnv->CallObjectMethod(object, m);
+	}
+}
+
+void JavaNativeComponent::click() {
+	jclass aecl = pEnv->FindClass("java/awt/event/ActionEvent");
+	if (aecl != NULL)
+	{
+		jmethodID aec = pEnv->GetMethodID(aecl, "<init>", "()V");
+		jobject ae = pEnv->NewObject(aecl, aec);
+		jclass clazz = pEnv->GetObjectClass(object);
+		jmethodID m = pEnv->GetMethodID(clazz, "processActionEvent", "(Ljava/awt/event/ActionEvent;)V");
+		if (m != NULL)
+			pEnv->CallObjectMethod(object, m, ae);
+		else
+			MZNSendDebugMessage("Missing processActionEvent method");
+	}
+	else
+		MZNSendDebugMessage("Unable to locate java.awt.event.ActionEvent class");
+}

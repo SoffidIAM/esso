@@ -1,0 +1,22 @@
+
+// Language definition
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SELACCOUNT DIALOG DISCARDABLE  0, 0, 299, 175
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | 
+	WS_SYSMENU
+CAPTION "Select account"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LISTBOX         			IDC_LIST1,7,22,230,146,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | 
+                    				WS_TABSTOP | 0x2000
+    DEFPUSHBUTTON				"Select",IDOK,242,25,50,14
+    PUSHBUTTON 			     	"Cancel",IDCANCEL,242,46,50,14
+    LTEXT           			"Select account to use",IDC_STATIC, 7, 7, 136, 10
+END
+

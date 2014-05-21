@@ -1,0 +1,24 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.soffid.iam.esso.pom</groupId>
+	<artifactId>libMazingerPreload</artifactId>
+	<packaging>pom</packaging>
+	<name>Dll per a injecció d'Usuaris i Passwords a Linux</name>
+	<version>1.4.0</version>
+	<parent>
+		<artifactId>root</artifactId>
+		<groupId>com.soffid.iam.esso.pom</groupId>
+		<version>1.4.0</version>
+	</parent>
+	<issueManagement>
+		<system>RTIR</system>
+		<url>https://rtir.caib.es</url>
+	</issueManagement>
+	<modules>
+		<module>preload-l32</module>
+		<module>preload-l64</module>
+	</modules>
+	<properties>
+		<gforge.project>seycon</gforge.project>
+	</properties>
+</project>

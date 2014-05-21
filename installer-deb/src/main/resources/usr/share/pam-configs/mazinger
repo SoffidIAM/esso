@@ -1,0 +1,20 @@
+Name: Mazinger authentication
+Default: yes
+Priority: 512
+Auth-Type: Primary
+Auth:
+        [success=end user_unknown=ignore authinfo_unavail=ignore default=ok]    pam_sayaka.so 
+Auth-Initial:
+        [success=end user_unknown=ignore authinfo_unavail=ignore default=ok]    pam_sayaka.so 
+Session-Interactive-Only: yes
+Session-Type: Primary
+Session:
+        [success=end]        pam_sayaka.so 
+Session-Initial:
+        [success=end]        pam_sayaka.so 
+Password-Type: Primary
+Password:
+        [success=end user_unknown=ignore authinfo_unavail=ignore default=ok]        pam_sayaka.so 
+Password-Initial:
+        [success=end user_unknown=ignore authinfo_unavail=ignore default=ok]        pam_sayaka.so 
+                                                                             

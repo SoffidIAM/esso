@@ -1,0 +1,21 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "engine/resources/engine-resource.h"
+
+#include <windows.h>
+#include <winnt.h>
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Multilanguage resource files reference
+
+#include "engine/resources/engine-resources_ca.rc"
+#include "engine/resources/engine-resources_en.rc"
+#include "engine/resources/engine-resources_es.rc"
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+50001		ICON	DISCARDABLE		"engine/resources/soffid.ico"
+

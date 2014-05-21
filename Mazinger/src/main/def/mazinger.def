@@ -1,0 +1,78 @@
+NAME Mazinger
+
+
+IMPORTS
+	WinHttpAddRequestHeaders@16=winhttp.AddRequestHeaders
+	WinHttpCheckPlatform@0=winhttp.WinHttpCheckPlatform
+	WinHttpCloseHandle@4=winhttp.WinHttpCloseHandle
+	WinHttpConnect@16=winhttp.WinHttpConnect
+	WinHttpCrackUrl@16=winhttp.WinHttpCrackUrl
+	WinHttpCreateUrl@16 =winhttp.WinHttpCreateUrl
+	WinHttpDetectAutoProxyConfigUrl@8=winhttp.WinHttpDetectAutoProxyConfigUrl
+	WinHttpGetDefaultProxyConfiguration@4=winhttp.WinHttpGetDefaultProxyConfiguration
+	WinHttpGetIEProxyConfigForCurrentUser@4=winhttp.WinHttpGetIEProxyConfigForCurrentUser
+	WinHttpGetProxyForUrl@16=winhttp.WinHttpGetProxyForUrl
+	WinHttpOpen@20=winhttp.WinHttpOpen
+	WinHttpOpenRequest@28=winhttp.WinHttpOpenRequest
+	WinHttpQueryAuthSchemes@16=winhttp.WinHttpQueryAuthSchemes
+	WinHttpQueryDataAvailable@8=winhttp.WinHttpQueryDataAvailable
+	WinHttpQueryHeaders@24=winhttp.WinHttpQueryHeaders
+	WinHttpQueryOption@16=winhttp.WinHttpQueryOption
+	WinHttpReadData@16=winhttp.WinHttpReadData
+	WinHttpReceiveResponse@8=winhttp.WinHttpReceiveResponse
+	WinHttpSendRequest@28=winhttp.WinHttpSendRequest
+	WinHttpSetCredentials@24=winhttp.WinHttpSetCredentials
+	WinHttpSetDefaultProxyConfiguration@4 =winhttp.WinHttpSetDefaultProxyConfiguration
+	WinHttpSetOption@16=winhttp.WinHttpSetOption
+	WinHttpSetStatusCallback@16=winhttp.WinHttpSetStatusCallback
+	WinHttpSetTimeouts@20=winhttp.WinHttpSetTimeouts
+	WinHttpTimeFromSystemTime@8=winhttp.WinHttpTimeFromSystemTime
+	WinHttpTimeToSystemTime@8=winhttp.WinHttpTimeToSystemTime
+	WinHttpWriteData@16=winhttp.WinHttpWriteData
+	
+	
+	CertFreeCertificateChain@4=crypt32.CertFreeCertificateChain
+	CertGetCertificateChain@32=crypt32.CertGetCertificateChain
+	CertNameToStrA@20=crypt32.CertNameToStrA
+	CertNameToStrW@20=crypt32.CertNameToStrW
+	CertVerifyCertificateChainPolicy@16=crypt32.CertVerifyCertificateChainPolicy
+	CertCloseStore@8=crypt32.CertCloseStore
+	CertOpenSystemStoreA@8=crypt32.CertOpenSystemStoreA
+	CertOpenSystemStoreW@8=crypt32.CertOpenSystemStoreW
+	CertFindCertificateInStore@24=crypt32.CertFindCertificateInStore
+	CertFreeCertificateContext@4=crypt32.CertFreeCertificateContext
+	CertGetIssuerCertificateFromStore@16=crypt32.CertGetIssuerCertificateFromStore
+	CertFindChainInStore@24=crypt32.CertFindChainInStore
+	CertOpenStore@20=crypt32.CertOpenStore
+	CertOIDToAlgId@4=crypt32.CertOIDToAlgId
+	CertAlgIDToOID@4=crypt32.CertAlgIDToOID
+	CryptProtectData@28=crypt32.CryptProtectData
+	CryptUnprotectData@28=crypt32.CryptUnprotectData
+	CryptDecodeObject@28=crypt32.CryptDecodeObject
+	CryptDecodeObjectEx@32=crypt32.CryptDecodeObjectEx
+	CryptEncodeObjectEx@28=crypt32.CryptEncodeObjectEx
+	CryptRegisterOIDFunction@20=crypt32.CryptRegisterOIDFunction
+	CryptUnregisterOIDFunction@12=crypt32.CryptUnregisterOIDFunction
+	CertEnumCertificatesInStore@8=crypt32.CertEnumCertificatesInStore
+	CertDuplicateStore@4=crypt32.CertDuplicateStore
+	CertDuplicateCertificateContext@4=crypt32.CertDuplicateCertificateContext
+	CertGetNameStringA@24=crypt32.CertGetNameStringA
+	CertGetNameStringW@24=crypt32.CertGetNameStringW
+	CertFindExtension@12=crypt32.CertFindExtension
+	CertAddCertificateContextToStore@16=crypt32.CertAddCertificateContextToStore
+	CertCompareCertificate@12=crypt32.CertCompareCertificate
+	CertDeleteCertificateFromStore@4=crypt32.CertDeleteCertificateFromStore
+	PFXIsPFXBlob@4=crypt32.PFXIsPFXBlob
+	PFXVerifyPassword@12=crypt32.PFXVerifyPassword
+	PFXImportCertStore@12=crypt32.PFXImportCertStore
+	CertAddSerializedElementToStore@32=crypt32.CertAddSerializedElementToStore
+	CertCreateCertificateContext@12=crypt32.CertCreateCertificateContext
+	CertComparePublicKeyInfo@12=crypt32.CertComparePublicKeyInfo
+	CertGetCertificateContextProperty@16=crypt32.CertGetCertificateContextProperty
+	CryptSignMessageWithKey@20=crypt32.CryptSignMessageWithKey
+	CryptSignMessage@28=crypt32.CryptSignMessage
+	CryptGetMessageCertificates@20=crypt32.CryptGetMessageCertificates
+	CertCreateContext@24=crypt32.CertCreateContext
+	CertVerifyTimeValidity@8=crypt32.CertVerifyTimeValidity
+	
+	

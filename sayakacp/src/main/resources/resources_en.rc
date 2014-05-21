@@ -1,0 +1,79 @@
+
+// Language definition
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+	1,			"Incorrect PIN"
+ 	2,			"Cryptographic card"
+ 	3,			"You do not have access to server. Can not login"
+ 	4,			"Cryptographic card error. Unable to sign application logon"
+ 	5,			"You do not have access to Intranet. Can not login"
+ 	6,			"The server has rejected the logon request: "
+ 	7,			"Server access error: "
+ 	8,			"The system does not have the necessary credentials. Contact the support center"
+ 	9,			"Unable to contact with servers"
+ 	10,		"Unknown card type: "
+ 	11,		"Smart card management"
+ 	12,		"Hello"
+ 	13,		"Start session"
+ 	14,		"You must change the password of Intranet"
+ 	15,		"(No will change the PIN of the card)"
+ 	16,		"The two passwords do not match"
+ 	17,		"Reading cryptographic card"
+ 	18,		"Checking validity of certificate"
+ 	19,		"Wrong password"
+ 	20,		"Account cancelled"
+ 	21,		"You need to change the password."
+	22,		"Imposible to execute"
+	23,		"Image"
+	24,		"Card"
+	25,		"PIN"
+	26,		"Certificate"
+	27,		"Start"
+	28,		"Message"
+	29,		"New password"
+	30,		"New password (repeat)"
+	31,		"Hello"
+	32,		"Intranet user authorization"
+	33,		"Start session"
+	34,		"Validating user and password"
+END
+
+IDD_ENTERPIN DIALOG DISCARDABLE  0, 0, 280, 61
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION |  
+    WS_SYSMENU
+CAPTION "Access to Intranet"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        			IDC_PIN,65,28,133,12,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON	"Accept",IDOK,223,7,50,14
+    PUSHBUTTON      	"Cancel",IDCANCEL,223,28,50,14
+    LTEXT           			"Enter the PIN for access to cryptographic card",
+                    				IDC_STATIC,65,7,156,11
+    CONTROL         		"TARJETA",IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+                    				SS_REALSIZEIMAGE,7,7,52,47
+END
+
+IDD_MESSAGE DIALOG DISCARDABLE  0, 0, 330, 98
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Access to corporate network"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL		"SOFFID_LOGO",IDC_BITMAP,"Static",SS_BITMAP | 
+                    	SS_REALSIZEIMAGE,0,0,330,50
+    LTEXT           "",IDC_MESSAGE,13,79,324,8
+END
+
+IDD_LOGOUT DIALOGEX 0, 0, 389, 273
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Access to corporate network"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         		"SOFFID_LOGO",IDC_BITMAP,"Static",SS_BITMAP | SS_CENTERIMAGE,
+                    				0,0,389,71,WS_EX_TRANSPARENT
+    EDITTEXT        			IDC_EDIT1,11,78,366,168,ES_MULTILINE | ES_READONLY | 
+                    				ES_WANTRETURN | NOT WS_BORDER | WS_VSCROLL | NOT 
+                    				WS_TABSTOP
+    DEFPUSHBUTTON	"Accept",IDOK, 327, 250,50,14
+END

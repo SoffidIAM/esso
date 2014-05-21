@@ -1,0 +1,253 @@
+/*
+ * ConfigReader.cpp
+ *
+ *  Created on: 16/02/2010
+ *      Author: u07286
+ */
+
+#include "ConfigReader.h"
+#include "MazingerInternal.h"
+#include "MazingerHook.h"
+#include "Action.h"
+#include "ComponentSpec.h"
+
+#undef PARSE_DEBUG
+#define PARSE_DEBUG  //
+
+ConfigReader::ConfigReader(unsigned char *pointer) {
+	m_pointer = pointer;
+}
+
+ConfigReader::~ConfigReader() {
+	for (int i =0 ; i < m_components.size(); i++)
+	{
+//		delete m_components[i];
+	}
+}
+
+char ConfigReader::readChar() {
+	return *m_pointer++;
+}
+
+unsigned int ConfigReader::readInteger() {
+	unsigned int dwValue = 0;
+//	MZNSendDebugMessage("Read Integer (%d)->%d", (int)m_pointer, * (int*) m_pointer);
+//	MZNSendDebugMessage("Read byte (%d)->%d", (int)m_pointer, (int) (* (char*) m_pointer));
+	dwValue = (int) *m_pointer++ << 24 ;
+//	MZNSendDebugMessage("result=", dwValue);
+//	MZNSendDebugMessage("Read byte (%d)->%d", (int)m_pointer, (int) (* (char*) m_pointer));
+	dwValue |= (int) *m_pointer++ << 1;
+//	MZNSendDebugMessage("result=", dwValue);
+//	MZNSendDebugMessage("Read byte (%d)->%d", (int)m_pointer, (int) (* (char*) m_pointer));
+	dwValue |= (int) *m_pointer++ << 8 ;
+//	MZNSendDebugMessage("result=", dwValue);
+//	MZNSendDebugMessage("Read byte (%d)->%d", (int)m_pointer, (int) (* (char*) m_pointer));
+	dwValue |= (int) *m_pointer++;
+//	MZNSendDebugMessage("result=", dwValue);
+
+	return dwValue;
+}
+
+char* ConfigReader::readString(int skipOnly) {
+	int allocated = 32;
+	int isSkipOnly = 0;
+	char *pszString = isSkipOnly ? NULL : (char*) malloc(allocated);
+	int used = 0;
+	char chTag;
+	do {
+		chTag = readChar();
+		if (!isSkipOnly) {
+
+			if (used + 2 > allocated) {
+				allocated *= 2;
+				pszString = (char*) realloc(pszString, allocated);
+			}
+			pszString[used++] = chTag;
+		}
+	} while (chTag != '\0');
+	if (!isSkipOnly)
+		pszString[used] = '\0';
+	if (skipOnly) {
+		PARSE_DEBUG("Skipped %s\n", pszString);
+		free(pszString);
+		return NULL;
+	} else {
+		PARSE_DEBUG("Got %s\n", pszString);
+		return pszString;
+	}
+}
+
+std::vector<ComponentSpec*>& ConfigReader::getComponents () {
+	return m_components;
+}
+
+regex_t* ConfigReader::compileRegExp(char *string) {
+	if (string != NULL) {
+		regex_t *re = (regex_t*) malloc(sizeof(regex_t));
+		regcomp(re, string, REG_EXTENDED | REG_NOSUB);
+		return re;
+	} else
+		return NULL;
+}
+
+Action *ConfigReader::readAction(int skipOnly) {
+	Action* pAction = NULL;
+	if (!skipOnly) {
+		pAction = new Action();
+	}
+
+	// Leer cabecera
+	readChar();
+	// Leer atributes
+	char chTag;
+	for (chTag = readChar(); chTag != L'\0'; chTag = readChar()) {
+		PARSE_DEBUG("Action tag = %c", chTag);
+		if (chTag == 'T') {
+			char *szType = readString(skipOnly);
+			if (szType != NULL)
+				pAction -> szType = szType;
+		}
+		if (chTag == 't') {
+			char *szText = readString(skipOnly);
+			if (szText != NULL)
+				pAction -> szText = szText;
+		}
+	}
+	char *szContent = readString(skipOnly);
+	PARSE_DEBUG("Action content = %s", szContent);
+	if (szContent != NULL)
+		pAction->szContent = szContent;
+	return pAction;
+}
+
+ComponentSpec *ConfigReader::readComponent(int skipOnly) {
+	ComponentSpec* pComponent = NULL;
+	if (!skipOnly) {
+		pComponent = new ComponentSpec();
+	}
+	// Leer cabecera
+	readChar();
+	// Leer el tipo de match
+	WCHAR achMatchType = readChar();
+	if (!skipOnly) {
+		if (achMatchType == 'F')
+			pComponent->fullMatch = TRUE;
+		else
+			pComponent->fullMatch = FALSE;
+	}
+
+	// Leer atributes
+	char chTag;
+	char *str;
+	for (chTag = readChar(); chTag != L'\0'; chTag = readChar()) {
+		PARSE_DEBUG("En load Component tag = %c", chTag);
+		if (chTag == 'N') {
+			str = readString(skipOnly);
+			if (str != NULL) {
+				pComponent -> szName = str;
+				pComponent -> reName = compileRegExp(str);
+			}
+		}
+		if (chTag == 'C') {
+			str = readString(skipOnly);
+			if (str != NULL) {
+				pComponent -> szClass = str;
+				pComponent -> reClass = compileRegExp(str);
+			}
+		}
+		if (chTag == 'V') {
+			str = readString(skipOnly);
+			if (str != NULL) {
+				pComponent -> szText = str;
+				pComponent -> reText = compileRegExp(str);
+			}
+		}
+		if (chTag == 'T') {
+			str = readString(skipOnly);
+			if (str != NULL) {
+				pComponent -> szTitle = str;
+				pComponent -> reTitle = compileRegExp(str);
+			}
+		}
+		if (chTag == 'I') {
+			str = readString(skipOnly);
+			if (str != NULL) {
+				pComponent -> szId = str;
+			}
+		}
+	}
+	DWORD dwActions = readInteger();
+	PARSE_DEBUG("En load Component %d actions", dwActions);
+
+	for (DWORD i = 0; i < dwActions; i++) {
+		Action *pAction = readAction(skipOnly);
+		if (pAction != NULL) {
+			pComponent->m_actions.push_back(pAction);
+			pAction->m_component = pComponent;
+		}
+	}
+	DWORD dwComponents = readInteger();
+	PARSE_DEBUG("En load Component %d components", dwComponents);
+	for (DWORD i = 0; i < dwComponents; i++) {
+		ComponentSpec* pChild = readComponent(skipOnly);
+		if (pChild != NULL) {
+			pComponent->m_children.push_back(pChild);
+			pChild->m_parent = pComponent;
+		}
+	}
+	return pComponent;
+}
+
+void ConfigReader::readApplication() {
+	// Leer cabecera
+	char achType = readChar();
+	if (achType != 'J') {
+		return;
+	}
+	// Leer atributes
+	WCHAR chTag;
+	BOOL skip = FALSE;
+	LPCSTR lpszCmdLine = GetCommandLine();
+	for (chTag = readChar(); chTag != L'\0'; chTag = readChar()) {
+		PARSE_DEBUG("tag = %c", chTag);
+		if (chTag == L'N') {
+			char *str = readString(FALSE);
+			regex_t* re = compileRegExp(str);
+			free(str);
+			if (regexec(re, lpszCmdLine, 0, NULL, 0) != 0)
+				skip = TRUE;
+			regfree(re);
+		}
+	}
+	PARSE_DEBUG("tag = %c", chTag);
+	DWORD dwComponents = readInteger();
+	PARSE_DEBUG("Components = %d", dwComponents);
+
+	for (DWORD i = 0; i < dwComponents; i++) {
+		ComponentSpec *c = readComponent(skip);
+		if (c != NULL) {
+			m_components.push_back(c);
+		}
+	}
+	PARSE_DEBUG("Parsed application");
+}
+
+void ConfigReader::parse() {
+	for (std::vector<ComponentSpec*>::iterator it = m_components.begin();
+			it != m_components.end();
+			it ++)
+	{
+		if (*it != NULL)
+		{
+//			delete *it;
+		}
+	}
+	m_components.clear();
+
+	DWORD dwApplications = readInteger();
+	PARSE_DEBUG("Parsing data %d applications", dwApplications);
+	for (DWORD i = 0; i < dwApplications; i++) {
+		readApplication();
+	}
+
+}

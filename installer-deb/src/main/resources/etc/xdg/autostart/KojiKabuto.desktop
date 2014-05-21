@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=KojiKabuto
+Comment=Manages Mazinger configuration
+Icon=/usr/share/mazinger/koji_kabuto.png
+Exec=/usr/bin/kojikabuto
+X-GNOME-Autostart-Delay=5
+X-GNOME-Autostart-Phase=Application
+X-GNOME-Autostart-Notify=true
+

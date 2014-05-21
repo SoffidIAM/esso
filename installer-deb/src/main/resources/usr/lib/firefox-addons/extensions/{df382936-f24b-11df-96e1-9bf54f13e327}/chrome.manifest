@@ -1,0 +1,13 @@
+content   MazingerExtension                 chrome/content/
+skin      MazingerExtension   classic/1.0   chrome/skin/
+locale    MazingerExtension   en-US         chrome/locale/en-US/
+
+
+overlay   chrome://browser/content/browser.xul   chrome://MazingerExtension/content/ff-overlay.xul
+
+resource  MazingerExtension				modules/ 
+
+interfaces components/afrodita-firefox.xpt
+binary-component components/libafroditaff.so
+
+
