@@ -59,6 +59,7 @@
 							<linkerProvider>generic</linkerProvider>
 							<linkerExecutable>${cpp.32w}</linkerExecutable>
 							<linkerMiddleOptions>
+								<linkerMiddleOption>-mwindows</linkerMiddleOption>
 								<linkerMiddleOption>target/objs/resources.o</linkerMiddleOption>
 								<linkerMiddleOption>-Xlinker</linkerMiddleOption>
 								<linkerMiddleOption>--strip-all</linkerMiddleOption>

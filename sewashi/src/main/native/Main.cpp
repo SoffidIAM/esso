@@ -19,7 +19,9 @@ static DWORD CALLBACK threadFunction (void * param)
 	ThreadInfo *ti = (ThreadInfo*) param;
 	HANDLE handle = NULL;
 
+#ifdef DEBUG
 	printf ("Starting thread for session %c\n", ti->session);
+#endif
 	do {
 		bool connected = false;
 		do {
@@ -29,7 +31,9 @@ static DWORD CALLBACK threadFunction (void * param)
 			else
 				Sleep(3);
 		} while (! connected );
+#ifdef DEBUG
 		printf ("Session %c Connected\n", ti->session);
+#endif
 		while (connected) {
 			DWORD dwResult = WaitForSingleObject(handle, 3000);
 			if ( dwResult == WAIT_OBJECT_0 ) {
@@ -43,7 +47,9 @@ static DWORD CALLBACK threadFunction (void * param)
 			if (result != 0)
 				connected = false;
 		}
+#ifdef DEBUG
 		printf ("Seesion %c Disconnected\n", ti->session);
+#endif
 	} while (true);
 	return 0;
 }
