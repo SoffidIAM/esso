@@ -38,6 +38,13 @@ BEGIN
 	32,		"Autorizació per a usuari d'Intranet"
 	33,		"Iniciar sesió"
 	34,		"Validant usuari i contrasenya"
+	35,		"Recuperar contrasenya"
+	36,		"Usuari"
+	37,		"Enviar"
+	38,		"Error de xarxa"
+	39,		"El sistema ha rebutjat la seva resposta"
+	40,		"Resposta"
+	
 END
 
 IDD_ENTERPIN DIALOG DISCARDABLE  0, 0, 280, 61

@@ -41,6 +41,7 @@ class LoginDialog
 		 */
 		HWND m_hWnd;
 
+
 	public:
 
 		/** @brief Default constructor
@@ -96,5 +97,7 @@ class LoginDialog
 		 *  @param param	Handler to loop dialog.
 		 */
 		static DWORD CALLBACK raiseLoop (LPVOID param);
+
+		bool hidden;
 };
 #endif /* LOGINDIALOG_H_ */

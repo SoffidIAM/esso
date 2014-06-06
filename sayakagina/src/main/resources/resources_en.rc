@@ -56,6 +56,14 @@ BEGIN
 	1005,	"Restart"
 	1006,	"Suspend"
 	1007,	"Sleep"
+
+    2003	"Please, enter a user name"
+    2004	"Password mismatch"
+    2005	"Unable to contact remote Soffid service"
+    2006	"Your answer are not correct"
+    2007	"The password has been successfully changed. Now, you can open up a new session"
+    2008	"System administrator has not enabled this feature"
+
 END
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +74,7 @@ END
 IDD_SELCERT DIALOG DISCARDABLE  0, 0, 299, 175
 STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | 
 	WS_SYSMENU
-CAPTION "Access to Intranet"
+CAPTION "Network login"
 FONT 8, "MS Sans Serif"
 BEGIN
     LISTBOX         			IDC_LIST1,7,22,230,146,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | 
@@ -79,7 +87,7 @@ END
 IDD_ENTERPIN DIALOG DISCARDABLE  0, 0, 280, 61
 STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | 
     WS_SYSMENU
-CAPTION "Access to Intranet"
+CAPTION "Network login"
 FONT 8, "MS Sans Serif"
 BEGIN
     EDITTEXT        			IDC_PIN,65,28,133,12,ES_PASSWORD | ES_AUTOHSCROLL
@@ -142,7 +150,7 @@ END
 
 IDD_LOCKED DIALOG DISCARDABLE  0, 0, 330, 108
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
-CAPTION "Access to corporate network"
+CAPTION "Network login"
 FONT 8, "MS Sans Serif"
 BEGIN
 	CONTROL		"LOCKED_EN",IDC_BITMAP,"Static",SS_BITMAP | SS_REALSIZEIMAGE,
@@ -180,7 +188,7 @@ END
 
 IDD_LOGINDIALOG DIALOGEX 0, 0, 314, 186
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Log on to Intranet"
+CAPTION "Network login"
 FONT 8, "MS Sans Serif"
 BEGIN
 	EDITTEXT        			IDC_USER,88,74,184,14,ES_AUTOHSCROLL
@@ -197,6 +205,63 @@ BEGIN
 	                				0,0,314,71,WS_EX_TRANSPARENT
 	LTEXT           			"User name :",IDC_STATIC,16,78,45,8
 	LTEXT           			"Password:",IDC_STATIC,16,96,67,10
-	CONTROL         		"CARD",IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+	CONTROL         		"TARJA",IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
 	                				SS_REALSIZEIMAGE,16,131,52,47
+    ICON            IDI_LIFERING, IDI_LIFERING, 283, 158, 21, 20, SS_ICON | SS_NOTIFY
 END
+
+
+//
+// Dialog resources
+//
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+IDD_PASSWORD DIALOG 0, 0, 322, 134
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+CAPTION "Recover password"
+FONT 8, "Ms Shell Dlg"
+{
+    EDITTEXT        IDC_USER, 92, 19, 184, 14, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "User name", IDC_STATIC, 22, 23, 35, 8, SS_LEFT
+    LTEXT           "Password:", IDC_STATIC, 21, 40, 67, 10, SS_LEFT
+    LTEXT           "Repeat Password:", IDC_STATIC, 22, 57, 59, 8, SS_LEFT
+    EDITTEXT        IDC_PASSWORD1, 92, 38, 184, 14, ES_AUTOHSCROLL | ES_PASSWORD
+    EDITTEXT        IDC_PASSWORD2, 92, 55, 184, 14, ES_AUTOHSCROLL | ES_PASSWORD
+    LTEXT           "Please, set a new password", IDC_STATIC, 105, 9, 90, 8, SS_LEFT
+    DEFPUSHBUTTON   "Accept", IDOK, 93, 92, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 160, 92, 50, 14
+}
+
+
+
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+IDD_QUESTION DIALOG 0, 0, 316, 121
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+CAPTION "Recover password"
+FONT 8, "Ms Shell Dlg"
+{
+    EDITTEXT        IDC_USER, 93, 33, 184, 14, ES_AUTOHSCROLL | ES_READONLY
+    DEFPUSHBUTTON   "Accept", IDOK, 92, 98, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 159, 98, 50, 14
+    LTEXT           "User name", IDC_STATIC, 22, 35, 35, 8, SS_LEFT
+    LTEXT           "Question", IDC_QUESTION, 22, 52, 252, 8, SS_LEFT
+    EDITTEXT        IDC_ANSWER, 22, 68, 252, 13, ES_AUTOHSCROLL
+    LTEXT           "Please, answer this question", IDC_STATIC, 111, 16, 92, 8, SS_LEFT
+}
+
+
+
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+IDD_NOSSORIDIALOG DIALOGEX 0, 0, 314, 111
+STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+CAPTION "Recover password"
+FONT 8, "MS Sans Serif", 0, 0, 1
+{
+    EDITTEXT        IDC_USER, 88, 42, 184, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Accept", IDOK, 87, 71, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 154, 71, 50, 14
+    LTEXT           "User name", IDC_STATIC, 17, 46, 35, 8, SS_LEFT
+    LTEXT           "Please, enter you user name", IDC_STATIC, 115, 19, 90, 8, SS_LEFT
+}
+
+
+

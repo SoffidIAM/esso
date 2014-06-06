@@ -175,7 +175,7 @@ BEGIN
         MENUITEM 	"Actualizar",			IDM_UPDATE
         MENUITEM	"Acceso usuario",	IDM_LOGIN
         MENUITEM	"Cerrar sesión",		IDM_LOGOFF
-//        MENUITEM 	SEPARATOR
-//        MENUITEM 	"Créditos",        		IDM_CREDITS
+        MENUITEM "Iniciar sesión", IDM_LOGIN
+        MENUITEM "Cerrar sesión", IDM_LOGOFF
     END
 END

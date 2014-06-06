@@ -28,10 +28,10 @@
 
 SOFFID_LOGO	BITMAP	DISCARDABLE	"Logo_Soffid.bmp"
 
-TARJA			BITMAP  DISCARDABLE	"tarja.bmp"
-LOGO			BITMAP  DISCARDABLE     "logotipo_Soffid.bmp"
-
-DNIE   		BITMAP  DISCARDABLE     "dnie.bmp"
+TARJA    BITMAP  DISCARDABLE	"tarja.bmp"
+LOGO     BITMAP  DISCARDABLE    "logotipo_Soffid.bmp"
+LIFERING BITMAP  DISCARDABLE    "lifering.bmp"
+DNIE     BITMAP  DISCARDABLE    "dnie.bmp"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //

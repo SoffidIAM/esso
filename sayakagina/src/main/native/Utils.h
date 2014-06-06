@@ -38,6 +38,7 @@ public:
 	 * @return Message loaded from DLL.
 	 */
 	static  std::string LoadResourcesString (int id);
+	static  std::wstring LoadResourcesWString (int id);
 };
 
 #endif /* UTILS_H_ */

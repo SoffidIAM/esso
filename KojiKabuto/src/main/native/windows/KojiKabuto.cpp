@@ -42,9 +42,15 @@ int KojiKabuto::runProgram (char *achString, char *achDir, int bWait)
 	{
 		if (bWait)
 		{
+			MSG msg;
 			do
 			{
 				Sleep(1000);
+				while (PeekMessage (&msg, NULL, 0, 0, PM_REMOVE) > 0) //Or use an if statement
+				{
+				          TranslateMessage (&msg);
+				          DispatchMessage (&msg);
+				}
 				GetExitCodeProcess(p.hProcess, &dwExitStatus);
 			} while (dwExitStatus == STILL_ACTIVE );
 

@@ -38,6 +38,12 @@ BEGIN
 	32,		"Intranet user authorization"
 	33,		"Start session"
 	34,		"Validating user and password"
+	35,		"Recover Password"
+	36,		"User"
+	37,		"Submit"
+	38,		"Network error"
+	39,		"The system has refused your answer"
+	40,		"Answer"
 END
 
 IDD_ENTERPIN DIALOG DISCARDABLE  0, 0, 280, 61

@@ -1,9 +1,30 @@
-
+#include "KojiKabuto.h"
 # include "loginDialog.h"
+#include <string.h>
 
 extern HINSTANCE hKojiInstance;
 
 static LoginDialog *loginDialog = NULL;
+
+static char* getNossoriFile() {
+	HKEY hKey;
+	static char achPath[MAX_ZONE_PATH];
+
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+			"SOFTWARE\\Microsoft\\Windows\\CurrentVersion", 0, KEY_READ, &hKey)
+			== ERROR_SUCCESS) {
+		DWORD dwType;
+		DWORD size = -150 + sizeof achPath;
+		RegQueryValueEx(hKey, "ProgramFilesDir", NULL, &dwType,
+				(LPBYTE) achPath, &size);
+		RegCloseKey(hKey);
+		strcat(achPath, "\\SoffidESSO\\Nossori.exe");
+		return achPath;
+	} else {
+		return FALSE;
+	}
+}
+
 
 // Login dialog process
 INT_PTR CALLBACK LoginDialog::loginDialogProc(HWND hwndDlg, UINT uMsg,
@@ -32,6 +53,13 @@ INT_PTR CALLBACK LoginDialog::loginDialogProc(HWND hwndDlg, UINT uMsg,
 				SetFocus (GetDlgItem(hwndDlg, IDC_PASSWORD));
 			}
 
+		    SeyconCommon::updateConfig("addon.retrieve-password.right_number");
+		    std::string v;
+		    if (!SeyconCommon::readProperty("addon.retrieve-password.right_number", v) ||
+		    		v.empty())
+		    {
+		    	ShowWindow (GetDlgItem(hwndDlg, IDI_LIFERING), SW_HIDE);
+		    }
 			return false;
 		}
 
@@ -52,6 +80,15 @@ INT_PTR CALLBACK LoginDialog::loginDialogProc(HWND hwndDlg, UINT uMsg,
 			{
 				loginDialog == NULL;
 				EndDialog (hwndDlg, -1);
+			}
+
+			if (wID == IDI_LIFERING)
+			{
+				loginDialog->hidden = true;
+				ShowWindow(hwndDlg, SW_HIDE);
+				KojiKabuto::runProgram(getNossoriFile(), ".", true);
+				loginDialog->hidden = false;
+				ShowWindow(hwndDlg, SW_SHOW);
 			}
 
 			return true;
@@ -108,9 +145,12 @@ DWORD CALLBACK LoginDialog::raiseLoop (LPVOID param)
 		Sleep (1000);
 	}
 
+	if (loginDialog != NULL) loginDialog->hidden = false;
+
 	while (loginDialog != NULL && loginDialog -> m_hWnd != NULL)
 	{
-		ShowWindow(loginDialog -> m_hWnd, SW_SHOWNORMAL);
+		if (!loginDialog->hidden)
+			ShowWindow(loginDialog -> m_hWnd, SW_SHOWNORMAL);
 
 		Sleep (1000);
 	}

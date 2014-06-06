@@ -4,11 +4,11 @@
 	<artifactId>MazingerInstaller</artifactId>
 	<packaging>${architecture.exe}</packaging>
 	<name>Instal·lador de MAZINGER</name>
-	<version>1.4.1-SNAPSHOT</version>
+	<version>1.4.2</version>
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.4.1-SNAPSHOT</version>
+		<version>1.4.2</version>
 	</parent>
 	<issueManagement>
 		<system>RTIR</system>
@@ -96,6 +96,7 @@
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.JetScrander.exe" destfile="target/resources/com.soffid.iam.esso.w32.JetScrander.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.ShiroKabuto.exe" destfile="target/resources/com.soffid.iam.esso.w32.ShiroKabuto.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.boss.exe" destfile="target/resources/com.soffid.iam.esso.w32.boss.exe.bzip" />
+								<bzip2 src="target/resources/com.soffid.iam.esso.w32.nossori.exe" destfile="target/resources/com.soffid.iam.esso.w32.nossori.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.SayakaGina.dll" destfile="target/resources/com.soffid.iam.esso.w32.SayakaGina.dll.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.sayaka-cp.dll" destfile="target/resources/com.soffid.iam.esso.w32.sayaka-cp.dll.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.SoffidConfig.exe" destfile="target/resources/com.soffid.iam.esso.w32.SoffidConfig.exe.bzip" />
@@ -330,6 +331,12 @@
 		<dependency>
 			<groupId>com.soffid.iam.esso.w32</groupId>
 			<artifactId>boss</artifactId>
+			<version>${pom.version}</version>
+			<type>${architecture.exe}</type>
+		</dependency>
+		<dependency>
+			<groupId>com.soffid.iam.esso.w32</groupId>
+			<artifactId>nossori</artifactId>
 			<version>${pom.version}</version>
 			<type>${architecture.exe}</type>
 		</dependency>

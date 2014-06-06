@@ -57,6 +57,14 @@ BEGIN
 	1005,	"Reiniciar"
 	1006,	"Suspendre"
 	1007,	"Hibernar"
+	
+	2003	"Per favor, introduïu el vostre codi d'usuari"
+    2004	"Les contrasenyes no coincideixen"
+    2005	"Imposible contactar amb el servei Soffid"
+    2006	"Les respostes no son correctes"
+    2007	"La contrasenya s'ha canviat correctament.Ja pot iniciar la sessió"
+    2008	"L'administrador no ha habilitat aquesta funcionalitat"
+	
 END
 
 ////////////////////////////////////////////////////////////////////////////
@@ -200,4 +208,58 @@ BEGIN
 	LTEXT           			"Contrasenya:",IDC_STATIC,16,96,67,10
 	CONTROL         		"TARJA",IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
 	                				SS_REALSIZEIMAGE,16,131,52,47
+    ICON            IDI_LIFERING, IDI_LIFERING, 283, 158, 21, 20, SS_ICON | SS_NOTIFY
 END
+
+//
+// Dialog resources
+//
+LANGUAGE LANG_CATALAN, SUBLANG_NEUTRAL
+IDD_PASSWORD DIALOG 0, 0, 322, 134
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+CAPTION "Recover password"
+FONT 8, "Ms Shell Dlg"
+{
+    EDITTEXT        IDC_USER, 92, 19, 184, 14, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Usuari", IDC_STATIC, 22, 23, 35, 8, SS_LEFT
+    LTEXT           "Contrasenya:", IDC_STATIC, 21, 40, 67, 10, SS_LEFT
+    LTEXT           "Repetiu contrasenya:", IDC_STATIC, 22, 57, 59, 8, SS_LEFT
+    EDITTEXT        IDC_PASSWORD1, 92, 38, 184, 14, ES_AUTOHSCROLL | ES_PASSWORD
+    EDITTEXT        IDC_PASSWORD2, 92, 55, 184, 14, ES_AUTOHSCROLL | ES_PASSWORD
+    LTEXT           "Introduïu una nova contrasenya", IDC_STATIC, 105, 9, 190, 8, SS_LEFT
+    DEFPUSHBUTTON   "Acceptar", IDOK, 93, 92, 50, 14
+    PUSHBUTTON      "Cancel·lar", IDCANCEL, 160, 92, 50, 14
+}
+
+
+
+LANGUAGE LANG_CATALAN, SUBLANG_NEUTRAL
+IDD_QUESTION DIALOG 0, 0, 316, 121
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+CAPTION "Recover password"
+FONT 8, "Ms Shell Dlg"
+{
+    EDITTEXT        IDC_USER, 93, 33, 184, 14, ES_AUTOHSCROLL | ES_READONLY
+    DEFPUSHBUTTON   "Acceptar", IDOK, 92, 98, 50, 14
+    PUSHBUTTON      "Cancel·lar", IDCANCEL, 159, 98, 50, 14
+    LTEXT           "Usuari", IDC_STATIC, 22, 35, 35, 8, SS_LEFT
+    LTEXT           "Qüestió", IDC_QUESTION, 22, 52, 252, 8, SS_LEFT
+    EDITTEXT        IDC_ANSWER, 22, 68, 252, 13, ES_AUTOHSCROLL
+    LTEXT           "Respongui aquesta qüestió", IDC_STATIC, 111, 16, 192, 8, SS_LEFT
+}
+
+
+
+LANGUAGE LANG_CATALAN, SUBLANG_DEFAULT
+IDD_NOSSORIDIALOG DIALOGEX 0, 0, 314, 111
+STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+CAPTION "Recover password"
+FONT 8, "MS Sans Serif", 0, 0, 1
+{
+    EDITTEXT        IDC_USER, 88, 42, 184, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Acceptar", IDOK, 87, 71, 50, 14
+    PUSHBUTTON      "Cancel·lar", IDCANCEL, 154, 71, 50, 14
+    LTEXT           "Usuari", IDC_STATIC, 17, 46, 35, 8, SS_LEFT
+    LTEXT           "Introduïu el vostre codi d'usuari", IDC_STATIC, 115, 19, 190, 8, SS_LEFT
+}
+

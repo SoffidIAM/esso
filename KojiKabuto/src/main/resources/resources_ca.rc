@@ -141,6 +141,7 @@ BEGIN
                     				0,0,314,71,WS_EX_TRANSPARENT
     LTEXT           			"Codi d'usuari:",IDC_STATIC,16,78,45,8
     LTEXT           			"Contrasenya:",IDC_STATIC,16,96,67,10
+    ICON            IDI_LIFERING, IDI_LIFERING, 283, 158, 21, 20, SS_ICON | SS_NOTIFY
 END
 
 IDD_NEWPASS_DIALOG DIALOGEX 0, 0, 279, 119
@@ -172,8 +173,8 @@ BEGIN
 		MENUITEM 	"Activar ESSO",		IDM_ENABLE_ESSO
 		MENUITEM 	SEPARATOR
 		MENUITEM 	"Actualitzau",			IDM_UPDATE
-		MENUITEM	"Acces usuari",		IDM_LOGIN
-		MENUITEM	"Tancau sesió",		IDM_LOGOFF
+		MENUITEM	"Obriu sessió",		IDM_LOGIN
+		MENUITEM	"Tancau sessió",		IDM_LOGOFF
 //		MENUITEM 	SEPARATOR
 //		MENUITEM 	"Crèdits",					IDM_CREDITS
 	END

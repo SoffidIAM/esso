@@ -30,6 +30,7 @@
 // remains consistent on all systems.
 IDI_ICON2			ICON	DISCARDABLE		"koji_kabuto.ico"
 IDI_ICONGRAY		ICON	DISCARDABLE		"koji_gray.ico"
+IDI_LIFERING        ICON    DISCARDABLE      "lifering.ico"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //

@@ -57,6 +57,13 @@ BEGIN
 	1005,	"Reiniciar"
 	1006,	"Suspender"
 	1007,	"Hibernar"
+
+    2003	"Por favor, introduzca su código de usuario"
+    2004	"Las contraseñas no coinciden"
+    2005	"Imposible contactar con el servicio Soffid"
+    2006	"Las respuestas no son correctas"
+    2007	"La contraseña se ha cambiado correctamente. Ya puede iniciar la sesión"
+    2008	"El administrador no ha habilitado esta funcionalidad"
 END
 
 ////////////////////////////////////////////////////////////////////////////
@@ -201,6 +208,61 @@ BEGIN
 									SS_BITMAP | SS_CENTERIMAGE, 0,0,314,71,WS_EX_TRANSPARENT
 	LTEXT						"Código de usuario:", IDC_STATIC, 16, 78, 65, 8
 	LTEXT						"Contraseña:",IDC_STATIC,16,96,67,10
-	CONTROL					"TARJETA",IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+	CONTROL					"TARJA",IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
 									SS_REALSIZEIMAGE,16,131,52,47
+    ICON            IDI_LIFERING, IDI_LIFERING, 283, 158, 21, 20, SS_ICON | SS_NOTIFY
 END
+
+//
+// Dialog resources
+//
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+IDD_PASSWORD DIALOG 0, 0, 322, 134
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+CAPTION "Recover password"
+FONT 8, "Ms Shell Dlg"
+{
+    EDITTEXT        IDC_USER, 92, 19, 184, 14, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Usuario", IDC_STATIC, 22, 23, 35, 8, SS_LEFT
+    LTEXT           "Contraseña:", IDC_STATIC, 21, 40, 67, 10, SS_LEFT
+    LTEXT           "Repita contraseña:", IDC_STATIC, 22, 57, 59, 8, SS_LEFT
+    EDITTEXT        IDC_PASSWORD1, 92, 38, 184, 14, ES_AUTOHSCROLL | ES_PASSWORD
+    EDITTEXT        IDC_PASSWORD2, 92, 55, 184, 14, ES_AUTOHSCROLL | ES_PASSWORD
+    LTEXT           "Introduzca una nueva contraseña", IDC_STATIC, 105, 9, 190, 8, SS_LEFT
+    DEFPUSHBUTTON   "Aceptar", IDOK, 93, 92, 50, 14
+    PUSHBUTTON      "Cancelar", IDCANCEL, 160, 92, 50, 14
+}
+
+
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+IDD_QUESTION DIALOG 0, 0, 316, 121
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+CAPTION "Recover password"
+FONT 8, "Ms Shell Dlg"
+{
+    EDITTEXT        IDC_USER, 93, 33, 184, 14, ES_AUTOHSCROLL | ES_READONLY
+    DEFPUSHBUTTON   "Aceptar", IDOK, 92, 98, 50, 14
+    PUSHBUTTON      "Cancelar", IDCANCEL, 159, 98, 50, 14
+    LTEXT           "Usuario", IDC_STATIC, 22, 35, 35, 8, SS_LEFT
+    LTEXT           "Pregunta", IDC_QUESTION, 22, 52, 252, 8, SS_LEFT
+    EDITTEXT        IDC_ANSWER, 22, 68, 252, 13, ES_AUTOHSCROLL
+    LTEXT           "Responda esta pregunta", IDC_STATIC, 111, 16, 192, 8, SS_LEFT
+}
+
+
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+IDD_NOSSORIDIALOG DIALOGEX 0, 0, 314, 111
+STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+CAPTION "Recover password"
+FONT 8, "MS Sans Serif", 0, 0, 1
+{
+    EDITTEXT        IDC_USER, 88, 42, 184, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Aceptar", IDOK, 87, 71, 50, 14
+    PUSHBUTTON      "Cancelar", IDCANCEL, 154, 71, 50, 14
+    LTEXT           "Usuario", IDC_STATIC, 17, 46, 35, 8, SS_LEFT
+    LTEXT           "Introduzca su código de usuario", IDC_STATIC, 115, 19, 190, 8, SS_LEFT
+}
+
+

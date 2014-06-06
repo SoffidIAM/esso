@@ -11,6 +11,7 @@
 #define IDD_LOCKED                              110
 #define IDD_LOGOUT                              111
 #define IDD_LOGINDIALOG                         112
+#define IDI_LIFERING							120
 #define IDC_LIST1                               1000
 #define IDC_EDIT1                               1001
 #define IDC_PIN                                 1001
@@ -33,3 +34,10 @@
 #define IDC_PASSWORD0                           1016
 #define IDC_COMBO1                              1017
 #define IDC_WELCOME								1018
+
+#define IDC_PASSWORD                            1019
+#define IDD_NOSSORIDIALOG                       1020
+#define IDD_QUESTION                            1021
+#define IDD_PASSWORD                            1022
+#define IDC_ANSWER                              1023
+#define IDC_QUESTION                            1024

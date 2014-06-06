@@ -5,7 +5,7 @@
   <artifactId>root</artifactId>
   <packaging>pom</packaging>
   <name>Single sign on module grandfather</name>
-  <version>1.4.1-SNAPSHOT</version>
+  <version>1.4.2</version>
   <url>http://esso.forge.dev.lab</url>
   <profiles>
     <profile>
@@ -73,6 +73,7 @@
         <module>JetScrander</module>
         <module>ShiroKabuto</module>
         <module>boss</module>
+        <module>nossori</module>
         <module>uninstaller</module>
         <module>installer</module>
         <module>installer-deb</module>
@@ -124,6 +125,8 @@
         <module>JetScrander</module>
         <module>ShiroKabuto</module>
         <module>boss</module>
+        <module>nossori</module>
+        <module>sewashi</module>
         <module>uninstaller</module>
         <module>installer</module>
         <module>installer-deb</module>

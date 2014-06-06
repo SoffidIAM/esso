@@ -142,6 +142,7 @@ BEGIN
                     				0,0,314,71,WS_EX_TRANSPARENT
     LTEXT           			"User name :",IDC_STATIC,16,78,45,8
     LTEXT           			"Password:",IDC_STATIC,16,96,67,10
+    ICON            IDI_LIFERING, IDI_LIFERING, 283, 158, 21, 20, SS_ICON | SS_NOTIFY
 END
 
 IDD_NEWPASS_DIALOG DIALOGEX 0, 0, 279, 119
@@ -173,8 +174,8 @@ BEGIN
         MENUITEM 	"Enable ESSO",	IDM_ENABLE_ESSO
         MENUITEM 	SEPARATOR
         MENUITEM 	"Update",				IDM_UPDATE
-        MENUITEM	"Login user",		IDM_LOGIN
-        MENUITEM	"Close session",	IDM_LOGOFF
+        MENUITEM	"Log in",		IDM_LOGIN
+        MENUITEM	"Log out",	IDM_LOGOFF
 //        MENUITEM 	SEPARATOR
 //        MENUITEM 	"Credits",        		IDM_CREDITS
     END
