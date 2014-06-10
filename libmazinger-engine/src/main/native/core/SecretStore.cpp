@@ -18,10 +18,19 @@
 void SecretStore::applySeed(unsigned char const *lpszSeed, int size, unsigned char* achKey, int & k)
 {
     for (int i = 0; i < size || (size == -1 && lpszSeed[i]); i++)
-	{
-		achKey[k] = achKey[k] ^ lpszSeed[i] ;
-		k = (k+1) % AESKEY_SIZE;
-	}
+    {
+        int pos  = k / 2;
+        if ( (k % 2) == 1 )
+        {
+            achKey[pos] = achKey[pos] ^ ( 15 & (lpszSeed[i] >> 4)) ;
+            k = (k+1) % (AESKEY_SIZE * 2);
+            pos = k / 2;
+            achKey[pos] = achKey[pos] ^ ( (15 & lpszSeed[i]) << 4) ;
+        } else {
+            achKey[pos] = achKey[pos] ^ lpszSeed[i] ;
+            k = (k+1) % (AESKEY_SIZE * 2);
+        }
+    }
 }
 
 #ifndef KEY_WOW64_64KEY
@@ -29,15 +38,56 @@ void SecretStore::applySeed(unsigned char const *lpszSeed, int size, unsigned ch
 #endif
 
 SecretStore::SecretStore(const char *user) {
-//	MZNSendDebugMessageA("Opening secret store %s", user);
     int k = 0;
-    unsigned char achKey [] = "TheKeyIsVeryWeak";
-    const char *szHostName = MZNC_getHostName ();
-    applySeed((unsigned char const *)szHostName, -1, achKey, k);
+    unsigned char achKey [] = "SoffidRulesWorld";
+    applySeed((unsigned char const *)__DATE__, -1, achKey, k);
+    applySeed((unsigned char const *)__FILE__, -1, achKey, k);
 
     m_pEnv = MazingerEnv::getEnv(user);
 
-	m_expkey = (unsigned char*) malloc (EXPKEY_SIZE);
+#ifdef WIN32
+    HKEY hKey;
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+			"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0,
+			KEY_READ| KEY_WOW64_64KEY, &hKey) == ERROR_SUCCESS ||
+		RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+			"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0,
+			KEY_READ, &hKey) == ERROR_SUCCESS) {
+		unsigned char achBuffer[4096] = "";
+		DWORD dwType;
+		DWORD size = sizeof achBuffer;
+		if (ERROR_SUCCESS==
+				RegQueryValueEx(hKey, "LicenseInfo", NULL, &dwType, (LPBYTE) achBuffer, &size))
+		{
+			applySeed (achBuffer, size, achKey, k);
+		}
+		size = sizeof achBuffer;
+		if (ERROR_SUCCESS==
+				RegQueryValueEx(hKey, "DigitalProductId", NULL, &dwType, (LPBYTE) achBuffer, &size))
+		{
+			applySeed (achBuffer, size, achKey, k);
+		}
+		RegCloseKey(hKey);
+	}
+#endif
+    applySeed((unsigned char const *)user, -1, achKey, k);
+
+    const char *szHostName = MZNC_getHostName ();
+#ifdef TRACE_AES
+	printf ("HOST =%s\n", szHostName);
+#endif
+    applySeed((unsigned char const *)szHostName, -1, achKey, k);
+#ifdef TRACE_AES
+    printf ("AES KEY:\n");
+	for (int j = 0; j < AESKEY_SIZE; j++)
+	{
+		printf ("%02x ", (unsigned int)achKey[j]);
+	}
+	printf("\n");
+#endif
+
+    m_expkey = (unsigned char*) malloc (EXPKEY_SIZE);
+
     AESExpandKey(achKey, m_expkey);
 }
 
