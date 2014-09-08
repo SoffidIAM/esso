@@ -165,3 +165,26 @@ std::string Utils::LoadResourcesString (int id)
 
 	return result;
 }
+
+std::wstring Utils::LoadResourcesWString (int id)
+{
+	wchar_t resource[4096];	// Resource load
+	std::wstring result;			// Message of resource (or error)
+
+	// Check the resource availability
+	if ( LoadStringW ( hSayakaDll, id,  resource,
+			sizeof(resource)/sizeof(wchar_t)) > 0)
+	{
+		result = resource;
+	}
+
+	else
+	{
+		wchar_t ach [20];
+		swprintf (ach, L" %d ", id);
+		result = L"! Unknown message !";
+		result += ach;
+	}
+
+	return result;
+}

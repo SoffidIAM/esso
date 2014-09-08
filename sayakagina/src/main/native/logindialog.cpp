@@ -11,10 +11,14 @@
 #include <MZNcompat.h>
 #include <string.h>
 
+#include "nossori.h"
+#include "ssoclient.h"
+
 extern HWND hwndLogon;
 extern HINSTANCE hSayakaDll;
 
 static LoginDialog *loginDialog;
+
 
 //////////////////////////////////////////////////////////
 static BOOL CALLBACK loginDialogProc(
@@ -52,6 +56,12 @@ static BOOL CALLBACK loginDialogProc(
 				if (dw >= 0 && dw != WLX_SAS_ACTION_NONE)
 					EndDialog (hwndDlg, dw);
 			}
+			if (wID == IDI_LIFERING)
+			{
+				ShowWindow(hwndDlg, SW_HIDE);
+				NossoriHandler().perform();
+				ShowWindow(hwndDlg, SW_SHOW);
+			}
 			return true;
 		}
 		case WM_INITDIALOG:
@@ -82,6 +92,14 @@ static BOOL CALLBACK loginDialogProc(
 				SetFocus (GetDlgItem(hwndDlg, IDC_PASSWORD1));
 				ShowWindow(GetDlgItem(hwndDlg, IDC_SHUTDOWN_BUTTON), SW_HIDE);
 			}
+
+		    SeyconCommon::updateConfig("addon.retrieve-password.right_number");
+		    std::string v;
+		    if (!SeyconCommon::readProperty("addon.retrieve-password.right_number", v) ||
+		    		v.empty())
+		    {
+		    	ShowWindow (GetDlgItem(hwndDlg, IDI_LIFERING), SW_HIDE);
+		    }
 			return false;
 		}
 

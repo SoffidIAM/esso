@@ -38,6 +38,16 @@ BEGIN
 	32,		"Autorización para usuario de Intranet"
 	33,		"Iniciar sesión"
 	34,		"Validando usuario y contraseña"
+	35,		"Recuperar contraseña"
+	36,		"Usuario"
+	37,		"Enviar"
+	38,		"Error de red"
+	39,		"El sistema ha rechazado su respuesta"
+	40,		"Respuesta"
+	45,		"Iniciar como administrador"
+	46,		"Usuario"
+	47,		"Contraseña"
+	48,		"Validando credenciales....."
 END
 
 IDD_ENTERPIN DIALOG DISCARDABLE  0, 0, 280, 61

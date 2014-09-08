@@ -3,6 +3,7 @@
 
 #include "SayakaFactory.h"
 #include "ShiroFactory.h"
+#include "RecoverFactory.h"
 
 #include <SayakaGuid.h>
 
@@ -30,6 +31,14 @@ HRESULT __stdcall DllGetClassObject(const CLSID & clsid, const IID & iid,
 		}
 	} else if (clsid == CLSID_ShiroKabuto) {
 		ShiroFactory *pAddFact = new ShiroFactory;
+		if (pAddFact == NULL)
+			return E_OUTOFMEMORY;
+		else {
+			return pAddFact->QueryInterface(iid, ppv);
+		}
+
+	} else if (clsid == CLSID_Recover) {
+		RecoverFactory *pAddFact = new RecoverFactory;
 		if (pAddFact == NULL)
 			return E_OUTOFMEMORY;
 		else {
@@ -125,22 +134,17 @@ BOOL HelperWriteKey(HKEY roothk, const char *lpSubKey, LPCTSTR val_name,
 
 }
 
-void __stdcall Register() {
+static void registerClsid ( const GUID &guid, const char *description)
+{
 	char achDllPath[4096];
 	GetModuleFileName(hSayakaInstance, achDllPath, 4096);
-
-	//As per COM guidelines, every self installable COM inprocess component
-	//should export the function DllRegisterServer for printing the
-	//specified information to the registry
-	//
-	//
 
 	WCHAR *lpwszClsid;
 	char szBuff[MAX_PATH] = "";
 	char szClsid[MAX_PATH] = "", szInproc[MAX_PATH] = "";
 	char szDescriptionVal[256] = "";
 
-	StringFromCLSID(CLSID_Sayaka, &lpwszClsid);
+	StringFromCLSID(guid, (wchar_t **)&lpwszClsid);
 
 	wsprintf(szClsid, "%S", lpwszClsid);
 	wsprintf(szInproc, "%s\\%s\\%s", "clsid", szClsid, "InprocServer32");
@@ -148,13 +152,10 @@ void __stdcall Register() {
 	//
 	//write the default value
 	//
-	wsprintf(szBuff, "%s", "Sayaka Credential Provider");
+	wsprintf(szBuff, "%s", description);
 	wsprintf(szDescriptionVal, "%s\\%s", "clsid", szClsid);
 
 	HelperWriteKey(HKEY_CLASSES_ROOT, szDescriptionVal, NULL,//write to the "default" value
-			REG_SZ, (void*) szBuff, lstrlen(szBuff));
-	strcpy (szBuff, "Apartment");
-	HelperWriteKey(HKEY_CLASSES_ROOT, szDescriptionVal, "ThreadingModel",
 			REG_SZ, (void*) szBuff, lstrlen(szBuff));
 
 	//
@@ -163,6 +164,9 @@ void __stdcall Register() {
 	HelperWriteKey(HKEY_CLASSES_ROOT, szInproc, NULL,//write to the "default" value
 			REG_SZ, (void*) achDllPath, lstrlen(achDllPath));
 
+	strcpy (szBuff, "Apartment");
+	HelperWriteKey(HKEY_CLASSES_ROOT, szInproc, "ThreadingModel",
+			REG_SZ, (void*) szBuff, lstrlen(szBuff));
 
 	wsprintf(
 			szBuff,
@@ -172,6 +176,12 @@ void __stdcall Register() {
 	HelperWriteKey(HKEY_LOCAL_MACHINE, szBuff, NULL, REG_SZ,
 			(void*) szDescriptionVal, strlen(szDescriptionVal));
 
+}
+void __stdcall Register() {
+
+	registerClsid (CLSID_Sayaka, "Sayaka Credential Provider");
+	registerClsid (CLSID_ShiroKabuto, "Shiro Kabutgo Credential Provider");
+	registerClsid (CLSID_Recover, "Sayaka Recover Credential Provider");
 }
 
 }

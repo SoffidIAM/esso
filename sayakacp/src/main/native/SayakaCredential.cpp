@@ -592,7 +592,7 @@ HRESULT SayakaCredential::GenerateChangePasswordSerialization(
 	if (kcpr == NULL)
 		return E_OUTOFMEMORY;
 
-	ZeroMemory(kcpr, sizeof(kcpr));
+	ZeroMemory(kcpr, sizeof(*kcpr));
 	*pcpgsr = CPGSR_RETURN_CREDENTIAL_FINISHED;
 
 	kcpr->MessageType = KerbChangePasswordMessage;

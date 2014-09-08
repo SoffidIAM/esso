@@ -42,22 +42,37 @@ static void playSound ()
 static void ContextMenu (HWND hwnd)
 {
 	bool ok = MZNIsStarted(MZNC_getUserName());	// User authenticated status
-	std::string closeByUser;												// Enable close session by user
-	HMENU hm;																	// Menu handler
-	MENUITEMINFO mii;													// Menu item handler
-	POINT pt;																		// Cursor position
+	std::string closeByUser;							// Enable close session by user
+	HMENU hm;															// Menu handler
+	MENUITEMINFO mii;												// Menu item handler
+	POINT pt;														// Cursor position
 
 	mii.cbSize = sizeof mii;
 	mii.fMask = MIIM_STATE;
 
 	sessionStarted = sessionStarted && KojiKabuto::session->isOpen();
 
-	mii.fState = (ok || !sessionStarted) ? MFS_DISABLED : MFS_UNHILITE;
-	SetMenuItemInfo(_hMenu, IDM_ENABLE_ESSO, false, &mii);
+	// Check login information
+	if (ok && sessionStarted)
+	{
+		mii.fState = MFS_UNHILITE;
+		ModifyMenu(_hMenu, IDM_USER_ESSO, MF_BYCOMMAND, IDM_USER_ESSO,
+				KojiKabuto::session->getSoffidUser());
+	}
 
-	mii.fState = (ok && sessionStarted) ? MFS_UNHILITE : MFS_DISABLED;
+	else
+	{
+		mii.fState = MFS_DISABLED;
+		ModifyMenu(_hMenu, IDM_USER_ESSO, MF_BYCOMMAND, IDM_USER_ESSO,
+				Utils::LoadResourcesString(27).c_str());
+	}
+
+	SetMenuItemInfo(_hMenu, IDM_USER_ESSO, false, &mii);
 	SetMenuItemInfo(_hMenu, IDM_UPDATE, false, &mii);
 	SetMenuItemInfo(_hMenu, IDM_DISABLE_ESSO, false, &mii);
+
+	mii.fState = (ok || !sessionStarted) ? MFS_DISABLED : MFS_UNHILITE;
+	SetMenuItemInfo(_hMenu, IDM_ENABLE_ESSO, false, &mii);
 
 	// Enable login option
 	mii.fState = (startingSession || sessionStarted) ? MFS_DISABLED : MFS_DEFAULT;
@@ -65,7 +80,8 @@ static void ContextMenu (HWND hwnd)
 
 	// Enable logoff option
 	SeyconCommon::readProperty("EnableCloseSession", closeByUser);
-	mii.fState = (sessionStarted && (closeByUser == "true")) ? MFS_UNHILITE : MFS_DISABLED;
+	mii.fState =
+			(sessionStarted && (closeByUser == "true")) ? MFS_UNHILITE : MFS_DISABLED;
 	SetMenuItemInfo(_hMenu, IDM_LOGOFF, false, &mii);
 
 	SetForegroundWindow(_hwnd);
@@ -74,8 +90,8 @@ static void ContextMenu (HWND hwnd)
 
 	hm = GetSubMenu(_hMenu, 0);
 
-	TrackPopupMenu(hm, TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON,
-			pt.x, pt.y, 0, _hwnd, NULL);
+	TrackPopupMenu(hm, TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, 0,
+			_hwnd, NULL);
 }
 
 static LRESULT CALLBACK SystrayWndProc (HWND hwnd,        	// handle to window
@@ -83,7 +99,6 @@ static LRESULT CALLBACK SystrayWndProc (HWND hwnd,        	// handle to window
 		WPARAM wParam,	// first message parameter
 		LPARAM lParam)    	// second message parameter
 {
-	int loginResult = -1;	// Login process result
 
 	switch (uMsg)
 	{
@@ -154,7 +169,6 @@ static LRESULT CALLBACK SystrayWndProc (HWND hwnd,        	// handle to window
 
 						MessageBox(NULL, Utils::LoadResourcesString(18).c_str(),
 								Utils::LoadResourcesString(1002).c_str(), MB_OK);
-
 					}
 					break;
 				}

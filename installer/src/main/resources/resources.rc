@@ -17,6 +17,7 @@ SayakaGina.dll 		IDT_FILE "com.soffid.iam.esso.w32.SayakaGina.dll.bzip"
 SayakaCP.dll   			IDT_FILE "com.soffid.iam.esso.w32.sayaka-cp.dll.bzip"
 ShiroKabuto.exe 		IDT_FILE "com.soffid.iam.esso.w32.ShiroKabuto.exe.bzip"
 Boss.exe 					IDT_FILE "com.soffid.iam.esso.w32.boss.exe.bzip"
+Nossori.exe 					IDT_FILE "com.soffid.iam.esso.w32.nossori.exe.bzip"
 SoffidConfig.exe 		IDT_FILE "com.soffid.iam.esso.w32.SoffidConfig.exe.bzip"
 sewashi.exe 		IDT_FILE "com.soffid.iam.esso.w32.Sewashi.exe.bzip"
 

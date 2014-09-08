@@ -13,7 +13,7 @@
 #include <shlobj.h>
 #include <shlguid.h>
 #include <dirent.h>
-
+#include <sstream>
 #else
 
 #include <pwd.h>
@@ -51,11 +51,8 @@ static const char* getMazingerDir ()
 	{
 		TCHAR szPath[MAX_PATH];
 
-		if (SUCCEEDED(SHGetFolderPath(NULL,
-						CSIDL_PROGRAM_FILES|CSIDL_FLAG_CREATE,
-						NULL,
-						0,
-						szPath)))
+		if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PROGRAM_FILES | CSIDL_FLAG_CREATE,
+						NULL, 0, szPath)))
 		{
 			strMazingerDir = szPath;
 			strMazingerDir += "\\SoffidESSO";
@@ -151,13 +148,124 @@ void RecursiveRemoveDirectory (LPCSTR achName)
 
 #endif
 
+/** @brief Check existing file
+ *
+ * Method that checks if the specified file exists
+ * @param fileName Path of file to check.
+ * @return
+ * <ul>
+ * 		<li>
+ * 			@code TRUE @endcode
+ * 			If the specified file exists.
+ * 		</li>
+ *
+ * 		<li>
+ * 			@code FALSE @endcode
+ * 			If the specified file does not exists.
+ * 		</li>
+ * 	</ul>.
+ */
+bool FileExists (const char *fileName)
+{
+	if ((0xFFFFFFFF == GetFileAttributes(fileName))
+			&& (GetLastError() == ERROR_FILE_NOT_FOUND))
+		return false;
+
+	return true;
+}
+
+/** @brief Checks if creation date is greater than the specified days.
+ *
+ * Method that checks if the creation date is greater than the specified days.
+ * @param fileName Path of file to obtain the days.
+ * @param days Number of days to check the creation date.
+ * @return Number of days of file creation.
+ */
+bool CheckDaysFileCreation (const char *fileName, int days)
+{
+	bool daysOK = false;
+	WIN32_FIND_DATA limit;										// Finder data handler
+	SYSTEMTIME current;												// System current date
+	FILETIME currentFileTime;										// Current file time
+	HANDLE hFind = FindFirstFile(fileName, &limit);	// File handler
+
+	if (hFind != INVALID_HANDLE_VALUE )
+	{
+		ULONGLONG qwResult = (((ULONGLONG) limit.ftCreationTime.dwHighDateTime) << 32)
+				+ limit.ftCreationTime.dwLowDateTime;
+		qwResult += days * (24 * 60 * 60 * ((__int64) 10000000));
+
+		limit.ftCreationTime.dwLowDateTime = (DWORD) (qwResult & 0xFFFFFFFF);
+		limit.ftCreationTime.dwHighDateTime = (DWORD) (qwResult >> 32);
+
+		GetSystemTime(&current);
+		SystemTimeToFileTime(&current, &currentFileTime);
+
+		// Check limit date
+		if (CompareFileTime(&currentFileTime, &limit.ftCreationTime) == -1)
+			daysOK = true;
+	}
+
+	FindClose(hFind);
+
+	return daysOK;
+}
+
+/** @brief Gets the application icon location
+ *
+ * Method that obtain the application icon location.
+ * @param appid Application ID.
+ * @return Application icon location.
+ */
+std::string iconLocation (std::string appid)
+{
+	std::string location;				// Icon image installation path
+	std::string iconFileName;	// Icon image name
+	TCHAR achDir[MAX_PATH];
+
+	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+					NULL, 0, achDir)))
+	{
+		location.assign(achDir);
+		location.append("\\SoffidESSO\\icons\\");
+
+		// Check previous existing file or period to rechecks icon file
+		if (!FileExists(iconFileName.c_str())
+				|| !CheckDaysFileCreation(iconFileName.c_str(), 15))
+		{
+			CreateDirectory(location.c_str(), NULL);
+
+			SeyconService service;
+			SeyconResponse *response = service.sendUrlMessage(
+					L"/getapplicationicon?appID=%hs", appid.c_str());
+
+			if (response != NULL)
+			{
+				std::string status = response->getToken(0);
+				std::string image = response->getToken(1);
+				if ((status == "OK") && (image != ""))
+				{
+					std::string binary = SeyconCommon::fromBase64(image.c_str());
+
+					iconFileName = location + appid + ".ico";
+					FILE *f = fopen(iconFileName.c_str(), "wb+");
+					fwrite(binary.c_str(), binary.length(), 1, f);
+					fclose(f);
+				}
+			}
+		}
+	}
+
+	return iconFileName;
+}
+
 static
 int parseAndStoreApp (SeyconResponse *response, int &pos, const char* dir)
 {
 	std::string id = response->getToken(pos);
 	std::string name = response->getToken(pos + 1);
-
 	std::string fileName;
+
 	fileName.assign(dir);
 	fileName.append("\\");
 	fileName.append(name.c_str());
@@ -200,10 +308,17 @@ int parseAndStoreApp (SeyconResponse *response, int &pos, const char* dir)
 			return 0;
 		}
 
-		pShellLink->SetPath(getLauncherFile()); // Path to the object we are referring to
-		pShellLink->SetArguments(cmdLine.c_str()); // Path to the object we are referring to
+		pShellLink->SetPath(getLauncherFile());				// Path to the object we are referring to
+		pShellLink->SetArguments(cmdLine.c_str());	// Path to the object we are referring to
 		pShellLink->SetDescription(name.c_str());
-		pShellLink->SetIconLocation(getLauncherFile(), 1);
+
+		std::string location = iconLocation(id);
+
+		if (location != "")
+			pShellLink->SetIconLocation(location.c_str(), 0);
+
+		else
+			pShellLink->SetIconLocation(getLauncherFile(), 1);
 
 		IPersistFile *pPersistFile;
 
@@ -237,8 +352,7 @@ static HANDLE createMailSlot ()
 	return hCurrentMailSlot;
 }
 
-static
-void doLaunch (const char *lpszId, SeyconSession *session)
+static void doLaunch (const char *lpszId, SeyconSession *session)
 {
 
 	SeyconService service;
@@ -297,8 +411,7 @@ void doLaunch (const char *lpszId, SeyconSession *session)
 	}
 }
 
-static
-void LeerMailSlot (SeyconSession *session)
+static void LeerMailSlot (SeyconSession *session)
 {
 	DWORD cbRead;
 	CHAR achMessage[10024];
@@ -331,17 +444,15 @@ static DWORD WINAPI doGenerateMenus (LPVOID lpv)
 
 	TCHAR achDir[MAX_PATH];
 
-	if (SUCCEEDED(SHGetFolderPath(NULL,
-					CSIDL_PROGRAMS|CSIDL_FLAG_CREATE,
-					NULL,
-					0,
-					achDir)))
+	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PROGRAMS | CSIDL_FLAG_CREATE,
+					NULL, 0, achDir)))
 	{
 		DEBUG
 		SeyconService service;
 		DEBUG
 		SeyconResponse *response = service.sendUrlMessage(
-				L"/getapplications?user=%hs&key=%hs", session->getSoffidUser(), szSessionId);
+				L"/getapplications?user=%hs&key=%hs", session->getSoffidUser(),
+				szSessionId);
 		if (response != NULL)
 		{
 			DEBUG
@@ -355,7 +466,6 @@ static DWORD WINAPI doGenerateMenus (LPVOID lpv)
 		}
 		delete response;
 	}
-
 }
 
 DEBUG
@@ -397,7 +507,7 @@ if (id == "MENU")
 	chown (fileName.c_str(), pwd->pw_uid, pwd->pw_gid);
 
 	SeyconCommon::debug("Creating dir %s", name.c_str());
-	// Crear archivo .menu
+// Crear archivo .menu
 	std::string shortName = "mazinger-";
 	shortName.append (achPos);
 	shortName.append (".menu");
@@ -417,7 +527,7 @@ if (id == "MENU")
 		fclose (f);
 		chmod(fileName.c_str(), 0755);
 	}
-	// Anotar menu en el merge
+// Anotar menu en el merge
 	fprintf (fMerge, "%s<Menu>\n"
 			"%s<Name>%s</Name>\n"
 			"%s<Directory>%s</Directory>\n"
@@ -447,7 +557,7 @@ else
 	mkdir (fileName.c_str(), 0755);
 	chown (fileName.c_str(), pwd->pw_uid, pwd->pw_gid);
 
-	// Crear archivo .menu
+// Crear archivo .menu
 	std::string shortName ="mazinger-";
 	shortName += id;
 	shortName += ".desktop";
@@ -468,7 +578,7 @@ else
 		fclose (f);
 		chmod(fileName.c_str(), 0755);
 	}
-	// Anotar menu en el merge
+// Anotar menu en el merge
 	fprintf (fMerge, "%s<Include>\n"
 			"%s\t<Filename>%s</Filename>\n"
 			"%s</Include>\n",

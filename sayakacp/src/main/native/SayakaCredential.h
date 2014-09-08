@@ -125,6 +125,7 @@ private:
 	int m_iSelectedCert;
 
 	long m_nRefCount;
+
 	Log m_log;
     bool m_needsChangePassword;
     bool m_bAutoLogon;

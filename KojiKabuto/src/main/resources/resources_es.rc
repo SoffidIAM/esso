@@ -30,6 +30,7 @@ BEGIN
  	24,		"Las contraseñas no coinciden"
  	25,		"La contraseña no se ha actualizado"
  	26,		"Contraseña cambiada correctamente"
+ 	27,		"Sesión no iniciada"
  	
 	1000,	"Aviso"
 	1001,	"Soffid Enterprise Single Sign on"
@@ -166,13 +167,13 @@ IDR_POPUPMENU MENU DISCARDABLE
 BEGIN
     POPUP "eQUEMPLO"
     BEGIN
+	MENUITEM 	"Sesión no iniciada",	IDM_USER_ESSO
+	MENUITEM 	SEPARATOR
         MENUITEM	"Desactivar ESSO",	IDM_DISABLE_ESSO
         MENUITEM 	"Activar ESSO",		IDM_ENABLE_ESSO
         MENUITEM 	SEPARATOR
         MENUITEM 	"Actualizar",			IDM_UPDATE
-        MENUITEM	"Acceso usuario",	IDM_LOGIN
-        MENUITEM	"Cerrar sesión",		IDM_LOGOFF
-//        MENUITEM 	SEPARATOR
-//        MENUITEM 	"Créditos",        		IDM_CREDITS
+        MENUITEM "Iniciar sesión", IDM_LOGIN
+        MENUITEM "Cerrar sesión", IDM_LOGOFF
     END
 END

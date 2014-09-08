@@ -30,6 +30,7 @@ BEGIN
  	24,		"Les contrasenyes no coincideixen"
  	25,		"La contrasenya no s'ha actualitzat"
  	26,		"Contrasenya canviada correctament" 
+	27,		"Sessió no iniciada"
  	1000,	"Avís"
 	1001,	"Soffid Enterprise Single Sign on"
 	1002,	"Koji Kabuto"
@@ -140,6 +141,7 @@ BEGIN
                     				0,0,314,71,WS_EX_TRANSPARENT
     LTEXT           			"Codi d'usuari:",IDC_STATIC,16,78,45,8
     LTEXT           			"Contrasenya:",IDC_STATIC,16,96,67,10
+    ICON            IDI_LIFERING, IDI_LIFERING, 283, 158, 21, 20, SS_ICON | SS_NOTIFY
 END
 
 IDD_NEWPASS_DIALOG DIALOGEX 0, 0, 279, 119
@@ -149,8 +151,8 @@ FONT 8, "MS Sans Serif", 0, 0, 1
 BEGIN
 	EDITTEXT					IDC_PASSWORD, 115, 43, 120, 14, ES_AUTOHSCROLL | ES_PASSWORD
 	EDITTEXT					IDC_REPEATPASSWORD, 115, 62, 120, 14, ES_AUTOHSCROLL | ES_PASSWORD
-	DEFPUSHBUTTON	"Aceptar", IDOK, 88, 95, 50, 14
-	PUSHBUTTON      	"Cancelar", IDCANCEL, 155, 95, 50, 14
+	DEFPUSHBUTTON	"Acceptar", IDOK, 88, 95, 50, 14
+	PUSHBUTTON      	"Cancel.lar", IDCANCEL, 155, 95, 50, 14
 	LTEXT           			"", IDC_REASON, 10, 9, 260, 26, SS_CENTER
 	LTEXT           			"Nova contrasenya:", IDC_STATIC, 43, 47, 65, 8, SS_LEFT
 	LTEXT           			"Repeteixi contrasenya:", IDC_STATIC, 43, 65, 67, 10, SS_LEFT
@@ -165,12 +167,14 @@ IDR_POPUPMENU MENU DISCARDABLE
 BEGIN
 	POPUP "eQUEMPLO"
 	BEGIN
+		MENUITEM 	"",	IDM_USER_ESSO
+ 		MENUITEM 	SEPARATOR
 		MENUITEM	"Desactivar ESSO",	IDM_DISABLE_ESSO
 		MENUITEM 	"Activar ESSO",		IDM_ENABLE_ESSO
 		MENUITEM 	SEPARATOR
 		MENUITEM 	"Actualitzau",			IDM_UPDATE
-		MENUITEM	"Acces usuari",		IDM_LOGIN
-		MENUITEM	"Tancau sesió",		IDM_LOGOFF
+		MENUITEM	"Obriu sessió",		IDM_LOGIN
+		MENUITEM	"Tancau sessió",		IDM_LOGOFF
 //		MENUITEM 	SEPARATOR
 //		MENUITEM 	"Crèdits",					IDM_CREDITS
 	END

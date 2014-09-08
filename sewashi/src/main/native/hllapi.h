@@ -18,11 +18,11 @@
 #define HL_ST_5250PRINTER "G"
 #define HL_ST_ASCIIVT "H"
 
-typedef long (* HllApiType) (LPINT, LPSTR, LPINT, LPINT);
+typedef long __stdcall (* HllApiType) (LPINT, LPSTR, LPINT, LPINT);
 
 class HllApi {
 public:
-	HllApi (const char *dllName);
+	HllApi (const wchar_t *dllName);
 	int querySesssionStatus (const char session,
 			std::string &id, std::string& name, std::string& sessionType, int &rows, int &cols, int &codepage );
 	int getPresentationSpace (const char session,
@@ -35,6 +35,7 @@ public:
 	int setCursorLocation (const char session, int row, int column);
 
 	const char *getErrorMessage (int i);
+	bool isConnected () { return api != NULL; }
 private:
 	int doCall (int function, char*data, int &len) ;
 	int doCall (int function, char*data, int &len, int psposition) ;

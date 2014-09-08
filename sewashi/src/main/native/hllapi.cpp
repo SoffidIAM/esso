@@ -59,11 +59,11 @@ const char *hl_messages[] = {
 };
 
 
-HllApi::HllApi(const char *dllName)
+HllApi::HllApi(const wchar_t *dllName)
 {
 	api = NULL;
 
-	HINSTANCE hInstance = LoadLibrary (dllName);
+	HINSTANCE hInstance = LoadLibraryW (dllName);
 	if (hInstance != NULL)
 		api = (HllApiType) GetProcAddress (hInstance, "hllapi");
 }
@@ -173,12 +173,10 @@ int HllApi::getCursorLocation(const char session, int& row, int& column) {
 	ConnectPresentationSpaceStruct data;
 	data.request.session = session;
 	CALL (HL_ConnectPresentationSpaceFunction, data);
-	printf ("Connected to get position\n");
 
 	int result = doCall(HL_QueryCursorLocation, NULL, len) ;
 	if (result == 0)
 	{
-		printf ("Len = %d\n", len);
 		char str[8];
 		str[0]= session;
 		str[1]='P';
@@ -191,7 +189,6 @@ int HllApi::getCursorLocation(const char session, int& row, int& column) {
 	}
 	else
 	{
-		printf ("Error %d\n", result);
 		return 1;
 	}
 }
@@ -206,7 +203,6 @@ int HllApi::setCursorLocation(const char session, int row, int column) {
 	ConnectPresentationSpaceStruct data;
 	data.request.session = session;
 	CALL (HL_ConnectPresentationSpaceFunction, data);
-	printf ("Connected\n");
 
 	char str[8];
 	str[0]= session;
@@ -266,19 +262,21 @@ int HllApi::getPresentationSpace(const char session, std::string & content)
 		return result;
 
 
-	printf ("Queryied\n");
+	printf ("Querying session %c\n", session);
 	ConnectPresentationSpaceStruct data;
 	data.request.session = session;
 	CALL (HL_ConnectPresentationSpaceFunction, data);
-	printf ("Copnnected\n");
+	printf ("Connnected\n");
 
 
 	int size = rows * cols;
 	char *achBuffer = (char*) malloc(size);
 	result = doCall (HL_CopyPresentationSpaceToStringFunction, achBuffer, size, 1);
 
-	if (result != 0)
+	if (result != 0) {
+		printf ("Result  = %d\n", result);
 		return result;
+	}
 
 	printf ("Copied\n");
 	content.assign(achBuffer, size);
@@ -340,7 +338,6 @@ int HllApi::sendKeys (const char session, const char *szString) {
 	ConnectPresentationSpaceStruct data;
 	data.request.session = session;
 	CALL (HL_ConnectPresentationSpaceFunction, data);
-	printf ("Connected\n");
 
 
 	char *sz2 = strdup (szString);
@@ -353,7 +350,6 @@ int HllApi::sendKeys (const char session, const char *szString) {
 	if (result != 0)
 		return result;
 
-	printf ("Sent\n");
 
 	return 0;
 }
