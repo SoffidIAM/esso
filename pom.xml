@@ -114,10 +114,10 @@
         <module>libsee</module>
         <module>libmazinger-engine</module>
         <module>afrodita-explorer</module>
-        <module>afrodita-firefox</module>
         <module>afrodita-chrome</module>
         <module>afrodita-firefox-ctype</module>
         <module>javahook</module>
+        <module>sewashi</module>
         <module>KojiHook</module>
         <module>Mazinger</module>
         <module>MazingerHook</module>

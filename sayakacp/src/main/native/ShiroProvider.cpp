@@ -6,6 +6,8 @@
 #include "Utils.h"
 #include <ssoclient.h>
 
+#include <MZNcompat.h>
+
 ShiroProvider* ShiroProvider::s_handler;
 
 ShiroProvider::ShiroProvider (): m_log ("ShiroProvider")
