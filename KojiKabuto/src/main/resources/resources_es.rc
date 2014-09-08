@@ -173,8 +173,6 @@ BEGIN
         MENUITEM 	"Activar ESSO",		IDM_ENABLE_ESSO
         MENUITEM 	SEPARATOR
         MENUITEM 	"Actualizar",			IDM_UPDATE
-        MENUITEM	"Acceso usuario",	IDM_LOGIN
-        MENUITEM	"Cerrar sesión",		IDM_LOGOFF
         MENUITEM "Iniciar sesión", IDM_LOGIN
         MENUITEM "Cerrar sesión", IDM_LOGOFF
     END

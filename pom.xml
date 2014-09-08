@@ -10,7 +10,6 @@
         <scm>
                 <connection>scm:git:ssh://git@stash.dev.lab:7999/iam2/esso.git</connection>
                 <developerConnection>scm:git:ssh://git@stash.dev.lab:7999/iam2/esso.git</developerConnection>
-          <tag>esso-1.4.0-beta-1</tag>
         </scm>
   <profiles>
     <profile>
@@ -131,7 +130,6 @@
         <module>ShiroKabuto</module>
         <module>boss</module>
         <module>nossori</module>
-        <module>sewashi</module>
         <module>uninstaller</module>
         <module>installer</module>
         <module>installer-deb</module>

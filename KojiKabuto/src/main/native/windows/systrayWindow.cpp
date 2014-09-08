@@ -99,6 +99,7 @@ static LRESULT CALLBACK SystrayWndProc (HWND hwnd,        	// handle to window
 		WPARAM wParam,	// first message parameter
 		LPARAM lParam)    	// second message parameter
 {
+
 	switch (uMsg)
 	{
 		case WM_APP_SYSTRAY:

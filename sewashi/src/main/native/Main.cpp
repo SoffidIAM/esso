@@ -12,7 +12,7 @@ struct ThreadInfo
 	char session;
 };
 
-#define DEBUG
+// #define DEBUG
 
 static DWORD CALLBACK threadFunction (void * param)
 {
