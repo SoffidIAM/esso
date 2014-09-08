@@ -84,6 +84,10 @@ HRESULT ShiroProvider::SetUsageScenario(
         break;
 
     case CPUS_CREDUI:
+    	s_rgShiroFieldDescriptors[SHI_TITLE].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(45).c_str()).c_str() );
+    	s_rgShiroFieldDescriptors[SHI_USER].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(46).c_str()).c_str() );
+    	s_rgShiroFieldDescriptors[SHI_PASSWORD].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(47).c_str()).c_str() );
+    	s_rgShiroFieldDescriptors[SHI_MESSAGE].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(48).c_str()).c_str() );
     	hr = S_OK;
         break;
 

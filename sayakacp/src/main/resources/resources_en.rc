@@ -44,6 +44,10 @@ BEGIN
 	38,		"Network error"
 	39,		"The system has refused your answer"
 	40,		"Answer"
+	45,		"Start as administrator"
+	46,		"User"
+	47,		"Password"
+	48,		"Validating credentials....."
 END
 
 IDD_ENTERPIN DIALOG DISCARDABLE  0, 0, 280, 61

@@ -44,6 +44,11 @@ BEGIN
 	38,		"Error de xarxa"
 	39,		"El sistema ha rebutjat la seva resposta"
 	40,		"Resposta"
+	45,		"Iniciar com a administrador"
+	46,		"Usuari"
+	47,		"Contrasenya"
+	48,		"Validant credencials....."
+
 	
 END
 
