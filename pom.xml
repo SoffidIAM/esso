@@ -7,6 +7,11 @@
   <name>Single sign on module grandfather</name>
   <version>1.4.2</version>
   <url>http://esso.forge.dev.lab</url>
+        <scm>
+                <connection>scm:git:ssh://git@stash.dev.lab:7999/iam2/esso.git</connection>
+                <developerConnection>scm:git:ssh://git@stash.dev.lab:7999/iam2/esso.git</developerConnection>
+          <tag>esso-1.4.0-beta-1</tag>
+        </scm>
   <profiles>
     <profile>
       <id>centos</id>
