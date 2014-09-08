@@ -81,7 +81,7 @@ enum SHIRO_FIELD_ID
     SHI_NUM_FIELDS      = 6,  // Note: if new fields are added, keep NUM_FIELDS last.  This is used as a count of the number of fields
 };
 
-static const CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgShiroFieldDescriptors[] =
+static CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgShiroFieldDescriptors[] =
 {
     { SHI_IMAGE, CPFT_TILE_IMAGE, (wchar_t*) L"Image" },
     { SHI_TITLE, CPFT_LARGE_TEXT, (wchar_t*) L"Start as administrator" },
