@@ -8,8 +8,8 @@
   <version>1.5.0-enterprise-beta-1</version>
   <url>http://esso.forge.dev.lab</url>
         <scm>
-                <connection>scm:git:ssh://git@stash.dev.lab:7999/iam2/esso.git</connection>
-                <developerConnection>scm:git:ssh://git@stash.dev.lab:7999/iam2/esso.git</developerConnection>
+               <connection>scm:git:ssh://git@stash.dev.lab:7999/iam2/esso.git</connection>
+               <developerConnection>scm:git:ssh://git@stash.dev.lab:7999/iam2/esso.git</developerConnection>
         </scm>
   <profiles>
     <profile>
