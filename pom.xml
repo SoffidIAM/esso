@@ -170,7 +170,7 @@
     <site>
       <id>soffid-open</id>
       <name>Soffid Maven site repository</name>
-      <url>${soffid.deploy.site.url}</url>
+      <url>${soffid.deploy.site.url}/esso</url>
     </site>
   </distributionManagement>
 </project>
