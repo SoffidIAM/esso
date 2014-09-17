@@ -1571,7 +1571,7 @@ void installCP(const char *file)
 	HelperWriteKey(0, HKEY_LOCAL_MACHINE, szKey, szEntry, REG_DWORD,
 			(void*) &dwValue, sizeof dwValue);
 
-	// SMARTCARD PIN PROVIDER
+	// SMARTCARD PIN PROVIDER DISABLED
 	strcpy(szKey, "Software\\Microsoft\\Windows\\"
 			"CurrentVersion\\Authentication\\Credential Providers\\"
 			"{94596c7e-3744-41ce-893e-bbf09122f76a}");
@@ -1636,14 +1636,14 @@ void installCP(const char *file)
 	HelperWriteKey(0, HKEY_LOCAL_MACHINE, szKey, NULL, REG_SZ, (void*) szValue,
 			strlen(szValue));
 
-	// SHIRO CLSID
-	sprintf(szKey, "CLSID\\%s", shiroClsid);
+	// Recover CLSID
+	sprintf(szKey, "CLSID\\%s", recoverClsid);
 	strcpy(szValue, "Sayaka Recover Credential Provider");
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
 			strlen(szValue));
 
 	// SHIRO CLSID / Inprocserver32
-	sprintf(szKey, "CLSID\\%s\\InprocServer32", shiroClsid);
+	sprintf(szKey, "CLSID\\%s\\InprocServer32", recoverClsid);
 	strcpy(szValue, file);
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
 			strlen(szValue));
