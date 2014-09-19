@@ -1472,7 +1472,7 @@ void updateUserInit(const char *quitar, const char*poner)
 			for (int i = 0; token[i] != '\0'; i++)
 				token[i] = tolower(token[i]);
 
-			// Si no conté el que s'ha de llevar
+			// Si no cont\E9 el que s'ha de llevar
 			if (strstr(token, quitar) == NULL && strstr(token, poner) == NULL)
 			{
 				strcat(achNewPath, ",");
@@ -1571,7 +1571,7 @@ void installCP(const char *file)
 	HelperWriteKey(0, HKEY_LOCAL_MACHINE, szKey, szEntry, REG_DWORD,
 			(void*) &dwValue, sizeof dwValue);
 
-	// SMARTCARD PIN PROVIDER
+	// SMARTCARD PIN PROVIDER DISABLED
 	strcpy(szKey, "Software\\Microsoft\\Windows\\"
 			"CurrentVersion\\Authentication\\Credential Providers\\"
 			"{94596c7e-3744-41ce-893e-bbf09122f76a}");
@@ -1636,14 +1636,14 @@ void installCP(const char *file)
 	HelperWriteKey(0, HKEY_LOCAL_MACHINE, szKey, NULL, REG_SZ, (void*) szValue,
 			strlen(szValue));
 
-	// SHIRO CLSID
-	sprintf(szKey, "CLSID\\%s", shiroClsid);
+	// Recover CLSID
+	sprintf(szKey, "CLSID\\%s", recoverClsid);
 	strcpy(szValue, "Sayaka Recover Credential Provider");
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
 			strlen(szValue));
 
 	// SHIRO CLSID / Inprocserver32
-	sprintf(szKey, "CLSID\\%s\\InprocServer32", shiroClsid);
+	sprintf(szKey, "CLSID\\%s\\InprocServer32", recoverClsid);
 	strcpy(szValue, file);
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
 			strlen(szValue));
@@ -1890,7 +1890,7 @@ bool extractResource(LPCSTR resource, const char *lpszFileName)
 
 				case BZ_DATA_ERROR_MAGIC:
 					log(">> BZIP ERROR: Compression error");
-					printf("Error de compresión\n");
+					printf("Error de compresi\F3n\n");
 					return false;
 
 				case BZ_MEM_ERROR:
@@ -2234,11 +2234,11 @@ int install(int full)
 	std::string system = getenv("SystemRoot");
 	if (IsWow64())
 	{
-//		std::string sys1 = system + "\\System32";
-//		installResource (sys1.c_str(), "Winpthread-1-64.dll", "WINPTHREAD-1.DLL");
-//		sys1 = system + "\\SysWOW64";
-//		installResource (sys1.c_str(), "Winpthread-1-32.dll", "WINPTHREAD-1.DLL");
-		installResource (NULL, "libwinpthread-1-64.dll", "libwinpthread-1.dll");
+		std::string sys1 = system + "\\System32";
+		installResource (sys1.c_str(), "libwinpthread-1-64.dll", "libwinpthread-1.dll");
+		std::string sys2 = system + "\\SysWOW64";
+		installResource (sys2.c_str(), "libwinpthread-1-32.dll", "libwinpthread-1.dll");
+//		installResource (NULL, "libwinpthread-1-64.dll", "libwinpthread-1.dll");
 	}
 	else
 	{

@@ -59,6 +59,7 @@ bool HllPatternSpec::matches(HllApplication& app) {
 			{
 				MZNSendTraceMessageA("Row %s does not match %s",
 						row->row, row->pattern);
+				MZNSendTraceMessageA("Content = %s : ", utf8RowContent.c_str());
 				return false;
 			}
 		}
