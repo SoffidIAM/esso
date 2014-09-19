@@ -1472,7 +1472,7 @@ void updateUserInit(const char *quitar, const char*poner)
 			for (int i = 0; token[i] != '\0'; i++)
 				token[i] = tolower(token[i]);
 
-			// Si no conté el que s'ha de llevar
+			// Si no cont\E9 el que s'ha de llevar
 			if (strstr(token, quitar) == NULL && strstr(token, poner) == NULL)
 			{
 				strcat(achNewPath, ",");
@@ -1890,7 +1890,7 @@ bool extractResource(LPCSTR resource, const char *lpszFileName)
 
 				case BZ_DATA_ERROR_MAGIC:
 					log(">> BZIP ERROR: Compression error");
-					printf("Error de compresión\n");
+					printf("Error de compresi\F3n\n");
 					return false;
 
 				case BZ_MEM_ERROR:
@@ -2234,11 +2234,11 @@ int install(int full)
 	std::string system = getenv("SystemRoot");
 	if (IsWow64())
 	{
-//		std::string sys1 = system + "\\System32";
-//		installResource (sys1.c_str(), "Winpthread-1-64.dll", "WINPTHREAD-1.DLL");
-//		sys1 = system + "\\SysWOW64";
-//		installResource (sys1.c_str(), "Winpthread-1-32.dll", "WINPTHREAD-1.DLL");
-		installResource (NULL, "libwinpthread-1-64.dll", "libwinpthread-1.dll");
+		std::string sys1 = system + "\\System32";
+		installResource (sys1.c_str(), "libwinpthread-1-64.dll", "libwinpthread-1.dll");
+		std::string sys2 = system + "\\SysWOW64";
+		installResource (sys2.c_str(), "libwinpthread-1-32.dll", "libwinpthread-1.dll");
+//		installResource (NULL, "libwinpthread-1-64.dll", "libwinpthread-1.dll");
 	}
 	else
 	{
