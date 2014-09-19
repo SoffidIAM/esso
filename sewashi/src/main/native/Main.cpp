@@ -12,6 +12,9 @@ struct ThreadInfo
 	char session;
 };
 
+bool polling = false;
+int pollDelay = 3000;
+
 #define DEBUG
 
 static DWORD CALLBACK threadFunction (void * param)
@@ -37,8 +40,9 @@ static DWORD CALLBACK threadFunction (void * param)
 		bool process = true;
 
 		while (connected) {
-			if (process)
+			if (process || polling)
 			{
+				MZNSendDebugMessageA ("HLLAPI: Testing session %c\n", ti->session);
 				// Detected change
 				ActualHllApplication app (ti->api, ti->session);
 				MZNHllMatch(&app);
@@ -50,10 +54,14 @@ static DWORD CALLBACK threadFunction (void * param)
 				connected = false;
 			else
 			{
-				DWORD dwResult = WaitForSingleObject(handle, 3000);
+				DWORD dwResult = WaitForSingleObject(handle, pollDelay);
 				process = ( dwResult == WAIT_OBJECT_0 ) ;
+				MZNSendDebugMessageA ("HLLAPI: Session %c detected change %d\n", ti->session, (int) process);
 			}
 		}
+
+		int result = ti->api->stopHostNotification (ti->session);
+
 #ifdef DEBUG
 		MZNSendDebugMessageA ("Seesion %c Disconnected\n", ti->session);
 #endif
@@ -96,13 +104,24 @@ extern "C" int __stdcall WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		{
 			sessions = argv[++i];
 		}
+		else if (wcscmp (argv[i], L"--poll") == 0 )
+		{
+			int number = 3;
+			polling = true;
+			swscanf (argv[++i], L"%d", &number);
+			pollDelay = number * 1000;
+		}
 		else
 		{
-			std::wstring s = std::wstring(L"Invalid switch ")+argv[i]+L"\nSyntax:\nsewashi --dll [DLL] --sessions [SESSIONS]";
+			std::wstring s = std::wstring(L"Invalid switch ")+argv[i]+L"\nSyntax:\nsewashi --dll [DLL] --sessions [SESSIONS] --poll [seconds]";
+			MessageBoxW (NULL, s.c_str(), L"Soffid ESSO", MB_OK|MB_ICONEXCLAMATION);
+
 			return 1;
 		}
 
 	}
+
+
 
 	HllApi *api = new HllApi (dll.c_str());
 

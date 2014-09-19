@@ -139,6 +139,12 @@ struct QueryHostUpdateStruct {
 	char reserved0[3];
 };
 
+#define HL_StopHostNotificationFunction 24
+struct StopHostNotificationStruct {
+	char session;
+	char reserved0[3];
+};
+
 
 #define HL_StartCommunicationNotificationFunction 80
 struct StartCommunicationNotificationStruct {
@@ -298,6 +304,18 @@ int HllApi::startHostNotification (const char session, HANDLE &handle) {
 	CALL (HL_StartHostNotificationFunction, data);
 
 	handle = *((HANDLE*) data.dwHandle);
+	return 0;
+}
+
+int HllApi::stopHostNotification (const char session) {
+	if (api == NULL)
+		return -1;
+
+	StopHostNotificationStruct data;
+	data.session = session;
+
+	CALL (HL_StopHostNotificationFunction, data);
+
 	return 0;
 }
 
