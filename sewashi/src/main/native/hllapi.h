@@ -29,6 +29,7 @@ public:
 			std::string &content );
 
 	int startHostNotification (const char session, HANDLE &handle);
+	int stopHostNotification (const char session);
 	int startCommunicationNotification (const char session, HANDLE &handle);
 	int sendKeys (const char session, const char *szString);
 	int getCursorLocation (const char session, int &row, int &column);

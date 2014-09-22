@@ -13,6 +13,9 @@ struct ThreadInfo
 };
 
 // #define DEBUG
+bool polling = false;
+int pollDelay = 3000;
+
 
 static DWORD CALLBACK threadFunction (void * param)
 {
@@ -21,7 +24,7 @@ static DWORD CALLBACK threadFunction (void * param)
 	HANDLE handle = NULL;
 
 #ifdef DEBUG
-	printf ("Starting thread for session %c\n", ti->session);
+	MZNSendDebugMessageA ("HLLAPI: Starting thread for session %c\n", ti->session);
 #endif
 	do {
 		bool connected = false;
@@ -32,12 +35,14 @@ static DWORD CALLBACK threadFunction (void * param)
 			else
 				Sleep(3);
 		} while (! connected );
-#ifdef DEBUG
-		printf ("Session %c Connected\n", ti->session);
-#endif
+		MZNSendDebugMessageA ("HLLAPI: Session %c Connected\n", ti->session);
+
+		bool process = true;
+
 		while (connected) {
-			DWORD dwResult = WaitForSingleObject(handle, 3000);
-			if ( dwResult == WAIT_OBJECT_0 ) {
+			if (process || polling)
+			{
+				MZNSendDebugMessageA ("HLLAPI: Testing session %c\n", ti->session);
 				// Detected change
 				ActualHllApplication app (ti->api, ti->session);
 				MZNHllMatch(&app);
@@ -47,9 +52,18 @@ static DWORD CALLBACK threadFunction (void * param)
 			int result = ti->api->querySesssionStatus (ti->session, id, name, type, rows, cols, codepage);
 			if (result != 0)
 				connected = false;
+			else
+			{
+				DWORD dwResult = WaitForSingleObject(handle, pollDelay);
+				process = ( dwResult == WAIT_OBJECT_0 ) ;
+				MZNSendDebugMessageA ("HLLAPI: Session %c detected change %d\n", ti->session, (int) process);
+			}
 		}
+
+		int result = ti->api->stopHostNotification (ti->session);
+
 #ifdef DEBUG
-		printf ("Seesion %c Disconnected\n", ti->session);
+		MZNSendDebugMessageA ("Seesion %c Disconnected\n", ti->session);
 #endif
 	} while (true);
 	return 0;
@@ -75,12 +89,12 @@ extern "C" int __stdcall WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		}
 		else if (wcscmp (argv[i], L"--stop") == 0)
 		{
-			printf ("Opening handle %s\n", SIGNAL_NAME);
+			MZNSendDebugMessageA ("Opening handle %s\n", SIGNAL_NAME);
 			HANDLE ghSvcStopEvent = OpenEvent(EVENT_MODIFY_STATE,
 					FALSE, // not inherited
 					SIGNAL_NAME); // no name
 			if (ghSvcStopEvent != NULL) {
-				printf ("Sending stop event\n");
+				MZNSendDebugMessageA ("Sending stop event\n");
 				SetEvent(ghSvcStopEvent);
 				CloseHandle(ghSvcStopEvent);
 			}
@@ -90,13 +104,24 @@ extern "C" int __stdcall WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		{
 			sessions = argv[++i];
 		}
+		else if (wcscmp (argv[i], L"--poll") == 0 )
+		{
+			int number = 3;
+			polling = true;
+			swscanf (argv[++i], L"%d", &number);
+			pollDelay = number * 1000;
+		}
 		else
 		{
-			std::wstring s = std::wstring(L"Invalid switch ")+argv[i]+L"\nSyntax:\nsewashi --dll [DLL] --sessions [SESSIONS]";
+			std::wstring s = std::wstring(L"Invalid switch ")+argv[i]+L"\nSyntax:\nsewashi --dll [DLL] --sessions [SESSIONS] --poll [seconds]";
+			MessageBoxW (NULL, s.c_str(), L"Soffid ESSO", MB_OK|MB_ICONEXCLAMATION);
+
 			return 1;
 		}
 
 	}
+
+
 
 	HllApi *api = new HllApi (dll.c_str());
 
