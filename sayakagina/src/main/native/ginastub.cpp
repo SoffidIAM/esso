@@ -276,7 +276,7 @@ WlxActivateUserShell(PVOID pWlxContext, PWSTR pszDesktopName,
 	// Connectar unitat local
 	const wchar_t *wchHomeDrive = getUserEnvironmentVariable(L"HOMEDRIVE");
 	const wchar_t *wchHomeShare = getUserEnvironmentVariable(L"HOMESHARE");
-	if (wchHomeShare != NULL) {
+	if (wchHomeShare != NULL && wchHomeDrive != NULL && wchHomeDrive[0] != L'\0' && wchHomeShare[0] != L'\0') {
 		log.info(L"Connecting %s -> %s", wchHomeDrive, wchHomeShare);
 		displayMessage(GetThreadDesktop(GetCurrentThreadId()),
 				MZNC_strtowstr(Utils::LoadResourcesString(16).c_str()).c_str());
