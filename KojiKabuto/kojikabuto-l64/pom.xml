@@ -84,14 +84,19 @@
 						<linkerEndOption>-lpcreposix</linkerEndOption>
 						<linkerEndOption>-lpthread</linkerEndOption>
 						<linkerEndOption>-lsoup-2.4</linkerEndOption>
-						<linkerEndOption>-lglib-2.0</linkerEndOption>
 						<linkerEndOption>-lgtk-x11-2.0</linkerEndOption>
 						<linkerEndOption>-lgdk-x11-2.0</linkerEndOption>
+						<linkerEndOption>-lglib-2.0</linkerEndOption>
 						<linkerEndOption>-lX11</linkerEndOption>
 						<linkerEndOption>-lgio-2.0</linkerEndOption>
 						<linkerEndOption>-lgobject-2.0</linkerEndOption>
+						<linkerEndOption>-lgmodule-2.0</linkerEndOption>
 						<linkerEndOption>-ldl</linkerEndOption>
 						<linkerEndOption>-lrt</linkerEndOption>
+						<linkerEndOption>-lz</linkerEndOption>
+						<linkerEndOption>-lffi</linkerEndOption>
+						<linkerEndOption>-lselinux</linkerEndOption>
+						<linkerEndOption>-lresolv</linkerEndOption>
 					</linkerEndOptions>
 					<sources>
 						<source>

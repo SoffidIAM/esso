@@ -10,6 +10,7 @@
 #include "JsonValue.h"
 
 #include <stdio.h>
+#include <SeyconServer.h>
 
 namespace json {
 
@@ -34,6 +35,8 @@ const char* JsonMap::read(const char* str) {
 		{
 			JsonTaggedObject *tag = new JsonTaggedObject();
 			str = tag->read(str);
+
+
 			taggedObjects.push_back(tag);
 
 

@@ -7,6 +7,7 @@
 
 #include "JsonTaggedObject.h"
 #include <stdio.h>
+#include <SeyconServer.h>
 
 namespace json {
 
