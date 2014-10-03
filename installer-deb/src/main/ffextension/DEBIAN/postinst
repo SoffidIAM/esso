@@ -4,15 +4,22 @@ chmod 440 /etc/mazinger/sudoers.d/README
 /usr/sbin/pam-auth-update --package
 changes=""
 armorfile=/etc/apparmor.d/abstractions/base
-if ! fgrep -q '/var/tmp/mazinger' $armorfile 
+if [[ -d /etc/apparmor.d/local ]]
 then
-  changes=1 
-  echo '   /var/tmp/mazinger/*  r, '>>$armorfile
-fi
-if ! fgrep -q '/dev/shm/MazingerData' $armorfile 
-then
-  changes=1 
-  echo '   /dev/shm/MazingerData-*  r, '>>$armorfile
+    echo '   /var/tmp/mazinger/*  r, '>/etc/apparmor.d/local/mazinger
+    echo '   /dev/shm/MazingerData-*  r, '>>/etc/apparmor.d/local/mazinger
+    changes=1 
+else
+  if ! fgrep -q '/var/tmp/mazinger' $armorfile 
+  then
+    changes=1 
+    echo '   /var/tmp/mazinger/*  r, '>>$armorfile
+  fi
+  if ! fgrep -q '/dev/shm/MazingerData' $armorfile 
+  then
+    changes=1 
+    echo '   /dev/shm/MazingerData-*  r, '>>$armorfile
+  fi
 fi
 if [[ "$changes" ]]
 then
@@ -20,23 +27,27 @@ then
 fi
 
 # Configurar preload
-machine=$(uname -m)
-if [[ "$machine" == "x86_64" ]]
+if false
 then
-   library='/$LIB/libMazingerPreload.so'
-else
-   library='/usr/lib/libMazingerPreload.so'
+   machine=$(uname -m)
+   if [[ "$machine" == "x86_64" ]]
+   then
+      library='/$LIB/libMazingerPreload.so'
+   else
+      library='/usr/lib/libMazingerPreload.so'
+   fi
+
+   if [[ -r /etc/ld.so.preload ]]
+   then
+      if ! fgrep -q "$library" /etc/ld.so.preload 
+      then
+         printf "\n# $library\n" >>/etc/ld.so.preload
+      fi
+   else
+     printf "# $library\n" >/etc/ld.so.preload
+   fi
 fi
 
-if [[ -r /etc/ld.so.preload ]]
-then
-   if ! fgrep -q "$library" /etc/ld.so.preload 
-   then
-      printf "\n$library\n" >>/etc/ld.so.preload
-   fi
-else
-   printf "$library\n" >/etc/ld.so.preload
-fi
 
 # Configurar sudoers
 fgrep -q /etc/mazinger/sudoers.d /etc/sudoers ||

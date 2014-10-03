@@ -118,6 +118,8 @@
 									<arg value="${deb.dir}/usr/bin/mazinger" />
 									<arg value="${deb.dir}/DEBIAN/postinst" />
 									<arg value="${deb.dir}/DEBIAN/prerm" />
+									<arg value="${deb.dir}/DEBIAN/postrm" />
+									<arg value="${deb.dir}/usr/bin/configure_esso" />
 								</exec>
 								<exec executable="fakeroot">
 									<arg value="chmod" />
