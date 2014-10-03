@@ -49,10 +49,6 @@ bool RetrieveCertificate (SoffidEssoManager &manager)
 	bool retrieveOK = true;	// Retrieve certificate status
 
 	// Save URL Server
-	HINTERNET hSession = WinHttpOpen((LPCWSTR) SoffidEssoManager::DEF_CON_AGENT.c_str(),
-			WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME,
-			WINHTTP_NO_PROXY_BYPASS, 0);
-
 	std::wstring wServerUrl = MZNC_strtowstr(manager.getServerUrl().c_str());
 	size_t size;
 
