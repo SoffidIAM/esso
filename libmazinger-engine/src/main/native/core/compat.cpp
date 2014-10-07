@@ -6,6 +6,8 @@
  */
 
 #include <MazingerInternal.h>
+#include <SeyconServer.h>
+
 #ifdef WIN32
 
 HANDLE hMutex;

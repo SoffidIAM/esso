@@ -290,7 +290,7 @@ LPSTR SoffidEssoManager::readURL (HINTERNET hSession, const wchar_t* host, int p
 
 	if (debug)
 	{
-		log(L"Connecting to %s:%d...\n", host, port);
+		log("Connecting to %s:%d...\n", host, port);
 	}
 
 	hConnect = WinHttpConnect(hSession, host, port, 0);
@@ -299,7 +299,7 @@ LPSTR SoffidEssoManager::readURL (HINTERNET hSession, const wchar_t* host, int p
 	{
 		if (debug)
 		{
-			log(L"Performing request %s...\n", path);
+			log("Performing request %s...\n", path);
 		}
 
 		hRequest = WinHttpOpenRequest(hConnect, L"GET", path, NULL, WINHTTP_NO_REFERER,
@@ -310,7 +310,7 @@ LPSTR SoffidEssoManager::readURL (HINTERNET hSession, const wchar_t* host, int p
 	if (hRequest)
 	{
 		if (debug)
-			log(L"Sending request ...\n");
+			log("Sending request ...\n");
 
 		WinHttpSetOption(hRequest, WINHTTP_OPTION_CLIENT_CERT_CONTEXT, NULL, 0);
 
@@ -335,7 +335,7 @@ LPSTR SoffidEssoManager::readURL (HINTERNET hSession, const wchar_t* host, int p
 
 		if (!result)
 		{
-			log(L"Cannot get context\n");
+			log("Cannot get context\n");
 //			notifyError();
 		}
 
@@ -356,7 +356,7 @@ LPSTR SoffidEssoManager::readURL (HINTERNET hSession, const wchar_t* host, int p
 	if (bResults)
 	{
 		if (debug)
-			log(L"Waiting for response....\n");
+			log("Waiting for response....\n");
 
 		bResults = WinHttpReceiveResponse(hRequest, NULL);
 	}
@@ -390,44 +390,44 @@ LPSTR SoffidEssoManager::readURL (HINTERNET hSession, const wchar_t* host, int p
 	if (!bResults && debug)
 	{
 		if (dw == ERROR_WINHTTP_CANNOT_CONNECT)
-			log(L"Error: Cannot connect\n");
+			log("Error: Cannot connect\n");
 		else if (dw == ERROR_WINHTTP_CLIENT_AUTH_CERT_NEEDED)
-			log(L"Error: Client CERT required\n");
+			log("Error: Client CERT required\n");
 		else if (dw == ERROR_WINHTTP_CONNECTION_ERROR)
-			log(L"Error: Connection error\n");
+			log("Error: Connection error\n");
 		else if (dw == ERROR_WINHTTP_INCORRECT_HANDLE_STATE)
-			log(L"Error: ERROR_WINHTTP_INCORRECT_HANDLE_STATE\n");
+			log("Error: ERROR_WINHTTP_INCORRECT_HANDLE_STATE\n");
 		else if (dw == ERROR_WINHTTP_INCORRECT_HANDLE_TYPE)
-			log(L"Error: ERROR_WINHTTP_INCORRECT_HANDLE_TYPE\n");
+			log("Error: ERROR_WINHTTP_INCORRECT_HANDLE_TYPE\n");
 		else if (dw == ERROR_WINHTTP_INTERNAL_ERROR)
-			log(L"Error: ERROR_WINHTTP_INTERNAL_ERROR\n");
+			log("Error: ERROR_WINHTTP_INTERNAL_ERROR\n");
 		else if (dw == ERROR_WINHTTP_INVALID_URL)
-			log(L"Error: ERROR_WINHTTP_INVALID_URL\n");
+			log("Error: ERROR_WINHTTP_INVALID_URL\n");
 		else if (dw == ERROR_WINHTTP_LOGIN_FAILURE)
-			log(L"Error: ERROR_WINHTTP_LOGIN_FAILURE\n");
+			log("Error: ERROR_WINHTTP_LOGIN_FAILURE\n");
 		else if (dw == ERROR_WINHTTP_NAME_NOT_RESOLVED)
-			log(L"Error: ERROR_WINHTTP_NAME_NOT_RESOLVED\n");
+			log("Error: ERROR_WINHTTP_NAME_NOT_RESOLVED\n");
 		else if (dw == ERROR_WINHTTP_OPERATION_CANCELLED)
-			log(L"Error: ERROR_WINHTTP_OPERATION_CANCELLED\n");
+			log("Error: ERROR_WINHTTP_OPERATION_CANCELLED\n");
 		else if (dw == ERROR_WINHTTP_RESPONSE_DRAIN_OVERFLOW)
-			log(L"Error: ERROR_WINHTTP_RESPONSE_DRAIN_OVERFLOW\n");
+			log("Error: ERROR_WINHTTP_RESPONSE_DRAIN_OVERFLOW\n");
 		else if (dw == ERROR_WINHTTP_SECURE_FAILURE)
-			log(L"Error: ERROR_WINHTTP_SECURE_FAILURE\n");
+			log("Error: ERROR_WINHTTP_SECURE_FAILURE\n");
 		else if (dw == ERROR_WINHTTP_SHUTDOWN)
-			log(L"Error: ERROR_WINHTTP_SHUTDOWN\n");
+			log("Error: ERROR_WINHTTP_SHUTDOWN\n");
 		else if (dw == ERROR_WINHTTP_TIMEOUT)
-			log(L"Error: ERROR_WINHTTP_TIMEOUT\n");
+			log("Error: ERROR_WINHTTP_TIMEOUT\n");
 		else if (dw == ERROR_WINHTTP_UNRECOGNIZED_SCHEME)
-			log(L"Error: ERROR_WINHTTP_UNRECOGNIZED_SCHEME\n");
+			log("Error: ERROR_WINHTTP_UNRECOGNIZED_SCHEME\n");
 		else if (dw == ERROR_NOT_ENOUGH_MEMORY)
-			log(L"Error: ERROR_NOT_ENOUGH_MEMORY\n");
+			log("Error: ERROR_NOT_ENOUGH_MEMORY\n");
 		else if (dw == ERROR_INVALID_PARAMETER)
-			log(L"Error: ERROR_INVALID_PARAMETER\n");
+			log("Error: ERROR_INVALID_PARAMETER\n");
 		else if (dw == ERROR_WINHTTP_RESEND_REQUEST)
-			log(L"Error:  ERROR_WINHTTP_RESEND_REQUEST\n");
+			log("Error:  ERROR_WINHTTP_RESEND_REQUEST\n");
 		else if (dw != ERROR_SUCCESS)
 		{
-			log(L"Unkonwn error %d\n", dw);
+			log("Unkonwn error %d\n", dw);
 		}
 //		notifyError();
 	}
@@ -454,25 +454,25 @@ CALLBACK asyncCallback(HINTERNET hInternet, DWORD_PTR dwContext,
 		DWORD dwStatusInformationLength) {
 	if (debug) {
 		if (dwInternetStatus == WINHTTP_CALLBACK_STATUS_SECURE_FAILURE) {
-			DWORD status = (DWORD) lpvStatusInformation;
+			DWORD status = *(LPDWORD) lpvStatusInformation;
 			if (status & WINHTTP_CALLBACK_STATUS_FLAG_INVALID_CERT)
-				log(
-						L"Invalid cert WINHTTP_CALLBACK_STATUS_FLAG_INVALID_CERT\n");
+				SoffidEssoManager::log(
+						"Invalid cert WINHTTP_CALLBACK_STATUS_FLAG_INVALID_CERT\n");
 			if (status & WINHTTP_CALLBACK_STATUS_FLAG_CERT_REVOKED)
-				log(
-						L"Invalid cert WINHTTP_CALLBACK_STATUS_FLAG_CERT_REVOKED\n");
+				SoffidEssoManager::log(
+						"Invalid cert WINHTTP_CALLBACK_STATUS_FLAG_CERT_REVOKED\n");
 			if (status & WINHTTP_CALLBACK_STATUS_FLAG_INVALID_CA)
-				log(
-						L"Invalid cert WINHTTP_CALLBACK_STATUS_FLAG_INVALID_CA\n");
+				SoffidEssoManager::log(
+						"Invalid cert WINHTTP_CALLBACK_STATUS_FLAG_INVALID_CA\n");
 			if (status & WINHTTP_CALLBACK_STATUS_FLAG_CERT_CN_INVALID)
-				log(
-						L"Invalid cert WINHTTP_CALLBACK_STATUS_FLAG_CERT_CN_INVALID\n");
+				SoffidEssoManager::log(
+						"Invalid cert WINHTTP_CALLBACK_STATUS_FLAG_CERT_CN_INVALID\n");
 			if (status & WINHTTP_CALLBACK_STATUS_FLAG_CERT_DATE_INVALID)
-				log(
-						L"Invalid cert WINHTTP_CALLBACK_STATUS_FLAG_CERT_DATE_INVALID\n");
+				SoffidEssoManager::log(
+						"Invalid cert WINHTTP_CALLBACK_STATUS_FLAG_CERT_DATE_INVALID\n");
 			if (status & WINHTTP_CALLBACK_STATUS_FLAG_SECURITY_CHANNEL_ERROR)
-				log(
-						L"Invalid cert WINHTTP_CALLBACK_STATUS_FLAG_SECURITY_CHANNEL_ERROR\n");
+				SoffidEssoManager::log(
+						"Invalid cert WINHTTP_CALLBACK_STATUS_FLAG_SECURITY_CHANNEL_ERROR\n");
 		}
 	}
 }
@@ -523,7 +523,7 @@ bool SoffidEssoManager::SaveURLServer (const char* url)
 	// Obtener la lista de host
 	size_t size;
 	if (debug)
-		log(L"Connecting to https://%ls:%d/cert\n", szHostName, urlComp.nPort);
+		log("Connecting to https://%ls:%d/cert\n", szHostName, urlComp.nPort);
 
 	LPCSTR cert = readURL(hSession, szHostName, urlComp.nPort, L"/cert", true, &size);
 
