@@ -77,7 +77,7 @@ bool WebApplicationSpec::matches(AbstractWebApplication &app) {
 		elements.clear();
 		if (!ok && ! (*it) ->m_bOptional)
 		{
-			MZNSendDebugMessageA("Missing required component");
+			MZNSendDebugMessageA("Missing required component: ");
 			(*it)->dump();
 			return false;
 		}

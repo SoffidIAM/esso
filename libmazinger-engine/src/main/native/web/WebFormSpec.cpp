@@ -54,8 +54,9 @@ bool WebFormSpec::matches (AbstractWebElement *element) {
 		{
 			std::string name;
 			element->getAttribute("name", name);
-			MZNSendDebugMessageA("Form %s: missing element",
+			MZNSendDebugMessageA("Form %s: missing element: ",
 					name.c_str());
+			(*it)->dump();
 			ok = false;
 		}
 	}
@@ -91,7 +92,9 @@ void WebFormSpec::findChildren (AbstractWebElement *childElement)
 		{
 			if ( (*it) ->getMatched() == NULL ) {
 				if ( (*it) ->matches(childElement))
+				{
 					found = true;
+				}
 			}
 
 		}
