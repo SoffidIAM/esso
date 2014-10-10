@@ -73,10 +73,14 @@
 						<linkerMiddleOption>-ldl</linkerMiddleOption>
 						<linkerMiddleOption>-lpcsclite</linkerMiddleOption>
 						<linkerMiddleOption>-lssl</linkerMiddleOption>
+						<linkerMiddleOption>-lcrypto</linkerMiddleOption>
 						<linkerMiddleOption>-lsoup-2.4</linkerMiddleOption>
 						<linkerMiddleOption>-lglib-2.0</linkerMiddleOption>
 						<linkerMiddleOption>-lpam</linkerMiddleOption>
 					</linkerMiddleOptions>
+                                        <linkerEndOptions>
+                                                <linkerEndOption>-Wl,-Map=target/${pom.artifactId}-${pom.version}.mapfile.txt</linkerEndOption>
+                                        </linkerEndOptions>
 					<sources>
 						<source>
 							<!-- relative to your project directory -->

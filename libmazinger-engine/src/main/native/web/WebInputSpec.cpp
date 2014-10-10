@@ -38,7 +38,7 @@ const char* WebInputSpec::getTag() {
 }
 
 void WebInputSpec::dump() {
-	MZNSendDebugMessageA("Input name='%s' action='%s' method='%s' id='%s' ref-as='%s'",
+	MZNSendDebugMessageA("Input name='%s' type='%s' value='%s' id='%s' ref-as='%s'",
 			szName == NULL? "": szName,
 			szType == NULL? "": szType,
 			szValue == NULL? "": szValue,

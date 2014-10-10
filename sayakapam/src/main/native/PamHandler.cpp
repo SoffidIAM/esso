@@ -276,15 +276,11 @@ int PamHandler::readPassword(const char *prompt)
     	if (prompt == NULL) {
     		char *service;
     		rv = pam_get_item (m_pamh, PAM_SERVICE, (const void**) &service);
-    		if (rv == PAM_SUCCESS && service && strcmp(service,"sudo") == 0)
-    			prompt = "Password:";
-    		else
-    			prompt = "Contrasenya: ";
+   			prompt = "Password:";
     	}
     	rv = readPasswordInternal(prompt, password);
 		if ( rv == PAM_SUCCESS ) {
 			pam_set_item(m_pamh, PAM_AUTHTOK, strdup(password));
-
 		}
     }
 	return rv;
@@ -298,9 +294,9 @@ int PamHandler::readNewPassword(const char *prompt)
 		repeat = false;
 		char *newpassword1 = NULL;
 		char *newpassword2 = NULL;
-		r = readPasswordInternal(prompt == NULL? "Nova contrasenya: ": prompt, newpassword1);
+		r = readPasswordInternal(prompt == NULL? "New password: ": prompt, newpassword1);
 		if (r == PAM_SUCCESS) {
-			int r = readPasswordInternal(prompt == NULL? "Confirmi la nova contrasenya: ": prompt, newpassword2);
+			int r = readPasswordInternal(prompt == NULL? "Repeat new password: ": prompt, newpassword2);
 			if ( r == PAM_SUCCESS ) {
 				if (strcmp (newpassword1, newpassword2) == 0) {
 					newpassword = strdup (newpassword1);
@@ -308,7 +304,7 @@ int PamHandler::readNewPassword(const char *prompt)
 						pam_set_item(m_pamh, PAM_OLDAUTHTOK, strdup(password));
 					pam_set_item(m_pamh, PAM_AUTHTOK, strdup(newpassword));
 				} else {
-					notify("Les contrasenyes introduïdes no coincidèixen. Intenti-ho de vell nou");
+					notify("Password mismatch. Try again");
 					repeat = true;
 				}
 			}
@@ -327,7 +323,7 @@ int PamHandler::readNewPassword(const char *prompt)
 
 int PamHandler::readCardValue(const char *prompt)
 {
-	return readPasswordInternal(prompt == NULL? "Nova contrasenya: ": prompt, cardValue);
+	return readPasswordInternal(prompt == NULL? "New password: ": prompt, cardValue);
 }
 
 int PamHandler::createSession()
@@ -430,7 +426,7 @@ int PamHandler::readPin(TokenHandler *token)
 	struct pam_message* msg[2];
 	struct pam_response *resp;
 	char msg1[512];
-	sprintf (msg1, "Targeta %s", token->getTokenDescription());
+	sprintf (msg1, "Card %s", token->getTokenDescription());
 	rv = pam_get_item(m_pamh, PAM_CONV, (const void **)&conv);
 	if (rv != PAM_SUCCESS) {
 			return PAM_AUTHINFO_UNAVAIL;
@@ -604,7 +600,7 @@ int PamHandler::changePassword () {
 			user, service);
 
 	int r;
-	std::string msg = "Canviant contrasenya de l'usuari ";
+	std::string msg = "Changing user password ";
 	msg.append (user);
 	notify(msg.c_str());
 
@@ -679,10 +675,10 @@ std::string PamHandler::sendDialogMessage (const char *msg) {
 
 bool PamDialog::askCard (const char* targeta, const char* cella, std::wstring &result) {
 	char msg[512];
-	sprintf (msg, "Ha d'Introduir una casella de la targeta número %s",
+	sprintf (msg, "Enter value for card %s",
 			targeta);
 	handler->notify(msg);
-	sprintf (msg, "Cel·la %s: ", cella);
+	sprintf (msg, "Cell %s: ", cella);
 	int rv = handler->readCardValue(msg);
 	if (rv == PAM_SUCCESS) {
 		result = MZNC_strtowstr(handler->getCardValue());
@@ -709,16 +705,16 @@ DuplicateSessionAction PamDialog::askDuplicateSession (const char *details) {
 
 	handler->m_log.info("Avisando de sesión duplicada");
 
-	std::string msg ="Avís: Ja té una sessió oberta a una altra màquina.\n";
+	std::string msg ="Warning. You already have a opened session..\n";
 	msg += details;
-	msg += "\n[T]ancar-la [E]sperar o [C]ancel·lar\n";
+	msg += "\nC[l]ose-it [W]ait o [C]ancel\n";
 	handler->notify (msg.c_str());
 	if (handler->genericQuestion("Acció: ", result) != PAM_SUCCESS) {
 		return dsaCancel;
 	}
 	if (result.length() == 0) {
 		return dsaCancel;
-	} else if (toupper(result.at(0)) == 'T')  {
+	} else if (toupper(result.at(0)) == 'L')  {
 		return dsaCloseOther;
 	} else if (toupper(result.at(0)) == 'E') {
 		return dsaWait;

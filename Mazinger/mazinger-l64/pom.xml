@@ -75,6 +75,8 @@
 						<linkerEndOption>-lgobject-2.0</linkerEndOption>
 						<linkerEndOption>-lrt</linkerEndOption>
 						<linkerEndOption>-ldl</linkerEndOption>
+						<linkerEndOption>-lglib-2.0</linkerEndOption>
+						<linkerEndOption>-lffi</linkerEndOption>
 					</linkerEndOptions>
 					<sources>
 						<source>

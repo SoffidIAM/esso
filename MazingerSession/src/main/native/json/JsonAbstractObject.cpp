@@ -12,28 +12,26 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <MazingerInternal.h>
+#include <SeyconServer.h>
 
 namespace json {
 
 JsonAbstractObject::JsonAbstractObject() {
-	// TODO Auto-generated constructor stub
-
 }
 
 JsonAbstractObject::~JsonAbstractObject() {
-	// TODO Auto-generated destructor stub
 }
 
 const char *JsonAbstractObject::skipSpaces (const char *str)
 {
-	while (*str <= ' ')
+	while (*str && *str <= ' ')
 		str ++;
 	return str;
 }
 
 JsonAbstractObject* JsonAbstractObject::readObject(const char* &str) {
-	str = skipSpaces(str);
 	JsonAbstractObject *o;
+	str = skipSpaces(str);
 	if (*str == '[')
 	{
 		o= new JsonVector();
@@ -88,6 +86,8 @@ static const char * tags[] = {
 
 void JsonAbstractObject::ConfigureChromePreferences ()
 {
+
+
 #ifdef WIN32
 	const char *appdata = getenv ("LOCALAPPDATA");
 	if (appdata == NULL)
@@ -110,6 +110,7 @@ void JsonAbstractObject::ConfigureChromePreferences ()
 
 #endif
 
+	SeyconCommon::debug ("Reading %s", file.c_str());
 	FILE *f = fopen (file.c_str(), "r");
 	std::string s;
 
@@ -123,48 +124,67 @@ void JsonAbstractObject::ConfigureChromePreferences ()
 		}
 		fclose (f);
 
+		buffer[0] = '\0';
+		s.append (buffer, 1);
+
+
 		const char *str = s.c_str();
 
-		json::JsonAbstractObject *root =  json::JsonAbstractObject::readObject (str);
+		const char *str2 = str;
+
+		json::JsonAbstractObject *root =  json::JsonAbstractObject::readObject (str2);
+
+		if (true) return;
+
 		json::JsonMap *map =  dynamic_cast<json::JsonMap*> (root);
 
-		for (int i = 0; tags[i]; i++)
+		if (map != NULL)
 		{
-			json::JsonMap *object = dynamic_cast<json::JsonMap*>
-				(map->getObject(tags[i]));
-			if (object == NULL)
+			for (int i = 0; tags[i]; i++)
 			{
-				object = new json::JsonMap();
-				map->setObject(tags[i], object);
+				json::JsonMap *object = dynamic_cast<json::JsonMap*>
+					(map->getObject(tags[i]));
+				if (object == NULL)
+				{
+					object = new json::JsonMap();
+					map->setObject(tags[i], object);
+				}
+				map = object;
 			}
-			map = object;
-		}
 
-		s.clear ();
-		map->write (s,0);
-		bool save = false;
-		json::JsonValue *v = dynamic_cast<json::JsonValue*>(map->getObject(PLUGIN_EXTENSION));
-		if (v == NULL)
-		{
-			v = new json::JsonValue();
-			v->value = "true";
-			save = true;
-		}
-		else if ( v->value != "true" )
-		{
-			save = true;
-			v->value = "true";
-		}
-
-		if (save)
-		{
-			std::string s;
-			root->write(s, 0);
-			FILE *f = fopen ((file).c_str(), "w");
-			if ( f != NULL)
+			s.clear ();
+//			map->write (s,0);
+			bool save = false;
+			json::JsonValue *v = dynamic_cast<json::JsonValue*>(map->getObject(PLUGIN_EXTENSION));
+			if (v == NULL)
 			{
-				fwrite (s.c_str(), 1, s.length(), f);
-				fclose (f);
+				json::JsonTaggedObject *to = new json::JsonTaggedObject();
+				v = new json::JsonValue ();
+				v->value = PLUGIN_EXTENSION;
+				to->left = v;
+				v = new json::JsonValue ();
+				v->value = "true";
+				to->right = v;
+				map->taggedObjects.push_back(to);
+				save = true;
+			}
+			else if ( v->value != "true" )
+			{
+				save = true;
+				v->value = "true";
+			}
+
+			if (save)
+			{
+				SeyconCommon::debug ("Writing %s", file.c_str());
+				std::string s;
+				root->write(s, 0);
+				FILE *f = fopen ((file).c_str(), "w");
+				if ( f != NULL)
+				{
+					fwrite (s.c_str(), 1, s.length(), f);
+					fclose (f);
+				}
 			}
 		}
 	} else {

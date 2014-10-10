@@ -132,6 +132,8 @@
 									<arg value="${deb.dir}/usr/bin/jetscrander" />
 									<arg value="${deb.dir}/DEBIAN/postinst" />
 									<arg value="${deb.dir}/DEBIAN/prerm" />
+									<arg value="${deb.dir}/DEBIAN/postrm" />
+									<arg value="${deb.dir}/usr/bin/configure_esso" />
 								</exec>
 								<exec executable="fakeroot">
 									<arg value="chmod" />
@@ -166,9 +168,14 @@
                                         <maintainer>Soffid &lt;contact@soffid.com&gt;</maintainer>
                                         <section>admin</section>
                                         <priority>optional</priority>
-                                        <architecture>i386</architecture>
+                                        <architecture>amd64</architecture>
                                         <packageName>mazinger</packageName>
                                         <maintainerRevision>1</maintainerRevision>
+                                        <extraDependencies>
+                                        	<debianDependency>
+                                        		<artifactId>libsoup2.4-1</artifactId>
+                                        	</debianDependency>
+                                        </extraDependencies>
 				</configuration>
 				<executions>
 					<execution>

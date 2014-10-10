@@ -7,20 +7,19 @@
 
 #include "JsonValue.h"
 #include <stdio.h>
+#include <SeyconServer.h>
 
 namespace json {
 
 JsonValue::JsonValue() {
-	// TODO Auto-generated constructor stub
-
 }
 
 JsonValue::~JsonValue() {
-	// TODO Auto-generated destructor stub
 }
 
 const char* JsonValue::read(const char* str) {
 	value.clear();
+
 	str = skipSpaces(str);
 	if (*str == '"')
 	{
@@ -33,7 +32,7 @@ const char* JsonValue::read(const char* str) {
 			else
 				backSlash = (*str == '\\');
 			str ++;
-		} while (backSlash || *str != '"');
+		} while (*str != '\0' && (backSlash || *str != '"'));
 		if (*str)
 		{
 			value.append (str++, 1);

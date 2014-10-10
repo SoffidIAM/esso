@@ -6,6 +6,8 @@
  */
 
 #include <MazingerInternal.h>
+#include <SeyconServer.h>
+
 #ifdef WIN32
 
 HANDLE hMutex;
@@ -189,14 +191,25 @@ const char * MZNC_getUserName ( ) {
 	return achUserName;
 }
 
+
 const char *MZNC_getHostName () {
     static char achHostName[1024] = "";
-    DWORD dwSize = sizeof achHostName;
-    GetComputerNameExA(ComputerNameDnsFullyQualified, achHostName, &dwSize);
+
+    std::string s;
+
+	DWORD dwSize = sizeof achHostName;
+    if ( SeyconCommon::readProperty("soffid.hostname.format", s) && s == "short")
+    {
+		GetComputerName(achHostName, &dwSize);
+    }
+    else
+    {
+		GetComputerNameExA(ComputerNameDnsFullyQualified, achHostName, &dwSize);
+    }
 	for (int i = 0; achHostName[i]; i++)
 		achHostName[i] = tolower(achHostName[i]);
 
-    return achHostName ;
+	return achHostName ;
 }
 
 #else
