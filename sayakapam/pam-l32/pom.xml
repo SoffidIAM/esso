@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>com.soffid.iam.esso.pom</groupId>
 		<artifactId>pam_sayaka</artifactId>
-		<version>1.5.0-enterprise-beta-4</version>
+		<version>1.6.0-SNAPSHOT</version>
 	</parent>
 	<dependencies>
 		<dependency>
@@ -72,6 +72,7 @@
 						<linkerMiddleOption>-ldl</linkerMiddleOption>
 						<linkerMiddleOption>-lpcsclite</linkerMiddleOption>
 						<linkerMiddleOption>-lssl</linkerMiddleOption>
+						<linkerMiddleOption>-lcrypto</linkerMiddleOption>
 						<linkerMiddleOption>-lsoup-2.4</linkerMiddleOption>
 						<linkerMiddleOption>-lglib-2.0</linkerMiddleOption>
 						<linkerMiddleOption>-lpam</linkerMiddleOption>

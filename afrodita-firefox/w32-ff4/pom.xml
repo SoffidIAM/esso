@@ -80,6 +80,9 @@
 						<linkerMiddleOption>-lsee</linkerMiddleOption>
 						<linkerMiddleOption>-lmpr</linkerMiddleOption>
 						<linkerMiddleOption>-lgdi32</linkerMiddleOption>
+						<linkerMiddleOption>-lwinhttp</linkerMiddleOption>
+						<linkerMiddleOption>-lcrypt32</linkerMiddleOption>
+						<linkerMiddleOption>-lxpcomglue_s</linkerMiddleOption>
 					</linkerEndOptions>
 					<sources>
 						<source>

@@ -4,7 +4,7 @@
 	<artifactId>MazingerInstaller</artifactId>
 	<name>Instal·lador de MAZINGER</name>
 	<parent>
-		<version>1.5.0-enterprise-beta-4</version>
+		<version>1.6.0-SNAPSHOT</version>
 		<groupId>com.soffid.iam.esso.pom</groupId>
 		<artifactId>MazingerInstaller</artifactId>
 	</parent>
@@ -118,6 +118,8 @@
 									<arg value="${deb.dir}/usr/bin/mazinger" />
 									<arg value="${deb.dir}/DEBIAN/postinst" />
 									<arg value="${deb.dir}/DEBIAN/prerm" />
+									<arg value="${deb.dir}/DEBIAN/postrm" />
+									<arg value="${deb.dir}/usr/bin/configure_esso" />
 								</exec>
 								<exec executable="fakeroot">
 									<arg value="chmod" />

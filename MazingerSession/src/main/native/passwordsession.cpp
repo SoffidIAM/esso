@@ -387,6 +387,8 @@ int SeyconSession::passwordSessionStartup ( const char* lpszUser, const wchar_t*
 
 	SeyconCommon::updateHostAddress();
     // Actualitzar la configuraci�
+    SeyconCommon::updateConfig ( "soffid.hostname.format" );
+    SeyconCommon::updateConfig ( "soffid.esso.protocol" );
     SeyconCommon::updateConfig ( "SSOServer" );
     SeyconCommon::updateConfig ( "QueryServer" );
     SeyconCommon::updateConfig ( "PreferedServers" );

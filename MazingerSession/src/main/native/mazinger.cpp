@@ -122,8 +122,13 @@ void SeyconSession::downloadMazingerConfig (std::string &configFile)
 {
 	SeyconService service;
 
-	SeyconResponse *resp = service.sendUrlMessage(
-			L"/getmazingerconfig?user=%hs&version=3", soffidUser.c_str());
+    std::string version;
+    SeyconCommon::readProperty("soffid.hostname.format", version);
+    if (version.empty())
+    	version = "3";
+
+    SeyconResponse *resp = service.sendUrlMessage(
+			L"/getmazingerconfig?user=%hs&version=%hs", soffidUser.c_str(), version.c_str());
 
 	configFile.clear();
 	// Obtener las reglas

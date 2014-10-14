@@ -7,6 +7,7 @@
 
 #include "JsonVector.h"
 #include <stdio.h>
+#include <SeyconServer.h>
 
 namespace json {
 

@@ -121,6 +121,8 @@ void SeyconSession::weakSessionStartup (const char* lpszUser, const wchar_t* lps
 
 	if (!SeyconCommon::bNormalized())
 	{
+	    SeyconCommon::updateConfig ( "soffid.hostname.format" );
+	    SeyconCommon::updateConfig ( "soffid.esso.protocol" );
 		SeyconCommon::updateConfig("SSOServer");
 		SeyconCommon::updateConfig("QueryServer");
 		SeyconCommon::updateConfig("PreferedServers");
@@ -455,6 +457,8 @@ int SeyconSession::kerberosSessionStartup ()
 	json::JsonAbstractObject::ConfigureChromePreferences();
 
 	SeyconCommon::updateHostAddress();
+    SeyconCommon::updateConfig ( "soffid.hostname.format" );
+    SeyconCommon::updateConfig ( "soffid.esso.protocol" );
 	SeyconCommon::updateConfig("SSOServer");
 	SeyconCommon::updateConfig("QueryServer");
 	SeyconCommon::updateConfig("PreferedServers");

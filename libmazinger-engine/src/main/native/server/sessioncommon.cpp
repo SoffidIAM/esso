@@ -36,7 +36,7 @@ int SeyconCommon::seyconDebugLevel = 0;
 __attribute__((constructor))
 static void initDebugLevel () {
 	int i = SeyconCommon::readIntProperty ("debugLevel");
-	if (i < 0)
+	if (i <= 0)
 		SeyconCommon::setDebugLevel(0);
 	else
 		SeyconCommon::setDebugLevel(i);
@@ -427,6 +427,7 @@ void SeyconCommon::info (const char *szFormat, ...) {
 		va_end(v);
 		if (szFormat[strlen(szFormat)-1] != '\n')
 			printf ("\n");
+		fflush (stdout);
 	}
 }
 
@@ -453,6 +454,7 @@ void SeyconCommon::warn (const char *szFormat, ...) {
 	va_end(v);
 	if (szFormat[strlen(szFormat)-1] != '\n')
 		printf ("\n");
+	fflush (stdout);
 }
 
 void SeyconCommon::debug (const char *szFormat, ...) {
@@ -480,6 +482,7 @@ void SeyconCommon::debug (const char *szFormat, ...) {
 		va_end(v);
 		if (szFormat[strlen(szFormat)-1] != '\n')
 			printf ("\n");
+		fflush (stdout);
 	}
 
 }

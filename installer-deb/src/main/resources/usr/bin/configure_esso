@@ -1,0 +1,15 @@
+#!/bin/bash
+if [[ "$1" == "" ]]
+then
+   echo "Usage: $0 <ServerURL>"
+else
+   base=$(basename "$1")
+   wget -O - "https://$base/cert" --no-check-certificate | openssl x509 -inform der >/etc/mazinger/seycon.pem
+   SSOServer=$(wget -O - "https://$base/query/config/SSOServer?format=text/plain" --no-check-certificate | grep -o '[^|]*$')
+   port=$(wget -O - "https://$base/query/config/seycon.https.port?format=text/plain" --no-check-certificate | grep -o '[^|]*$')
+   cp /etc/mazinger/config /etc/mazinger/config.bak
+   echo "SSOServer:$SSOServer" >/etc/mazinger/config
+   echo "seycon.https.port:$port" >>/etc/mazinger/config
+   echo "CertificateFile:/etc/mazinger/seycon.pem" >>/etc/mazinger/config
+   cat /etc/mazinger/config.bak | fgrep -v SSOServer  | fgrep -v CertificateFile >> /etc/mazinger/config
+fi
