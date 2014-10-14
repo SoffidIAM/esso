@@ -4,11 +4,11 @@
 	<artifactId>MazingerInstaller</artifactId>
 	<packaging>${architecture.exe}</packaging>
 	<name>Instal·lador de MAZINGER</name>
-	<version>1.5.0</version>
+	<version>1.6.0-SNAPSHOT</version>
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.5.0</version>
+		<version>1.6.0-SNAPSHOT</version>
 	</parent>
 	<issueManagement>
 		<system>RTIR</system>
