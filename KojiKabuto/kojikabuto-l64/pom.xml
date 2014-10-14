@@ -8,7 +8,7 @@
 	<parent>
 		<artifactId>KojiKabuto</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.5.0-SNAPSHOT</version>
+		<version>1.5.0</version>
 	</parent>
 	<issueManagement>
 		<system>RTIR</system>
@@ -94,9 +94,11 @@
 						<linkerEndOption>-ldl</linkerEndOption>
 						<linkerEndOption>-lrt</linkerEndOption>
 						<linkerEndOption>-lz</linkerEndOption>
+<!--
 						<linkerEndOption>-lffi</linkerEndOption>
 						<linkerEndOption>-lselinux</linkerEndOption>
 						<linkerEndOption>-lresolv</linkerEndOption>
+-->
 					</linkerEndOptions>
 					<sources>
 						<source>
