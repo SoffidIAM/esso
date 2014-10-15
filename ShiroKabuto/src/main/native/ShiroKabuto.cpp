@@ -201,15 +201,11 @@ bool notifyNewPassword (const wchar_t* password)
 		}
 	}
 
-	wchar_t wchHostName[128];
-	DWORD dwSize = 128;
-	GetComputerNameExW(ComputerNameDnsFullyQualified, wchHostName, &dwSize);
-	for (int i = 0; wchHostName[i]; i++)
-		wchHostName[i] = towlower(wchHostName[i]);
+	std::wstring hostname = MZNC_strtowstr (MZNC_getHostName());
 
 	SeyconResponse *resp = service.sendUrlMessage(
 			L"/sethostadmin?host=%s&user=%s&pass=%s&shiroId=%s&serial=%s",
-			service.escapeString(wchHostName).c_str(), achShiroAccount,
+			service.escapeString(hostName.c_str()).c_str(), achShiroAccount,
 			service.escapeString(password).c_str(),
 			service.escapeString(shiroId.c_str()).c_str(),
 			service.escapeString(serial.c_str()).c_str());
