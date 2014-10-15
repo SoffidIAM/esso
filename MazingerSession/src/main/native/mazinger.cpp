@@ -123,7 +123,7 @@ void SeyconSession::downloadMazingerConfig (std::string &configFile)
 	SeyconService service;
 
     std::string version;
-    SeyconCommon::readProperty("soffid.hostname.format", version);
+    SeyconCommon::readProperty("soffid.mazinger.version", version);
     if (version.empty())
     	version = "3";
 
