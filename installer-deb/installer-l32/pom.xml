@@ -4,7 +4,7 @@
 	<artifactId>MazingerInstaller</artifactId>
 	<name>Instal·lador de MAZINGER</name>
 	<parent>
-		<version>1.5.0-enterprise</version>
+		<version>1.5.0-enterprise-1</version>
 		<groupId>com.soffid.iam.esso.pom</groupId>
 		<artifactId>MazingerInstaller</artifactId>
 	</parent>
