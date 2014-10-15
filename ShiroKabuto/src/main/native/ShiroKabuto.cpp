@@ -205,7 +205,7 @@ bool notifyNewPassword (const wchar_t* password)
 
 	SeyconResponse *resp = service.sendUrlMessage(
 			L"/sethostadmin?host=%s&user=%s&pass=%s&shiroId=%s&serial=%s",
-			service.escapeString(hostName.c_str()).c_str(), achShiroAccount,
+			service.escapeString(hostname.c_str()).c_str(), achShiroAccount,
 			service.escapeString(password).c_str(),
 			service.escapeString(shiroId.c_str()).c_str(),
 			service.escapeString(serial.c_str()).c_str());
