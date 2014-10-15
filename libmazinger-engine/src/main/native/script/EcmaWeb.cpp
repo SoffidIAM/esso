@@ -883,9 +883,9 @@ static void MZN_element_getAttribute (struct SEE_interpreter *interp,
 	SEE_string *s2;
 	MZN_element_object *pObj = (MZN_element_object*) thisobj;
 	SEE_SET_UNDEFINED(res);
-	if (argc == 2)
+	if (argc > 0)
 	{
-		SEE_parse_args(interp, argc, argv, "s|s", &s1, &s2);
+		SEE_parse_args(interp, argc, argv, "s", &s1, &s2);
 		std::string ach1 = SEE_StringToUTF8(interp, s1);
 		std::string v;
 		pObj->spec->getAttribute(ach1.c_str(), v);
