@@ -19,7 +19,8 @@ public:
 	virtual void alert(const char *msg);
 	virtual void progressMessage (const char *msg) ;
 	virtual void cancelProgressMessage ();
-	virtual std::wstring selectAccount(std::vector<std::wstring>accounts);
+	virtual std::wstring selectAccount(std::vector<std::wstring>accounts,
+			std::vector<std::wstring>accountDescriptions);
 };
 
 #endif /* PAMSCRIPTDIALOG_H_ */
