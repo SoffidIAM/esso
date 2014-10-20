@@ -377,7 +377,7 @@ HRESULT RecoverCredential::SetStringValue(
 }
 
 //-------------
-// The following methods are for logonUI to get the values of various UI elements and then communicate
+// The following methods are for logonUI to get the values of various UI msdn and then communicate
 // to the credential about what the user did in that field.  However, these methods are not implemented
 // because our tile doesn't contain these types of UI elements
 HRESULT RecoverCredential::GetCheckboxValue(
@@ -484,9 +484,26 @@ HRESULT RecoverCredential::GetSerialization(
 			hr = S_OK;
 			m_log.info("Passwords do not match");
 		} else {
+			m_log.info("Trying change password");
 			if (resetPassword())
 			{
-				m_log.info("Trying change password");
+				bool ok = false;
+				int tries = 0;
+				HANDLE hToken;
+				do
+				{
+					if ( LogonUserW (user.c_str(), windowsDomain.c_str(), desiredPassword1.c_str(),
+							LOGON32_LOGON_NETWORK, LOGON32_PROVIDER_DEFAULT, &hToken))
+					{
+						CloseHandle (hToken);
+						ok = true;
+					}
+					else
+					{
+						tries ++;
+						Sleep (tries * 1000);
+					}
+				} while (!ok && tries < 10);
 				hr = GenerateLoginSerialization(pcpgsr, pcpcs, ppwzOptionalStatusText, pcpsiOptionalStatusIcon);
 			}
 		}
