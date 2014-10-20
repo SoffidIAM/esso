@@ -213,7 +213,7 @@ static struct SEE_objectclass element_inst_class = {
 
 struct MZN_collection_object {
 	struct SEE_native native;
-	std::vector <AbstractWebElement*> elements;
+	std::vector <AbstractWebElement*> *elements;
 };
 
 static struct SEE_objectclass collection_inst_class = {
@@ -419,14 +419,15 @@ void finalizeCollectionObject (struct SEE_interpreter *i, void *object,
 			void *closure)
 {
 	struct MZN_collection_object * seeCollection = (struct MZN_collection_object*) object;
-	for (std::vector<AbstractWebElement*>::iterator it = seeCollection->elements.begin();
-			it != seeCollection->elements.end();
+	for (std::vector<AbstractWebElement*>::iterator it = seeCollection->elements->begin();
+			it != seeCollection->elements->end();
 			it ++)
 	{
 		AbstractWebElement *pElement = *it;
 		delete pElement;
 	}
-	seeCollection->elements.clear();
+	seeCollection->elements->clear();
+	delete seeCollection->elements;
 }
 
 MZN_collection_object *createCollectionObject (std::vector<AbstractWebElement*> &v, SEE_interpreter *interp)
@@ -439,15 +440,16 @@ MZN_collection_object *createCollectionObject (std::vector<AbstractWebElement*> 
 	SEE_native_init(&seeCollection->native, interp,
 			&collection_inst_class, PRIVATE(interp)->collectionPrototype);
 
+	seeCollection -> elements = new std::vector<AbstractWebElement*>();
 	for (std::vector<AbstractWebElement*>::iterator it = v.begin();
 			it != v.end();
 			it++)
 	{
-		seeCollection->elements.push_back(*it);
+		seeCollection->elements->push_back(*it);
 	}
 
 	SEE_value v2;
-	SEE_SET_NUMBER(&v2, seeCollection->elements.size());
+	SEE_SET_NUMBER(&v2, seeCollection->elements->size());
 	SEE_OBJECT_PUT(interp, &seeCollection->native.object, STR(length), &v2, SEE_ATTR_READONLY);
 	return seeCollection;
 
@@ -650,11 +652,11 @@ static void MZN_collection_item(struct SEE_interpreter *interp,
 	SEE_int32_t i = -1;
 	MZN_collection_object *pObj = (MZN_collection_object*) thisobj;
 	SEE_parse_args(interp, argc, argv, "i", &i);
-	if (i < 0 || i >= (SEE_int32_t) pObj->elements.size())
+	if (i < 0 || i >= (SEE_int32_t) pObj->elements->size())
 	{
 		SEE_SET_UNDEFINED(res);
 	} else {
-		AbstractWebElement *pEl = pObj->elements.at(i);
+		AbstractWebElement *pEl = pObj->elements->at(i);
 		if (pEl == NULL)
 		{
 			SEE_SET_NULL(res);
@@ -680,8 +682,8 @@ static void MZN_collection_namedItem(struct SEE_interpreter *interp,
 		SEE_parse_args(interp, argc, argv, "s", &s);
 		std::string ach = SEE_StringToUTF8(interp, s);
 		bool found = false;
-		for ( std::vector<AbstractWebElement*>::iterator it = pObj->elements.begin();
-				!found && it != pObj->elements.end();
+		for ( std::vector<AbstractWebElement*>::iterator it = pObj->elements->begin();
+				!found && it != pObj->elements->end();
 				it ++)
 		{
 			AbstractWebElement *el = *it;
@@ -695,8 +697,8 @@ static void MZN_collection_namedItem(struct SEE_interpreter *interp,
 			}
 		}
 		if (! found) {
-			for ( std::vector<AbstractWebElement*>::iterator it = pObj->elements.begin();
-					!found && it != pObj->elements.end();
+			for ( std::vector<AbstractWebElement*>::iterator it = pObj->elements->begin();
+					!found && it != pObj->elements->end();
 					it ++)
 			{
 				AbstractWebElement *el = *it;
