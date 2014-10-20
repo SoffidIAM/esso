@@ -735,7 +735,20 @@ static void MZNECMA_getAccount(struct SEE_interpreter *interp,
 		}
 		else
 		{
-			std::wstring account = sd->selectAccount(accounts);
+			std::vector<std::wstring> accountDescriptions;
+			std::wstring prefix = L"accdesc.";
+			prefix += SEE_StringToWChars(interp, message);
+			prefix += L".";
+			for (std::vector<std::wstring>::iterator it = accounts.begin();
+					it != accounts.end();
+					it++)
+			{
+				std::wstring account = *it;
+				std::wstring secret = prefix+account;
+				std::wstring description = s.getSecret(secret.c_str());
+				accountDescriptions.push_back(description);
+			}
+			std::wstring account = sd->selectAccount(accounts, accountDescriptions);
 			if (account.empty())
 				SEE_error_throw(interp, interp->EvalError, "No account selected");
 			else
