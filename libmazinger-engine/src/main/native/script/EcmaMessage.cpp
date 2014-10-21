@@ -40,7 +40,8 @@ public:
 	virtual void alert(const char *msg);
 	virtual void progressMessage (const char *msg) ;
 	virtual void cancelProgressMessage ();
-	virtual  std::wstring selectAccount(std::vector<std::wstring>accounts) ;
+	virtual  std::wstring selectAccount(std::vector<std::wstring>accounts,
+			std::vector<std::wstring>accountDescriptions) ;
 };
 
 
@@ -272,6 +273,7 @@ static void setProgressMessage (const char *lpszMessage) {
 
 static int iSelectedIndex = -1;
 static std::vector<std::wstring> *s_accounts;
+static std::vector<std::wstring> *s_accountDescriptions;
 
 #include <engine/resources/engine-resource.h>
 //////////////////////////////////////////////////////////
@@ -313,11 +315,18 @@ static INT_PTR CALLBACK selectAccountDialogProc(
 	{
 		HWND hwndList = GetDlgItem (hwndDlg, IDC_LIST1);
 
-		for (std::vector<std::wstring>::iterator it = s_accounts->begin();
+		for (std::vector<std::wstring>::iterator it = s_accounts->begin(),
+				it2 = s_accountDescriptions->begin();
 				it != s_accounts->end();
-				it ++)
+				it ++, it2++)
 		{
-			std::wstring &account = *it;
+			std::wstring account = *it;
+			std::wstring &description = *it2;
+			if (! description.empty())
+			{
+				account += L" - ";
+				account += description;
+			}
 			SendMessageW(hwndList, LB_ADDSTRING, 0, (LPARAM)account.c_str());
 		}
 		SendMessage(hwndList, LB_SETCURSEL, 0, 0);
@@ -350,8 +359,10 @@ void DefaultScriptDialog::cancelProgressMessage() {
 }
 
 std::wstring DefaultScriptDialog::selectAccount(
-		std::vector<std::wstring> accounts) {
+		std::vector<std::wstring> accounts,
+		std::vector<std::wstring> accountDescriptions) {
 	s_accounts = &accounts;
+	s_accountDescriptions = &accountDescriptions;
 	int result = DialogBox (hMazingerInstance, MAKEINTRESOURCE (IDD_SELACCOUNT),
 			NULL,  selectAccountDialogProc);
 	MZNSendDebugMessage("Result = %d", result);
@@ -365,7 +376,8 @@ std::wstring DefaultScriptDialog::selectAccount(
 #else
 
 std::wstring DefaultScriptDialog::selectAccount(
-		std::vector<std::wstring> accounts) {
+		std::vector<std::wstring> accounts,
+		std::vector<std::wstring> accountDescriptions) {
 	return std::wstring();
 }
 

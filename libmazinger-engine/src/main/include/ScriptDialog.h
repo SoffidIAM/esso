@@ -18,7 +18,7 @@ public:
 	virtual void alert(const char *msg) = 0;
 	virtual void progressMessage (const char *msg) = 0;
 	virtual void cancelProgressMessage () = 0;
-	virtual std::wstring selectAccount(std::vector<std::wstring>accounts) = 0;
+	virtual std::wstring selectAccount(std::vector<std::wstring>accounts,std::vector<std::wstring>accountDescriptions) = 0;
 	static void setScriptDialog (ScriptDialog *d);
 	static ScriptDialog* getScriptDialog();
 	static bool isScriptDialogSet();

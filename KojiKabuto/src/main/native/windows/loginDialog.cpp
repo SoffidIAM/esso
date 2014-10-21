@@ -36,7 +36,7 @@ INT_PTR CALLBACK LoginDialog::loginDialogProc(HWND hwndDlg, UINT uMsg,
 	{
 		case WM_INITDIALOG:
 		{
-			SendMessage (GetDlgItem(hwndDlg, IDC_PASSWORD), EM_SETPASSWORDCHAR, '*', 0);
+		    SendMessage (GetDlgItem(hwndDlg, IDC_PASSWORD), EM_SETPASSWORDCHAR, '*', 0);
 
 			loginDialog -> m_hWnd = hwndDlg;
 
@@ -60,6 +60,10 @@ INT_PTR CALLBACK LoginDialog::loginDialogProc(HWND hwndDlg, UINT uMsg,
 		    {
 		    	ShowWindow (GetDlgItem(hwndDlg, IDI_LIFERING), SW_HIDE);
 		    }
+
+		    ShowWindow(hwndDlg, SW_SHOWNORMAL);
+		    UpdateWindow(hwndDlg);
+
 			return false;
 		}
 
@@ -165,7 +169,7 @@ int LoginDialog::show ()
 
 	loginDialog = this;
 
-	CreateThread(NULL, 0, raiseLoop, NULL, 0, NULL);
+	CreateThread(NULL, 0, LoginDialog::raiseLoop, NULL, 0, NULL);
 
 	result = DialogBoxA (hKojiInstance, MAKEINTRESOURCE(IDD_LOGINDIALOG),
 			NULL, loginDialogProc);

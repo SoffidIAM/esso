@@ -338,6 +338,30 @@ void doDebug(int debugLevel) {
 
 
 #ifdef WIN32
+#define LOW_INTEGRITY_SDDL_SACL_W L"S:(ML;;NW;;;LW)"
+
+static void SetLowLabelToFile(LPWSTR lpszFileName) {
+	// The LABEL_SECURITY_INFORMATION SDDL SACL to be set for low integrity
+	DWORD dwErr = ERROR_SUCCESS;
+	PSECURITY_DESCRIPTOR pSD = NULL;
+
+	PACL pSacl = NULL; // not allocated
+	BOOL fSaclPresent = FALSE;
+	BOOL fSaclDefaulted = FALSE;
+
+	if (ConvertStringSecurityDescriptorToSecurityDescriptorW(
+			LOW_INTEGRITY_SDDL_SACL_W, SDDL_REVISION_1, &pSD, NULL)) {
+		if (GetSecurityDescriptorSacl(pSD, &fSaclPresent, &pSacl,
+				&fSaclDefaulted)) {
+			// Note that psidOwner, psidGroup, and pDacl are
+			// all NULL and set the new LABEL_SECURITY_INFORMATION
+			dwErr = SetNamedSecurityInfoW(lpszFileName, SE_FILE_OBJECT,
+					LABEL_SECURITY_INFORMATION, NULL, NULL, NULL, pSacl);
+		}
+		LocalFree(pSD);
+	}
+}
+
 void SetLowLabelToMailslot(HANDLE hKernelObj) {
 	// The LABEL_SECURITY_INFORMATION SDDL SACL to be set for low integrity
 	DWORD dwErr = ERROR_SUCCESS;
@@ -370,6 +394,7 @@ HANDLE createDebugMailSlot ()
 	wsprintfW(ach, L"\\\\.\\mailslot\\MAZINGER_%s", achUser);
 	HANDLE hResult = CreateMailslotW(ach, 10024, MAILSLOT_WAIT_FOREVER, NULL);
 	SetLowLabelToMailslot(hResult);
+	SetLowLabelToFile(ach);
 	return hResult;
 }
 
