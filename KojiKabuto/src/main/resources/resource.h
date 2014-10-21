@@ -10,9 +10,9 @@
 #define IDD_TOOMANYSESSIONS                     106
 #define IDR_POPUPMENU                           106
 #define IDD_NEWPASS_DIALOG                      108
-#define IDI_LIFERING                            110
-#define IDI_ICON2								111
-#define IDI_ICONGRAY							112
+#define IDI_ICON2								110
+#define IDI_ICONGRAY							111
+#define IDI_LIFERING                            120
 #define IDC_CONTADOR                            1000
 #define IDC_HOST                                1001
 #define IDC_TEXT                                1001
