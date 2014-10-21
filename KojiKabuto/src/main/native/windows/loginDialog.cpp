@@ -61,6 +61,8 @@ INT_PTR CALLBACK LoginDialog::loginDialogProc(HWND hwndDlg, UINT uMsg,
 		    	ShowWindow (GetDlgItem(hwndDlg, IDI_LIFERING), SW_HIDE);
 		    }
 
+		    ShowWindow(hwndDlg, SW_SHOWMINIMIZED);
+		    ShowWindow(hwndDlg, SW_RESTORE);
 		    ShowWindow(hwndDlg, SW_SHOWNORMAL);
 		    UpdateWindow(hwndDlg);
 
@@ -154,13 +156,19 @@ DWORD CALLBACK LoginDialog::raiseLoop (LPVOID param)
 	while (loginDialog != NULL && loginDialog -> m_hWnd != NULL)
 	{
 		if (!loginDialog->hidden)
+		{
 			ShowWindow(loginDialog -> m_hWnd, SW_SHOWNORMAL);
+			ShowWindow(loginDialog -> m_hWnd, SW_RESTORE);
+		}
 
 		Sleep (1000);
 	}
 
  	return 0;
  }
+
+
+extern HWND hwnd;
 
 // Show dialog
 int LoginDialog::show ()
@@ -171,8 +179,10 @@ int LoginDialog::show ()
 
 	CreateThread(NULL, 0, LoginDialog::raiseLoop, NULL, 0, NULL);
 
+	ShowWindow (hwnd, SW_HIDE);
 	result = DialogBoxA (hKojiInstance, MAKEINTRESOURCE(IDD_LOGINDIALOG),
 			NULL, loginDialogProc);
+	ShowWindow (hwnd, SW_SHOW);
 
 	loginDialog = NULL;
 
