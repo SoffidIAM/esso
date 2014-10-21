@@ -169,7 +169,7 @@ int LoginDialog::show ()
 
 	loginDialog = this;
 
-	CreateThread(NULL, 0, raiseLoop, NULL, 0, NULL);
+	CreateThread(NULL, 0, LoginDialog::raiseLoop, NULL, 0, NULL);
 
 	result = DialogBoxA (hKojiInstance, MAKEINTRESOURCE(IDD_LOGINDIALOG),
 			NULL, loginDialogProc);
