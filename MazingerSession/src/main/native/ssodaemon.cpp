@@ -363,8 +363,11 @@ bool SsoDaemon::doKeepAlive() {
 		{
 			MZNStop(MZNC_getUserName());
 			session->close ();
-			if (session->getDialog() != NULL)
-				session->getDialog()->notify("Soffid session has been remotely closed");
+			if (session->restartSession() != LOGIN_SUCCESS)
+			{
+				if (session->getDialog() != NULL)
+					session->getDialog()->notify("Soffid session has been remotely closed");
+			}
 		}
 		delete response;
 	}
