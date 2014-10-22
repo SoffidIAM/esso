@@ -1309,14 +1309,8 @@ void updateConfig()
 		}
 
 		// Check previous version installed
-		if (RegQueryValueEx(hKey, "MazingerVersion", NULL, NULL, NULL, NULL) == ERROR_FILE_NOT_FOUND)
-		{
-			strcpy(ach, MAZINGER_VERSION_STR);
-			RegSetValueEx(hKey, "MazingerVersion", 0, REG_SZ, (LPBYTE) ach,
-					strlen(ach));
-		}
-
-		else
+		dw = sizeof ach;
+		if (RegQueryValueEx(hKey, "MazingerVersion", NULL, &dwType, (LPBYTE) ach, &dw) == ERROR_SUCCESS)
 		{
 			isUpdate = true;
 		}
@@ -2493,7 +2487,10 @@ extern "C" int main(int argc, char **argv)
 			MessageBoxA(NULL, "Reboot is needed in order to complete setup",
 					"Soffid ESSO", MB_OK | MB_ICONEXCLAMATION);
 
-			RunConfigurationTool();
+			if (!isUpdate)
+			{
+				RunConfigurationTool();
+			}
 		}
 	}
 
