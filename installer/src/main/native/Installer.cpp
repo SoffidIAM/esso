@@ -1271,7 +1271,7 @@ void updateConfig()
 		if (RegQueryValueEx(hKey, "LocalCardSupport", NULL, &dwType, (LPBYTE) ach,
 				&dw) == ERROR_FILE_NOT_FOUND)
 		{
-			dw = 2;
+			dw = 3;
 			RegSetValueEx(hKey, "LocalCardSupport", 0, REG_DWORD, (LPBYTE) &dw,
 					sizeof dw);
 		}
@@ -1287,22 +1287,29 @@ void updateConfig()
 		if (RegQueryValueEx(hKey, "RemoteCardSupport", NULL, &dwType,
 				(LPBYTE) ach, &dw) == ERROR_FILE_NOT_FOUND)
 		{
-			dw = 1;
+			dw = 3;
 			RegSetValueEx(hKey, "RemoteCardSupport", 0, REG_DWORD, (LPBYTE) &dw,
 					sizeof dw);
 		}
 
-		dw = 0;
-		RegSetValueEx(hKey, "RemoteOfflineAllowed", 0, REG_DWORD, (LPBYTE) &dw,
-				sizeof dw);
+		if (RegQueryValueEx(hKey, "RemoteOfflineAllowed", NULL, NULL, NULL,
+				NULL) == ERROR_FILE_NOT_FOUND)
+		{
+			dw = 1;
+			RegSetValueEx(hKey, "RemoteOfflineAllowed", 0, REG_DWORD, (LPBYTE) &dw,
+					sizeof dw);
+		}
 
-		sprintf(ach, "760");
-		RegSetValueEx(hKey, "seycon.https.port", 0, REG_SZ, (LPBYTE) ach,
-				strlen(ach));
+		if (RegQueryValueEx(hKey, "seycon.https.port", NULL, NULL, NULL,
+				NULL) == ERROR_FILE_NOT_FOUND)
+		{
+			sprintf(ach, "760");
+			RegSetValueEx(hKey, "seycon.https.port", 0, REG_SZ, (LPBYTE) ach,
+					strlen(ach));
+		}
 
 		// Check previous version installed
-		if (RegQueryValueEx(hKey, "MazingerVersion", NULL, &dwType, (LPBYTE) ach,
-				&dw) == ERROR_FILE_NOT_FOUND)
+		if (RegQueryValueEx(hKey, "MazingerVersion", NULL, NULL, NULL, NULL) == ERROR_FILE_NOT_FOUND)
 		{
 			strcpy(ach, MAZINGER_VERSION_STR);
 			RegSetValueEx(hKey, "MazingerVersion", 0, REG_SZ, (LPBYTE) ach,
