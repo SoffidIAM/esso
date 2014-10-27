@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>com.soffid.iam.esso.pom</groupId>
 		<artifactId>sayaka-cp</artifactId>
-		<version>1.5.1-enterprise</version>
+		<version>1.5.4-enterprise</version>
 	</parent>
 	<dependencies>
 		<dependency>

@@ -4,11 +4,11 @@
 	<artifactId>MazingerHook</artifactId>
 	<packaging>pom</packaging>
 	<name>Dll per a injecció d'Usuaris i Passwords</name>
-	<version>1.5.1-enterprise</version>
+	<version>1.5.4-enterprise</version>
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.5.1-enterprise</version>
+		<version>1.5.4-enterprise</version>
 	</parent>
 	<modules>
 		<module>hook-l32</module>

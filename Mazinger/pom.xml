@@ -5,11 +5,11 @@
 	<artifactId>Mazinger</artifactId>
 	<packaging>pom</packaging>
 	<name>Executable per a injecció d'Usuaris i Passwords</name>
-	<version>1.5.1-enterprise</version>
+	<version>1.5.4-enterprise</version>
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.5.1-enterprise</version>
+		<version>1.5.4-enterprise</version>
 	</parent>
 	<issueManagement>
 		<system>RTIR</system>

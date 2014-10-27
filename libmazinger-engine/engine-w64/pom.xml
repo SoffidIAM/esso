@@ -8,7 +8,7 @@
 	<parent>
 		<artifactId>libmazinger-engine</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.5.1-enterprise</version>
+		<version>1.5.4-enterprise</version>
 	</parent>
 	<build>
 		<plugins>
