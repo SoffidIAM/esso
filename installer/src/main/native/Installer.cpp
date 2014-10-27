@@ -1627,6 +1627,9 @@ void installCP(const char *file)
 	strcpy(szValue, file);
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
 			strlen(szValue));
+	strcpy(szValue, "Apartment");
+	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, "ThreadingModel", REG_SZ,
+			(void*) szValue, strlen(szValue));
 
 	const char *recoverClsid = "{e046f8f0-7ca2-4c83-8e6b-a273f4911a48}";
 	// Recover CREDENTIAL PROVIDER
