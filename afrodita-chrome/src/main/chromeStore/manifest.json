@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Soffid ESSO",
   "description": "Soffid Enterprise Single Sign-On",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "icons": { "32": "icon.png", "128": "soffid.png"},
 
   "permissions": [

@@ -20,7 +20,7 @@ chrome.tabs.onUpdated
 	+ 'embed.setAttribute("type", "application/soffid-sso-plugin");'
 	+ ' try {' 
 	+ 'document.getElementById("soffid-sso-plugin").run();'
-	+ '} catch (e) { alert ("error "+e);}' 
+	+ '} catch (e) { }' 
 	});
 
 			}

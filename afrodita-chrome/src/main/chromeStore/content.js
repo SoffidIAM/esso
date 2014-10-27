@@ -8,10 +8,14 @@ embed.setAttribute("id", "soffid-sso-plugin-"+i);
 embed.setAttribute("type", "application/soffid-sso-plugin");
 document.body.appendChild(embed); 
 try {
-	document.getElementById("soffid-sso-plugin-"+i).run();
-	document.body.removeChild(embed);
+	plugin = document.getElementById("soffid-sso-plugin-"+i);
+        if ( ! (typeof plugin === 'undefined'))
+        {
+	   plugin.run();
+	   document.body.removeChild(embed);
+        }
 } catch (e) { 
-	alert ("Error on Soffid ESSO plugin:"+e+" for "+document.URL);
+//	alert ("Error on Soffid ESSO plugin:"+e+" for "+document.URL);
 }
 
 
