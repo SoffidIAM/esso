@@ -49,7 +49,9 @@ extern "C"  __stdcall long hllapi ( LPWORD function, LPSTR data, LPWORD len, LPW
 		int function3 = 9;
 		int result = oldapi(&function3, data3, &len3, &rc3) ;
 
+#ifdef DEBUG
 		fprintf (f, "NEW SESSION OPTIONS: [%.*s]\n", len3, data3);
+#endif
 		free (data3);
 
 		len2 = 4;

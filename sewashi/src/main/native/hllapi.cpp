@@ -349,19 +349,6 @@ int HllApi::setSessionParameters () {
 
 	int result = doCall(HL_SetSessionParameters, data, len) ;
 
-	if (result == 2)
-	{
-		MessageBox (NULL, "HLLAPI", "on or more parameters where not valid", MB_OK);
-	}
-	else if (result == 0)
-	{
-		MessageBox (NULL, "HLLAPI", "All parameters where valid", MB_OK);
-	}
-	else
-	{
-		MessageBox (NULL, "HLLAPI", "Session error", MB_OK);
-	}
-
 	free (data);
 
 	return 0;
