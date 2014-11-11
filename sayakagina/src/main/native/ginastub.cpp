@@ -439,7 +439,7 @@ BOOL
 WINAPI
 WlxScreenSaverNotify(PVOID pWlxContext, BOOL * pSecure) {
 	__TRACE
-	*pSecure = true;
+//	*pSecure = true;
 	__TRACE
 	return TRUE;
 }

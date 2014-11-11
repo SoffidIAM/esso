@@ -313,16 +313,21 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* hostName, s
 		g_type_init ();
 
 		std::string fileName;
-
 		SeyconCommon::readProperty("CertificateFile", fileName);
+
 		if (fileName.size() == 0) {
 			SeyconCommon::warn("Unknown certificate file. Please configure /etc/mazinger\n");
 			return SIR_ERROR;
 		}
 
+		std::string timeoutStr;
+		SeyconCommon::readProperty("Timeout", timeoutStr);
+		int timeout = 60;
+		sscanf ( timeoutStr.c_str(), "%d", &timeout);
+
 		pSession = soup_session_sync_new_with_options ( SOUP_SESSION_SSL_CA_FILE, fileName.c_str(),
 				SOUP_SESSION_IDLE_TIMEOUT, 3,
-				SOUP_SESSION_TIMEOUT, 60,
+				SOUP_SESSION_TIMEOUT, timeout,
 				NULL);
 	}
 

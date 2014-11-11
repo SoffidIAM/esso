@@ -65,6 +65,7 @@
         <module>afrodita-firefox-ctype</module>
         <module>javahook</module>
         <module>sewashi</module>
+        <module>sewbr</module>
         <module>KojiHook</module>
         <module>Mazinger</module>
         <module>MazingerHook</module>
@@ -117,6 +118,7 @@
         <module>afrodita-firefox-ctype</module>
         <module>javahook</module>
         <module>sewashi</module>
+        <module>sewbr</module>
         <module>KojiHook</module>
         <module>Mazinger</module>
         <module>MazingerHook</module>
