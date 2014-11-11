@@ -359,6 +359,12 @@
 			<version>${pom.version}</version>
 			<type>${architecture.exe}</type>
 		</dependency>
+		<dependency>
+			<groupId>com.soffid.iam.esso.w32</groupId>
+			<artifactId>sewbr</artifactId>
+			<version>${pom.version}</version>
+			<type>${architecture.dll}</type>
+		</dependency>
 	</dependencies>
 	<properties>
 		<architecture>w32</architecture>
