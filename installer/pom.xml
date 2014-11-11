@@ -101,6 +101,7 @@
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.sayaka-cp.dll" destfile="target/resources/com.soffid.iam.esso.w32.sayaka-cp.dll.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.SoffidConfig.exe" destfile="target/resources/com.soffid.iam.esso.w32.SoffidConfig.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.sewashi.exe" destfile="target/resources/com.soffid.iam.esso.w32.Sewashi.exe.bzip" />
+								<bzip2 src="target/resources/com.soffid.iam.esso.w32.sewbr.dll" destfile="target/resources/com.soffid.iam.esso.w32.Sewbr.dll.bzip" />
 
 								<bzip2 src="target/resources/com.soffid.iam.esso.java.javahook.jar" destfile="target/resources/com.soffid.iam.esso.java.javahook.jar.bzip" />
 

@@ -2264,6 +2264,7 @@ int install(int full)
 	installResource(NULL, "logon.tcl");
 	installResource(NULL, "uninstall.exe");
 	installResource(NULL, "sewashi.exe");
+	installResource(NULL, "sewbr.dll");
 	installResource(NULL, "profyumi.jar");
 	installResource("FFExtension\\modules", "afrodita.jsm");
 	installResource("FFExtension\\chrome\\content", "about.xul");

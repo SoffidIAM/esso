@@ -61,6 +61,7 @@
         <module>afrodita-firefox-ctype</module>
         <module>javahook</module>
         <module>sewashi</module>
+        <module>sewbr</module>
         <module>KojiHook</module>
         <module>Mazinger</module>
         <module>MazingerHook</module>
@@ -113,6 +114,7 @@
         <module>afrodita-firefox-ctype</module>
         <module>javahook</module>
         <module>sewashi</module>
+        <module>sewbr</module>
         <module>KojiHook</module>
         <module>Mazinger</module>
         <module>MazingerHook</module>
@@ -126,7 +128,6 @@
         <module>ShiroKabuto</module>
         <module>boss</module>
         <module>nossori</module>
-        <module>sewashi</module>
         <module>uninstaller</module>
         <module>installer</module>
         <module>installer-deb</module>

@@ -65,7 +65,10 @@ HllApi::HllApi(const wchar_t *dllName)
 
 	HINSTANCE hInstance = LoadLibraryW (dllName);
 	if (hInstance != NULL)
+	{
 		api = (HllApiType) GetProcAddress (hInstance, "hllapi");
+		setSessionParameters();
+	}
 }
 
 
@@ -96,6 +99,8 @@ struct ConnectPresentationSpaceStruct {
 };
 
 #define HL_SendKeysFunction 3
+
+#define HL_SetSessionParameters 9
 
 #define HL_QuerySessionStatusFunction 22
 struct QuerySessionStatusStruct {
@@ -331,6 +336,34 @@ int HllApi::startCommunicationNotification (const char session, HANDLE &handle) 
 	CALL (HL_StartCommunicationNotificationFunction, data);
 
 	handle = *((HANDLE*) data.dwHandle);
+	return 0;
+}
+
+int HllApi::setSessionParameters () {
+	if (api == NULL)
+		return -1;
+
+	char *data = strdup("WRITE_WRITE");
+
+	int len = strlen(data);
+
+	int result = doCall(HL_SetSessionParameters, data, len) ;
+
+	if (result == 2)
+	{
+		MessageBox (NULL, "HLLAPI", "on or more parameters where not valid", MB_OK);
+	}
+	else if (result == 0)
+	{
+		MessageBox (NULL, "HLLAPI", "All parameters where valid", MB_OK);
+	}
+	else
+	{
+		MessageBox (NULL, "HLLAPI", "Session error", MB_OK);
+	}
+
+	free (data);
+
 	return 0;
 }
 
