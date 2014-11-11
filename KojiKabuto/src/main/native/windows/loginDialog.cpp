@@ -154,7 +154,10 @@ DWORD CALLBACK LoginDialog::raiseLoop (LPVOID param)
 	while (loginDialog != NULL && loginDialog -> m_hWnd != NULL)
 	{
 		if (!loginDialog->hidden)
+		{
+			ShowWindow(loginDialog -> m_hWnd, SW_RESTORE);
 			ShowWindow(loginDialog -> m_hWnd, SW_SHOWNORMAL);
+		}
 
 		Sleep (1000);
 	}
