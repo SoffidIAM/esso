@@ -88,6 +88,39 @@ void freeCitrixMemory(PVOID pMemory) {
 	(*pWTSFreeMemory)(pMemory);
 }
 
+void SeyconCommon::getCitrixInitialProgram(std::string &name) {
+	char* lpszBytes;
+	DWORD dwBytes = 0;
+	BOOL bOK = FALSE;
+	name.clear ();
+
+	/*
+	 *  Get handle to WTSAPI.DLL
+	 */
+	if (hWTSAPI == NULL && (hWTSAPI = LoadLibrary("WTSAPI32")) == NULL) {
+		return;
+	}
+
+	/*
+	 *  Get entry point for WTSEnumerateServers
+	 */
+	if (pWTSQuerySessionInformation == NULL)
+		pWTSQuerySessionInformation
+				= (typeWTSQuerySessionInformation) GetProcAddress(hWTSAPI,
+						"WTSQuerySessionInformationA");
+	if (pWTSQuerySessionInformation == NULL) {
+		name.clear ();
+		return;
+	}
+	bOK = (*pWTSQuerySessionInformation)(WTS_CURRENT_SERVER_HANDLE,
+			WTS_CURRENT_SESSION, WTSInitialProgram, &lpszBytes, &dwBytes);
+	if (bOK) {
+		name.assign (lpszBytes);
+		freeCitrixMemory(lpszBytes);
+	} else
+		name.clear ();
+}
+
 void SeyconCommon::getCitrixClientName(std::string &name) {
 	char* lpszBytes;
 	DWORD dwBytes = 0;
@@ -175,6 +208,10 @@ void notifyError() {
 	perror("");
 	printf("\n");
 	printf("***************\n");
+}
+
+void SeyconCommon::getCitrixInitialProgram(std::string &name) {
+	name.clear();
 }
 
 void SeyconCommon::getCitrixClientName(std::string &name) {
