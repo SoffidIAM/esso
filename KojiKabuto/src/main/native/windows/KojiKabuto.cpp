@@ -508,23 +508,35 @@ DWORD WINAPI KojiKabuto::mainLoop (LPVOID param)
 
 	SeyconCommon::readProperty("ForceStartupLogin", forceLogin);
 
-	// Check force login before KojiKabuto login
-	if (forceLogin != "true")
+	// If Remote desktop support is initial program, do not perform ESSO login and go to userinit
+	std::string initialProgram;
+	SeyconCommon::getCitrixInitialProgram(initialProgram);
+	const char * pattern ="%WINDIR%\\SYSTEM32\\RDSADDIN.EXE";
+
+	if (_strnicmp (initialProgram.c_str(), pattern, strlen(pattern)) == 0)
 	{
 		KojiKabuto::StartUserInit();
 	}
-
-	do
+	else
 	{
-		// Start login process
-		loginResult = KojiKabuto::StartLoginProcess();
+		// Check force login before KojiKabuto login
+		if (forceLogin != "true")
+		{
+			KojiKabuto::StartUserInit();
+		}
 
-		// Check login status
-	} while (KojiKabuto::LoginStatusProcess(loginResult));
+		do
+		{
+			// Start login process
+			loginResult = KojiKabuto::StartLoginProcess();
 
-	if (forceLogin == "true")
-	{
-		KojiKabuto::StartUserInit();
+			// Check login status
+		} while (KojiKabuto::LoginStatusProcess(loginResult));
+
+		if (forceLogin == "true")
+		{
+			KojiKabuto::StartUserInit();
+		}
 	}
 
 	startingSession = false;
