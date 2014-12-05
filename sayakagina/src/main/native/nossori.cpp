@@ -97,7 +97,7 @@ bool NossoriHandler::responseChallenge() {
 	SeyconService service;
 
 	std::wstring msg = std::wstring(L"/rememberPasswordServlet?action=responseChallenge&user=")+
-			service.escapeString(dialog.user.c_str()) + L"&domain" +
+			service.escapeString(dialog.user.c_str()) + L"&domain=" +
 			service.escapeString(domain.c_str()) + L"&id=" +
 			service.escapeString(requestId.c_str());
 

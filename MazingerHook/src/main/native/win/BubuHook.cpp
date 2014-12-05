@@ -9,7 +9,7 @@
 #include <ComponentMatcher.h>
 #include "../java/JavaVirtualMachine.h"
 #include <MazingerEnv.h>
-
+#include <time.h>
 
 DWORD CALLBACK ProcessFocus (void * param)
 {
@@ -38,7 +38,12 @@ LRESULT CALLBACK CBTProc(int nCode, WPARAM wParam, LPARAM lParam)
     char szCode[128]; 
 	HWND hwnd = (HWND) wParam;
  
-    if (nCode < 0)  // do not process message
+	MazingerEnv *pEnv = MazingerEnv::getDefaulEnv ();
+	MAZINGER_DATA *data = pEnv->getDataRW();
+	if (data != NULL)
+		time(& data->lastUpdate);
+
+	if (nCode < 0)  // do not process message
     {
         return CallNextHookEx(hhk, nCode, wParam, 
             lParam); 

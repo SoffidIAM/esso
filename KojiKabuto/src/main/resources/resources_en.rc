@@ -176,7 +176,7 @@ BEGIN
         MENUITEM 	"Update",				IDM_UPDATE
         MENUITEM	"Log in",		IDM_LOGIN
         MENUITEM	"Log out",	IDM_LOGOFF
-//        MENUITEM 	SEPARATOR
-//        MENUITEM 	"Credits",        		IDM_CREDITS
+		MENUITEM 	SEPARATOR
+		MENUITEM	"New session",		IDM_USER_NEW_DESKTOP
     END
 END

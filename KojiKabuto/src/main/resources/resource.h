@@ -34,3 +34,5 @@
 #define IDM_LOGIN                               40006
 #define IDM_LOGOFF                              40007
 #define IDM_USER_ESSO                           40008
+#define IDM_USER_NEW_DESKTOP                    40009
+#define IDM_USER_DESKTOP                        40010

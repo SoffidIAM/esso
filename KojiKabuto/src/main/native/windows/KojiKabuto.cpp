@@ -1,5 +1,7 @@
 # include "KojiKabuto.h"
 
+#include <MazingerEnv.h>
+
 HINSTANCE hKojiInstance;
 SeyconSession *KojiKabuto::session = NULL;
 HWND hwndLogon = NULL;
@@ -8,6 +10,7 @@ extern bool sessionStarted;
 extern bool startingSession;
 
 bool KojiKabuto::usedKerberos = false;
+bool KojiKabuto::desktopSession = false;
 
 HWND createKojiWindow (HINSTANCE hinstance);
 void createSystrayWindow (HINSTANCE hInstance);
@@ -99,6 +102,8 @@ void KojiKabuto::consumeMessages ()
 void KojiKabuto::createProgressWindow (HINSTANCE hInstance)
 {
 	hwndLogon = createKojiWindow(hInstance);
+	HDESK hd = GetThreadDesktop (GetCurrentThreadId());
+	SwitchDesktop (hd);
 	return;
 }
 
@@ -106,6 +111,8 @@ void KojiKabuto::destroyProgressWindow ()
 {
 	if (hwndLogon != NULL)
 	{
+		HDESK hd = GetThreadDesktop (GetCurrentThreadId());
+		SwitchDesktop (hd);
 		consumeMessages();
 		ShowWindow(hwndLogon, SW_HIDE);
 		consumeMessages();
@@ -272,6 +279,37 @@ void KojiKabuto::checkScreenSaver ()
 	}
 }
 
+static BOOL CALLBACK enumDesktopProcToReturn(
+		  LPTSTR lpszDesktop,
+		  LPARAM lParam
+		)
+{
+	HANDLE hd = GetThreadDesktop (GetCurrentThreadId());
+	char desktopName[1024] = "";
+
+	GetUserObjectInformation (hd,
+		UOI_NAME,
+		desktopName, sizeof desktopName,
+		NULL);
+	if (strcmp (lpszDesktop, desktopName) == 0)
+	{
+		return true;
+	}
+
+	std::string user = MZNC_getUserName();
+	MazingerEnv *penv = MazingerEnv::getEnv (user.c_str(), lpszDesktop);
+	if (penv != NULL && penv->getDataRW() != NULL && penv->getDataRW()->started)
+	{
+		HDESK hDesktop = OpenDesktop(lpszDesktop, 0, 0, GENERIC_EXECUTE|GENERIC_READ);
+		if (SwitchDesktop(hDesktop))
+			if (lParam == NULL)
+				ExitProcess(0);
+			else
+				return false;
+	}
+	return true;
+}
+
 // Force login process
 void KojiKabuto::ForceLogin ()
 {
@@ -282,7 +320,11 @@ void KojiKabuto::ForceLogin ()
 	destroyProgressWindow();
 
 	// Check force login
-	if (forceLogin != "false")
+	if (desktopSession)
+	{
+		EnumDesktops (GetProcessWindowStation(), enumDesktopProcToReturn, (LPARAM) NULL) ;
+	}
+	else if (forceLogin != "false")
 	{
 		ExitWindowsEx(EWX_LOGOFF, 0);
 	}
@@ -310,7 +352,7 @@ void KojiKabuto::LoginErrorProcess ()
 	}
 
 	// Check offline allowed
-	if (offlineAllowed)
+	if (offlineAllowed && ! desktopSession)
 	{
 		MessageBox(NULL, (session->getErrorMessage()),
 				Utils::LoadResourcesString(1001).c_str(), MB_OK | MB_ICONWARNING);
@@ -443,7 +485,7 @@ int KojiKabuto::StartLoginProcess ()
 	}
 
 	// Check login type
-	if ((loginType == "kerberos") || (loginType == "both"))
+	if (!desktopSession && ((loginType == "kerberos") || (loginType == "both")))
 	{
 		result = StartKerberosLogin();
 		usedKerberos = true;
@@ -452,7 +494,7 @@ int KojiKabuto::StartLoginProcess ()
 	// Check login status
 	if (result != LOGIN_SUCCESS)
 	{
-		if (loginType == "manual" || loginType == "both")
+		if (desktopSession || loginType == "manual" || loginType == "both")
 		{
 			result = StartManualLogin();
 			usedKerberos = false;
@@ -472,12 +514,19 @@ void KojiKabuto::CloseSession ()
 	MZNStop(MZNC_getUserName());
 
 	sessionStarted = false;
+	if (desktopSession)
+	{
+		EnumDesktops (GetProcessWindowStation(), enumDesktopProcToReturn, (LPARAM) 1) ;
+	}
 }
 
 // Start user login
 void KojiKabuto::StartUserInit ()
 {
 	SeyconCommon::info("Starting userinit\n");
+
+	HDESK hd = GetThreadDesktop (GetCurrentThreadId());
+	SwitchDesktop (hd);
 
 	runProgram((char*) "userinit.exe", NULL, FALSE);
 	enableTaskManager(TRUE);
@@ -520,7 +569,7 @@ DWORD WINAPI KojiKabuto::mainLoop (LPVOID param)
 	else
 	{
 		// Check force login before KojiKabuto login
-		if (forceLogin != "true")
+		if (!desktopSession && forceLogin != "true")
 		{
 			KojiKabuto::StartUserInit();
 		}
@@ -533,7 +582,7 @@ DWORD WINAPI KojiKabuto::mainLoop (LPVOID param)
 			// Check login status
 		} while (KojiKabuto::LoginStatusProcess(loginResult));
 
-		if (forceLogin == "true")
+		if (desktopSession || forceLogin == "true")
 		{
 			KojiKabuto::StartUserInit();
 		}
@@ -595,7 +644,11 @@ extern "C" int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hInst2, LPSTR cmdL
 	LPCWSTR wCmdLine = GetCommandLineW();
 	LPWSTR* args = CommandLineToArgvW(wCmdLine, &numArgs);
 
-	if (numArgs > 1)
+	if (wcsicmp(wCmdLine, L"newDesktop") == 0)
+	{
+		KojiKabuto::desktopSession = true;
+	}
+	else if (numArgs > 1)
 	{
 		if (wcsicmp(args[1], L"update") == 0)
 		{
@@ -620,7 +673,10 @@ extern "C" int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hInst2, LPSTR cmdL
 
 			return 1;
 		}
-
+		else if (wcsicmp(args[1], L"newDesktop") == 0)
+		{
+			KojiKabuto::desktopSession = true;
+		}
 		else
 		{
 			wchar_t wchMessage[4096];
@@ -666,7 +722,7 @@ extern "C" int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hInst2, LPSTR cmdL
 	KojiKabuto::createProgressWindow(hInstance);
 	createSystrayWindow(hInstance);
 
-	HDESK hdesk = OpenDesktopA("Default", 0, FALSE, GENERIC_ALL);
+	HDESK hdesk = GetThreadDesktop(GetCurrentThreadId());
 
 	if (hdesk == NULL)
 	{
