@@ -41,6 +41,19 @@ SecretStore::SecretStore(const char *user) {
     AESExpandKey(achKey, m_expkey);
 }
 
+SecretStore::SecretStore(const char *user, const char *desktop) {
+//	MZNSendDebugMessageA("Opening secret store %s", user);
+    int k = 0;
+    unsigned char achKey [] = "TheKeyIsVeryWeak";
+    const char *szHostName = MZNC_getHostName ();
+    applySeed((unsigned char const *)szHostName, -1, achKey, k);
+
+    m_pEnv = MazingerEnv::getEnv(user, desktop);
+
+	m_expkey = (unsigned char*) malloc (EXPKEY_SIZE);
+    AESExpandKey(achKey, m_expkey);
+}
+
 SecretStore::~SecretStore() {
 }
 

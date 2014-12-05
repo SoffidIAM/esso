@@ -347,6 +347,7 @@ void SsoDaemon::stopDaemon ()
 #endif
 }
 
+
 bool SsoDaemon::doKeepAlive() {
 	bool ok = false;
 	SeyconService service;

@@ -175,5 +175,7 @@ BEGIN
         MENUITEM 	"Actualizar",			IDM_UPDATE
         MENUITEM "Iniciar sesión", IDM_LOGIN
         MENUITEM "Cerrar sesión", IDM_LOGOFF
+		MENUITEM 	SEPARATOR
+		MENUITEM	"Nueva sessión",		IDM_USER_NEW_DESKTOP
     END
 END

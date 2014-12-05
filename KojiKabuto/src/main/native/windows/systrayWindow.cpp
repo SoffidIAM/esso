@@ -6,15 +6,21 @@
 #include <stdio.h>
 #include <MZNcompat.h>
 #include <ssoclient.h>
+#include <MazingerEnv.h>
+#include <SecretStore.h>
+
+#include <MazingerInternal.h>
 
 # include "KojiKabuto.h"
 # include "Utils.h"
+# include <stdio.h>
 
 #define WM_APP_SYSTRAY (WM_APP + 1)
 
 static HMENU _hMenu;
 static HINSTANCE _hInstance;
 static HWND _hwnd;
+static int defaultMenuEntries = 0;
 
 bool sessionStarted;	// Session started status
 bool startingSession;	// Session is starting
@@ -39,6 +45,150 @@ static void playSound ()
 	}
 }
 
+struct EnumDesktopAction
+{
+	bool updateMenu;
+	bool execute;
+	HMENU hm;
+	int nextId;
+	int idToExeucte;
+};
+
+static BOOL CALLBACK enumDesktopProc(
+		  LPTSTR lpszDesktop,
+		  LPARAM lParam
+		)
+{
+	HANDLE hd = GetThreadDesktop (GetCurrentThreadId());
+	EnumDesktopAction *action = (EnumDesktopAction*) lParam;
+	char desktopName[1024] = "";
+
+	GetUserObjectInformation (hd,
+		UOI_NAME,
+		desktopName, sizeof desktopName,
+		NULL);
+	printf ("Desktop %s (Current = %s)\n", lpszDesktop, desktopName);
+	if (strcmp (lpszDesktop, desktopName) == 0)
+		return true;
+
+
+	std::string user = MZNC_getUserName();
+	MazingerEnv *penv = MazingerEnv::getEnv (user.c_str(), lpszDesktop);
+	if (penv != NULL && penv->getDataRW() != NULL)
+	{
+		printf ("Processing desktop %s (Current = %s)\n", lpszDesktop, desktopName);
+		if ( action->updateMenu )
+		{
+
+			SecretStore ss ( MZNC_getUserName(), lpszDesktop);
+			wchar_t * userName = ss.getSecret(L"fullName");
+			if (userName == NULL || userName[0] == L'\0')
+			{
+				ss.freeSecret(userName);
+				userName = ss.getSecret(L"user");
+			}
+			printf ("User = %ls\n", userName);
+			if (userName != NULL && userName [0] != L'\0')
+			{
+				// Get desktop user
+				if (action->nextId == IDM_USER_DESKTOP)
+					AppendMenuW (action->hm, MF_SEPARATOR, -1, L"");
+				AppendMenuW (action->hm, MF_STRING, action->nextId, userName);
+			}
+			ss.freeSecret(userName);
+
+		}
+		printf ("Action to find = %d Current action = %d\n",
+				action->idToExeucte, action->nextId);
+		if (action-> execute && action->nextId == action->idToExeucte)
+		{
+		 	HDESK h = OpenDesktop (lpszDesktop  ,
+				NULL,
+				0,
+				GENERIC_ALL);
+			if (h != NULL)
+			{
+				printf ("Switching to desktop %s", lpszDesktop);
+				SwitchDesktop(h);
+				CloseHandle(h);
+			}
+		}
+		action -> nextId ++;
+		delete penv;
+	}
+	fflush (stdout);
+	return true;
+}
+
+static void createDesktop ()
+{
+	printf ("Crating desktop\n");
+	for (int i = 0; i < 9999; i++)
+	{
+		char ach[20];
+		sprintf (ach, "Desktop_%d", i);
+		printf ("Probing desktop %s\n", ach);
+	 	HDESK h = OpenDesktop (ach  ,
+			NULL,
+			0,
+			GENERIC_ALL);
+		if (h == NULL)
+		{
+			printf ("Desktop %s is free\n", ach);
+		 	h = CreateDesktop (ach,
+				NULL,
+				NULL,
+				0,
+				GENERIC_ALL,
+				NULL);
+			if (h != NULL)
+			{
+				printf ("Created desktop %s\n", ach);
+				char achFilename[1000];
+				PROCESS_INFORMATION p;
+				STARTUPINFO si;
+				memset(&si, 0, sizeof si);
+				si.cb = sizeof si;
+				si.wShowWindow = SW_NORMAL;
+				si.lpDesktop = ach;
+
+
+				fflush (stdout);
+
+				if ( GetModuleFileNameA(NULL, achFilename, sizeof achFilename))
+				{
+					printf ("Creating process %s\n", achFilename);
+					fflush (stdout);
+					char achParams[100];
+					strcpy (achParams, "newDesktop");
+
+					CreateProcess(achFilename, achParams,
+							NULL, // Process Atributes
+							NULL, // Thread Attributes
+							FALSE, // bInheritHandles
+							NORMAL_PRIORITY_CLASS, NULL, // Environment,
+							NULL, // Current directory
+							&si, // StartupInfo,
+							&p);
+
+
+					if (SwitchDesktop (h))
+					{
+						printf ("Switched desktop\n");
+						fflush (stdout);
+					}
+//					CloseHandle(h);
+					return;
+				}
+
+			}
+		}
+		CloseHandle(h);
+	}
+
+}
+
+
 static void ContextMenu (HWND hwnd)
 {
 	bool ok = MZNIsStarted(MZNC_getUserName());	// User authenticated status
@@ -59,7 +209,6 @@ static void ContextMenu (HWND hwnd)
 		ModifyMenu(_hMenu, IDM_USER_ESSO, MF_BYCOMMAND, IDM_USER_ESSO,
 				KojiKabuto::session->getSoffidUser());
 	}
-
 	else
 	{
 		mii.fState = MFS_DISABLED;
@@ -70,6 +219,7 @@ static void ContextMenu (HWND hwnd)
 	SetMenuItemInfo(_hMenu, IDM_USER_ESSO, false, &mii);
 	SetMenuItemInfo(_hMenu, IDM_UPDATE, false, &mii);
 	SetMenuItemInfo(_hMenu, IDM_DISABLE_ESSO, false, &mii);
+	SetMenuItemInfo(_hMenu, IDM_USER_NEW_DESKTOP, false, &mii);
 
 	mii.fState = (ok || !sessionStarted) ? MFS_DISABLED : MFS_UNHILITE;
 	SetMenuItemInfo(_hMenu, IDM_ENABLE_ESSO, false, &mii);
@@ -90,6 +240,18 @@ static void ContextMenu (HWND hwnd)
 
 	hm = GetSubMenu(_hMenu, 0);
 
+	while (GetMenuItemCount(hm) > defaultMenuEntries)
+	{
+		DeleteMenu (hm, GetMenuItemCount(hm)-1, MF_BYPOSITION);
+	}
+
+	EnumDesktopAction eda ;
+	eda.execute = false;
+	eda.updateMenu = true;
+	eda.nextId = IDM_USER_DESKTOP;
+	eda.hm = hm;
+	EnumDesktops (GetProcessWindowStation(), enumDesktopProc, (LPARAM) &eda);
+
 	TrackPopupMenu(hm, TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, 0,
 			_hwnd, NULL);
 }
@@ -109,6 +271,7 @@ static LRESULT CALLBACK SystrayWndProc (HWND hwnd,        	// handle to window
 				case WM_RBUTTONDOWN:
 				{
 					ContextMenu(hwnd);
+					fflush (stdout);
 
 					return 0;
 				}
@@ -118,6 +281,8 @@ static LRESULT CALLBACK SystrayWndProc (HWND hwnd,        	// handle to window
 
 		case WM_COMMAND:
 		{
+			printf ("Received command %d\n", wParam);
+			fflush (stdout);
 			switch (wParam)
 			{
 				case IDM_ENABLE_ESSO:
@@ -172,6 +337,22 @@ static LRESULT CALLBACK SystrayWndProc (HWND hwnd,        	// handle to window
 					break;
 				}
 
+				case IDM_USER_NEW_DESKTOP:
+				{
+					createDesktop();
+					break;
+				}
+				default:
+					if (wParam >= IDM_USER_DESKTOP && wParam <= IDM_USER_DESKTOP + 16)
+					{
+						EnumDesktopAction eda ;
+						eda.execute = true;
+						eda.updateMenu = false;
+						eda.nextId = IDM_USER_DESKTOP;
+						eda.idToExeucte = wParam;
+						EnumDesktops (GetProcessWindowStation(), enumDesktopProc, (LPARAM) &eda);
+
+					}
 //				case IDM_CREDITS:
 //				{
 //					creditsDialog1();
@@ -211,6 +392,34 @@ BOOL createSystrayWndClass (HINSTANCE hinstance)
 	return RegisterClassEx(&wcx);
 }
 
+
+static void testSessionTimeout ()
+{
+	std::string idleTimeout;
+
+	// Timeout in seconds
+	SeyconCommon::readProperty("soffid.esos.idleTimeout", idleTimeout);
+	if (!idleTimeout.empty() )
+	{
+		long timeout = 99999;
+		sscanf (idleTimeout.c_str(), "%ld", &timeout);
+		MazingerEnv *pEnv = MazingerEnv::getDefaulEnv ();
+		MAZINGER_DATA *data = pEnv->getDataRW();
+		if (data != NULL)
+		{
+			time_t now;
+			time (&now);
+			if (now - data->lastUpdate >  timeout)
+			{
+				KojiKabuto::CloseSession();
+				KojiKabuto::StartLoginProcess();
+			}
+		}
+	}
+
+}
+
+
 static DWORD WINAPI systrayThread (void* lparam)
 {
 	HICON hIconFail = LoadIconA(_hInstance, MAKEINTRESOURCE(IDI_ICONGRAY) );
@@ -236,6 +445,7 @@ static DWORD WINAPI systrayThread (void* lparam)
 	int lastChangeElapsed = 0;
 	while (true)
 	{
+		testSessionTimeout ();
 		bool ok = MZNIsStarted(MZNC_getUserName());
 		if (laststatus != ok)
 			change = true;
@@ -311,5 +521,8 @@ void createSystrayWindow (HINSTANCE hInstance)
 	UpdateWindow(_hwnd);
 
 	_hMenu = LoadMenu(_hInstance, MAKEINTRESOURCE(IDR_POPUPMENU) );
+	HMENU hm = GetSubMenu(_hMenu, 0);
+	defaultMenuEntries = GetMenuItemCount (hm);
+
 	CreateThread(NULL, 0, systrayThread, NULL, 0, NULL);
 }

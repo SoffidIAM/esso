@@ -132,6 +132,8 @@ void SeyconSession::weakSessionStartup (const char* lpszUser, const wchar_t* lps
 		SeyconCommon::updateConfig("seycon.alternate.https.port");
 		SeyconCommon::updateConfig("seycon.https.port");
 		SeyconCommon::updateConfig("SSOSoffidAgent");
+		SeyconCommon::updateConfig("soffid.esso.idleTimeout");
+		SeyconCommon::updateConfig("soffid.esso.sharedWorkstation");
 		// Propagar password
 		propagatePassword();
 		createWeakSession();

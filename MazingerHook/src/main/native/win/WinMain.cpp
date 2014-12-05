@@ -18,12 +18,28 @@ LRESULT CALLBACK CBTProc(int nCode, WPARAM wParam, LPARAM lParam);
 LPCWSTR MAZINGER_EVENT_NAME = L"Local\\Mazinger-Stop-Event";
 
 static std::wstring getStopSemaphoreName(const char *user) {
-
+	// Base name
 	std::wstring semName = MAZINGER_EVENT_NAME;
+
+	// Append user name
 	if (user == NULL)
 		user = MZNC_getUserName();
 
 	semName.append(MZNC_strtowstr(user));
+
+	// Append desktop name
+
+	HANDLE hd = GetThreadDesktop (GetCurrentThreadId());
+	wchar_t desktopName[1024];
+
+	wcscpy (desktopName, L"Default");
+
+	GetUserObjectInformationW (hd,
+		UOI_NAME,
+		desktopName, sizeof desktopName,
+		NULL);
+
+	semName.append(desktopName);
 	return semName;
 
 }
@@ -239,6 +255,7 @@ extern "C" __declspec(dllexport) bool MZNLoadConfiguration(const char *user,
 		ConfigReader *currentConfig = new ConfigReader(pData);
 		currentConfig->testConfiguration();
 		MZNSendDebugMessageA("CONFIGURATION TESTED  !!!\n");
+		time(& pData->lastUpdate);
 		return TRUE;
 	}
 }

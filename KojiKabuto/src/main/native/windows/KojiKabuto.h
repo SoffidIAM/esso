@@ -116,6 +116,7 @@ class KojiKabuto
 		static SeyconSession *session ;
 
 		static bool usedKerberos;
+		static bool desktopSession;
 };
 
 
