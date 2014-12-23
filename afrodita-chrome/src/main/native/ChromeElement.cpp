@@ -1,79 +1,83 @@
 /*
- * ExplorerElement.cpp
  *
  *  Created on: 11/11/2010
  *      Author: u07286
  */
-#define NS_SCRIPTABLE
 
 
 #include "AfroditaC.h"
 #include "ChromeElement.h"
 #include <stdio.h>
 #include <string.h>
+#include "json/JsonAbstractObject.h"
+#include "json/JsonValue.h"
+#include "json/JsonMap.h"
+#include "json/JsonVector.h"
+#include "CommunicationManager.h"
 
 namespace mazinger_chrome
 {
 
-ChromeElement::ChromeElement(PluginObject *plugin, NPObject* object)
+ChromeElement::ChromeElement(ChromeWebApplication *app, const char *externalId)
 {
-	this -> plugin = plugin;
-	this -> elementObject = object;
-	npGlobalFuncs.retainobject (elementObject);
+	this -> app = app;
+	this -> externalId = externalId;
+
 }
 
 ChromeElement::~ChromeElement() {
-	npGlobalFuncs.releaseobject(elementObject);
 }
 
 
 
 void ChromeElement::getChildren(std::vector<AbstractWebElement*> &children)
 {
+	const char * msg [] = {"action","getChildren", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), NULL};
 	children.clear ();
-
-	NPVariant variantValue;
-	if (! plugin->getProperty(elementObject, "children", variantValue ))
-		return;
-	if (variantValue.type != NPVariantType_Object)
-	{
-		npGlobalFuncs.releasevariantvalue(&variantValue);
-		return;
+	bool error;
+	json::JsonVector* response =
+			dynamic_cast<json::JsonVector*>(CommunicationManager::getInstance()->call(
+					error, msg));
+	if (response != NULL && !error) {
+		for (std::vector<json::JsonAbstractObject*>::iterator it =
+				response->objects.begin(); it != response->objects.end();
+				it++) {
+			json::JsonValue *v = dynamic_cast<json::JsonValue*>(*it);
+			if (v != NULL) {
+				ChromeElement *e = new ChromeElement(this->app, v->value.c_str());
+				children.push_back(e);
+			}
+		}
+		delete response;
 	}
-
-	NPObject *nodeList = variantValue.value.objectValue;
-	// Now iterate over returned objects
-	plugin->nodeListToVector (nodeList, children);
-
-	npGlobalFuncs.releasevariantvalue(&variantValue);
 }
 
 
 
 void ChromeElement::click()
 {
-	NPVariant variantValue;
-	if (! plugin->invoke0(elementObject, "click",variantValue ))
-		return;
-	npGlobalFuncs.releasevariantvalue(&variantValue);
+	const char * msg [] = {"action","click", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), NULL};
+	bool error;
+	json::JsonAbstractObject* response = CommunicationManager::getInstance()->call(
+					error, msg);
+	if (response != NULL) {
+		delete response;
+	}
 }
 
 
 
 void ChromeElement::getAttribute(const char *attribute, std::string & value)
 {
-	value.clear();
-	NPVariant variantValue;
-	NPVariant param;
+	const char * msg [] = {"action","getAttribute", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), "attribute", attribute, NULL};
+	bool error;
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
 
-	STRINGZ_TO_NPVARIANT(attribute, param);
-	if (! plugin->invoke1(elementObject, "getAttribute", param, variantValue ))
-		return;
-	if (variantValue.type == NPVariantType_String)
+	if (response != NULL && ! error)
 	{
-		value.assign (variantValue.value.stringValue.UTF8Characters, variantValue.value.stringValue.UTF8Length);
+		value = response->value;
+		delete response;
 	}
-	npGlobalFuncs.releasevariantvalue(&variantValue);
 
 }
 
@@ -81,74 +85,82 @@ void ChromeElement::getAttribute(const char *attribute, std::string & value)
 
 void ChromeElement::blur()
 {
-	NPVariant variantValue;
-	if (! plugin->invoke0(elementObject, "blur",variantValue ))
-		return;
-	npGlobalFuncs.releasevariantvalue(&variantValue);
+	const char * msg [] = {"action","blur", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), NULL};
+	bool error;
+	json::JsonAbstractObject* response = CommunicationManager::getInstance()->call(
+					error, msg);
+	if (response != NULL) {
+		delete response;
+	}
 }
 
 
 
 AbstractWebElement *ChromeElement::getParent()
 {
-	NPVariant variantValue;
-	if (! plugin->invoke0(elementObject, "blur",variantValue ))
-		return NULL;
-	if (! variantValue.type == NPVariantType_Object)
-	{
-		npGlobalFuncs.releasevariantvalue(&variantValue);
-		return NULL;
-	}
+	bool error;
+	const char * msg [] = {"action","getParent", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), NULL};
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
 
-	ChromeElement * ce = new ChromeElement(plugin, variantValue.value.objectValue);
-	npGlobalFuncs.releasevariantvalue(&variantValue);
+	if (response != NULL && ! error)
+	{
+		ChromeElement* result = new ChromeElement(app, response->value.c_str());
+		delete response;
+		return result;
+	}
+	else
+		return NULL;
 }
 
 
 
 void ChromeElement::setAttribute(const char *attribute, const char*value)
 {
-	NPVariant variantValue;
-	NPVariant param1, param2;
+	const char * msg [] = {"action","setAttribute", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(),
+			"attribute", attribute, "value", value, NULL};
+	bool error;
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
 
-	STRINGZ_TO_NPVARIANT(attribute, param1);
-	STRINGZ_TO_NPVARIANT(value, param2);
-	if (! plugin->invoke2(elementObject, "setAttribute", param1, param2, variantValue ))
-		return;
-	npGlobalFuncs.releasevariantvalue(&variantValue);
+	if (response != NULL && ! error)
+	{
+		delete response;
+	}
+
 }
 
 
 
 void ChromeElement::focus()
 {
-	NPVariant variantValue;
-	if (! plugin->invoke0(elementObject, "focus",variantValue ))
-		return;
-	npGlobalFuncs.releasevariantvalue(&variantValue);
-
+	const char * msg [] = {"action","focus", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), NULL};
+	bool error;
+	json::JsonAbstractObject* response = CommunicationManager::getInstance()->call(
+					error, msg);
+	if (response != NULL) {
+		delete response;
+	}
 }
 
 
 
 void ChromeElement::getTagName(std::string & value)
 {
-	value.clear ();
-	NPVariant variantValue;
-	if (! plugin->getProperty(elementObject, "tagName",variantValue ))
-		return;
-	if (variantValue.type == NPVariantType_String)
+	const char * msg [] = {"action","getTagName", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), NULL};
+	bool error;
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL && ! error)
 	{
-		value.assign (variantValue.value.stringValue.UTF8Characters, variantValue.value.stringValue.UTF8Length);
+		value = response->value;
+		delete response;
 	}
-	npGlobalFuncs.releasevariantvalue(&variantValue);
 }
 
 
 
 AbstractWebElement *ChromeElement::clone()
 {
-	return new ChromeElement(plugin, elementObject);
+	return new ChromeElement(app, externalId.c_str());
 }
 
 }

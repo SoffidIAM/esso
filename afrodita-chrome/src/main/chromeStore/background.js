@@ -1,42 +1,49 @@
-chrome.tabs.onCreated.addListener(function(tab) {
-	// alert('Hola tab '+tab);
-	// chrome.debugger.attach({tabId:tab.id}, version,
-	// onAttach.bind(null, tab.id));
-});
+var version = "2.0.0";
+//alert ("Started 2");
 
-if (true)
+
+var mazingerBridge = {
+	ports: [],
+	pageId: 0,
+	onConnect: function (port) {
+		  try {
+			  var pageId = mazingerBridge.pageId ++;
+			  mazingerBridge.port[pageId] = port;
+			  port.onMessage.addListener (mazingerBridge.pageEventReceived);
+			  port.postMessage({action: "getInfo", pageId: pageId});
+			  port.onDisconnect.addListener ( function (port) {
+				  delete mazingerBridge.port[pageId];
+			  });
+		  } catch (e) { 
+		  	alert ("Error on Soffid ESSO extension: "+e+" for "+document.URL);
+		  }
+	},
+	pageEventReceived: function (msg, port) {
+		var pageId = msg.pageId;
+		if (typeof (msg.requestId) != 'undefined')
+			msg.message = "response";
+		mazingerBridge.port.postMessage(msg);
+	},
+	ssoEventReceived: function (response) {
+		var result = "";
+		for (var key in response) {
+			result = result + key+":"+response[key]+" ";
+		}
+		var pageId = parseInt(response.pageId);
+		port = mazingerBridge.port[pageId];
+		port.postMessage(response);
+	}
+};
+
+
 chrome.tabs.onUpdated
 		.addListener(function(tabindex, changeinfo, tab) {
 			if (changeinfo.status == "complete") {
-				chrome.tabs.executeScript(
-								{
-									code : 
-        'var btn = document.createElement("BUTTON"); '
-	+ 'document.body.appendChild(btn); '
-	+ 'btn.appendChild(document.createTextNode("HOLA"));'
-	+ 'var embed = document.createElement("OBJECT"); '
-	+ 'document.body.appendChild(embed); '
-	+ 'embed.setAttribute("id", "soffid-sso-plugin");'
-	+ 'embed.setAttribute("type", "application/soffid-sso-plugin");'
-	+ ' try {' 
-	+ 'document.getElementById("soffid-sso-plugin").run();'
-	+ '} catch (e) { alert ("error "+e);}' 
-	});
-
 			}
 		});
 
-var version = "1.0";
 
-function onAttach(tabId) {
-	if (chrome.runtime.lastError) {
-		return;
-	}
+chrome.runtime.onConnect.addListener(mazingerBridge.onConnect);
+mazingerBridge.port = chrome.runtime.connectNative ("com.soffid.esso_chrome1");
+mazingerBridge.port.onMessage.addListener(mazingerBridge.ssoEventReceived);
 
-	chrome.windows.create({
-		url : "headers.html?" + tabId,
-		type : "popup",
-		width : 800,
-		height : 600
-	});
-}

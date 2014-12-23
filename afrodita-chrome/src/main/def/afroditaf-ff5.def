@@ -1,7 +1,0 @@
-LIBRARY SayakaF
-
-
-EXPORTS
-                NSModule
-                
-	                

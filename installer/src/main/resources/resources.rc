@@ -11,7 +11,7 @@ KojiKabuto.exe 		IDT_FILE "com.soffid.iam.esso.w32.KojiKabuto.exe.bzip"
 uninstall.exe 			IDT_FILE "com.soffid.iam.esso.w32.MazingerUnInstaller.exe.bzip"
 AfroditaE.dll 			IDT_FILE "com.soffid.iam.esso.w32.afrodita-explorer.dll.bzip"
 AfroditaFC.dll 			IDT_FILE "com.soffid.iam.esso.w32.afrodita-firefox-ctype.dll.bzip"
-AfroditaC.dll 			IDT_FILE "com.soffid.iam.esso.w32.afrodita-chrome.dll.bzip"
+AfroditaC.exe 			IDT_FILE "com.soffid.iam.esso.w32.afrodita-chrome.exe.bzip"
 JetScrander.exe 		IDT_FILE "com.soffid.iam.esso.w32.JetScrander.exe.bzip"
 SayakaGina.dll 		IDT_FILE "com.soffid.iam.esso.w32.SayakaGina.dll.bzip"
 SayakaCP.dll   			IDT_FILE "com.soffid.iam.esso.w32.sayaka-cp.dll.bzip"
@@ -46,7 +46,7 @@ AfroditaE64.dll			IDT_FILE "com.soffid.iam.esso.w64.afrodita-explorer.dll.bzip"
 JetScrander64.exe 		IDT_FILE "com.soffid.iam.esso.w64.JetScrander.exe.bzip"
 SayakaCP64.dll 			IDT_FILE "com.soffid.iam.esso.w64.sayaka-cp.dll.bzip"
 SoffidConfig64.exe		IDT_FILE "com.soffid.iam.esso.w64.SoffidConfig.exe.bzip"
-AfroditaC64.dll			IDT_FILE "com.soffid.iam.esso.w64.afrodita-chrome.dll.bzip"
+AfroditaC64.exe			IDT_FILE "com.soffid.iam.esso.w64.afrodita-chrome.exe.bzip"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // MINGW libraries

@@ -10,11 +10,11 @@
 
 #ifdef WIN32
 #include <windows.h>
+//#define DEBUG(x) MessageBox(NULL, x, "Afrodita-Crhome", MB_OK)
+#define DEBUG(x)
+#else
+#define DEBUG(x)
 #endif
 
-#include <npapi.h>
-#include <npfunctions.h>
-
-extern NPNetscapeFuncs npGlobalFuncs ;
 
 #endif /* MAZINGERFF_H_ */

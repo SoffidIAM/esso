@@ -675,6 +675,9 @@ int uninstall (int argc, char **argv)
 	uninstallResource("SayakaCP.dll");
 	uninstallResource("planeador.wav");
 	uninstallResource("ShiroKabuto.exe");
+	uninstallResource("ShiroKabuto.exe");
+	uninstallResource("Afrodita-crhome.exe");
+	uninstallResource("Afrodita-crhome.manifest");
 
 	if (IsWow64())
 	{

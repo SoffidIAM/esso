@@ -1,21 +1,33 @@
 {
   "manifest_version": 2,
-  "name": "Soffid ESSO",
-  "description": "Soffid Enterprise Single Sign-On",
-  "version": "1.0.6",
+  "name": "Soffid ESSO v2",
+  "description": "Soffid Enterprise Single Sign-On extension (version 2)",
+  "version": "2.0.0",
   "icons": { "32": "icon.png", "128": "soffid.png"},
 
   "permissions": [
-	"*://*/"
+	"*://*/",
+	"tabs",
+    "nativeMessaging"
   ],
+  
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
 
   "browser_action": {
     "default_icon": "icon.png",
     "default_popup": "popup.html"
   },
-
-  "content_scripts": [ {
-    "matches": ["*://*/*"],
-    "js": ["content.js"]
-  } ]
+  
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": ["content.js"],
+      "all_frames": true
+    }
+  ]
+  
 }
+
