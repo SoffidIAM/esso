@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <MazingerInternal.h>
+#include <SeyconServer.h>
 
 MazingerEnv::MazingerEnv() {
 #ifdef WIN32
@@ -78,9 +79,7 @@ static char *getDefaultDesktop ()
 			NULL);
 		defaultDesktop = strdup (desktopName);
 #else
-		defaultDesktop = getenv("DISPLAY");
-		if (defaultDesktop == NULL)
-			defaultDesktop = "Default";
+		defaultDesktop = "Default";
 #endif
 	}
 	return defaultDesktop;
@@ -103,7 +102,7 @@ MazingerEnv* MazingerEnv::getEnv(const char *user) {
 
 MazingerEnv* MazingerEnv::getEnv(const char *user, const char*desktop) {
 	if ( (user == NULL || strcmp(user, MZNC_getUserName()) == 0) &&
-			desktop == NULL || strcmp(desktop, getDefaultDesktop()) == 0)
+			(desktop == NULL || strcmp(desktop, getDefaultDesktop()) == 0))
 		return getDefaulEnv();
 	for (std::vector<MazingerEnv*>::iterator it = environments.begin ();
 			it != environments.end(); it++)
@@ -334,6 +333,7 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 			shmName.assign ("/MazingerData-");
 			shmName.append (user);
 		}
+		SeyconCommon::debug ("Opening %s\n", shmName.c_str());
 		shm = shm_open (shmName.c_str(), readOnly ? O_RDONLY : O_RDWR, 0600);
 		if (shm < 0) {
 			if (readOnly) return NULL;
@@ -341,7 +341,7 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 			shm = shm_open (shmName.c_str(), O_RDWR|O_CREAT, 0600);
 			if (shm < 0) {
 				if (! readOnly) {
-					printf ("Unable to create shared memory %s", shmName.c_str());
+					fprintf (stderr, "Unable to create shared memory %s", shmName.c_str());
 					perror ("Error: ");
 				}
 				return NULL;
@@ -362,7 +362,10 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 			readOnly ? PROT_READ: PROT_READ|PROT_WRITE, MAP_SHARED, shm, 0);
 	if (pMazingerData == MAP_FAILED) {
 		pMazingerData = NULL;
+		SeyconCommon::debug ("Cannot map %s\n", shmName.c_str());
 	}
+	else
+		SeyconCommon::debug ("Opened %s\n", shmName.c_str());
 	openReadOnly = readOnly;
 
 	return pMazingerData;

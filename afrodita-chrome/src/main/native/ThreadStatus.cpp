@@ -6,7 +6,7 @@
  */
 
 #include "ThreadStatus.h"
-
+#include <stdio.h>
 
 namespace mazinger_chrome {
 
@@ -36,15 +36,20 @@ json::JsonAbstractObject* ThreadStatus::waitForMessage() {
 	acquired = (dwResult == WAIT_OBJECT_0);
 #else
 	struct timespec timeout;
+	time (&timeout.tv_sec);
 	timeout.tv_nsec = 0;
-	timeout.tv_sec = 5;
+	timeout.tv_sec += 5;
 	acquired = ( sem_timedwait (&semaphore, &timeout) == 0);
 #endif
 	if (acquired)
 	{
+		fflush(stderr);
 		json::JsonAbstractObject *result = readObject;
 		readObject = NULL;
 		return result;
+	}
+	else
+	{
 	}
 }
 
@@ -53,6 +58,8 @@ void ThreadStatus::notifyMessage(json::JsonAbstractObject* message) {
 #ifdef WIN32
 	SetEvent (hMutex);
 #else
+	std::string s;
+	message->write(s, 3);
 	sem_post(&semaphore);
 #endif
 }

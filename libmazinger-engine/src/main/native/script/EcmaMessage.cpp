@@ -382,15 +382,15 @@ std::wstring DefaultScriptDialog::selectAccount(
 }
 
 void DefaultScriptDialog::alert (const char *msg) {
-	printf ("%s\n", msg);
+	fprintf (stderr, "%s\n", msg);
 }
 
 void DefaultScriptDialog::progressMessage(const char *msg) {
-	printf ("%s\r", msg);
+	fprintf (stderr, "%s\r", msg);
 }
 
 void DefaultScriptDialog::cancelProgressMessage() {
-	printf ("\n");
+	fprintf (stderr, "\n");
 }
 #endif
 
