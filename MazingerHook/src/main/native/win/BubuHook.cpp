@@ -115,7 +115,6 @@ LRESULT CALLBACK wireKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
             wParam, lParam); 
  
 
-//    MZNSendDebugMessage (szBuf, "KEYBOARD - nCode: %d, vk: %d, %d times ", nCode, wParam, c++);
     return CallNextHookEx(hhk, nCode, wParam, 
         lParam); 
 } 

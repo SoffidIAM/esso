@@ -35,4 +35,5 @@
 #define IDM_LOGOFF                              40007
 #define IDM_USER_ESSO                           40008
 #define IDM_USER_NEW_DESKTOP                    40009
-#define IDM_USER_DESKTOP                        40010
+#define IDM_OPEN_MENU                           40010
+#define IDM_USER_DESKTOP                        40011
