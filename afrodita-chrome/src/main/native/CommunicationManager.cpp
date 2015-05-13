@@ -32,6 +32,8 @@ CommunicationManager::CommunicationManager() {
 #else
 	sem_init(&semaphore, true, 1);
 #endif
+	requestId = 0;
+	pendingMessage = NULL;
 }
 
 CommunicationManager::~CommunicationManager() {
