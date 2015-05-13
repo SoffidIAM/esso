@@ -36,8 +36,8 @@ private:
 	std::string readMessage ();
 	void writeMessage (const std::string &msg);
 	static CommunicationManager *instance;
-	int requestId = 0;
-	json::JsonAbstractObject *pendingMessage = NULL;
+	int requestId;
+	json::JsonAbstractObject *pendingMessage;
 #ifdef WIN32
 	HANDLE hMutex;
 #else
