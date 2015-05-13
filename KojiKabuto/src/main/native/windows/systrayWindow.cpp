@@ -68,15 +68,28 @@ static void playSound ()
 
 struct EnumDesktopAction
 {
-	bool updateMenu = false;
-	bool execute = false;
-	bool openMenu = false;
-	bool forwardAction = false;
-	bool highlight = false;
+	bool updateMenu ;
+	bool execute ;
+	bool openMenu ;
+	bool forwardAction;
+	bool highlight;
 	HMENU hm;
 	int nextId;
 	int idToExeucte;
 	HDESK currentDesktop;
+
+	EnumDesktopAction::EnumDesktopAction ()
+	{
+		updateMenu = false;
+		execute = false;
+		openMenu = false;
+		forwardAction = false;
+		highlight = false;
+		idToExeucte = 0;
+		nextId = 0;
+		hm = NULL;
+		currentDesktop = NULL;
+	}
 };
 
 static BOOL CALLBACK enumWindowProc(
