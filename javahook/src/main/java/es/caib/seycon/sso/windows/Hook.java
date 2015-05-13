@@ -53,7 +53,26 @@ public class Hook implements PropertyChangeListener
     public void removeObject (long id) {
     	savedObjects.remove(new Long(id));
     }
+    
+    private void lock()
+    {
+    	synchronized (this)
+    	{
+    		locks ++;
+    	}
+    }
+    
+    private void unlock ()
+    {
+    	synchronized (this)
+    	{
+    		locks --;
+    		if (locks == 0)
+    			savedObjects.clear(); 
+    	}
+    }
 
+    int locks = 0;
     public void propertyChange(PropertyChangeEvent evt) {
     	if ("focusOwner".equals(evt.getPropertyName())) {
 			NotifyThread nt = new NotifyThread();
@@ -65,21 +84,29 @@ public class Hook implements PropertyChangeListener
         	kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
         	kfm.addPropertyChangeListener("focusOwner", this);
         	kfm.addPropertyChangeListener("managingFocus", this);
-        	this.notifyFocus (kfm.getFocusedWindow(), kfm.getFocusOwner());
+        	doNotifyFocus (kfm.getFocusedWindow(), kfm.getFocusOwner());
     	}
 	}
 
+    private void doNotifyFocus (Window w, Component c)
+    {
+		try {
+			lock();
+			notifyFocus(w, c);
+		} catch (Throwable t) {
+			// Ignore
+		} finally {
+			unlock();
+		}
+    }
+    
 	private native void notifyFocus(Window w, Component c) ;
 
 	class NotifyThread extends Thread {
 		Window w;
 		Component c;
 		public void run() {
-			try {
-				notifyFocus(w, c);
-			} catch (Throwable t) {
-				// Ignore
-			}
+			doNotifyFocus(w, c);
 		}
 		
 	}

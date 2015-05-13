@@ -9,7 +9,7 @@
 #define CHROMEWEBAPPLICAITON_H_
 
 #include "AfroditaC.h"
-#include "PluginObject.h"
+#include "ThreadStatus.h"
 
 #include <AbstractWebApplication.h>
 namespace mazinger_chrome
@@ -17,7 +17,7 @@ namespace mazinger_chrome
 
 class ChromeWebApplication: public AbstractWebApplication {
 public:
-	ChromeWebApplication(PluginObject *plugin, NPObject *windowObject);
+    ChromeWebApplication(ThreadStatus *thread);
 	virtual ~ChromeWebApplication();
 
 	virtual void getUrl (std::string &value) ;
@@ -35,9 +35,13 @@ public:
 	virtual void write (const char*str);
 	virtual void writeln (const char*str) ;
 
+	ThreadStatus *threadStatus;
 private:
-    NPObject *windowObject;
-    PluginObject *plugin;
+    std::string url;
+    std::string title;
+
+	void generateCollection(const char* msg[],
+			std::vector<AbstractWebElement*>& elements);
 };
 }
 

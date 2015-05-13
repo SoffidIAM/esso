@@ -1,4 +1,5 @@
 # include "KojiKabuto.h"
+#include <userenv.h>
 
 #include <MazingerEnv.h>
 
@@ -12,19 +13,19 @@ extern bool startingSession;
 bool KojiKabuto::usedKerberos = false;
 bool KojiKabuto::desktopSession = false;
 
-HWND createKojiWindow (HINSTANCE hinstance);
-void createSystrayWindow (HINSTANCE hInstance);
+HWND createKojiWindow(HINSTANCE hinstance);
+void createSystrayWindow(HINSTANCE hInstance);
 
-void KojiKabuto::enableTaskManager (DWORD dwEnable)
-{
-	if (dwEnable)
-		KOJITaskMgrEnable();
-	else
-		KOJITaskMgrDisable();
+void KojiKabuto::enableTaskManager(DWORD dwEnable) {
+	if (!KojiKabuto::desktopSession) {
+		if (dwEnable)
+			KOJITaskMgrEnable();
+		else
+			KOJITaskMgrDisable();
+	}
 }
 
-int KojiKabuto::runProgram (char *achString, char *achDir, int bWait)
-{
+int KojiKabuto::runProgram(char *achString, char *achDir, int bWait) {
 	PROCESS_INFORMATION p;
 	STARTUPINFO si;
 	DWORD dwExitStatus;
@@ -41,40 +42,35 @@ int KojiKabuto::runProgram (char *achString, char *achDir, int bWait)
 			NORMAL_PRIORITY_CLASS, NULL, // Environment,
 			achDir, // Current directory
 			&si, // StartupInfo,
-			&p))
-	{
-		if (bWait)
-		{
+			&p)) {
+		if (bWait) {
 			MSG msg;
-			do
-			{
+			do {
 				Sleep(1000);
-				while (PeekMessage (&msg, NULL, 0, 0, PM_REMOVE) > 0) //Or use an if statement
+				while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) > 0) //Or use an if statement
 				{
-				          TranslateMessage (&msg);
-				          DispatchMessage (&msg);
+					TranslateMessage(&msg);
+					DispatchMessage(&msg);
 				}
 				GetExitCodeProcess(p.hProcess, &dwExitStatus);
-			} while (dwExitStatus == STILL_ACTIVE );
+			} while (dwExitStatus == STILL_ACTIVE);
 
-			CloseHandle (p.hProcess);
-			CloseHandle (p.hThread);
+			CloseHandle(p.hProcess);
+			CloseHandle(p.hThread);
 		}
 
 		return 0;
 	}
 
-	else
-	{
-		MessageBox (NULL, achString, Utils::LoadResourcesString(9).c_str(),
-				MB_OK | MB_ICONSTOP);
+	else {
+		MessageBox(NULL, achString, Utils::LoadResourcesString(9).c_str(),
+		MB_OK | MB_ICONSTOP);
 
 		return -1;
 	}
 }
 
-void KojiKabuto::runScript (LPCSTR lpszScript)
-{
+void KojiKabuto::runScript(LPCSTR lpszScript) {
 	char achCmdLine[2048];
 	sprintf(achCmdLine, "c:\\tcl\\bin\\wish80 \"%s\"", lpszScript);
 	char achDir[2048];
@@ -89,8 +85,7 @@ void KojiKabuto::runScript (LPCSTR lpszScript)
 	runProgram(achCmdLine, achDir, TRUE);
 }
 
-void KojiKabuto::consumeMessages ()
-{
+void KojiKabuto::consumeMessages() {
 //	MSG msg;
 
 //	while (PeekMessage (&msg, NULL, 0, 0, PM_REMOVE))
@@ -99,20 +94,17 @@ void KojiKabuto::consumeMessages ()
 //	}
 }
 
-void KojiKabuto::createProgressWindow (HINSTANCE hInstance)
-{
+void KojiKabuto::createProgressWindow(HINSTANCE hInstance) {
 	hwndLogon = createKojiWindow(hInstance);
-	HDESK hd = GetThreadDesktop (GetCurrentThreadId());
-	SwitchDesktop (hd);
+	HDESK hd = GetThreadDesktop(GetCurrentThreadId());
+	SwitchDesktop(hd);
 	return;
 }
 
-void KojiKabuto::destroyProgressWindow ()
-{
-	if (hwndLogon != NULL)
-	{
-		HDESK hd = GetThreadDesktop (GetCurrentThreadId());
-		SwitchDesktop (hd);
+void KojiKabuto::destroyProgressWindow() {
+	if (hwndLogon != NULL) {
+		HDESK hd = GetThreadDesktop(GetCurrentThreadId());
+		SwitchDesktop(hd);
 		consumeMessages();
 		ShowWindow(hwndLogon, SW_HIDE);
 		consumeMessages();
@@ -120,10 +112,8 @@ void KojiKabuto::destroyProgressWindow ()
 	}
 }
 
-void KojiKabuto::displayProgressMessage (LPCSTR achString)
-{
-	if (hwndLogon != NULL)
-	{
+void KojiKabuto::displayProgressMessage(LPCSTR achString) {
+	if (hwndLogon != NULL) {
 		consumeMessages();
 //		SetWindowTextA(hwndLogon, achString);
 		SetDlgItemText(hwndLogon, IDC_TEXT, achString);
@@ -131,8 +121,7 @@ void KojiKabuto::displayProgressMessage (LPCSTR achString)
 	}
 }
 
-BOOL KojiKabuto::mountScriptDrive ()
-{
+BOOL KojiKabuto::mountScriptDrive() {
 	NETRESOURCE nr;
 	char *token;
 	BOOL bMontado = FALSE;
@@ -148,24 +137,20 @@ BOOL KojiKabuto::mountScriptDrive ()
 
 	token = strtok(achMounts, ", ");
 
-	while (token != NULL && !bMontado)
-	{
-		if (token[0] != '\0')
-		{
+	while (token != NULL && !bMontado) {
+		if (token[0] != '\0') {
 			displayProgressMessage(token);
 			nr.dwType = RESOURCETYPE_ANY;
 			nr.lpLocalName = (char*) localDrive.c_str();
 			nr.lpRemoteName = token;
 			nr.lpProvider = NULL;
-			if (WNetAddConnection2(&nr, NULL, NULL, 0) == NO_ERROR)
-			{
+			if (WNetAddConnection2(&nr, NULL, NULL, 0) == NO_ERROR) {
 				bMontado = TRUE;
 			}
 
-			else
-			{
-				SeyconCommon::warn("Unable to mount drive %s: %s\n", localDrive.c_str(),
-						token);
+			else {
+				SeyconCommon::warn("Unable to mount drive %s: %s\n",
+						localDrive.c_str(), token);
 				SeyconCommon::notifyError();
 			}
 		}
@@ -179,8 +164,7 @@ BOOL KojiKabuto::mountScriptDrive ()
 	return bMontado;
 }
 
-void KojiKabuto::umountScriptDrive ()
-{
+void KojiKabuto::umountScriptDrive() {
 	std::string localDrive;
 	SeyconCommon::readProperty("LogonDrive", localDrive);
 
@@ -190,22 +174,20 @@ void KojiKabuto::umountScriptDrive ()
 	WNetCancelConnection2(localDrive.c_str(), CONNECT_UPDATE_PROFILE, TRUE);
 }
 
-void KojiKabuto::writeIntegerProperty (HKEY hKey, const char *name, int value)
-{
+void KojiKabuto::writeIntegerProperty(HKEY hKey, const char *name, int value) {
 	char achValue[30];
 	sprintf(achValue, "%d", value);
-	RegSetValueExA(hKey, name, NULL, REG_SZ, (LPBYTE) achValue, strlen(achValue) + 1);
+	RegSetValueExA(hKey, name, NULL, REG_SZ, (LPBYTE) achValue,
+			strlen(achValue) + 1);
 }
 
-int KojiKabuto::readIntegerProperty (HKEY hKey, const char *name)
-{
+int KojiKabuto::readIntegerProperty(HKEY hKey, const char *name) {
 	char *achValue;
 	DWORD size = 0;
 	DWORD dwType;
 	RegQueryValueEx(hKey, name, NULL, &dwType, (LPBYTE) NULL, &size);
 
-	if (size > 0)
-	{
+	if (size > 0) {
 		achValue = (char*) malloc(size + 1);
 		RegQueryValueEx(hKey, name, NULL, &dwType, (LPBYTE) achValue, &size);
 		achValue[size] = '\0';
@@ -215,38 +197,32 @@ int KojiKabuto::readIntegerProperty (HKEY hKey, const char *name)
 		return v;
 	}
 
-	else
-	{
+	else {
 		return 0;
 	}
 }
 
-bool KojiKabuto::startDisabled ()
-{
+bool KojiKabuto::startDisabled() {
 	std::string disabled;
 	SeyconCommon::readProperty("startDisabled", disabled);
 	return disabled.size() > 0;
 }
 
-void KojiKabuto::checkScreenSaver ()
-{
+void KojiKabuto::checkScreenSaver() {
 	HKEY hKey;
 
-	if (RegOpenKeyEx(HKEY_CURRENT_USER, "Control Panel\\Desktop", 0, KEY_ALL_ACCESS,
-			&hKey) == ERROR_SUCCESS)
-	{
+	if (RegOpenKeyEx(HKEY_CURRENT_USER, "Control Panel\\Desktop", 0,
+			KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS) {
 		DWORD dwActive = readIntegerProperty(hKey, "ScreenSaveActive");
 		DWORD dwTimeout = readIntegerProperty(hKey, "ScreenSaveTimeOut");
 		DWORD dwSecure = readIntegerProperty(hKey, "ScreenSaverIsSecure");
 		bool change = false;
 
-		if (!dwActive || !dwSecure)
-		{
+		if (!dwActive || !dwSecure) {
 			int r = MessageBoxA(NULL, Utils::LoadResourcesString(10).c_str(),
 					Utils::LoadResourcesString(11).c_str(), MB_YESNO);
 
-			if (r == IDYES)
-			{
+			if (r == IDYES) {
 				dwActive = 1;
 				dwSecure = 1;
 				change = true;
@@ -258,20 +234,17 @@ void KojiKabuto::checkScreenSaver ()
 			}
 		}
 
-		else if (dwTimeout > 900)
-		{
+		else if (dwTimeout > 900) {
 			int r = MessageBoxA(NULL, Utils::LoadResourcesString(12).c_str(),
 					Utils::LoadResourcesString(11).c_str(), MB_YESNO);
 
-			if (r == IDYES)
-			{
+			if (r == IDYES) {
 				change = true;
 				dwTimeout = 600;
 			}
 		}
 
-		if (change)
-		{
+		if (change) {
 			writeIntegerProperty(hKey, "ScreenSaveActive", dwActive);
 			writeIntegerProperty(hKey, "ScreenSaverIsSecure", dwSecure);
 			writeIntegerProperty(hKey, "ScreenSaveTimeOut", dwTimeout);
@@ -279,40 +252,8 @@ void KojiKabuto::checkScreenSaver ()
 	}
 }
 
-static BOOL CALLBACK enumDesktopProcToReturn(
-		  LPTSTR lpszDesktop,
-		  LPARAM lParam
-		)
-{
-	HANDLE hd = GetThreadDesktop (GetCurrentThreadId());
-	char desktopName[1024] = "";
-
-	GetUserObjectInformation (hd,
-		UOI_NAME,
-		desktopName, sizeof desktopName,
-		NULL);
-	if (strcmp (lpszDesktop, desktopName) == 0)
-	{
-		return true;
-	}
-
-	std::string user = MZNC_getUserName();
-	MazingerEnv *penv = MazingerEnv::getEnv (user.c_str(), lpszDesktop);
-	if (penv != NULL && penv->getDataRW() != NULL && penv->getDataRW()->started)
-	{
-		HDESK hDesktop = OpenDesktop(lpszDesktop, 0, 0, GENERIC_EXECUTE|GENERIC_READ);
-		if (SwitchDesktop(hDesktop))
-			if (lParam == NULL)
-				ExitProcess(0);
-			else
-				return false;
-	}
-	return true;
-}
-
 // Force login process
-void KojiKabuto::ForceLogin ()
-{
+void KojiKabuto::ForceLogin() {
 	std::string forceLogin;	// Force login on startup registry key value
 
 	SeyconCommon::readProperty("ForceStartupLogin", forceLogin);
@@ -320,19 +261,15 @@ void KojiKabuto::ForceLogin ()
 	destroyProgressWindow();
 
 	// Check force login
-	if (desktopSession)
-	{
-		EnumDesktops (GetProcessWindowStation(), enumDesktopProcToReturn, (LPARAM) NULL) ;
-	}
-	else if (forceLogin != "false")
-	{
+	if (desktopSession) {
+//		SwitchDesktop(OpenDesktop("Default", 0, 0, GENERIC_ALL));
+	} else if (forceLogin != "false") {
 		ExitWindowsEx(EWX_LOGOFF, 0);
 	}
 }
 
 // Login error process
-void KojiKabuto::LoginErrorProcess ()
-{
+void KojiKabuto::LoginErrorProcess() {
 	std::string clientName;			// Client name
 	DWORD offlineAllowed = 0;	// Offline login allowed
 
@@ -341,34 +278,30 @@ void KojiKabuto::LoginErrorProcess ()
 	SeyconCommon::getCitrixClientName(clientName);
 
 	// Check client name
-	if (clientName.empty())
-	{
+	if (clientName.empty()) {
 		offlineAllowed = SeyconCommon::readIntProperty("LocalOfflineAllowed");
 	}
 
-	else
-	{
+	else {
 		offlineAllowed = SeyconCommon::readIntProperty("RemoteOfflineAllowed");
 	}
 
 	// Check offline allowed
-	if (offlineAllowed && ! desktopSession)
-	{
+	if (offlineAllowed && !desktopSession) {
 		MessageBox(NULL, (session->getErrorMessage()),
-				Utils::LoadResourcesString(1001).c_str(), MB_OK | MB_ICONWARNING);
+				Utils::LoadResourcesString(1001).c_str(),
+				MB_OK | MB_ICONWARNING);
 
 		session->executeOfflineScript();
 	}
 
-	else
-	{
+	else {
 		LoginDeniedProcess();
 	}
 }
 
 // Login denied process
-void KojiKabuto::LoginDeniedProcess ()
-{
+void KojiKabuto::LoginDeniedProcess() {
 	MessageBox(NULL, (session->getErrorMessage()),
 			Utils::LoadResourcesString(1001).c_str(), MB_OK | MB_ICONSTOP);
 
@@ -376,8 +309,7 @@ void KojiKabuto::LoginDeniedProcess ()
 }
 
 // Login success process
-void KojiKabuto::LoginSucessProcess ()
-{
+void KojiKabuto::LoginSucessProcess() {
 	SeyconCommon::debug("Enable task manager\n");
 	enableTaskManager(TRUE);
 
@@ -397,44 +329,37 @@ void KojiKabuto::LoginSucessProcess ()
  * True if must repeat login process
  *
  */
-bool KojiKabuto::LoginStatusProcess (int pLoginResult)
-{
+bool KojiKabuto::LoginStatusProcess(int pLoginResult) {
 	SeyconCommon::info("Login result = %d\n", pLoginResult);
 
-	switch (pLoginResult)
-	{
-		case LOGIN_DENIED:
-		{
-			LoginDeniedProcess();
-			return !usedKerberos;
-		}
+	switch (pLoginResult) {
+	case LOGIN_DENIED: {
+		LoginDeniedProcess();
+		return !usedKerberos;
+	}
 
-		case LOGIN_ERROR:
-		{
-			LoginErrorProcess();
-			return false;
-		}
+	case LOGIN_ERROR: {
+		LoginErrorProcess();
+		return false;
+	}
 
-		case LOGIN_SUCCESS:
-		{
-			LoginSucessProcess();
-			return false;
-		}
+	case LOGIN_SUCCESS: {
+		LoginSucessProcess();
+		return false;
+	}
 
-		case LOGIN_UNKNOWNUSER:
-		{
-			LoginDeniedProcess();
-			return !usedKerberos;
-		}
+	case LOGIN_UNKNOWNUSER: {
+		LoginDeniedProcess();
+		return !usedKerberos;
+	}
 
-		default:
-			return false;
+	default:
+		return false;
 	}
 }
 
 // Start manual login
-int KojiKabuto::StartManualLogin ()
-{
+int KojiKabuto::StartManualLogin() {
 	LoginDialog loginDialog;			// Login dialog handler
 	int loginResult;						// Login dialog process result
 	int manualLoginResult = -1;	// Manual login process result
@@ -442,15 +367,13 @@ int KojiKabuto::StartManualLogin ()
 	loginResult = loginDialog.show();
 
 	// Check login dialog result
-	if (loginResult == 0)
-	{
+	if (loginResult == 0) {
 		manualLoginResult = session->passwordSessionStartup(
 				MZNC_wstrtostr(loginDialog.getUserId().c_str()).c_str(),
 				loginDialog.getUserPassword().c_str());
 	}
 
-	else
-	{
+	else {
 		ForceLogin();
 	}
 
@@ -458,16 +381,14 @@ int KojiKabuto::StartManualLogin ()
 }
 
 // Start kerberos login
-int KojiKabuto::StartKerberosLogin ()
-{
+int KojiKabuto::StartKerberosLogin() {
 	return session->kerberosSessionStartup();
 }
 
 static KojiDialog dlg;				// KojiKabuto dialog handler
 
 // Start login process
-int KojiKabuto::StartLoginProcess ()
-{
+int KojiKabuto::StartLoginProcess() {
 	std::string loginType;	// Login type registry key value
 	int result = -1;			// Login result
 
@@ -479,23 +400,21 @@ int KojiKabuto::StartLoginProcess ()
 	SeyconCommon::readProperty("LoginType", loginType);
 
 	// Check unrecognized login type
-	if ((loginType != "kerberos") && (loginType != "manual") && (loginType != "both"))
-	{
+	if ((loginType != "kerberos") && (loginType != "manual")
+			&& (loginType != "both")) {
 		loginType = "both";
 	}
 
 	// Check login type
-	if (!desktopSession && ((loginType == "kerberos") || (loginType == "both")))
-	{
+	if (!desktopSession
+			&& ((loginType == "kerberos") || (loginType == "both"))) {
 		result = StartKerberosLogin();
 		usedKerberos = true;
 	}
 
 	// Check login status
-	if (result != LOGIN_SUCCESS)
-	{
-		if (desktopSession || loginType == "manual" || loginType == "both")
-		{
+	if (result != LOGIN_SUCCESS) {
+		if (desktopSession || loginType == "manual" || loginType == "both") {
 			result = StartManualLogin();
 			usedKerberos = false;
 		}
@@ -504,9 +423,64 @@ int KojiKabuto::StartLoginProcess ()
 	return result;
 }
 
+static BOOL CALLBACK closeAllWindowsStep1(HWND hwnd,	LPARAM lParam) {
+	DWORD dwProcessId = GetCurrentProcessId();
+	GetWindowThreadProcessId(hwnd, &dwProcessId);
+	if (dwProcessId != GetCurrentProcessId())
+	{
+		if (IsWindowVisible(hwnd) || IsIconic(hwnd))
+		{
+			bool *allOk = (bool*) lParam;
+			DWORD result = SendMessage (hwnd, WM_QUERYENDSESSION, 0 , ENDSESSION_LOGOFF);
+			if (allOk != NULL && result == FALSE)
+			{
+				char ach[1000];
+				GetWindowText(hwnd, ach, sizeof ach);
+				*allOk = false;
+			}
+		}
+	}
+	return true;
+
+}
+
+static BOOL CALLBACK closeAllWindowsStep2(HWND hwnd,	LPARAM lParam) {
+	DWORD dwProcessId = GetCurrentProcessId();
+	GetWindowThreadProcessId(hwnd, &dwProcessId);
+	if (dwProcessId != GetCurrentProcessId())
+	{
+		if (IsWindowVisible(hwnd) || IsIconic(hwnd))
+		{
+			SendMessage (hwnd, WM_ENDSESSION, 1, ENDSESSION_LOGOFF);
+		}
+	}
+	return true;
+
+}
+
+static BOOL CALLBACK closeAllWindowsStep3(HWND hwnd,	LPARAM lParam) {
+	DWORD dwProcessId = GetCurrentProcessId();
+	GetWindowThreadProcessId(hwnd, &dwProcessId);
+	if (dwProcessId != GetCurrentProcessId())
+	{
+		HANDLE h = OpenProcess(GENERIC_ALL, false, dwProcessId);
+		TerminateProcess(h, 0);
+		CloseHandle(h);
+	}
+	return true;
+
+}
+
+
 // Close session
-void KojiKabuto::CloseSession ()
-{
+void KojiKabuto::CloseSession() {
+	if (desktopSession) {
+		bool allOk = true;
+		EnumWindows(closeAllWindowsStep1, (LPARAM)&allOk);
+		if (! allOk)
+			return;
+	}
+
 	if (session != NULL)
 		session->close();
 	session = NULL;
@@ -514,26 +488,30 @@ void KojiKabuto::CloseSession ()
 	MZNStop(MZNC_getUserName());
 
 	sessionStarted = false;
-	if (desktopSession)
-	{
-		EnumDesktops (GetProcessWindowStation(), enumDesktopProcToReturn, (LPARAM) 1) ;
+	if (desktopSession) {
+
+		EnumWindows(closeAllWindowsStep2, 0);
+
+		HDESK hdesk = GetThreadDesktop(GetCurrentThreadId());
+		SwitchDesktop(OpenDesktop("Default", 0, 0, GENERIC_ALL));
+		EnumDesktopWindows(hdesk, closeAllWindowsStep3, 0);
+		SwitchDesktop(OpenDesktop("Default", 0, 0, GENERIC_ALL));
+		ExitProcess(0);
 	}
 }
 
 // Start user login
-void KojiKabuto::StartUserInit ()
-{
+void KojiKabuto::StartUserInit() {
 	SeyconCommon::info("Starting userinit\n");
 
-	HDESK hd = GetThreadDesktop (GetCurrentThreadId());
-	SwitchDesktop (hd);
+	HDESK hd = GetThreadDesktop(GetCurrentThreadId());
+	SwitchDesktop(hd);
 
 	runProgram((char*) "userinit.exe", NULL, FALSE);
 	enableTaskManager(TRUE);
 }
 
-DWORD WINAPI KojiKabuto::mainLoop (LPVOID param)
-{
+DWORD WINAPI KojiKabuto::mainLoop(LPVOID param) {
 	DWORD debugLevel;	// Debug level
 	int loginResult = -1;	// Login process result
 	std::string forceLogin;	// Force user login registry key value
@@ -545,13 +523,11 @@ DWORD WINAPI KojiKabuto::mainLoop (LPVOID param)
 	KojiKabuto::displayProgressMessage(Utils::LoadResourcesString(13).c_str());
 
 	// Check debug level
-	if (debugLevel > 0)
-	{
+	if (debugLevel > 0) {
 		SeyconCommon::setDebugLevel(debugLevel);
 	}
 
-	else
-	{
+	else {
 		SeyconCommon::setDebugLevel(0);
 	}
 
@@ -560,30 +536,28 @@ DWORD WINAPI KojiKabuto::mainLoop (LPVOID param)
 	// If Remote desktop support is initial program, do not perform ESSO login and go to userinit
 	std::string initialProgram;
 	SeyconCommon::getCitrixInitialProgram(initialProgram);
-	const char * pattern ="%WINDIR%\\SYSTEM32\\RDSADDIN.EXE";
+	const char * pattern = "%WINDIR%\\SYSTEM32\\RDSADDIN.EXE";
 
-	if (_strnicmp (initialProgram.c_str(), pattern, strlen(pattern)) == 0)
-	{
+	if (_strnicmp(initialProgram.c_str(), pattern, strlen(pattern)) == 0) {
 		KojiKabuto::StartUserInit();
-	}
-	else
-	{
+	} else {
 		// Check force login before KojiKabuto login
-		if (!desktopSession && forceLogin != "true")
-		{
+		if (!desktopSession && forceLogin != "true") {
 			KojiKabuto::StartUserInit();
 		}
 
-		do
-		{
+		do {
 			// Start login process
 			loginResult = KojiKabuto::StartLoginProcess();
 
 			// Check login status
 		} while (KojiKabuto::LoginStatusProcess(loginResult));
 
-		if (desktopSession || forceLogin == "true")
-		{
+		if (desktopSession && loginResult != LOGIN_SUCCESS) {
+			SwitchDesktop(OpenDesktopA("Default", 0, 0, GENERIC_ALL));
+			ExitProcess(0);
+		}
+		if (desktopSession || forceLogin == "true") {
 			KojiKabuto::StartUserInit();
 		}
 	}
@@ -593,8 +567,7 @@ DWORD WINAPI KojiKabuto::mainLoop (LPVOID param)
 	return 0;
 }
 
-DWORD WINAPI KojiKabuto::loginThread (LPVOID param)
-{
+DWORD WINAPI KojiKabuto::loginThread(LPVOID param) {
 	DWORD debugLevel;	// Debug level
 	int loginResult = -1;	// Login process result
 	std::string forceLogin;	// Force user login registry key value
@@ -606,18 +579,15 @@ DWORD WINAPI KojiKabuto::loginThread (LPVOID param)
 	KojiKabuto::displayProgressMessage(Utils::LoadResourcesString(13).c_str());
 
 	// Check debug level
-	if (debugLevel > 0)
-	{
+	if (debugLevel > 0) {
 		SeyconCommon::setDebugLevel(debugLevel);
 	}
 
-	else
-	{
+	else {
 		SeyconCommon::setDebugLevel(0);
 	}
 
-	do
-	{
+	do {
 		// Start login process
 		loginResult = KojiKabuto::StartLoginProcess();
 
@@ -632,9 +602,155 @@ DWORD WINAPI KojiKabuto::loginThread (LPVOID param)
 	return 0;
 }
 
-extern "C" int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hInst2, LPSTR cmdLine,
-		int nShow)
-{
+static void displayError(const char *header, DWORD error) {
+	char* buffer;
+	char ach[1000];
+	if (FormatMessageA(
+	FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, error, 0,
+			(LPSTR) &buffer, 0, NULL) > 0) {
+		sprintf(ach, "%s. Error %d: %s", header, error, buffer);
+	} else {
+		sprintf(ach, "%s. Error %d", header, error);
+	}
+	MessageBox(NULL, ach, "Soffid ESSO", MB_OK);
+}
+
+static void displayError(const char *header) {
+	displayError(header, GetLastError());
+}
+
+static bool getUserAndPassword(std::wstring &user, std::wstring &password) {
+	WSADATA wsaData;
+	WSAStartup(MAKEWORD(1, 1), &wsaData);
+
+	std::string port;
+	int portNumber = 0;
+	SeyconCommon::readProperty("createUserSocket", port);
+	sscanf(port.c_str(), " %d", &portNumber);
+	if (portNumber <= 0)
+		return false;
+
+	SOCKADDR_IN addrin;
+	SOCKET socket_in = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+	SeyconCommon::debug("Created socket: %d\n", (int) socket_in);
+	if (socket_in < 0) {
+		fprintf(stderr, "Error creating socket\n");
+		return false;
+	}
+
+	addrin.sin_family = AF_INET;
+	addrin.sin_addr.s_addr = inet_addr("127.0.0.1");
+	addrin.sin_port = htons(portNumber);
+	if (connect(socket_in, (LPSOCKADDR) &addrin, sizeof(addrin)) != 0) {
+		printf("Error connecting socket\n");
+		return false;
+	}
+
+	wchar_t buffer[4096];
+	int read = recv(socket_in, (char*) buffer, sizeof buffer, 0);
+	if (read <= 0) {
+		return false;
+	}
+
+	user.clear();
+	password.clear();
+	int i = 0;
+	int max = read / (sizeof(wchar_t));
+	while (buffer[i] != '\n' && i < max)
+		user += buffer[i++];
+	i++;
+	if (i >= max)
+		return false;
+
+	while (i < max)
+		password += buffer[i++];
+
+	return true;
+}
+
+static void switchNewDesktop() {
+	std::wstring user;
+	std::wstring password;
+	HANDLE hToken;
+	LPVOID lpvEnv;
+	DWORD dwSize;
+	char ach[1000];
+	wchar_t szUserProfile[500];
+
+	printf("Creating desktop\n");
+	bool done = false;
+	for (int i = 0; i < 3; i++) {
+		if (!getUserAndPassword(user, password)) {
+			MessageBoxA(NULL,
+					"Unable to get local account. Verify Soffid local service is up and running",
+					"Soffid ESSO", MB_ICONEXCLAMATION);
+			SwitchDesktop(OpenDesktopA("Default", 0, 0, GENERIC_ALL));
+			return;
+		}
+
+		if (LogonUserW(user.c_str(), NULL, password.c_str(),
+				LOGON32_LOGON_INTERACTIVE,
+				LOGON32_PROVIDER_DEFAULT, &hToken)) {
+			done = true;
+			break;
+		}
+	}
+
+	if (!done) {
+		displayError("Error creating users session");
+		SwitchDesktop(OpenDesktopA("Default", 0, 0, GENERIC_ALL));
+		return;
+	}
+
+	lpvEnv = NULL;
+
+	dwSize = sizeof(szUserProfile) / sizeof(WCHAR);
+
+	if (!GetSystemDirectoryW(szUserProfile, dwSize)) {
+		wcscpy(szUserProfile, L"c:\\windows\\system32");
+	}
+
+	printf("Created desktop %s\n", ach);
+	wchar_t achFilename[1000];
+	PROCESS_INFORMATION p;
+	STARTUPINFOW siw;
+	memset(&p, 0, sizeof p);
+	memset(&siw, 0, sizeof siw);
+	siw.cb = sizeof siw;
+	siw.wShowWindow = SW_NORMAL;
+
+	fflush(stdout);
+
+	if (GetModuleFileNameW(NULL, achFilename, sizeof achFilename)) {
+		printf("Creating process %ls\n", achFilename);
+		fflush(stdout);
+		wchar_t achParams[1000];
+		wcscpy(achParams, L"newDesktop2");
+
+		HDESK hOld = GetThreadDesktop(GetCurrentThreadId());
+
+		if (CreateProcessWithLogonW(user.c_str(), //LPCWSTR lpUsername
+				NULL, //LPCWSTR lpDomain
+				password.c_str(), //  LPCWSTR lpPassword
+				LOGON_WITH_PROFILE,  // DWORD dwLogonFlags
+				achFilename, achParams, // LPCWSTR lpApplicationName, LPWSTR lpCommandLine
+				CREATE_UNICODE_ENVIRONMENT, // DWORD dwCreationFlags
+				lpvEnv, // Environment,
+				szUserProfile, // Current directory
+				&siw, // StartupInfo,
+				&p) == 0) {
+			SetThreadDesktop(hOld);
+			DWORD error = GetLastError();
+			displayError("Error creating process", error);
+			SwitchDesktop(OpenDesktopA("Default", 0, 0, GENERIC_ALL));
+		}
+	}
+
+	CloseHandle(hToken);
+}
+
+extern "C" int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hInst2,
+		LPSTR cmdLine, int nShow) {
 	time_t t;
 	time(&t);
 	srand((int) t);
@@ -644,14 +760,16 @@ extern "C" int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hInst2, LPSTR cmdL
 	LPCWSTR wCmdLine = GetCommandLineW();
 	LPWSTR* args = CommandLineToArgvW(wCmdLine, &numArgs);
 
-	if (wcsicmp(wCmdLine, L"newDesktop") == 0)
-	{
+	if (wcsicmp(wCmdLine, L"newDesktop") == 0
+			|| numArgs == 2 && wcsicmp(args[1], L"newDesktop") == 0) {
+		SwitchDesktop(GetThreadDesktop(GetCurrentThreadId()));
+		switchNewDesktop();
+		ExitProcess(0);
+	} else if (wcsicmp(wCmdLine, L"newDesktop2") == 0
+			|| numArgs == 2 && wcsicmp(args[1], L"newDesktop2") == 0) {
 		KojiKabuto::desktopSession = true;
-	}
-	else if (numArgs > 1)
-	{
-		if (wcsicmp(args[1], L"update") == 0)
-		{
+	} else if (numArgs > 1) {
+		if (wcsicmp(args[1], L"update") == 0) {
 			SeyconSession session;
 			session.setUser(MZNC_getUserName());
 			session.updateMazingerConfig();
@@ -662,29 +780,28 @@ extern "C" int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hInst2, LPSTR cmdL
 			return 0;
 		}
 
-		else if (wcsicmp(args[1], L"test-hook") == 0)
-		{
+		else if (wcsicmp(args[1], L"test-hook") == 0) {
 			KojiKabuto::enableTaskManager(false);
 
-			MessageBoxW(NULL, MZNC_strtowstr(Utils::LoadResourcesString(15).c_str()).c_str(),
-					MZNC_strtowstr(Utils::LoadResourcesString(16).c_str()).c_str(), MB_OK);
+			MessageBoxW(NULL,
+					MZNC_strtowstr(Utils::LoadResourcesString(15).c_str()).c_str(),
+					MZNC_strtowstr(Utils::LoadResourcesString(16).c_str()).c_str(),
+					MB_OK);
 
 			KojiKabuto::enableTaskManager(true);
 
 			return 1;
-		}
-		else if (wcsicmp(args[1], L"newDesktop") == 0)
-		{
+		} else if (wcsicmp(args[1], L"newDesktop2") == 0) {
 			KojiKabuto::desktopSession = true;
-		}
-		else
-		{
+		} else {
 			wchar_t wchMessage[4096];
-			swprintf(wchMessage, MZNC_strtowstr(Utils::LoadResourcesString(17).c_str()).c_str(),
+			swprintf(wchMessage,
+					MZNC_strtowstr(Utils::LoadResourcesString(17).c_str()).c_str(),
 					args[1]);
 
 			MessageBoxW(NULL, wchMessage,
-					MZNC_strtowstr(Utils::LoadResourcesString(16).c_str()).c_str(), MB_OK);
+					MZNC_strtowstr(Utils::LoadResourcesString(16).c_str()).c_str(),
+					MB_OK);
 
 			return 1;
 		}
@@ -698,13 +815,11 @@ extern "C" int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hInst2, LPSTR cmdL
 	std::string logfile;
 	SeyconCommon::readProperty("logFile", logfile);
 
-	if (!logfile.empty())
-	{
+	if (!logfile.empty()) {
 		printf("LOGFILE ACTIVE %s\n", logfile.c_str());
 		SeyconCommon::setDebugLevel(2);
 
-		if (stdout!= NULL)
-		{
+		if (stdout != NULL) {
 			setbuf(stdout, NULL);
 			fclose(stdout);
 		}
@@ -714,8 +829,7 @@ extern "C" int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hInst2, LPSTR cmdL
 			setbuf(f, NULL);
 	}
 
-	else
-	{
+	else {
 		SeyconCommon::setDebugLevel(0);
 	}
 
@@ -724,20 +838,16 @@ extern "C" int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hInst2, LPSTR cmdL
 
 	HDESK hdesk = GetThreadDesktop(GetCurrentThreadId());
 
-	if (hdesk == NULL)
-	{
+	if (hdesk == NULL) {
 		SeyconCommon::debug("Cannot open desktop Default");
 	}
 
-	else
-	{
-		if (SwitchDesktop(hdesk))
-		{
+	else {
+		if (SwitchDesktop(hdesk)) {
 			SeyconCommon::debug("Switch desktop Default SUCCESS");
 		}
 
-		else
-		{
+		else {
 			SeyconCommon::debug("Switch desktop Default FAILURE");
 		}
 	}
@@ -745,8 +855,7 @@ extern "C" int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hInst2, LPSTR cmdL
 	CreateThread(NULL, 0, KojiKabuto::mainLoop, NULL, 0, NULL);
 
 	MSG msg;
-	while (GetMessageA(&msg, (HWND) NULL, 0, 0))
-	{
+	while (GetMessageA(&msg, (HWND) NULL, 0, 0)) {
 		TranslateMessage(&msg);
 		DispatchMessageA(&msg);
 	}

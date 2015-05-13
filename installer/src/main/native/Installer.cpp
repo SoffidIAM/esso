@@ -536,44 +536,42 @@ void registerChromePlugin()
 	//write the default value
 	//
 
-	log("Registering Firefox extension");
+	log("Registering Chrome extension");
+
+	std::string dir = getMazingerDir();
+	dir += "\\afrodita-chrome.manifest";
 
 	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
-			"Software\\MozillaPlugins",
-			NULL, REG_SZ, NULL, 0);
+			"Software\\Google\\Chrome\\NativeMessagingHosts\\com.soffid.esso_chrome1",
+			NULL, REG_SZ, (void*)dir.c_str(), -1);
 
-	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
-			"Software\\MozillaPlugins\\@soffid.com/SoffidPlugin",
-			"Description", REG_SZ, (void*) "Soffid ESSO Module", -1);
+	LPCSTR mznDir = getMazingerDir();
+	std::string dir2 ;
+	for (int i = 0; mznDir[i]; i++)
+	{
+		if (mznDir[i] == '\\')
+			dir2 += '\\';
+		dir2 += mznDir[i];
+	}
+	FILE * f = fopen (dir.c_str(), "w");
+	fprintf (f, "{\n"
+				"  \"name\": \"com.soffid.esso_chrome1\", \n"
+				"  \"description\": \"Soffid Chrome ESSO Handler\", \n"
+				"  \"path\": \"%s\\\\afrodita-chrome.exe\",\n"
+				"  \"type\": \"stdio\",\n"
+				"  \"allowed_origins\": [\n"
+				"    \"chrome-extension://ecdihhgdjciiabklgobilokhejhecjbm/\"\n"
+				"  ]\n"
+				"}\n",
+				dir2.c_str());
+	fclose (f);
 
-	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
-			"Software\\MozillaPlugins\\@soffid.com/SoffidPlugin",
-			"ProductName", REG_SZ, (void*) "Soffid ESSO", -1);
 
-	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
-			"Software\\MozillaPlugins\\@soffid.com/SoffidPlugin",
-			"Vendor", REG_SZ, (void*) "Soffid", -1);
-
-	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
-			"Software\\MozillaPlugins\\@soffid.com/SoffidPlugin",
-			"Version", REG_SZ, (void*) MAZINGER_VERSION_STR, -1);
-
-	// Register DLL
-
-	wsprintf(szBuff, "%s\\AfroditaC.dll", getMazingerDir());
-	HelperWriteKey(32, HKEY_LOCAL_MACHINE,
-			"Software\\MozillaPlugins\\@soffid.com/SoffidPlugin",
-			"Path", REG_SZ, (void*) szBuff, -1);
-
-	wsprintf(szBuff, "%s\\AfroditaC64.dll", getMazingerDir());
-
-	HelperWriteKey(64, HKEY_LOCAL_MACHINE,
-			"Software\\MozillaPlugins\\@soffid.com/SoffidPlugin",
-			"Path", REG_SZ, (void*) szBuff, -1);
 	// Register extension
-		HelperWriteKey(0, HKEY_LOCAL_MACHINE,
-			"Software\\Google\\Chrome\\Extensions\\gmipnihabpcggdnlbbncgleblgjapgkm",
+	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
+			"Software\\Google\\Chrome\\Extensions\\ecdihhgdjciiabklgobilokhejhecjbm",
 			"update_url", REG_SZ, (void*) "https://clients2.google.com/service/update2/crx", -1);
+
 
 }
 
@@ -1809,6 +1807,11 @@ bool extractResource(LPCSTR resource, const char *lpszFileName)
 	{
 		log(">> Missing resource %s", resource);
 		printf("ERROR. Missing resource %s for %s\n", resource, lpszFileName);
+		if (!quiet)
+		{
+			disableProgressWindow();
+			MessageBox (NULL, "Installer file is corrupt", "Soffid ESSO installer", MB_OK|MB_ICONWARNING);
+		}
 		exit(2);
 	}
 
@@ -1894,7 +1897,7 @@ bool extractResource(LPCSTR resource, const char *lpszFileName)
 
 				case BZ_DATA_ERROR_MAGIC:
 					log(">> BZIP ERROR: Compression error");
-					printf("Error de compresi\F3n\n");
+					printf("Compression error\n");
 					return false;
 
 				case BZ_MEM_ERROR:
@@ -2209,8 +2212,7 @@ int install(int full)
 //		installResource(NULL, "AfroditaFC64.dll", "AfroditaFC.dll");
 		installResource(NULL, "AfroditaFC.dll", "AfroditaFC.dll");
 		installResource(NULL, "AfroditaFC.dll", "AfroditaFC32.dll");
-		installResource(NULL, "AfroditaC64.dll", "AfroditaC64.dll");
-		installResource(NULL, "AfroditaC.dll", "AfroditaC.dll");
+		installResource(NULL, "AfroditaC64.exe", "Afrodita-chrome.exe");
 
 		installResource(NULL, "AfroditaE64.dll", "AfroditaE.dll");
 		installResource(NULL, "AfroditaE.dll", "AfroditaE32.dll");
@@ -2228,7 +2230,7 @@ int install(int full)
 
 		installResource(NULL, "AfroditaE.dll");
 		installResource(NULL, "AfroditaFC.dll");
-		installResource(NULL, "AfroditaC.dll");
+		installResource(NULL, "AfroditaC.exe", "Afrodita-chrome.exe");
 		installResource(NULL, "JetScrander.exe");
 		installResource(NULL, "SayakaCP.dll");
 

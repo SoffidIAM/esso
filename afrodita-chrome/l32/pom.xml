@@ -1,9 +1,9 @@
  <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.soffid.iam.esso.${architecture}</groupId>
-	<artifactId>${architecture.libPrefix}afrodita-chrome</artifactId>
-	<packaging>${architecture.dll}</packaging>
-	<name>Dll per a injecció d'Usuaris i Passwords al Firefox (Linux)</name>
+	<artifactId>afrodita-chrome</artifactId>
+	<packaging>${architecture.exe}</packaging>
+	<name>EXE per a injecció d'Usuaris i Passwords al Chrome (Linux)</name>
 	<parent>
 		<artifactId>afrodita-chrome</artifactId>
 		<groupId>com.soffid.iam.esso</groupId>
@@ -35,21 +35,33 @@
 						<compilerMiddleOption>-O0</compilerMiddleOption>
 						<compilerMiddleOption>-fshort-wchar</compilerMiddleOption>
 						<compilerMiddleOption>-I../src/main/include-deps</compilerMiddleOption>
+						<compilerMiddleOption>-DVERSION=${pom.version}</compilerMiddleOption>
 					</compilerMiddleOptions>
 					<linkerMiddleOptions>
 						<linkerMiddleOption>-m32</linkerMiddleOption>
-						<linkerMiddleOption>-Wl,-s</linkerMiddleOption>
-						<linkerMiddleOption>-Wl,--exclude-libs=ALL</linkerMiddleOption>
 						<linkerMiddleOption>-Lsrc/lib/</linkerMiddleOption>
-						<linkerMiddleOption>-shared</linkerMiddleOption>
+						<linkerMiddleOption>-lglib-2.0</linkerMiddleOption>
+						<linkerMiddleOption>-lgobject-2.0</linkerMiddleOption>
 						<linkerMiddleOption>-lrt</linkerMiddleOption>
 					</linkerMiddleOptions>
 					<linkerEndOptions>
 						<linkerEndOption>-lsee</linkerEndOption>
 						<linkerEndOption>-lpcreposix</linkerEndOption>
 						<linkerEndOption>-lsoup-2.4</linkerEndOption>
+						<linkerEndOption>-lgobject-2.0</linkerEndOption>
 						<linkerEndOption>-lglib-2.0</linkerEndOption>
+						<linkerEndOption>-lffi</linkerEndOption>
+						<linkerEndOption>-ldl</linkerEndOption>
 						<linkerEndOption>-lpthread</linkerEndOption>
+						<linkerEndOption>-lX11</linkerEndOption>
+						<linkerEndOption>-lgio-2.0</linkerEndOption>
+						<linkerEndOption>-lgmodule-2.0</linkerEndOption>
+						<linkerEndOption>-lrt</linkerEndOption>
+						<linkerEndOption>-lz</linkerEndOption>
+						<linkerEndOption>-lffi</linkerEndOption>
+						<linkerEndOption>-lselinux</linkerEndOption>
+						<linkerEndOption>-lresolv</linkerEndOption>
+						<linkerEndOption>-lgobject-2.0</linkerEndOption>
 					</linkerEndOptions>
 					<sources>
 						<source>

@@ -286,7 +286,7 @@ static char * convert (const char *pszString, const char *fromCharset, const cha
 	iconv_t ict = iconv_open (toCharset == NULL? nl_langinfo(CODESET): toCharset,
 			fromCharset == NULL? nl_langinfo(CODESET): fromCharset);
 	if (ict == (iconv_t) -1 ) {
-		printf ("Unable to transform to charset %s from charset %s\n",
+		fprintf (stderr, "Unable to transform to charset %s from charset %s\n",
 				fromCharset, toCharset);
 		exit(1);
 	}

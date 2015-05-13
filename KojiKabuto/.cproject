@@ -91,7 +91,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="windows" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src/main/native"/>
+						<entry excluding="linux/" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="src/main/native"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -128,7 +128,6 @@
 								<option id="gnu.cpp.compiler.option.include.paths.1717351522" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/KojiKabuto/target/native/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/KojiKabuto/src/main/resources}&quot;"/>
-									<listOptionValue builtIn="false" value="/usr/i586-mingw32msvc/include/"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.optimization.level.334587980" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.1084375775" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
@@ -136,7 +135,6 @@
 							</tool>
 							<tool command="i586-mingw32msvc-gcc" id="cdt.managedbuild.tool.gnu.c.compiler.base.1170390865" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
 								<option id="gnu.c.compiler.option.include.paths.397161480" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/usr/i586-mingw32msvc/include/"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Mazinger/target/native/include}&quot;"/>
 								</option>
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.841270395" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" valueType="enumerated"/>
@@ -215,9 +213,9 @@
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1076687462" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool command="i586-mingw32msvc-g++" id="cdt.managedbuild.tool.gnu.cpp.compiler.base.302372214" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.include.paths.314811969" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/usr/i686-w64-mingw32/include"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/KojiKabuto/src/main/resources}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/KojiKabuto/kojikabuto-w32/target/native/include}&quot;"/>
-									<listOptionValue builtIn="false" value="/usr/i686-w64-mingw32/include/"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.optimization.level.191028946" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.1911502282" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
@@ -228,7 +226,7 @@
 							</tool>
 							<tool command="i586-mingw32msvc-gcc" id="cdt.managedbuild.tool.gnu.c.compiler.base.698942675" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
 								<option id="gnu.c.compiler.option.include.paths.2116239363" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/usr/i686-w64-mingw32/include/"/>
+									<listOptionValue builtIn="false" value="/usr/i686-w64-mingw32/include"/>
 								</option>
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.1570017865" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.debugging.level.456758165" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
@@ -271,7 +269,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="linux" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src/main/native"/>
+						<entry excluding="linux/" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src/main/native"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

@@ -43,11 +43,12 @@ FONT 8, "Ms Shell Dlg"
 										IDC_MSG_LOGIN_STARTUP_INFO, 27, 140, 180, 20, SS_LEFT
 	AUTOCHECKBOX			"Forzar login en el inicio", IDC_CHECKBOX_FORCE_LOGIN,
 										27, 165, 180, 8
-	GROUPBOX					"Cerrar sesión", IDC_GROUPBOX_CLOSE_SESSION, 227, 51, 198, 57
+    GROUPBOX        "Sesiones", IDC_GROUPBOX_CLOSE_SESSION, 227, 51, 198, 72
 	LTEXT							"Si selecciona esta opción, los usuarios podrán cerrar la sesión en el sistema operativo",
 										IDC_MSG_CLOSE_SESION_INFO, 237, 66, 180, 25, SS_LEFT
 	AUTOCHECKBOX			"Cerrar sesión por el usuario", IDC_CHECKBOX_CLOSE_SESSION,
 										237, 91, 180, 8, BS_LEFT 
+    AUTOCHECKBOX    "Permitir sesiones compartidas", IDC_CHECKBOX_SHARED_SESSION, 237, 105, 117, 8, BS_LEFT
 	LTEXT							"Si cambia la URL del servidor, deberá recuperar el certificado del servidor",
 										IDC_MSG_CLOSE_SERVER_INFO, 27, 66, 180, 20, SS_LEFT
 	GROUPBOX					"URL del servidor ESSO", IDC_GROUPBOX_SERVER, 17, 51, 198, 57

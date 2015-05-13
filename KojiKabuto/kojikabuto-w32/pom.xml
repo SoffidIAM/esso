@@ -109,6 +109,7 @@
 						<linkerEndOption>-lsecur32</linkerEndOption>
 						<linkerEndOption>-lmpr</linkerEndOption>
 						<linkerEndOption>-lgdi32</linkerEndOption>
+						<linkerEndOption>-luserenv</linkerEndOption>
 						<linkerEndOption>-lwinmm</linkerEndOption>
 						<linkerMiddleOption>-lMazingerHook</linkerMiddleOption>
 						<linkerMiddleOption>-lKojiHook</linkerMiddleOption>

@@ -8,6 +8,8 @@
 #include <ssoclient.h>
 #include <MazingerEnv.h>
 #include <SecretStore.h>
+#include <winsock.h>
+#include <userenv.h>
 
 #include <MazingerInternal.h>
 
@@ -16,6 +18,8 @@
 # include <stdio.h>
 
 #define WM_APP_SYSTRAY (WM_APP + 1)
+
+#define INTERNAL_WND_PREFIX "$$KojiKabutoUser$$ "
 
 static HMENU _hMenu;
 static HINSTANCE _hInstance;
@@ -26,6 +30,23 @@ bool sessionStarted;	// Session started status
 bool startingSession;	// Session is starting
 
 void creditsDialog1 ();
+
+static void displayError(const char *header, DWORD error) {
+	char* buffer;
+	char ach[1000];
+	if (FormatMessageA(
+			FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
+			error, 0, (LPSTR) & buffer, 0, NULL) > 0) {
+		sprintf (ach, "%s. Error %d: %s", header, error, buffer);
+	} else {
+		sprintf (ach, "%s. Error %d", header, error);
+	}
+	MessageBox (NULL, ach, "Soffid ESSO", MB_OK);
+}
+
+static void displayError(const char *header) {
+	displayError(header, GetLastError());
+}
 
 static void playSound ()
 {
@@ -47,150 +68,196 @@ static void playSound ()
 
 struct EnumDesktopAction
 {
-	bool updateMenu;
-	bool execute;
+	bool updateMenu = false;
+	bool execute = false;
+	bool openMenu = false;
+	bool forwardAction = false;
+	bool highlight = false;
 	HMENU hm;
 	int nextId;
 	int idToExeucte;
+	HDESK currentDesktop;
 };
+
+static BOOL CALLBACK enumWindowProc(
+  HWND hwnd,
+  LPARAM lParam
+)
+{
+	EnumDesktopAction *action = (EnumDesktopAction*) lParam;
+	char achText[1000] = "";
+	GetWindowText (hwnd, achText, sizeof achText);
+
+	int prefixLen = strlen (INTERNAL_WND_PREFIX);
+	if (strncmp (achText, INTERNAL_WND_PREFIX, prefixLen ) == 0)
+	{
+		if ( action->forwardAction)
+		{
+			PostMessageA(hwnd, WM_COMMAND, IDM_USER_NEW_DESKTOP, 0L);
+		}
+		if ( action->updateMenu )
+		{
+			char hotkey[10];
+			if (action->nextId == IDM_USER_DESKTOP)
+				AppendMenuW (action->hm, MF_SEPARATOR, -1, L"");
+			sprintf(hotkey, "&%d.", (action->nextId - IDM_USER_DESKTOP + 1));
+			std::string s = hotkey;
+			s +=  &achText[prefixLen];
+			DWORD style = action->highlight ? MF_STRING|MF_HILITE : MF_STRING;
+			AppendMenuA (action->hm, style , action->nextId, s.c_str());
+		}
+		if ( action->openMenu )
+		{
+			PostMessageA(hwnd, WM_COMMAND, IDM_OPEN_MENU, 0L);
+		}
+		if (action-> execute && action->nextId == action->idToExeucte)
+		{
+			SwitchDesktop(action->currentDesktop);
+		}
+		action -> nextId ++;
+		return 0;
+	}
+
+
+	return 1;
+}
+
 
 static BOOL CALLBACK enumDesktopProc(
 		  LPTSTR lpszDesktop,
 		  LPARAM lParam
 		)
 {
-	HANDLE hd = GetThreadDesktop (GetCurrentThreadId());
+
 	EnumDesktopAction *action = (EnumDesktopAction*) lParam;
 	char desktopName[1024] = "";
 
-	GetUserObjectInformation (hd,
+	HDESK old = GetThreadDesktop (GetCurrentThreadId());
+	GetUserObjectInformation (old,
 		UOI_NAME,
 		desktopName, sizeof desktopName,
 		NULL);
 	printf ("Desktop %s (Current = %s)\n", lpszDesktop, desktopName);
-	if (strcmp (lpszDesktop, desktopName) == 0)
-		return true;
+//	if (strcmp (lpszDesktop, desktopName) == 0)
+//		return true;
 
+	action->highlight = strcmp (lpszDesktop, desktopName) == 0;
 
-	std::string user = MZNC_getUserName();
-	MazingerEnv *penv = MazingerEnv::getEnv (user.c_str(), lpszDesktop);
-	if (penv != NULL && penv->getDataRW() != NULL)
+	HDESK hd = OpenDesktop (lpszDesktop, 0, false, GENERIC_ALL);
+	if (hd != NULL)
 	{
-		printf ("Processing desktop %s (Current = %s)\n", lpszDesktop, desktopName);
-		if ( action->updateMenu )
-		{
-
-			SecretStore ss ( MZNC_getUserName(), lpszDesktop);
-			wchar_t * userName = ss.getSecret(L"fullName");
-			if (userName == NULL || userName[0] == L'\0')
-			{
-				ss.freeSecret(userName);
-				userName = ss.getSecret(L"user");
-			}
-			printf ("User = %ls\n", userName);
-			if (userName != NULL && userName [0] != L'\0')
-			{
-				// Get desktop user
-				if (action->nextId == IDM_USER_DESKTOP)
-					AppendMenuW (action->hm, MF_SEPARATOR, -1, L"");
-				AppendMenuW (action->hm, MF_STRING, action->nextId, userName);
-			}
-			ss.freeSecret(userName);
-
-		}
-		printf ("Action to find = %d Current action = %d\n",
-				action->idToExeucte, action->nextId);
-		if (action-> execute && action->nextId == action->idToExeucte)
-		{
-		 	HDESK h = OpenDesktop (lpszDesktop  ,
-				NULL,
-				0,
-				GENERIC_ALL);
-			if (h != NULL)
-			{
-				printf ("Switching to desktop %s", lpszDesktop);
-				SwitchDesktop(h);
-				CloseHandle(h);
-			}
-		}
-		action -> nextId ++;
-		delete penv;
+		action->currentDesktop = hd;
+		EnumDesktopWindows (hd, enumWindowProc, lParam);
 	}
-	fflush (stdout);
+
 	return true;
 }
 
+static void hotKey ()
+{
+	HDESK hDesktop = OpenInputDesktop(0, false, GENERIC_ALL);
+	if (hDesktop != NULL)
+	{
+		EnumDesktopAction eda ;
+		eda.execute = false;
+		eda.openMenu = true;
+		eda.updateMenu = false;
+		eda.forwardAction = false;
+		eda.nextId = IDM_USER_DESKTOP;
+		eda.currentDesktop = hDesktop;
+		EnumDesktopWindows(hDesktop, enumWindowProc, (LPARAM) &eda);
+		CloseDesktop(hDesktop);
+	} else {
+		displayError("Unable to open default desktop");
+	}
+}
+
+
 static void createDesktop ()
 {
-	printf ("Crating desktop\n");
-	for (int i = 0; i < 9999; i++)
+	if (KojiKabuto::desktopSession)
 	{
-		char ach[20];
-		sprintf (ach, "Desktop_%d", i);
-		printf ("Probing desktop %s\n", ach);
-	 	HDESK h = OpenDesktop (ach  ,
-			NULL,
-			0,
-			GENERIC_ALL);
-		if (h == NULL)
+		HDESK hDesktop = OpenDesktopA("Default", 0, false, GENERIC_ALL);
+		if (hDesktop != NULL)
 		{
-			printf ("Desktop %s is free\n", ach);
-		 	h = CreateDesktop (ach,
-				NULL,
-				NULL,
-				0,
-				GENERIC_ALL,
-				NULL);
-			if (h != NULL)
-			{
-				printf ("Created desktop %s\n", ach);
-				char achFilename[1000];
-				PROCESS_INFORMATION p;
-				STARTUPINFO si;
-				memset(&si, 0, sizeof si);
-				si.cb = sizeof si;
-				si.wShowWindow = SW_NORMAL;
-				si.lpDesktop = ach;
-
-
-				fflush (stdout);
-
-				if ( GetModuleFileNameA(NULL, achFilename, sizeof achFilename))
-				{
-					printf ("Creating process %s\n", achFilename);
-					fflush (stdout);
-					char achParams[100];
-					strcpy (achParams, "newDesktop");
-
-					CreateProcess(achFilename, achParams,
-							NULL, // Process Atributes
-							NULL, // Thread Attributes
-							FALSE, // bInheritHandles
-							NORMAL_PRIORITY_CLASS, NULL, // Environment,
-							NULL, // Current directory
-							&si, // StartupInfo,
-							&p);
-
-
-					if (SwitchDesktop (h))
-					{
-						printf ("Switched desktop\n");
-						fflush (stdout);
-					}
-//					CloseHandle(h);
-					return;
-				}
-
-			}
+			EnumDesktopAction eda ;
+			eda.execute = false;
+			eda.updateMenu = false;
+			eda.forwardAction = true;
+			eda.nextId = IDM_USER_DESKTOP;
+			eda.currentDesktop = hDesktop;
+			EnumDesktopWindows(hDesktop, enumWindowProc, (LPARAM) &eda);
+			CloseDesktop(hDesktop);
 		}
-		CloseHandle(h);
 	}
+	else
+	{
 
+		for (int i = 0; i < 49; i++)
+		{
+			char ach[20];
+			sprintf (ach, "Soffid_%d", i);
+			HDESK h = OpenDesktop (ach  ,
+				0,
+				0,
+				GENERIC_ALL);
+			if (h == NULL)
+			{
+				printf ("Desktop %s is free\n", ach);
+				h = CreateDesktop (ach,
+					NULL,
+					NULL,
+					0,
+					GENERIC_ALL,
+					NULL);
+				if (h != NULL)
+				{
+					char achFilename[1000];
+					if ( GetModuleFileName(NULL, achFilename, sizeof achFilename))
+					{
+						PROCESS_INFORMATION p;
+						STARTUPINFO si;
+						DWORD dwExitStatus;
+						char achParams[1000];
+						strcpy (achParams, "newDesktop");
+
+						memset(&si, 0, sizeof si);
+						si.cb = sizeof si;
+						si.wShowWindow = SW_NORMAL;
+						si.lpDesktop = ach;
+
+						memset (&p, 0, sizeof p);
+
+						if (CreateProcessA(achFilename, achParams,
+								NULL, // Process Atributes
+								NULL, // Thread Attributes
+								FALSE, // bInheritHandles
+								NORMAL_PRIORITY_CLASS, NULL, // Environment,
+								NULL, // Current directory
+								&si, // StartupInfo,
+								&p) == 0)
+						{
+							displayError ("Error creating process");
+						}
+						else
+						{
+							Sleep(5000);
+							CloseDesktop(h);
+							return;
+						}
+					}
+				}
+			}
+			else
+				CloseDesktop(h);
+		}
+	}
 }
 
 
 static void ContextMenu (HWND hwnd)
 {
+	std::string enabledLocalAccounts;
 	bool ok = MZNIsStarted(MZNC_getUserName());	// User authenticated status
 	std::string closeByUser;							// Enable close session by user
 	HMENU hm;															// Menu handler
@@ -219,6 +286,10 @@ static void ContextMenu (HWND hwnd)
 	SetMenuItemInfo(_hMenu, IDM_USER_ESSO, false, &mii);
 	SetMenuItemInfo(_hMenu, IDM_UPDATE, false, &mii);
 	SetMenuItemInfo(_hMenu, IDM_DISABLE_ESSO, false, &mii);
+
+	SeyconCommon::readProperty("enableLocalAccounts", enabledLocalAccounts);
+	if (enabledLocalAccounts != "true")
+		mii.fState = MFS_DISABLED;
 	SetMenuItemInfo(_hMenu, IDM_USER_NEW_DESKTOP, false, &mii);
 
 	mii.fState = (ok || !sessionStarted) ? MFS_DISABLED : MFS_UNHILITE;
@@ -248,6 +319,7 @@ static void ContextMenu (HWND hwnd)
 	EnumDesktopAction eda ;
 	eda.execute = false;
 	eda.updateMenu = true;
+	eda.forwardAction = false;
 	eda.nextId = IDM_USER_DESKTOP;
 	eda.hm = hm;
 	EnumDesktops (GetProcessWindowStation(), enumDesktopProc, (LPARAM) &eda);
@@ -264,12 +336,17 @@ static LRESULT CALLBACK SystrayWndProc (HWND hwnd,        	// handle to window
 
 	switch (uMsg)
 	{
+		case WM_HOTKEY:
+			hotKey ();
+			break;
+
 		case WM_APP_SYSTRAY:
 		{
 			switch (lParam)
 			{
 				case WM_CONTEXTMENU:
 				case WM_RBUTTONDOWN:
+				case WM_LBUTTONUP:
 				{
 					ContextMenu(hwnd);
 					fflush (stdout);
@@ -286,6 +363,11 @@ static LRESULT CALLBACK SystrayWndProc (HWND hwnd,        	// handle to window
 			fflush (stdout);
 			switch (wParam)
 			{
+				case IDM_OPEN_MENU:
+				{
+					ContextMenu(hwnd);
+					break;
+				}
 				case IDM_ENABLE_ESSO:
 				{
 					MZNStart(MZNC_getUserName());
@@ -350,6 +432,7 @@ static LRESULT CALLBACK SystrayWndProc (HWND hwnd,        	// handle to window
 						eda.execute = true;
 						eda.updateMenu = false;
 						eda.nextId = IDM_USER_DESKTOP;
+						eda.forwardAction = false;
 						eda.idToExeucte = wParam;
 						EnumDesktops (GetProcessWindowStation(), enumDesktopProc, (LPARAM) &eda);
 
@@ -421,6 +504,29 @@ static void testSessionTimeout ()
 }
 
 
+static void updateKojiKabutoWindowText ()
+{
+	std::string text = INTERNAL_WND_PREFIX;
+	bool ok = MZNIsStarted(MZNC_getUserName());
+	if (! ok )
+	{
+		text += "Empty desktop";
+	}
+	else
+	{
+		SecretStore ss ( MZNC_getUserName() );
+		wchar_t * userName = ss.getSecret(L"fullName");
+		if (userName == NULL || userName[0] == L'\0')
+		{
+			ss.freeSecret(userName);
+			userName = ss.getSecret(L"user");
+		}
+		text += MZNC_wstrtostr(userName);
+		ss.freeSecret(userName);
+	}
+	SetWindowText (_hwnd, text.c_str());
+}
+
 static DWORD WINAPI systrayThread (void* lparam)
 {
 	HICON hIconFail = LoadIconA(_hInstance, MAKEINTRESOURCE(IDI_ICONGRAY) );
@@ -452,6 +558,8 @@ static DWORD WINAPI systrayThread (void* lparam)
 			change = true;
 		if (change || lastChangeElapsed > 120)
 		{
+			updateKojiKabutoWindowText ();
+
 			laststatus = ok;
 			std::string msg;
 			if (ok)
@@ -489,6 +597,22 @@ static DWORD WINAPI systrayThread (void* lparam)
 	return 0;
 }
 
+typedef WINAPI BOOL (*CWMFType) (HWND hwnd, UINT message, DWORD action, LPVOID pointer);
+
+static void setMessageFilterWindows7 (HWND hwnd)
+{
+	HMODULE hModule = LoadLibraryA("user32");
+	if (hModule != NULL)
+	{
+		CWMFType cwmf = (CWMFType) GetProcAddress(hModule, "ChangeWindowMessageFilterEx");
+		if (cwmf != NULL)
+		{
+			BOOL result = cwmf (hwnd, WM_COMMAND,  1 /*MSGFLT_ALLOW*/, NULL);
+		}
+	}
+
+}
+
 void createSystrayWindow (HINSTANCE hInstance)
 {
 	_hInstance = hInstance;
@@ -512,18 +636,21 @@ void createSystrayWindow (HINSTANCE hInstance)
 	if (!_hwnd)
 		return;
 
+	setMessageFilterWindows7 (_hwnd);
+
 	// Show the window and send a WM_PAINT message to the window
 	// procedure.
 
 	//
 	ShowWindow(_hwnd, SW_HIDE);
 	//
-	printf("Created window\n");
 	UpdateWindow(_hwnd);
 
 	_hMenu = LoadMenu(_hInstance, MAKEINTRESOURCE(IDR_POPUPMENU) );
 	HMENU hm = GetSubMenu(_hMenu, 0);
 	defaultMenuEntries = GetMenuItemCount (hm);
+
+	RegisterHotKey (_hwnd, 1, MOD_WIN, 'Z');
 
 	CreateThread(NULL, 0, systrayThread, NULL, 0, NULL);
 }
