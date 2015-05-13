@@ -15,6 +15,7 @@ class MazingerEnv;
 class SecretStore {
 public:
 	SecretStore(const char *user);
+	SecretStore(const char *user, const char *desktop);
 	virtual ~SecretStore();
 
 	wchar_t * getSecret(const wchar_t * secret);

@@ -383,6 +383,8 @@ PasswordIterator::~PasswordIterator ()
 //////////////////////////////////////////////////////////
 int SeyconSession::passwordSessionStartup ( const char* lpszUser, const wchar_t* lpszPass )
 {
+	m_kerberosLogin = false;
+	m_passwordLogin = true;
 	json::JsonAbstractObject::ConfigureChromePreferences();
 
 	SeyconCommon::updateHostAddress();

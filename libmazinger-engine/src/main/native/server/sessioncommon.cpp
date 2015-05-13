@@ -88,6 +88,39 @@ void freeCitrixMemory(PVOID pMemory) {
 	(*pWTSFreeMemory)(pMemory);
 }
 
+void SeyconCommon::getCitrixInitialProgram(std::string &name) {
+	char* lpszBytes;
+	DWORD dwBytes = 0;
+	BOOL bOK = FALSE;
+	name.clear ();
+
+	/*
+	 *  Get handle to WTSAPI.DLL
+	 */
+	if (hWTSAPI == NULL && (hWTSAPI = LoadLibrary("WTSAPI32")) == NULL) {
+		return;
+	}
+
+	/*
+	 *  Get entry point for WTSEnumerateServers
+	 */
+	if (pWTSQuerySessionInformation == NULL)
+		pWTSQuerySessionInformation
+				= (typeWTSQuerySessionInformation) GetProcAddress(hWTSAPI,
+						"WTSQuerySessionInformationA");
+	if (pWTSQuerySessionInformation == NULL) {
+		name.clear ();
+		return;
+	}
+	bOK = (*pWTSQuerySessionInformation)(WTS_CURRENT_SERVER_HANDLE,
+			WTS_CURRENT_SESSION, WTSInitialProgram, &lpszBytes, &dwBytes);
+	if (bOK) {
+		name.assign (lpszBytes);
+		freeCitrixMemory(lpszBytes);
+	} else
+		name.clear ();
+}
+
 void SeyconCommon::getCitrixClientName(std::string &name) {
 	char* lpszBytes;
 	DWORD dwBytes = 0;
@@ -169,12 +202,16 @@ void SeyconCommon::getCitrixClientIP(std::string &ip) {
 
 void notifyError() {
 
-	printf("***************\n");
-	printf("    ERROR      \n");
-	printf("\n");
+	fprintf(stderr, "***************\n");
+	fprintf(stderr, "    ERROR      \n");
+	fprintf(stderr, "\n");
 	perror("");
-	printf("\n");
-	printf("***************\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "***************\n");
+}
+
+void SeyconCommon::getCitrixInitialProgram(std::string &name) {
+	name.clear();
 }
 
 void SeyconCommon::getCitrixClientName(std::string &name) {
@@ -419,15 +456,15 @@ void SeyconCommon::info (const char *szFormat, ...) {
 		time_t t;
 		time(&t);
 		struct tm *tm = localtime (&t);
-		fprintf (stdout, "%d-%02d-%04d %02d:%02d:%02d INFO ",
+		fprintf (stderr, "%d-%02d-%04d %02d:%02d:%02d INFO ",
 				tm->tm_mday, tm->tm_mon+1, tm->tm_year+1900, tm->tm_hour, tm->tm_min, tm->tm_sec);
 		va_list v;
 		va_start(v, szFormat);
 		vprintf(szFormat, v);
 		va_end(v);
 		if (szFormat[strlen(szFormat)-1] != '\n')
-			printf ("\n");
-		fflush (stdout);
+			fprintf (stderr, "\n");
+		fflush (stderr);
 	}
 }
 
@@ -453,8 +490,8 @@ void SeyconCommon::warn (const char *szFormat, ...) {
 	vfprintf(stderr, szFormat, v);
 	va_end(v);
 	if (szFormat[strlen(szFormat)-1] != '\n')
-		printf ("\n");
-	fflush (stdout);
+		fprintf (stderr, "\n");
+	fflush (stderr);
 }
 
 void SeyconCommon::debug (const char *szFormat, ...) {
@@ -474,15 +511,15 @@ void SeyconCommon::debug (const char *szFormat, ...) {
 		time_t t;
 		time(&t);
 		struct tm *tm = localtime (&t);
-		fprintf (stdout, "%d-%02d-%04d %02d:%02d:%02d DEBUG ",
+		fprintf (stderr, "%d-%02d-%04d %02d:%02d:%02d DEBUG ",
 				tm->tm_mday, tm->tm_mon+1, tm->tm_year+1900, tm->tm_hour, tm->tm_min, tm->tm_sec);
 		va_list v;
 		va_start(v, szFormat);
 		vprintf(szFormat, v);
 		va_end(v);
 		if (szFormat[strlen(szFormat)-1] != '\n')
-			printf ("\n");
-		fflush (stdout);
+			fprintf (stderr,"\n");
+		fflush (stderr);
 	}
 
 }

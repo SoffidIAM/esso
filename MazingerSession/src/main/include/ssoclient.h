@@ -77,6 +77,7 @@ public:
 	const char *getSoffidUser() {return soffidUser.c_str();}
 	bool isOpen() {return m_bOpen;}
 	SeyconDialog * getDialog() { return m_dialog;}
+	int restartSession ();
 
 private:
 	std::wstring getCardValue () ;
@@ -116,6 +117,8 @@ private:
 	SsoDaemon *m_daemon;
 	SeyconDialog *m_dialog;
 	int status;
+	bool m_kerberosLogin;
+	bool m_passwordLogin;
 	std::vector<std::string> newKeys;
 };
 

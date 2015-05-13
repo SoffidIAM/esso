@@ -52,9 +52,13 @@ MAZINGERAPI void MZNStatus (const char *user)
 		SecretStore ss(user);
 		ss.dump();
 	}
-	else
+	else if (pData == NULL)
 	{
 		printf("Mazinger not started\n");
+	}
+	else
+	{
+		printf("Mazinger is paused\n");
 	}
 }
 

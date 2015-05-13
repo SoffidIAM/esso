@@ -1,22 +1,20 @@
+var port = chrome.runtime.connect ({name: "soffidesso"});
 
-var soffidTester = {
-
-  test: function(document) {
-        try {
-		document.getElementById("pluginId").test();
-		document.getElementById("labelSuccess").style.display='block';
-        } catch (e) {	
-		document.getElementById("labelError").style.display='block';
-		document.getElementById("textError").textContent = e;
+port.onMessage.addListener (function (request) {
+	try {
+		if (request.action == "version")
+	    {
+			document.getElementById("labelError").style.display = "none";
+			document.getElementById("labelSuccess").style.display = "block";
+			document.getElementById("labelVersion").innerText = request.version;
+	    }
+	    else if (request.action == "getInfo")
+	    {
+		    port.postMessage({message: "info", pageId: request.pageId});
+	    }
+	} catch (e) {
+		alert ("Error "+e);
 	}
-	document.getElementById("label").style.display='none';
-  }
-
-};
-
-// Run our kitten generation script as soon as the document's DOM is ready.
-document.addEventListener('DOMContentLoaded', function () {
-  soffidTester.test(document);
 });
 
 

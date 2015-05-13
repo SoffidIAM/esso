@@ -84,10 +84,10 @@
 								</artifactItem>
 								<artifactItem>
 									<groupId>com.soffid.iam.esso.${architecture}</groupId>
-									<artifactId>${architecture.libPrefix}afrodita-chrome</artifactId>
+									<artifactId>afrodita-chrome</artifactId>
 									<version>${pom.version}</version>
-									<type>${architecture.dll}</type>
-									<destFileName>/usr/lib/mozilla/plugins/libafroditac.so</destFileName>
+									<type>${architecture.exe}</type>
+									<destFileName>/usr/bin/afrodita-chrome</destFileName>
 								</artifactItem>
 								<artifactItem>
 									<groupId>com.soffid.iam.esso.${architecture}</groupId>
@@ -130,6 +130,7 @@
 									<arg value="${deb.dir}/usr/bin/kojikabuto" />
 									<arg value="${deb.dir}/usr/bin/mazinger" />
 									<arg value="${deb.dir}/usr/bin/jetscrander" />
+									<arg value="${deb.dir}/usr/bin/afrodita-chrome" />
 									<arg value="${deb.dir}/DEBIAN/postinst" />
 									<arg value="${deb.dir}/DEBIAN/prerm" />
 									<arg value="${deb.dir}/DEBIAN/postrm" />

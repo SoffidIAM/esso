@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.soffid.iam.esso.w32</groupId>
 	<artifactId>afrodita-chrome</artifactId>
-	<packaging>dll</packaging>
+	<packaging>exe</packaging>
 	<name>Dll per a injecció d'Usuaris i Passwords al Firefox 4 (Windows)</name>
 	<parent>
 		<artifactId>afrodita-chrome</artifactId>
@@ -61,16 +61,13 @@
 						<compilerMiddleOption>-D_WIN32_WINNT=0x0500</compilerMiddleOption>
 						<compilerMiddleOption>-DWIN32</compilerMiddleOption>
 						<compilerMiddleOption>-DXP_WIN</compilerMiddleOption>
-						<compilerMiddleOption>-DFF_VERSION=4</compilerMiddleOption>
+						<compilerMiddleOption>-DVERSION="${pom.version}"</compilerMiddleOption>
 					</compilerMiddleOptions>
 					<linkerMiddleOptions>
-						<linkerMiddleOption>../src/main/def/afroditaf.def</linkerMiddleOption>
-						<linkerMiddleOption>-s</linkerMiddleOption>
+						<linkerMiddleOption>-mwindows</linkerMiddleOption>
 						<linkerMiddleOption>-Xlinker</linkerMiddleOption>
 						<linkerMiddleOption>--strip-all</linkerMiddleOption>
-						<linkerMiddleOption>-shared</linkerMiddleOption>
 						<linkerMiddleOption>target/objs/resources.o</linkerMiddleOption>
-						<linkerMiddleOption>-shared</linkerMiddleOption>
 						<linkerMiddleOption>-static-libgcc</linkerMiddleOption>
 						<linkerMiddleOption>-static-libstdc++</linkerMiddleOption>
 					</linkerMiddleOptions>

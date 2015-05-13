@@ -4,6 +4,7 @@ import java.awt.AWTEvent;
 import java.awt.Component;
 import java.awt.Frame;
 import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.event.AWTEventListener;
 import java.awt.event.FocusEvent;
 import java.security.AccessController;
@@ -31,7 +32,7 @@ public class Hook13 implements AWTEventListener {
 							if (frames[i].isActive()) {
 								Component owner = frames[i].getFocusOwner();
 								if (owner != null)
-									h.notifyFocus(owner);
+									h.doNotifyFocus(owner);
 							}
 						}
 					} catch (Throwable t) {
@@ -69,7 +70,7 @@ public class Hook13 implements AWTEventListener {
 
 		public void run() {
 			try {
-				notifyFocus(c);
+				doNotifyFocus(c);
 			} catch (Throwable t) {
 				// Ignore
 			}
@@ -87,4 +88,36 @@ public class Hook13 implements AWTEventListener {
 			}
 		}
 	}
+
+    private void lock()
+    {
+    	synchronized (this)
+    	{
+    		locks ++;
+    	}
+    }
+    
+    private void unlock ()
+    {
+    	synchronized (this)
+    	{
+    		locks --;
+    		if (locks == 0)
+    			savedObjects.clear(); 
+    	}
+    }
+
+    int locks = 0;
+    private void doNotifyFocus (Component c)
+    {
+		try {
+			lock();
+			notifyFocus(c);
+		} catch (Throwable t) {
+			// Ignore
+		} finally {
+			unlock();
+		}
+    }
+    
 }

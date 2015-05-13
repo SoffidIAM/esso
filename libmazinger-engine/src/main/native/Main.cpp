@@ -234,7 +234,7 @@ void sendMessage( int priority, const char* lpszMessage) {
 	if (achMessageFile[0] == '\0') {
 		sprintf (achMessageFile, "%s/.config/mazinger/debug", getenv ("HOME"));
 	}
-	printf ("[%s]: %s\n", achMessageFile, lpszMessage);
+//	fprintf (stderr, "[%s]: %s\n", achMessageFile, lpszMessage);
 	debugFile = fopen (achMessageFile, "a");
 	if (debugFile != NULL)
 	{

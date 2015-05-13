@@ -10,11 +10,11 @@
 
 #ifdef WIN32
 #include <windows.h>
+#define DEBUG(x)
+#else
+#define DEBUG(x)
+//#define DEBUG(x) printf("%s\n", x)
 #endif
 
-#include <npapi.h>
-#include <npfunctions.h>
-
-extern NPNetscapeFuncs npGlobalFuncs ;
 
 #endif /* MAZINGERFF_H_ */

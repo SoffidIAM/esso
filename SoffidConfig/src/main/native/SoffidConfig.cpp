@@ -209,6 +209,7 @@ void SaveForceStartupLogin (SoffidEssoManager &pManager)
 void SaveEnableCloseSession (SoffidEssoManager &pManager)
 {
 	std::string enableCloseSession = "false";	// Enable close session activated
+	std::string enableSharedSession = "false";	// Enable close session activated
 
 	// Check force startup login checked
 	if (IsDlgButtonChecked(hWindDlg, IDC_CHECKBOX_CLOSE_SESSION))
@@ -216,10 +217,20 @@ void SaveEnableCloseSession (SoffidEssoManager &pManager)
 		enableCloseSession = "true";
 	}
 
+	if (IsDlgButtonChecked(hWindDlg, IDC_CHECKBOX_SHARED_SESSION))
+	{
+		enableSharedSession = "true";
+	}
+
 	// Check configuration changed
 	if (enableCloseSession.compare(pManager.getEnableCloseSession())!= 0)
 	{
 		pManager.setEnableCloseSession(enableCloseSession);
+	}
+	// Check configuration changed
+	if (enableSharedSession.compare(pManager.getEnableSharedSession())!= 0)
+	{
+		pManager.setEnableSharedSession(enableSharedSession);
 	}
 }
 
@@ -323,6 +334,18 @@ void SetConfigOnDlg (SoffidEssoManager manager)
 	{
 		CheckDlgButton(hWindDlg, IDC_CHECKBOX_CLOSE_SESSION, BST_UNCHECKED);
 	}
+
+	// Enable Shared session
+	if (manager.getEnableSharedSession().compare("true") == 0)
+	{
+		CheckDlgButton(hWindDlg, IDC_CHECKBOX_SHARED_SESSION, BST_CHECKED);
+	}
+
+	else
+	{
+		CheckDlgButton(hWindDlg, IDC_CHECKBOX_SHARED_SESSION, BST_UNCHECKED);
+	}
+
 
 	// ESSO login type
 	// Check 'kerberos' login

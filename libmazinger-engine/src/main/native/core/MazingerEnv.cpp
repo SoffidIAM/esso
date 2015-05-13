@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <MazingerInternal.h>
+#include <SeyconServer.h>
 
 MazingerEnv::MazingerEnv() {
 #ifdef WIN32
@@ -60,27 +61,59 @@ MazingerEnv *MazingerEnv::pDefaultEnv = NULL;
 std::vector<MazingerEnv*> MazingerEnv::environments;
 
 
+static char *defaultDesktop = NULL;
+
+static char *getDefaultDesktop ()
+{
+	if (defaultDesktop == NULL)
+	{
+#ifdef WIN32
+		HANDLE hd = GetThreadDesktop (GetCurrentThreadId());
+		char desktopName[1024];
+
+		strcpy (desktopName, "Default");
+
+		GetUserObjectInformation (hd,
+			UOI_NAME,
+			desktopName, sizeof desktopName,
+			NULL);
+		defaultDesktop = strdup (desktopName);
+#else
+		defaultDesktop = "Default";
+#endif
+	}
+	return defaultDesktop;
+}
+
 MazingerEnv* MazingerEnv::getDefaulEnv() {
 	if (pDefaultEnv == NULL) {
 		pDefaultEnv = new MazingerEnv;
 		pDefaultEnv->user.assign (MZNC_getUserName());
+		pDefaultEnv->desktop = getDefaultDesktop();
 		environments.push_back(pDefaultEnv);
 	}
 	return pDefaultEnv;
 }
 
+static char currentDesktop[1000] = "";
 MazingerEnv* MazingerEnv::getEnv(const char *user) {
-	if (user == NULL || strcmp(user, MZNC_getUserName()) == 0)
+	return getEnv (user, getDefaultDesktop());
+}
+
+MazingerEnv* MazingerEnv::getEnv(const char *user, const char*desktop) {
+	if ( (user == NULL || strcmp(user, MZNC_getUserName()) == 0) &&
+			(desktop == NULL || strcmp(desktop, getDefaultDesktop()) == 0))
 		return getDefaulEnv();
 	for (std::vector<MazingerEnv*>::iterator it = environments.begin ();
 			it != environments.end(); it++)
 	{
 		MazingerEnv* env = *it;
-		if (env->user == user)
+		if (env->user == user && env->desktop == desktop)
 			return env;
 	}
 	MazingerEnv *env = new MazingerEnv;
 	env->user.assign (user);
+	env->desktop = desktop;
 	environments.push_back(env);
 	return env;
 }
@@ -106,7 +139,7 @@ extern "C" BOOL WINAPI ConvertStringSecurityDescriptorToSecurityDescriptorW(
 
 
 #define MAZINGER_HEADER_SIZE (sizeof (MAZINGER_DATA)+10)
-#define MAZINGER_DATA_PREFIX L"MAZINGER_CONFIG_%s"
+#define MAZINGER_DATA_PREFIX L"MAZINGER_CONFIG_%hs_%hs"
 HINSTANCE hMazingerInstance;
 
 static void fatalError() {
@@ -178,13 +211,11 @@ static void SetLowLabelToFile(LPWSTR lpszFileName) {
 }
 
 PMAZINGER_DATA MazingerEnv::createMazingerData() {
-	WCHAR achUser[100];
 	WCHAR ach[200];
-	DWORD userSize = sizeof achUser;
 
-	GetUserNameW(achUser, &userSize);
-	CharLowerW(achUser);
-	wsprintfW(ach, MAZINGER_DATA_PREFIX, achUser);
+	wsprintfW(ach, MAZINGER_DATA_PREFIX, user.c_str(), desktop.c_str());
+
+	CharLowerW(ach);
 
 	SECURITY_ATTRIBUTES sa;
 	sa.nLength = sizeof sa;
@@ -231,9 +262,7 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 		return pMazingerData;
 	}
 
-	WCHAR achUser[100];
 	WCHAR ach[200];
-	DWORD userSize = sizeof achUser;
 
 	if (! MZNC_waitMutex()) {
 		return NULL;
@@ -251,9 +280,8 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 
 
 	if (hMapFile == NULL) {
-		GetUserNameW(achUser, &userSize);
-		CharLowerW(achUser);
-		wsprintfW(ach, MAZINGER_DATA_PREFIX, achUser);
+		wsprintfW(ach, MAZINGER_DATA_PREFIX, user.c_str(), desktop.c_str());
+		CharLowerW(ach);
 		hMapFile = OpenFileMappingW(readOnly ? FILE_MAP_READ : FILE_MAP_WRITE, // Read/write permission.
 				FALSE, // Max. object size.
 				ach); // Name of mapping object.
@@ -305,6 +333,7 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 			shmName.assign ("/MazingerData-");
 			shmName.append (user);
 		}
+		SeyconCommon::debug ("Opening %s\n", shmName.c_str());
 		shm = shm_open (shmName.c_str(), readOnly ? O_RDONLY : O_RDWR, 0600);
 		if (shm < 0) {
 			if (readOnly) return NULL;
@@ -312,7 +341,7 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 			shm = shm_open (shmName.c_str(), O_RDWR|O_CREAT, 0600);
 			if (shm < 0) {
 				if (! readOnly) {
-					printf ("Unable to create shared memory %s", shmName.c_str());
+					fprintf (stderr, "Unable to create shared memory %s", shmName.c_str());
 					perror ("Error: ");
 				}
 				return NULL;
@@ -333,7 +362,10 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 			readOnly ? PROT_READ: PROT_READ|PROT_WRITE, MAP_SHARED, shm, 0);
 	if (pMazingerData == MAP_FAILED) {
 		pMazingerData = NULL;
+		SeyconCommon::debug ("Cannot map %s\n", shmName.c_str());
 	}
+	else
+		SeyconCommon::debug ("Opened %s\n", shmName.c_str());
 	openReadOnly = readOnly;
 
 	return pMazingerData;

@@ -109,6 +109,9 @@ void SeyconSession::weakSessionStartup (const char* lpszUser, const wchar_t* lps
 {
 	int i;
 
+	m_passwordLogin = false;
+	m_kerberosLogin = false;
+
 	SeyconCommon::updateHostAddress();
 
 	SeyconService service;
@@ -129,6 +132,8 @@ void SeyconSession::weakSessionStartup (const char* lpszUser, const wchar_t* lps
 		SeyconCommon::updateConfig("seycon.alternate.https.port");
 		SeyconCommon::updateConfig("seycon.https.port");
 		SeyconCommon::updateConfig("SSOSoffidAgent");
+		SeyconCommon::updateConfig("soffid.esso.idleTimeout");
+		SeyconCommon::updateConfig("soffid.esso.sharedWorkstation");
 		// Propagar password
 		propagatePassword();
 		createWeakSession();
@@ -454,6 +459,8 @@ KerberosIterator::~KerberosIterator ()
 //////////////////////////////////////////////////////////
 int SeyconSession::kerberosSessionStartup ()
 {
+	m_kerberosLogin = true;
+	m_passwordLogin = false;
 	json::JsonAbstractObject::ConfigureChromePreferences();
 
 	SeyconCommon::updateHostAddress();
@@ -473,6 +480,17 @@ int SeyconSession::kerberosSessionStartup ()
 	ServiceIteratorResult result = service.iterateServers(it);
 
 	return status;
+}
+
+//////////////////////////////////////////////////////////
+int SeyconSession::restartSession ()
+{
+	if (m_kerberosLogin)
+		return kerberosSessionStartup();
+	else if (m_passwordLogin)
+		return passwordSessionStartup(user.c_str(), password.c_str());
+	else
+		return LOGIN_ERROR;
 }
 
 void SeyconSession::close ()

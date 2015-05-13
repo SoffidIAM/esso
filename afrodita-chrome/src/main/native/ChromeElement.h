@@ -10,14 +10,14 @@
 
 #include <AbstractWebElement.h>
 #include "AfroditaC.h"
-#include "PluginObject.h"
+#include "ChromeWebApplication.h"
 
 namespace mazinger_chrome
 {
 
 class ChromeElement: public AbstractWebElement {
 public:
-	ChromeElement (PluginObject *plugin, NPObject *object);
+	ChromeElement (ChromeWebApplication *app, const char *externalId);
 	virtual ~ChromeElement();
 	virtual void getChildren (std::vector<AbstractWebElement*> &children);
 	virtual AbstractWebElement* getParent();
@@ -29,8 +29,8 @@ public:
 	virtual void blur ();
 	virtual AbstractWebElement* clone();
 private:
-	PluginObject *plugin;
-	NPObject* elementObject;
+	ChromeWebApplication *app;
+	std::string externalId;
 };
 
 }

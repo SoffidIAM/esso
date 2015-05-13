@@ -23,6 +23,8 @@ typedef long __stdcall (* HllApiType) (LPINT, LPSTR, LPINT, LPINT);
 class HllApi {
 public:
 	HllApi (const wchar_t *dllName);
+	int setSessionParameters ();
+
 	int querySesssionStatus (const char session,
 			std::string &id, std::string& name, std::string& sessionType, int &rows, int &cols, int &codepage );
 	int getPresentationSpace (const char session,

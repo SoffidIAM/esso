@@ -302,27 +302,34 @@ struct TempBuffer {
 ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* hostName, size_t dwPort) {
 	if (pSession == NULL)
 	{
-		static void   (*pg_thread_init)   (GThreadFunctions *vtable);
+		static void   (*pg_thread_init)   (GThreadFunctions *vtable) = NULL;
+		static void   (*pg_type_init)  () = NULL;
 
-		pg_thread_init = NULL;
-		if (pg_thread_init == NULL) {
+		if (pg_thread_init == NULL) 
 			pg_thread_init = (void   (*)   (GThreadFunctions *vtable)) dlsym (RTLD_DEFAULT, "g_thread_init");
-		}
 		if (pg_thread_init != NULL)
 			pg_thread_init (NULL);
-		g_type_init ();
+		if (pg_type_init == NULL) 
+			pg_type_init = (void   (*)  ()) dlsym (RTLD_DEFAULT, "g_type_init");
+		if (pg_type_init != NULL) 
+			pg_type_init ();
 
 		std::string fileName;
-
 		SeyconCommon::readProperty("CertificateFile", fileName);
+
 		if (fileName.size() == 0) {
 			SeyconCommon::warn("Unknown certificate file. Please configure /etc/mazinger\n");
 			return SIR_ERROR;
 		}
 
+		std::string timeoutStr;
+		SeyconCommon::readProperty("Timeout", timeoutStr);
+		int timeout = 60;
+		sscanf ( timeoutStr.c_str(), "%d", &timeout);
+
 		pSession = soup_session_sync_new_with_options ( SOUP_SESSION_SSL_CA_FILE, fileName.c_str(),
 				SOUP_SESSION_IDLE_TIMEOUT, 3,
-				SOUP_SESSION_TIMEOUT, 60,
+				SOUP_SESSION_TIMEOUT, timeout,
 				NULL);
 	}
 

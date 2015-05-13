@@ -11,83 +11,39 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "json/JsonMap.h"
+#include "json/JsonVector.h"
+#include "json/JsonValue.h"
+
+#include "CommunicationManager.h"
+
+
 namespace mazinger_chrome
 {
 
 
-static std::string getAttribute (PluginObject *plugin, NPObject *windowObject, const char *attribute)
-{
-	std::string value;
-	NPVariant variantValue;
-	NPVariant variantValue2;
-	if (plugin->getProperty(windowObject, "document", variantValue))
-	{
-		if (variantValue.type == NPVariantType_Object)
-		{
-			NPObject* documentObject = variantValue.value.objectValue;
-
-			// Gets the "title" identifier.
-			if (plugin->getProperty(documentObject, attribute, variantValue2))
-			{
-				if (variantValue2.type == NPVariantType_String)
-				{
-					value.assign(variantValue2.value.stringValue.UTF8Characters,
-							variantValue2.value.stringValue.UTF8Length);
-				}
-				npGlobalFuncs.releasevariantvalue(&variantValue2);
-			}
-
-		}
-		npGlobalFuncs.releasevariantvalue(&variantValue);
-	}
-
-	return value;
-}
-
-static void getCollection (PluginObject *plugin, NPObject *windowObject, const char *attribute, std::vector<AbstractWebElement*> & elements)
-{
-	elements.clear ();
-	// Declare a local variant value.
-	NPVariant variantValue;
-	if (plugin->getProperty(windowObject, "document", variantValue))
-	{
-		if (variantValue.type == NPVariantType_Object)
-		{
-			// Get a pointer to the "document" object.
-			NPObject *documentObject = variantValue.value.objectValue;
-
-			// Get the location property from the location object.
-			NPVariant variantValue2;
-
-			if (plugin->getProperty(documentObject, attribute,variantValue2 ))
-			{
-				if (variantValue2.type == NPVariantType_Object)
-				{
-					NPObject *nodeList = variantValue2.value.objectValue;
-					// Now iterate over returned objects
-					plugin->nodeListToVector (nodeList, elements);
-				}
-				npGlobalFuncs.releasevariantvalue(&variantValue2);
-			}
-		}
-		npGlobalFuncs.releasevariantvalue(&variantValue);
-	}
-}
 ChromeWebApplication::~ChromeWebApplication() {
-	npGlobalFuncs.releaseobject(windowObject);
 }
 
 
 void ChromeWebApplication::getUrl(std::string & value)
 {
-	value = getAttribute(plugin, windowObject, "URL");
+	value = url;
 }
 
 
 
 void ChromeWebApplication::getTitle(std::string & value)
 {
-	value = getAttribute (plugin, windowObject, "title");
+	bool error;
+	const char * msg [] = {"action","getTitle", "pageId", threadStatus->pageId.c_str(), NULL};
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL && ! error)
+	{
+		value = response->value;
+		delete response;
+	}
 }
 
 
@@ -97,67 +53,37 @@ void ChromeWebApplication::getContent(std::string & value)
 	value.assign("<not supported>");
 }
 
-ChromeWebApplication::ChromeWebApplication(PluginObject *plugin, NPObject *windowObject)
-{
-	this->plugin = plugin;
-	this->windowObject = windowObject;
-	npGlobalFuncs.retainobject(windowObject);
-}
 
 AbstractWebElement *ChromeWebApplication::getDocumentElement()
 {
-	NPVariant variantValue;
-	ChromeElement *ce = NULL;
-	if (plugin->getProperty(windowObject, "document", variantValue))
+	bool error;
+	const char * msg [] = {"action","getDocumentElement", "pageId", NULL};
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL && ! error)
 	{
-		if (variantValue.type == NPVariantType_Object)
-		{
-			ce = new mazinger_chrome::ChromeElement (plugin, variantValue.value.objectValue);
-		}
-		npGlobalFuncs.releasevariantvalue(&variantValue);
+		ChromeElement* result = new ChromeElement(this, response->value.c_str());
+		delete response;
+		return result;
 	}
-	return ce;
+	else
+		return NULL;
 }
 
 
 
 void ChromeWebApplication::getElementsByTagName(const char*tag, std::vector<AbstractWebElement*> & elements)
 {
-	elements.clear ();
-	// Declare a local variant value.
-	NPVariant variantValue;
-	if (plugin->getProperty(windowObject, "document", variantValue))
-	{
-		if (variantValue.type == NPVariantType_Object)
-		{
-			// Get a pointer to the "document" object.
-			NPObject *documentObject = variantValue.value.objectValue;
-
-			NPVariant variantParam;
-			NPVariant variantValue2;
-			STRINGZ_TO_NPVARIANT(tag, variantParam);
-			// Get the location property from the location object.
-			if (plugin->invoke1(documentObject, "getElementsByTagName",
-					variantParam, variantValue2 ))
-			{
-				if (variantValue2.type == NPVariantType_Object)
-				{
-					NPObject *nodeList = variantValue2.value.objectValue;
-					// Now iterate over returned objects
-					plugin->nodeListToVector (nodeList, elements);
-				}
-				npGlobalFuncs.releasevariantvalue(&variantValue2);
-			}
-		}
-	}
-	npGlobalFuncs.releasevariantvalue(&variantValue);
+	const char * msg [] = {"action","getElementsByTagName", "pageId", threadStatus->pageId.c_str(), "tagName", tag, NULL};
+	generateCollection(msg, elements);
 }
 
 
 
 void ChromeWebApplication::getImages(std::vector<AbstractWebElement*> & elements)
 {
-	getCollection(plugin, windowObject, "images", elements);
+	const char * msg [] = {"action","getImages", "pageId", threadStatus->pageId.c_str(), NULL};
+	generateCollection(msg, elements);
 }
 
 
@@ -165,109 +91,122 @@ void ChromeWebApplication::getImages(std::vector<AbstractWebElement*> & elements
 
 void ChromeWebApplication::getLinks(std::vector<AbstractWebElement*> & elements)
 {
-	getCollection(plugin, windowObject, "links", elements);
+	const char * msg [] = {"action","getLinks", "pageId", threadStatus->pageId.c_str(), NULL};
+	generateCollection(msg, elements);
 }
 
 
 
 void ChromeWebApplication::getDomain(std::string & value)
 {
-	value = getAttribute (plugin, windowObject, "domain");
+	bool error;
+	const char * msg [] = {"action","getDomain", "pageId", threadStatus->pageId.c_str(), NULL};
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL && ! error)
+	{
+		value = response->value;
+		delete response;
+	}
 }
 
-
+void ChromeWebApplication::generateCollection(const char* msg[],
+		std::vector<AbstractWebElement*>& elements) {
+	elements.clear ();
+	bool error;
+	json::JsonVector* response =
+			dynamic_cast<json::JsonVector*>(CommunicationManager::getInstance()->call(
+					error, msg));
+	if (response != NULL && !error) {
+		for (std::vector<json::JsonAbstractObject*>::iterator it =
+				response->objects.begin(); it != response->objects.end();
+				it++) {
+			json::JsonValue *v = dynamic_cast<json::JsonValue*>(*it);
+			if (v != NULL) {
+				ChromeElement *e = new ChromeElement(this, v->value.c_str());
+				elements.push_back(e);
+			}
+		}
+		delete response;
+	}
+}
 
 void ChromeWebApplication::getAnchors(std::vector<AbstractWebElement*> & elements)
 {
-	getCollection(plugin, windowObject, "anchors", elements);
+	const char * msg [] = {"action","getAnchors", "pageId", threadStatus->pageId.c_str(), NULL};
+	generateCollection(msg, elements);
 }
 
 
 
 void ChromeWebApplication::getCookie(std::string & value)
 {
-	value = getAttribute (plugin, windowObject, "cookie");
+	bool error;
+	const char * msg [] = {"action","getCookie", "pageId", threadStatus->pageId.c_str(), NULL};
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL && ! error)
+	{
+		value = response->value;
+		delete response;
+	}
 }
 
 
 
 AbstractWebElement *ChromeWebApplication::getElementById(const char *id)
 {
-	// Declare a local variant value.
-	NPVariant variantValue;
-	AbstractWebElement *element = NULL;
-	if ( plugin->getProperty(windowObject, "document", variantValue))
+	bool error;
+	const char * msg [] = {"action","getElementById", "pageId", threadStatus->pageId.c_str(), "elementId", id, NULL};
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL && ! error)
 	{
-		if (variantValue.type == NPVariantType_Object)
-		{
-
-			// Get a pointer to the "document" object.
-			NPObject *documentObject = variantValue.value.objectValue;
-
-			NPVariant variantParam;
-			NPVariant variantValue2;
-			STRINGZ_TO_NPVARIANT(id, variantParam);
-			// Get the location property from the location object.
-			if (plugin->invoke1(documentObject, "getElementById",
-					variantParam, variantValue2 ))
-			{
-				if (variantValue2.type == NPVariantType_Object)
-					element = new ChromeElement(plugin, variantValue2.value.objectValue);
-				npGlobalFuncs.releasevariantvalue(&variantValue2);
-			}
-		}
-		npGlobalFuncs.releasevariantvalue(&variantValue);
+		ChromeElement* result = new ChromeElement(this, response->value.c_str());
+		delete response;
+		return result;
 	}
-	return element;
+	else
+		return NULL;
 }
 
 
 
 void ChromeWebApplication::getForms(std::vector<AbstractWebElement*> & elements)
 {
-	getCollection(plugin, windowObject, "forms", elements);
+	const char * msg [] = {"action","getForms", "pageId", threadStatus->pageId.c_str(), NULL};
+	generateCollection(msg, elements);
 }
 
 
 
 void ChromeWebApplication::write(const char *text)
 {
-	// Declare a local variant value.
-	NPVariant variantValue;
-	NPVariant variantParam;
-	if (! plugin->getProperty(windowObject, "document", variantValue))
-		return;
-	if (variantValue.type != NPVariantType_Object)
-		return;
-	// Get a pointer to the "document" object.
-	NPObject *documentObject = variantValue.value.objectValue;
+	bool error;
+	const char * msg [] = {"action","write", "pageId", threadStatus->pageId.c_str(), "text", text, NULL};
+	json::JsonAbstractObject * response = CommunicationManager::getInstance()->call(error,msg);
 
-	STRINGZ_TO_NPVARIANT(text, variantParam);
-	// Get the location property from the location object.
-	if (! plugin->invoke1(documentObject, "write", variantParam, variantValue ))
-		return;
-	npGlobalFuncs.releasevariantvalue(&variantValue);
+	if (response != NULL)
+		delete response;
 }
 
 void ChromeWebApplication::writeln(const char *text)
 {
-	// Declare a local variant value.
-	NPVariant variantValue;
-	NPVariant variantParam;
-	if (! plugin->getProperty(windowObject, "document", variantValue))
-		return;
-	if (variantValue.type != NPVariantType_Object)
-		return;
-	// Get a pointer to the "document" object.
-	NPObject *documentObject = variantValue.value.objectValue;
+	bool error;
+	const char * msg [] = {"action","writeln", "pageId", threadStatus->pageId.c_str(), "text", text, NULL};
+	json::JsonAbstractObject * response = CommunicationManager::getInstance()->call(error,msg);
 
-	STRINGZ_TO_NPVARIANT(text, variantParam);
-	// Get the location property from the location object.
-	if (! plugin->invoke1(documentObject, "writeln", variantParam, variantValue ))
-		return;
-	npGlobalFuncs.releasevariantvalue(&variantValue);
+	if (response != NULL)
+		delete response;
 }
 
 
+
+
+ChromeWebApplication::ChromeWebApplication(ThreadStatus *threadStatus) {
+	this->threadStatus = threadStatus;
+	title = threadStatus->title;
+	url = threadStatus->url;
+}
 
 }

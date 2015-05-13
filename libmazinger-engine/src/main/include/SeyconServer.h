@@ -36,6 +36,7 @@ public:
 
 	static void getCitrixClientName(std::string &name) ;
 	static void getCitrixClientIP(std::string &ip) ;
+	static void getCitrixInitialProgram(std::string &app) ;
 	/** Conversión base 64 **/
 	static std::string toBase64  (const unsigned char* source, int len);
 	static std::string fromBase64(const char* source);
