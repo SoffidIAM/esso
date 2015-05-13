@@ -778,9 +778,11 @@ static void MZNECMA_getPassword(struct SEE_interpreter *interp,
 	SEE_ToString(interp, argv[1], &account);
 
 	std::wstring secret = L"pass.";
-	secret += SEE_StringToWChars(interp, system.u.string);
+	std::wstring systemStr = SEE_StringToWChars(interp, system.u.string);
+	std::wstring accountStr = SEE_StringToWChars(interp, account.u.string);
+	secret += systemStr;
 	secret += L".";
-	secret += SEE_StringToWChars(interp, account.u.string);
+	secret += accountStr;
 
 	SecretStore s (MZNC_getUserName()) ;
 	wchar_t *str = s.getSecret(secret.c_str());
@@ -788,6 +790,16 @@ static void MZNECMA_getPassword(struct SEE_interpreter *interp,
 	if (str == NULL)
 		SEE_SET_UNDEFINED(res);
 	else {
+
+		wchar_t *sessionKey = s.getSecret(L"sessionKey");
+		wchar_t *user = s.getSecret(L"user");
+		SeyconService ss;
+		SeyconResponse *response = ss.sendUrlMessage(L"/auditPassword?user=%ls&key=%ls&system=%ls&account=%ls&application=%ls",
+				user, sessionKey, systemStr.c_str(), accountStr.c_str(),
+				ss.escapeString(MZNC_getCommandLine()).c_str());
+
+
+
 		struct SEE_string *buf = SEE_WCharsToString(interp, str);
 		SEE_SET_STRING(res, buf);
 		s.freeSecret(str);
