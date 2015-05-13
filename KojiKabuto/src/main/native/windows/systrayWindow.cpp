@@ -78,7 +78,7 @@ struct EnumDesktopAction
 	int idToExeucte;
 	HDESK currentDesktop;
 
-	EnumDesktopAction::EnumDesktopAction ()
+	EnumDesktopAction ()
 	{
 		updateMenu = false;
 		execute = false;
