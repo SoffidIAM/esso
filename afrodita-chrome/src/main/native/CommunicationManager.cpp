@@ -218,7 +218,7 @@ JsonAbstractObject* CommunicationManager::call(bool &error, const char*messages[
 
 #ifdef WIN32
 static DWORD WINAPI win32ThreadProc(
-  _In_  LPVOID arg
+  LPVOID arg
 )
 #else
 static void* linuxThreadProc (void *arg)
