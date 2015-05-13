@@ -5,6 +5,7 @@
 #define IDI_SOFFID_ICON                         1
 #define IDD_DIALOG_ESSO_CONFIG                  100
 #define IDB_BITMAP_SOFFID_IMG                   102
+#define IDC_CHECKBOX_SHARED_SESSION             1000
 #define IDC_IMG_SOFFIDLOG                       1003
 #define IDC_MSG_INFO                            1004
 #define IDC_CHECKBOX_SOFFID_GINA                1006

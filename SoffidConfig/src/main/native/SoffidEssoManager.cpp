@@ -104,6 +104,13 @@ const std::string& SoffidEssoManager::getEnableCloseSession () const
 	return enableCloseSession;
 }
 
+
+// Get enable close session by user value
+const std::string& SoffidEssoManager::getEnableSharedSession () const
+{
+	return enableSharedSession;
+}
+
 // Set enable close session by user value
 void SoffidEssoManager::setEnableCloseSession (const std::string& enableCloseSession)
 {
@@ -115,6 +122,20 @@ void SoffidEssoManager::setEnableCloseSession (const std::string& enableCloseSes
 	else
 	{
 		this->enableCloseSession = enableCloseSession;
+	}
+}
+
+// Set enable close session by user value
+void SoffidEssoManager::setEnableSharedSession (const std::string& enableSharedSession)
+{
+	if (enableSharedSession.size() == 0)
+	{
+		this->enableSharedSession = "false";
+	}
+
+	else
+	{
+		this->enableSharedSession = enableSharedSession;
 	}
 }
 
@@ -575,6 +596,8 @@ bool SoffidEssoManager::LoadConfiguration ()
 	// Load enable close session
 	SeyconCommon::readProperty("EnableCloseSession", regValue);
 	setEnableCloseSession(regValue);
+	SeyconCommon::readProperty("enableLocalAccounts", regValue);
+	setEnableSharedSession(regValue);
 
 	// Load login on startup
 	SeyconCommon::readProperty("ForceStartupLogin", regValue);
@@ -637,6 +660,9 @@ bool SoffidEssoManager::SaveConfiguration ()
 
 	// Save enable close session
 	SeyconCommon::writeProperty("EnableCloseSession", getEnableCloseSession().c_str());
+
+	// Save enable close session
+	SeyconCommon::writeProperty("enableLocalAccounts", getEnableSharedSession().c_str());
 
 	// Save login on startup
 	SeyconCommon::writeProperty("ForceStartupLogin", getForceLogin().c_str());

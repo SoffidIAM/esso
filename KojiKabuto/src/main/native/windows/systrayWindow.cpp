@@ -72,6 +72,7 @@ struct EnumDesktopAction
 	bool execute = false;
 	bool openMenu = false;
 	bool forwardAction = false;
+	bool highlight = false;
 	HMENU hm;
 	int nextId;
 	int idToExeucte;
@@ -102,7 +103,8 @@ static BOOL CALLBACK enumWindowProc(
 			sprintf(hotkey, "&%d.", (action->nextId - IDM_USER_DESKTOP + 1));
 			std::string s = hotkey;
 			s +=  &achText[prefixLen];
-			AppendMenuA (action->hm, MF_STRING, action->nextId, s.c_str());
+			DWORD style = action->highlight ? MF_STRING|MF_HILITE : MF_STRING;
+			AppendMenuA (action->hm, style , action->nextId, s.c_str());
 		}
 		if ( action->openMenu )
 		{
@@ -136,9 +138,10 @@ static BOOL CALLBACK enumDesktopProc(
 		desktopName, sizeof desktopName,
 		NULL);
 	printf ("Desktop %s (Current = %s)\n", lpszDesktop, desktopName);
-	if (strcmp (lpszDesktop, desktopName) == 0)
-		return true;
+//	if (strcmp (lpszDesktop, desktopName) == 0)
+//		return true;
 
+	action->highlight = strcmp (lpszDesktop, desktopName) == 0;
 
 	HDESK hd = OpenDesktop (lpszDesktop, 0, false, GENERIC_ALL);
 	if (hd != NULL)
@@ -285,7 +288,8 @@ static void ContextMenu (HWND hwnd)
 	SetMenuItemInfo(_hMenu, IDM_DISABLE_ESSO, false, &mii);
 
 	SeyconCommon::readProperty("enableLocalAccounts", enabledLocalAccounts);
-	mii.fState == mii.fState && enabledLocalAccounts == "true";
+	if (enabledLocalAccounts != "true")
+		mii.fState = MFS_DISABLED;
 	SetMenuItemInfo(_hMenu, IDM_USER_NEW_DESKTOP, false, &mii);
 
 	mii.fState = (ok || !sessionStarted) ? MFS_DISABLED : MFS_UNHILITE;

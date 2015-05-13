@@ -252,33 +252,6 @@ void KojiKabuto::checkScreenSaver() {
 	}
 }
 
-static BOOL CALLBACK enumDesktopProcToReturn(LPTSTR lpszDesktop,
-		LPARAM lParam) {
-	HANDLE hd = GetThreadDesktop(GetCurrentThreadId());
-	char desktopName[1024] = "";
-
-	GetUserObjectInformation(hd,
-	UOI_NAME, desktopName, sizeof desktopName,
-	NULL);
-	if (strcmp(lpszDesktop, desktopName) == 0) {
-		return true;
-	}
-
-	std::string user = MZNC_getUserName();
-	MazingerEnv *penv = MazingerEnv::getEnv(user.c_str(), lpszDesktop);
-	if (penv != NULL && penv->getDataRW() != NULL
-			&& penv->getDataRW()->started) {
-		HDESK hDesktop = OpenDesktop(lpszDesktop, 0, 0,
-				GENERIC_EXECUTE | GENERIC_READ);
-		if (SwitchDesktop(hDesktop))
-			if (lParam == NULL)
-				ExitProcess(0);
-			else
-				return false;
-	}
-	return true;
-}
-
 // Force login process
 void KojiKabuto::ForceLogin() {
 	std::string forceLogin;	// Force login on startup registry key value
@@ -289,8 +262,7 @@ void KojiKabuto::ForceLogin() {
 
 	// Check force login
 	if (desktopSession) {
-		EnumDesktops(GetProcessWindowStation(), enumDesktopProcToReturn,
-				(LPARAM) NULL);
+//		SwitchDesktop(OpenDesktop("Default", 0, 0, GENERIC_ALL));
 	} else if (forceLogin != "false") {
 		ExitWindowsEx(EWX_LOGOFF, 0);
 	}
@@ -451,8 +423,64 @@ int KojiKabuto::StartLoginProcess() {
 	return result;
 }
 
+static BOOL CALLBACK closeAllWindowsStep1(HWND hwnd,	LPARAM lParam) {
+	DWORD dwProcessId = GetCurrentProcessId();
+	GetWindowThreadProcessId(hwnd, &dwProcessId);
+	if (dwProcessId != GetCurrentProcessId())
+	{
+		if (IsWindowVisible(hwnd) || IsIconic(hwnd))
+		{
+			bool *allOk = (bool*) lParam;
+			DWORD result = SendMessage (hwnd, WM_QUERYENDSESSION, 0 , ENDSESSION_LOGOFF);
+			if (allOk != NULL && result == FALSE)
+			{
+				char ach[1000];
+				GetWindowText(hwnd, ach, sizeof ach);
+				*allOk = false;
+			}
+		}
+	}
+	return true;
+
+}
+
+static BOOL CALLBACK closeAllWindowsStep2(HWND hwnd,	LPARAM lParam) {
+	DWORD dwProcessId = GetCurrentProcessId();
+	GetWindowThreadProcessId(hwnd, &dwProcessId);
+	if (dwProcessId != GetCurrentProcessId())
+	{
+		if (IsWindowVisible(hwnd) || IsIconic(hwnd))
+		{
+			SendMessage (hwnd, WM_ENDSESSION, 1, ENDSESSION_LOGOFF);
+		}
+	}
+	return true;
+
+}
+
+static BOOL CALLBACK closeAllWindowsStep3(HWND hwnd,	LPARAM lParam) {
+	DWORD dwProcessId = GetCurrentProcessId();
+	GetWindowThreadProcessId(hwnd, &dwProcessId);
+	if (dwProcessId != GetCurrentProcessId())
+	{
+		HANDLE h = OpenProcess(GENERIC_ALL, false, dwProcessId);
+		TerminateProcess(h, 0);
+		CloseHandle(h);
+	}
+	return true;
+
+}
+
+
 // Close session
 void KojiKabuto::CloseSession() {
+	if (desktopSession) {
+		bool allOk = true;
+		EnumWindows(closeAllWindowsStep1, (LPARAM)&allOk);
+		if (! allOk)
+			return;
+	}
+
 	if (session != NULL)
 		session->close();
 	session = NULL;
@@ -461,8 +489,14 @@ void KojiKabuto::CloseSession() {
 
 	sessionStarted = false;
 	if (desktopSession) {
-		EnumDesktops(GetProcessWindowStation(), enumDesktopProcToReturn,
-				(LPARAM) 1);
+
+		EnumWindows(closeAllWindowsStep2, 0);
+
+		HDESK hdesk = GetThreadDesktop(GetCurrentThreadId());
+		SwitchDesktop(OpenDesktop("Default", 0, 0, GENERIC_ALL));
+		EnumDesktopWindows(hdesk, closeAllWindowsStep3, 0);
+		SwitchDesktop(OpenDesktop("Default", 0, 0, GENERIC_ALL));
+		ExitProcess(0);
 	}
 }
 

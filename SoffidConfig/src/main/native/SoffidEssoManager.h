@@ -74,6 +74,8 @@ class SoffidEssoManager
 		 */
 		std::string enableCloseSession;
 
+		std::string enableSharedSession;
+
 		/** @brief ESSO login type
 		 *
 		 * Select ESSO kerberos login, manual login or both (try kerberos and
@@ -208,11 +210,23 @@ class SoffidEssoManager
 		 */
 		const std::string& getEnableCloseSession () const;
 
+		/** @brief Get enable shared session
+		 *
+		 * Get value of enable shared session by user.
+		 */
+		const std::string& getEnableSharedSession () const;
+
 		/** @brief Set enable close session
 		 *
 		 * Set value of enable close session by user.
 		 */
 		void setEnableCloseSession (const std::string& enableCloseSession);
+
+		/** @brief Set enable close session
+		 *
+		 * Set value of enable shared sessions on desktop
+		 */
+		void setEnableSharedSession (const std::string& enableSharedSession);
 
 		/** @brief Get force login on startup
 		 *
