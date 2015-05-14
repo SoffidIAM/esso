@@ -9,7 +9,7 @@
 	<parent>
 		<artifactId>KojiKabuto</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.5.6-enterprise</version>
+		<version>1.5.7-SNAPSHOT</version>
 	</parent>
 	<dependencies>
 		<dependency>

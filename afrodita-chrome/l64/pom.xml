@@ -7,7 +7,7 @@
 	<parent>
 		<artifactId>afrodita-chrome</artifactId>
 		<groupId>com.soffid.iam.esso</groupId>
-		<version>1.5.6-enterprise</version>
+		<version>1.5.7-SNAPSHOT</version>
 	</parent>
 	<issueManagement>
 		<system>RTIR</system>
