@@ -4,11 +4,11 @@
 	<artifactId>libmazinger-engine</artifactId>
 	<packaging>pom</packaging>
 	<name>Codi comú per a injecció d'Usuaris i Passwords</name>
-	<version>1.6.0-SNAPSHOT</version>
+	<version>1.5.7</version>
 	<parent>
         	<groupId>com.soffid.iam.esso.pom</groupId>
         	<artifactId>root</artifactId>
-               	<version>1.6.0-SNAPSHOT</version>
+               	<version>1.5.7</version>
 	</parent>
 	<issueManagement>
 		<system>RTIR</system>
