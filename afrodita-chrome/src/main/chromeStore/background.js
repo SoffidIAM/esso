@@ -39,6 +39,24 @@ var mazingerBridge = {
 chrome.tabs.onUpdated
 		.addListener(function(tabindex, changeinfo, tab) {
 			if (changeinfo.status == "complete") {
+<<<<<<< HEAD
+=======
+				chrome.tabs.executeScript(
+								{
+									code : 
+        'var btn = document.createElement("BUTTON"); '
+	+ 'document.body.appendChild(btn); '
+	+ 'btn.appendChild(document.createTextNode("HOLA"));'
+	+ 'var embed = document.createElement("OBJECT"); '
+	+ 'document.body.appendChild(embed); '
+	+ 'embed.setAttribute("id", "soffid-sso-plugin");'
+	+ 'embed.setAttribute("type", "application/soffid-sso-plugin");'
+	+ ' try {' 
+	+ 'document.getElementById("soffid-sso-plugin").run();'
+	+ '} catch (e) { }' 
+	});
+
+>>>>>>> e59e2f63083a066b4ec2e0ded8ff3da6da89e946
 			}
 		});
 
