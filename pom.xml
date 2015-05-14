@@ -4,7 +4,7 @@
   <groupId>com.soffid.iam.esso.pom</groupId>
   <artifactId>root</artifactId>
   <packaging>pom</packaging>
-  <name>Single sign on module grandfather</name>
+  <name>Single sign on module grandfather </name>
   <version>1.5.7-enterprise</version>
   <url>http://esso.forge.dev.lab</url>
         <scm>
