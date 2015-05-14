@@ -4,11 +4,11 @@
 	<artifactId>libMazingerPreload</artifactId>
 	<packaging>pom</packaging>
 	<name>Dll per a injecció d'Usuaris i Passwords a Linux</name>
-	<version>1.5.7</version>
+	<version>1.6.0-SNAPSHOT</version>
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.5.7</version>
+		<version>1.6.0-SNAPSHOT</version>
 	</parent>
 	<issueManagement>
 		<system>RTIR</system>
