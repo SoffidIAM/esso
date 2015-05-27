@@ -12,10 +12,10 @@ struct ThreadInfo
 	char session;
 };
 
+// #define DEBUG
 bool polling = false;
 int pollDelay = 3000;
 
-#define DEBUG
 
 static DWORD CALLBACK threadFunction (void * param)
 {

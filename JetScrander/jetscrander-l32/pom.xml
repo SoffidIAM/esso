@@ -8,7 +8,7 @@
 	<parent>
 		<artifactId>JetScrander</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.5.0-SNAPSHOT</version>
+		<version>1.6.0-SNAPSHOT</version>
 	</parent>
 	<dependencies>
 		<dependency>
@@ -63,7 +63,6 @@
 						<linkerEndOption>-lpthread</linkerEndOption>
 						<linkerEndOption>-ldl</linkerEndOption>
 						<linkerEndOption>-lglib-2.0</linkerEndOption>
-						<linkerEndOption>-lffi</linkerEndOption>
 					</linkerEndOptions>
 					<sources>
 						<source>
