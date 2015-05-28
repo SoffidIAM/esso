@@ -67,7 +67,7 @@ static char *getDefaultDesktop ()
 {
 	if (defaultDesktop == NULL)
 	{
-#ifdef WIN32
+#ifdef WIN32_old_and_error
 		HANDLE hd = GetThreadDesktop (GetCurrentThreadId());
 		char desktopName[1024];
 
@@ -188,7 +188,7 @@ static PSECURITY_DESCRIPTOR createSecurityDescriptor() {
 
 #define LOW_INTEGRITY_SDDL_SACL_W L"S:(ML;;NW;;;LW)"
 
-static void SetLowLabelToFile(LPWSTR lpszFileName) {
+static void SetLowLabelToFile(HANDLE h) {
 	// The LABEL_SECURITY_INFORMATION SDDL SACL to be set for low integrity
 	DWORD dwErr = ERROR_SUCCESS;
 	PSECURITY_DESCRIPTOR pSD = NULL;
@@ -203,7 +203,7 @@ static void SetLowLabelToFile(LPWSTR lpszFileName) {
 				&fSaclDefaulted)) {
 			// Note that psidOwner, psidGroup, and pDacl are
 			// all NULL and set the new LABEL_SECURITY_INFORMATION
-			dwErr = SetNamedSecurityInfoW(lpszFileName, SE_FILE_OBJECT,
+			dwErr = SetSecurityInfo(h, SE_KERNEL_OBJECT,
 					LABEL_SECURITY_INFORMATION, NULL, NULL, NULL, pSacl);
 		}
 		LocalFree(pSD);
@@ -236,7 +236,7 @@ PMAZINGER_DATA MazingerEnv::createMazingerData() {
 		return NULL;
 	}
 
-	SetLowLabelToFile (ach);
+	SetLowLabelToFile (hMapFile);
 	hMapFileRW = true;
 
 
@@ -258,13 +258,19 @@ PMAZINGER_DATA MazingerEnv::createMazingerData() {
 static MAZINGER_DATA nullMazingerData;
 
 PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
+
 	if (pMazingerData != NULL && hMapFile != NULL && (readOnly || hMapFileRW)) {
 		return pMazingerData;
 	}
 
+
 	WCHAR ach[200];
 
-	if (! MZNC_waitMutex()) {
+	const char* lpszCmdLine2 = MZNC_getCommandLine();
+	bool iexplore = (strstr( lpszCmdLine2, "iexplore") != NULL);
+
+
+	if (!iexplore && ! MZNC_waitMutex()) {
 		return NULL;
 	}
 
@@ -282,7 +288,7 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 	if (hMapFile == NULL) {
 		wsprintfW(ach, MAZINGER_DATA_PREFIX, user.c_str(), desktop.c_str());
 		CharLowerW(ach);
-		hMapFile = OpenFileMappingW(readOnly ? FILE_MAP_READ : FILE_MAP_WRITE, // Read/write permission.
+			hMapFile = OpenFileMappingW(readOnly ? FILE_MAP_READ : FILE_MAP_WRITE, // Read/write permission.
 				FALSE, // Max. object size.
 				ach); // Name of mapping object.
 		if (hMapFile != NULL) {
@@ -309,7 +315,9 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 				0, 0, 0);
 	}
 
-	MZNC_endMutex ();
+
+	if (! iexplore)
+		MZNC_endMutex ();
 	return pMazingerData;
 }
 
