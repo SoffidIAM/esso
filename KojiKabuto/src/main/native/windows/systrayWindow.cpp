@@ -329,13 +329,16 @@ static void ContextMenu (HWND hwnd)
 		DeleteMenu (hm, GetMenuItemCount(hm)-1, MF_BYPOSITION);
 	}
 
-	EnumDesktopAction eda ;
-	eda.execute = false;
-	eda.updateMenu = true;
-	eda.forwardAction = false;
-	eda.nextId = IDM_USER_DESKTOP;
-	eda.hm = hm;
-	EnumDesktops (GetProcessWindowStation(), enumDesktopProc, (LPARAM) &eda);
+	if (enabledLocalAccounts == "true")
+	{
+		EnumDesktopAction eda ;
+		eda.execute = false;
+		eda.updateMenu = true;
+		eda.forwardAction = false;
+		eda.nextId = IDM_USER_DESKTOP;
+		eda.hm = hm;
+		EnumDesktops (GetProcessWindowStation(), enumDesktopProc, (LPARAM) &eda);
+	}
 
 	TrackPopupMenu(hm, TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, 0,
 			_hwnd, NULL);
