@@ -41,6 +41,37 @@ void sendMessage(HANDLE hMailSlot, LPCWSTR lpszMessage) {
 	}
 }
 
+static void SetLowLabelToMailslot(HANDLE hKernelObj) {
+	// The LABEL_SECURITY_INFORMATION SDDL SACL to be set for low integrity
+	DWORD dwErr = ERROR_SUCCESS;
+	PSECURITY_DESCRIPTOR pSD = NULL;
+
+	PACL pSacl = NULL; // not allocated
+	BOOL fSaclPresent = FALSE;
+	BOOL fSaclDefaulted = FALSE;
+
+	printf ("Convertging securty desciprtor\n");
+	if (ConvertStringSecurityDescriptorToSecurityDescriptorW(
+			L"S:(ML;;NW;;;LW)", SDDL_REVISION_1, &pSD, NULL)) {
+		printf ("Getting security descriptor sacl\n");
+		if (GetSecurityDescriptorSacl(pSD, &fSaclPresent, &pSacl,
+				&fSaclDefaulted)) {
+			printf ("Setting security info\n");
+			// Note that psidOwner, psidGroup, and pDacl are
+			// all NULL and set the new LABEL_SECURITY_INFORMATION
+			dwErr = SetSecurityInfo(hKernelObj, SE_KERNEL_OBJECT,
+					LABEL_SECURITY_INFORMATION, NULL, NULL, NULL, pSacl);
+			if (dwErr == ERROR_SUCCESS)
+			{
+				printf ("Set security info\n");
+			} else {
+				printf ("Error %ld (%lx)\n", (long)GetLastError(), (long) GetLastError());
+			}
+		}
+		LocalFree(pSD);
+	}
+}
+
 void sendDebugMessage(LPCWSTR lpszMessage) {
 	PMAZINGER_DATA pMazinger = MazingerEnv::getDefaulEnv()->getData();
 	if (pMazinger != NULL && pMazinger->debugLevel) {
@@ -55,11 +86,13 @@ void sendDebugMessage(LPCWSTR lpszMessage) {
 				FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0,
 				NULL);
 		if (hMailSlot != NULL) {
+			SetLowLabelToMailslot(hMailSlot);
 			sendMessage(hMailSlot, lpszMessage);
 			CloseHandle(hMailSlot);
 		}
 	}
 }
+
 
 void sendSpyMessage(LPCWSTR lpszMessage) {
 	PMAZINGER_DATA pMazinger = MazingerEnv::getDefaulEnv()->getData();
@@ -73,8 +106,12 @@ void sendSpyMessage(LPCWSTR lpszMessage) {
 		wsprintfW(ach, L"\\\\.\\mailslot\\MAZINGER_SPY_%s", achUser);
 		hSpyMailSlot = CreateFileW(ach, GENERIC_WRITE, FILE_SHARE_READ
 				| FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
-		sendMessage(hSpyMailSlot, lpszMessage);
-		CloseHandle(hSpyMailSlot);
+		if (hSpyMailSlot != NULL)
+		{
+			SetLowLabelToMailslot(hSpyMailSlot);
+			sendMessage(hSpyMailSlot, lpszMessage);
+			CloseHandle(hSpyMailSlot);
+		}
 	}
 }
 

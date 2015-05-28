@@ -14,6 +14,19 @@
 DWORD CALLBACK ProcessFocus (void * param)
 {
 
+	MazingerEnv *pEnv = MazingerEnv::getDefaulEnv ();
+
+	if (pEnv != NULL)
+	{
+		MAZINGER_DATA *data = pEnv->getDataRW();
+		if (data != NULL)
+		{
+			time_t t;
+			time (&t);
+			time(& data->lastUpdate);
+		}
+	}
+
 	HWND hwnd = (HWND) param;
 	if (hwnd != NULL) {
 		ConfigReader *config = MazingerEnv::getDefaulEnv()->getConfigReader();
@@ -37,11 +50,6 @@ LRESULT CALLBACK CBTProc(int nCode, WPARAM wParam, LPARAM lParam)
 { 
     char szCode[128]; 
 	HWND hwnd = (HWND) wParam;
- 
-	MazingerEnv *pEnv = MazingerEnv::getDefaulEnv ();
-	MAZINGER_DATA *data = pEnv->getDataRW();
-	if (data != NULL)
-		time(& data->lastUpdate);
 
 	if (nCode < 0)  // do not process message
     {

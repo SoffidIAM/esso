@@ -10,7 +10,7 @@
 
 #ifdef WIN32
 
-HANDLE hMutex;
+HANDLE hMutex = NULL;
 static HANDLE getMutex() {
 	if (hMutex == NULL)
 	{
