@@ -50,22 +50,18 @@ static void SetLowLabelToMailslot(HANDLE hKernelObj) {
 	BOOL fSaclPresent = FALSE;
 	BOOL fSaclDefaulted = FALSE;
 
-	printf ("Convertging securty desciprtor\n");
 	if (ConvertStringSecurityDescriptorToSecurityDescriptorW(
 			L"S:(ML;;NW;;;LW)", SDDL_REVISION_1, &pSD, NULL)) {
-		printf ("Getting security descriptor sacl\n");
 		if (GetSecurityDescriptorSacl(pSD, &fSaclPresent, &pSacl,
 				&fSaclDefaulted)) {
-			printf ("Setting security info\n");
 			// Note that psidOwner, psidGroup, and pDacl are
 			// all NULL and set the new LABEL_SECURITY_INFORMATION
 			dwErr = SetSecurityInfo(hKernelObj, SE_KERNEL_OBJECT,
 					LABEL_SECURITY_INFORMATION, NULL, NULL, NULL, pSacl);
 			if (dwErr == ERROR_SUCCESS)
 			{
-				printf ("Set security info\n");
 			} else {
-				printf ("Error %ld (%lx)\n", (long)GetLastError(), (long) GetLastError());
+			//	printf ("Error %ld (%lx)\n", (long)GetLastError(), (long) GetLastError());
 			}
 		}
 		LocalFree(pSD);
