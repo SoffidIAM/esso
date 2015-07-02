@@ -1,5 +1,12 @@
 var EXPORTED_SYMBOLS = ["AfroditaExtension"];  
 
+function logea (doc, msg)
+{
+
+       doc.documentElement.appendChild (doc.createTextNode(msg));
+};
+
+
 var AfroditaExtension = {
   documents: new Array(),
   callbacks: new Array(),
@@ -51,6 +58,14 @@ var AfroditaExtension = {
     AfroditaExtension.checkInit ();
     var doc = aEvent.originalTarget; // doc is document that triggered "onload" event
     if (AfroditaExtension.newInterface) {
+
+       // Listen for page changes
+
+       window = doc.defaultView;
+       var observer = new window.MutationObserver ( AfroditaExtension .onPageChanged );
+       var config = {attributes: false, childList: true, characterData: false, subtree: true };
+       observer.observe (doc, config);
+
        var docid = AfroditaExtension.counter ++;
        AfroditaExtension.documents[docid] = {
          id: docid, 
@@ -60,10 +75,12 @@ var AfroditaExtension = {
        };
        AfroditaExtension.AfrEvaluate (docid);
        AfroditaExtension.documents[docid] = null;
+
        // add event listener for page unload 
        aEvent.originalTarget.defaultView.addEventListener("unload", 
               function() { AfroditaExtension.onPageUnload(); }, true);
-	} else {
+
+   } else {
        var c = Components.classes["@caib.es/afroditaf;1"];          
        c = c.getService ();
        c = c.QueryInterface(Components.interfaces.caibIAfroditaF);
@@ -71,7 +88,33 @@ var AfroditaExtension = {
     }
     
   },
-
+  onPageChanged: function(mutations) {
+     mutations.forEach (function (mutation) {
+       var doc =  mutation.target.ownerDocument;
+       var docid = AfroditaExtension.counter ++;
+       AfroditaExtension.documents[docid] = {
+         id: docid, 
+         document: doc, 
+         elements: new Array(),
+         counter: 1
+       };
+       AfroditaExtension.AfrEvaluate (docid);
+       AfroditaExtension.documents[docid] = null;
+       returm;
+     });
+  },
+  onPageChanged2: function(event) {
+       var doc =  event.originalTarget;
+       var docid = AfroditaExtension.counter ++;
+       AfroditaExtension.documents[docid] = {
+         id: docid, 
+         document: doc, 
+         elements: new Array(),
+         counter: 1
+       };
+       AfroditaExtension.AfrEvaluate (docid);
+       AfroditaExtension.documents[docid] = null;
+  },
   onPageUnload: function(docid) {
   },
 
