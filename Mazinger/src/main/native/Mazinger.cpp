@@ -355,7 +355,7 @@ static void SetLowLabelToFile(LPWSTR lpszFileName) {
 				&fSaclDefaulted)) {
 			// Note that psidOwner, psidGroup, and pDacl are
 			// all NULL and set the new LABEL_SECURITY_INFORMATION
-			dwErr = SetNamedSecurityInfoW(lpszFileName, SE_FILE_OBJECT,
+			dwErr = SetNamedSecurityInfoW(lpszFileName, SE_KERNEL_OBJECT,
 					LABEL_SECURITY_INFORMATION, NULL, NULL, NULL, pSacl);
 		}
 		LocalFree(pSD);
@@ -379,6 +379,8 @@ void SetLowLabelToMailslot(HANDLE hKernelObj) {
 			// all NULL and set the new LABEL_SECURITY_INFORMATION
 			dwErr = SetSecurityInfo(hKernelObj, SE_KERNEL_OBJECT,
 					LABEL_SECURITY_INFORMATION, NULL, NULL, NULL, pSacl);
+			if (dwErr != ERROR_SUCCESS)
+				printf ("Error %ld (%lx) setting mail slot security\n", (long)GetLastError(), (long) GetLastError());
 		}
 		LocalFree(pSD);
 	}
@@ -394,7 +396,7 @@ HANDLE createDebugMailSlot ()
 	wsprintfW(ach, L"\\\\.\\mailslot\\MAZINGER_%s", achUser);
 	HANDLE hResult = CreateMailslotW(ach, 10024, MAILSLOT_WAIT_FOREVER, NULL);
 	SetLowLabelToMailslot(hResult);
-	SetLowLabelToFile(ach);
+//	SetLowLabelToFile(ach);
 	return hResult;
 }
 

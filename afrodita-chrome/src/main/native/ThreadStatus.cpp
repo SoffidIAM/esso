@@ -50,6 +50,7 @@ json::JsonAbstractObject* ThreadStatus::waitForMessage() {
 	}
 	else
 	{
+		return NULL;
 	}
 }
 

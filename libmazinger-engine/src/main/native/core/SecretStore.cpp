@@ -361,7 +361,7 @@ void SecretStore::putString (wchar_t* buffer, int &index, const wchar_t *text) {
 
 	if (index + bufferSizeChars + 1 >= SECRETS_BUFFER_SIZE)
 	{
-		printf ("Secret store: Buffer overflow\n");
+		// printf ("Secret store: Buffer overflow\n");
 		return;
 	}
 

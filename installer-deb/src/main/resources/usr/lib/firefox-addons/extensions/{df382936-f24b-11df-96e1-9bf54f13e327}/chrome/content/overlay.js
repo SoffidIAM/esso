@@ -6,7 +6,7 @@ window.addEventListener("load", function() {
     
     var appcontent = document.getElementById("appcontent");   // browser
     if(appcontent)
-      appcontent.addEventListener("DOMContentLoaded", AfroditaExtension.onPageLoad, true);
+      appcontent.addEventListener("load", AfroditaExtension.onPageLoad, true);
 
  }, false);
        

@@ -1,4 +1,4 @@
-var version = "2.0.0";
+var version = "3.0.0";
 //alert ("Started 2");
 
 
@@ -8,7 +8,7 @@ var mazingerBridge = {
 	onConnect: function (port) {
 		  try {
 			  var pageId = mazingerBridge.pageId ++;
-			  mazingerBridge.port[pageId] = port;
+			  mazingerBridge.ports[pageId] = port;
 			  port.onMessage.addListener (mazingerBridge.pageEventReceived);
 			  port.postMessage({action: "getInfo", pageId: pageId});
 			  port.onDisconnect.addListener ( function (port) {
@@ -24,13 +24,13 @@ var mazingerBridge = {
 			msg.message = "response";
 		mazingerBridge.port.postMessage(msg);
 	},
-	ssoEventReceived: function (response) {
+ 	ssoEventReceived: function (response) {
 		var result = "";
 		for (var key in response) {
 			result = result + key+":"+response[key]+" ";
 		}
 		var pageId = parseInt(response.pageId);
-		port = mazingerBridge.port[pageId];
+		port = mazingerBridge.ports[pageId];
 		port.postMessage(response);
 	}
 };

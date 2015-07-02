@@ -46,7 +46,7 @@ CommunicationManager* CommunicationManager::getInstance() {
 }
 
 std::string CommunicationManager::readMessage() {
-	unsigned int messageSize;
+	unsigned int messageSize = 0;
 
 
 	if (sizeof messageSize != 4)
@@ -97,6 +97,9 @@ json::JsonAbstractObject* CommunicationManager::getEventMessage() {
 	std::string textMsg = readMessage();
 	json::JsonAbstractObject *msg = NULL;
 
+	DEBUG("MESSAGE");
+	DEBUG(textMsg.c_str());
+
 	if (!textMsg.empty())
 	{
 		const char * strMsg = textMsg.c_str();
@@ -109,7 +112,6 @@ void CommunicationManager::writeMessage(const std::string& msg) {
 #ifdef WIN32
 	if (WaitForSingleObject (hMutex, INFINITE) != WAIT_OBJECT_0)
 		return;
-
 #else
 	sem_wait(&semaphore);
 #endif
@@ -232,6 +234,7 @@ static void* linuxThreadProc (void *arg)
 void CommunicationManager::mainLoop() {
 	do
 	{
+		DEBUG("Main loop");
 		JsonAbstractObject *message = getEventMessage();
 		if (message == NULL)
 		{

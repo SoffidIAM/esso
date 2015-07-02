@@ -819,37 +819,43 @@ static void MZN_element_setAttribute (struct SEE_interpreter *interp,
 	}
 }
 
+static void findElementsByTagName( AbstractWebElement *node, const std::string &wantedTag, std::vector<AbstractWebElement *> &result)
+{
+	std::vector<AbstractWebElement *> v1;
+	node->getChildren (v1);
+	for ( std::vector<AbstractWebElement*>::iterator it = v1.begin();
+			it != v1.end();
+			it++)
+	{
+		AbstractWebElement* el = *it;
+		findElementsByTagName(el, wantedTag, result);
+		std::string tagname;
+		el->getTagName(tagname);
+		if (tagname.compare(wantedTag))
+		{
+			result.push_back(el);
+		}
+		else
+		{
+			delete el;
+		}
+	}
+
+}
+
 static void MZN_element_getElementsByTagName (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res)
 {
 	SEE_string *s1;
-	SEE_string *s2;
 	MZN_element_object *pObj = (MZN_element_object*) thisobj;
 	SEE_SET_UNDEFINED(res);
 	if (argc == 1)
 	{
-		SEE_parse_args(interp, argc, argv, "s", &s1, &s2);
+		SEE_parse_args(interp, argc, argv, "s", &s1);
 		std::string wantedTag = SEE_StringToUTF8(interp, s1);
-		std::vector<AbstractWebElement *> v1;
 		std::vector<AbstractWebElement *> v2;
-		pObj->spec->getChildren (v1);
-		for ( std::vector<AbstractWebElement*>::iterator it = v1.begin();
-				it != v2.end();
-				it++)
-		{
-			AbstractWebElement*el = *it;
-			std::string tagname;
-			el->getTagName(tagname);
-			if (tagname.compare(wantedTag))
-			{
-				v2.push_back(el);
-			}
-			else
-			{
-				delete el;
-			}
-		}
+		findElementsByTagName(pObj->spec, wantedTag, v2);
 		SEE_SET_OBJECT(res, &createCollectionObject(v2, interp)->native.object);
 	}
 }
