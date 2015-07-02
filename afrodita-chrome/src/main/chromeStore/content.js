@@ -1,10 +1,11 @@
-cachedElements= {};
+var cachedElements= {};
 
-nextElement = 0;
+var nextElement = 0;
 
-var port = chrome.runtime.connect ({name: "soffidesso"});
-
-port.onMessage.addListener (function (request) {
+function soffidLoadProcedure () {
+     // alert("Connect on "+document.URL);
+    var port = chrome.runtime.connect ();
+    port.onMessage.addListener (function (request) {
 		try {
 				if (request.action == "getContent")
 			    {
@@ -13,7 +14,28 @@ port.onMessage.addListener (function (request) {
 			    }
 			    else if (request.action == "getInfo")
 			    {
-				    port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: request.pageId});
+					var pageId = request.pageId;
+				    port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: pageId});
+ 				    var observer = new MutationObserver ( function (mutations) {
+					   mutations.forEach (function (mutation) {
+						  if (mutation.type == 'childList' && mutation.addedNodes.length > 0 )
+						  {
+							  for (var i = 0; i < mutation.addedNodes.length; i++)
+							  {
+								  var node = mutation.addedNodes.item(i);
+								  if (node.tagName.toLowerCase() === "input")
+								  {
+									  var doc =  mutation.target.ownerDocument;
+									  port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: pageId});
+									  return;
+								  }
+							  }
+						  }
+					    });
+				      } );
+				    var config = {attributes: false, childList: true, characterData: false, subtree: true };
+				    observer.observe (document.documentElement, config);
+					window.addEventListener("unload", function () { observer.disconnect();})
 			    }
 			    else if (request.action == "getUrl")
 			    {
@@ -256,7 +278,15 @@ port.onMessage.addListener (function (request) {
 
 			alert ("Error processing message "+r+":"+e);
 		}
-    }
-);
+      }
+    );
+};
 
+
+var state = document.readyState ;
+if (state == "uninitialized" || state == "loading")
+	window.addEventListener("load", soffidLoadProcedure);
+else {
+	soffidLoadProcedure();
+}
 
