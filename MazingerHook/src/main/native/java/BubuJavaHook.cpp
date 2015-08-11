@@ -32,7 +32,11 @@ JNICALL void Java_es_caib_seycon_sso_windows_Hook_notifyFocus(
 	MazingerEnv *pEnv = MazingerEnv::getDefaulEnv ();
 	MAZINGER_DATA *data = pEnv->getDataRW();
 	if (data != NULL)
-		time(& data->lastUpdate);
+	{
+		time_t t;
+		time(& t);
+		data->lastUpdate = t;
+	}
 
 	if (focus != NULL) {
 		JavaVirtualMachine::setCurrent(env, hook);

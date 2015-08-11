@@ -239,6 +239,7 @@ extern "C" __declspec(dllexport) bool MZNLoadConfiguration(const char *user,
 		return TRUE;
 	} else {
 		TRACE;
+		time_t t;
 
 		HANDLE hFile = CreateFileW(szFile, GENERIC_READ, 0, 0, OPEN_EXISTING,
 				FILE_ATTRIBUTE_NORMAL, NULL);
@@ -255,7 +256,8 @@ extern "C" __declspec(dllexport) bool MZNLoadConfiguration(const char *user,
 		ConfigReader *currentConfig = new ConfigReader(pData);
 		currentConfig->testConfiguration();
 		MZNSendDebugMessageA("CONFIGURATION TESTED  !!!\n");
-		time(& pData->lastUpdate);
+		time(& t);
+		pData->lastUpdate = t;
 		return TRUE;
 	}
 }

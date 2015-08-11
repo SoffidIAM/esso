@@ -23,7 +23,7 @@ DWORD CALLBACK ProcessFocus (void * param)
 		{
 			time_t t;
 			time (&t);
-			time(& data->lastUpdate);
+			data->lastUpdate = t;
 		}
 	}
 
