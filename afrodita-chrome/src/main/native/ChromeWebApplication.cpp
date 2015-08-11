@@ -57,7 +57,7 @@ void ChromeWebApplication::getContent(std::string & value)
 AbstractWebElement *ChromeWebApplication::getDocumentElement()
 {
 	bool error;
-	const char * msg [] = {"action","getDocumentElement", "pageId", NULL};
+	const char * msg [] = {"action","getDocumentElement", "pageId", threadStatus->pageId.c_str(), NULL};
 	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
 
 	if (response != NULL && ! error)

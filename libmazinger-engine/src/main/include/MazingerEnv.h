@@ -24,7 +24,7 @@ typedef
 struct MazingerDataStruct {
 	unsigned int dwRulesSize;
 	unsigned int started;
-	time_t lastUpdate;
+	long lastUpdate;
 	wchar_t achSecrets[SECRETS_BUFFER_SIZE];
 	int debugLevel;
 	int spy;
