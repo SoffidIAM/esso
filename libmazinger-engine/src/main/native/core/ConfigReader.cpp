@@ -43,6 +43,7 @@ ConfigReader::ConfigReader(PMAZINGER_DATA pMazingerData) {
 
 	if (m_hMapFile != NULL) {
 		m_pMapView = (byte*) MapViewOfFile(m_hMapFile, FILE_MAP_READ, 0, 0, m_size);
+		MZNSendDebugMessageW(L"Reading rules file %s.\n", pMazingerData->achRulesFile);
 		if (m_pMapView == NULL) {
 			MZNSendDebugMessageW(L"Unable to read rules %s.\n", pMazingerData->achRulesFile);
 		} else {
@@ -57,10 +58,15 @@ ConfigReader::ConfigReader(PMAZINGER_DATA pMazingerData) {
 		} else {
 #endif
 			m_pointer = m_pMapView;
-			// Verificar la signatura
-			if (memcmp(m_pointer, "MZN",3) !=0 )
+			if (m_size < 5)
 			{
-				MZNSendDebugMessageW(L"Unable to parse rules %s. Bad signature\n", pMazingerData->achRulesFile);
+				MZNSendDebugMessageW(L"Unable to parse rules %s.Invalid size %d\n", pMazingerData->achRulesFile, m_size);
+				m_pointer = NULL;
+			}
+			// Verificar la signatura
+			else if (memcmp(m_pointer, "MZN",3) !=0 )
+			{
+				MZNSendDebugMessageW(L"Unable to parse rules %s. Bad signature (%c%c%c)\n", pMazingerData->achRulesFile, m_pointer[0],m_pointer[1],m_pointer[2]);
 				m_pointer = NULL;
 			} else {
 				m_pointer += 3;

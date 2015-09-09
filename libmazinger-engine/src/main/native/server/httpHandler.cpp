@@ -230,50 +230,50 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 		DWORD dw = GetLastError();
 		if (!bResults) {
 			if (dw == ERROR_WINHTTP_CANNOT_CONNECT)
-				SeyconCommon::warn("Error: Cannot connect\n");
+				SeyconCommon::warn("Error: Cannot connect to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_CLIENT_AUTH_CERT_NEEDED)
-				SeyconCommon::warn("Error: Client CERT required\n");
+				SeyconCommon::warn("Error: Client CERT required connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_CONNECTION_ERROR)
-				SeyconCommon::warn("Error: Connection error\n");
+				SeyconCommon::warn("Error: Connection error connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_INCORRECT_HANDLE_STATE)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_INCORRECT_HANDLE_STATE\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_INCORRECT_HANDLE_STATE connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_INCORRECT_HANDLE_TYPE)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_INCORRECT_HANDLE_TYPE\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_INCORRECT_HANDLE_TYPE connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_INTERNAL_ERROR)
-				SeyconCommon::warn("Error: ERRR_WINHTTP_INTERNAL_ERROR\n");
+				SeyconCommon::warn("Error: ERRR_WINHTTP_INTERNAL_ERROR connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_INVALID_URL)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_INVALID_URL\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_INVALID_URL connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_LOGIN_FAILURE)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_LOGIN_FAILURE\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_LOGIN_FAILURE connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_NAME_NOT_RESOLVED)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_NAME_NOT_RESOLVED\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_NAME_NOT_RESOLVED connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_OPERATION_CANCELLED)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_OPERATION_CANCELLED\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_OPERATION_CANCELLED connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_RESPONSE_DRAIN_OVERFLOW)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_RESPONSE_DRAIN_OVERFLOW\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_RESPONSE_DRAIN_OVERFLOW connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_SECURE_FAILURE)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_SECURE_FAILURE\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_SECURE_FAILURE connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_SHUTDOWN)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_SHUTDOWN\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_SHUTDOWN connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_TIMEOUT)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_TIMEOUT\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_TIMEOUT connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_UNRECOGNIZED_SCHEME)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_UNRECOGNIZED_SCHEME\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_UNRECOGNIZED_SCHEME connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_NOT_ENOUGH_MEMORY)
-				SeyconCommon::warn("Error: ERROR_NOT_ENOUGH_MEMORY\n");
+				SeyconCommon::warn("Error: ERROR_NOT_ENOUGH_MEMORY connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_INVALID_PARAMETER)
-				SeyconCommon::warn("Error: ERROR_INVALID_PARAMETER\n");
+				SeyconCommon::warn("Error: ERROR_INVALID_PARAMETER connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_RESEND_REQUEST)
-				SeyconCommon::warn("Error:  ERROR_WINHTTP_RESEND_REQUEST\n");
+				SeyconCommon::warn("Error:  ERROR_WINHTTP_RESEND_REQUEST connecting to %s:%d\n", host, port);
 			else if (dw ==  ERROR_WINHTTP_INVALID_SERVER_RESPONSE ) {
 				if (firstTime) {
 					firstTime = false;
 					repeat = true;
-					SeyconCommon::warn("Error:  ERROR_WINHTTP_INVALID_SERVER_RESPONSE. Retrying...\n");
+					SeyconCommon::warn("Error:  ERROR_WINHTTP_INVALID_SERVER_RESPONSE connecting to %s:%d. Retrying...\n", host, port);
 				} else
-					SeyconCommon::warn("Error:  ERROR_WINHTTP_INVALID_SERVER_RESPONSE\n");
+					SeyconCommon::warn("Error:  ERROR_WINHTTP_INVALID_SERVER_RESPONSE  connecting to %s:%d\n", host, port);
 			} else
-				SeyconCommon::warn("Error:  %d\n", dw);
+				SeyconCommon::warn("Error:  %d  connecting to %s:%d\n", (int) dw, host, port);
 		}
 
 		// Close any open handles.

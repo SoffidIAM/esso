@@ -34,6 +34,7 @@ public:
 	virtual void getImages (std::vector<AbstractWebElement*> &elements);
 	virtual void write (const char*str);
 	virtual void writeln (const char*str) ;
+	virtual AbstractWebElement * createElement(const char *tagName) ;
 
 	ThreadStatus *threadStatus;
 private:

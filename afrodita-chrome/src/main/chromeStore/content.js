@@ -23,7 +23,7 @@ function soffidLoadProcedure () {
 							  for (var i = 0; i < mutation.addedNodes.length; i++)
 							  {
 								  var node = mutation.addedNodes.item(i);
-								  if (node.tagName.toLowerCase() === "input")
+								  if (node.tagName != undefined && node.tagName.toLowerCase() === "input")
 								  {
 									  var doc =  mutation.target.ownerDocument;
 									  port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: pageId});

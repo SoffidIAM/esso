@@ -351,6 +351,9 @@ void ExplorerWebApplication::write(const char *str)
 }
 
 
+AbstractWebElement* ExplorerWebApplication::createElement(const char* tagName) {
+	return NULL;
+}
 
 
 

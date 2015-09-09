@@ -18,7 +18,7 @@
       "32": "icon.png"
    },
    "manifest_version": 2,
-   "name": "Soffid ESSO v3",
+   "name": "Soffid ESSO v2",
    "permissions": [ "*://*/", "tabs", "nativeMessaging" ],
-   "version": "2.1.0"
+   "version": "2.2.0"
 }

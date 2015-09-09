@@ -209,4 +209,9 @@ ChromeWebApplication::ChromeWebApplication(ThreadStatus *threadStatus) {
 	url = threadStatus->url;
 }
 
+
+AbstractWebElement* ChromeWebApplication::createElement(const char* tagName) {
+	return NULL;
+}
+
 }

@@ -108,7 +108,7 @@ void WebFormSpec::findChildren (AbstractWebElement *childElement)
 			it++)
 	{
 		findChildren ( *it);
-		delete (*it);
+		(*it) ->release();
 	}
 
 }

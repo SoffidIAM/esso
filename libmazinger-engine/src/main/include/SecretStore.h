@@ -21,6 +21,8 @@ public:
 	wchar_t * getSecret(const wchar_t * secret);
 	std::vector<std::wstring> getSecrets(const wchar_t * secret);
 	void setSecret(const wchar_t * secret, const wchar_t * value);
+	void removeSecret(const wchar_t * secret, const wchar_t * value);
+	void putSecret(const wchar_t * secret, const wchar_t * value);
 	void setSecrets(const wchar_t *);
 	void dump();
 	void dump(wchar_t *wchSecrets, int debugLevel);

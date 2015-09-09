@@ -81,6 +81,19 @@ void ChromeElement::getAttribute(const char *attribute, std::string & value)
 
 }
 
+void ChromeElement::getProperty(const char *attribute, std::string & value)
+{
+	const char * msg [] = {"action","getProperty", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), "attribute", attribute, NULL};
+	bool error;
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL && ! error)
+	{
+		value = response->value;
+		delete response;
+	}
+
+}
 
 
 void ChromeElement::blur()
@@ -161,6 +174,25 @@ void ChromeElement::getTagName(std::string & value)
 AbstractWebElement *ChromeElement::clone()
 {
 	return new ChromeElement(app, externalId.c_str());
+}
+
+void ChromeElement::subscribe(const char* eventName, WebListener* listener) {
+}
+
+AbstractWebElement* ChromeElement::getPreviousSibling() {
+}
+
+AbstractWebElement* ChromeElement::getNextSibling() {
+}
+
+void ChromeElement::appendChild(AbstractWebElement* element) {
+}
+
+void ChromeElement::insertBefore(AbstractWebElement* element,
+		AbstractWebElement* before) {
+}
+
+void ChromeElement::unSubscribe(const char* eventName, WebListener* listener) {
 }
 
 }

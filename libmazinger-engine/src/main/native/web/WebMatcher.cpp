@@ -14,6 +14,7 @@
 #include <string>
 #include <stdlib.h>
 #include <stdio.h>
+#include <SmartWebPage.h>
 
 WebMatcher::WebMatcher():
 	m_apps(0)
@@ -97,7 +98,16 @@ void MZNWebMatch (AbstractWebApplication *app) {
 			app->getUrl(url);
 			MZNSendDebugMessageA("Looking match for %s", url.c_str());
 			m.search(*c, *app);
-			m.triggerLoadEvent();
+			if (m.isFound())
+				m.triggerLoadEvent();
+			else
+			{
+				MZNSendDebugMessageA("Running default handler for %s", url.c_str());
+				SmartWebPage *page = app->getWebPage();
+				if (page != NULL)
+					page->parse(app);
+			}
+
 		}
 		MZNC_endMutex();
 	}

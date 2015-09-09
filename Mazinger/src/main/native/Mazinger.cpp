@@ -379,8 +379,6 @@ void SetLowLabelToMailslot(HANDLE hKernelObj) {
 			// all NULL and set the new LABEL_SECURITY_INFORMATION
 			dwErr = SetSecurityInfo(hKernelObj, SE_KERNEL_OBJECT,
 					LABEL_SECURITY_INFORMATION, NULL, NULL, NULL, pSacl);
-			if (dwErr != ERROR_SUCCESS)
-				printf ("Error %ld (%lx) setting mail slot security\n", (long)GetLastError(), (long) GetLastError());
 		}
 		LocalFree(pSD);
 	}

@@ -354,5 +354,69 @@ void SecretStore::freeSecret (wchar_t* buffer) {
 	}
 }
 
+void SecretStore::removeSecret(const wchar_t* secret, const wchar_t* value) {
+	PMAZINGER_DATA pMazinger = m_pEnv->getDataRW();
+	if (pMazinger == NULL)
+		return;
 
+	int sourceCounter = 0;
+	int targetCounter = 0;
+	while(true) {
+		wchar_t *achSecret = readString(pMazinger->achSecrets, sourceCounter);
+		if (achSecret == NULL || achSecret[0] == L'\0')
+		{
+			freeSecret(achSecret);
+			break;
+		}
+		else if (wcsicmp  (achSecret, secret) == 0)
+		{
+			wchar_t *achSecret2 = readString(pMazinger->achSecrets, sourceCounter);
+			if (wcsicmp (achSecret, value))
+			{
+				// Do not copy
+			}
+			else
+			{
+				putString(pMazinger->achSecrets, targetCounter, achSecret);
+				putString(pMazinger->achSecrets, targetCounter, achSecret2);
+			}
+			freeSecret (achSecret);
+			freeSecret (achSecret2);
+		}
+		else
+		{
+			putString(pMazinger->achSecrets, targetCounter, achSecret);
+			freeSecret (achSecret);
+			moveString(pMazinger->achSecrets, sourceCounter, targetCounter);
+		}
+	}
 
+	putString(pMazinger->achSecrets, targetCounter, L"");
+}
+
+void SecretStore::putSecret(const wchar_t* secret, const wchar_t* value) {
+	PMAZINGER_DATA pMazinger = m_pEnv->getDataRW();
+	if (pMazinger == NULL)
+		return;
+
+	int sourceCounter = 0;
+	int targetCounter = 0;
+	while(true) {
+		targetCounter = sourceCounter;
+		wchar_t *achSecret = readString(pMazinger->achSecrets, sourceCounter);
+		if (achSecret == NULL || achSecret[0] == L'\0')
+		{
+			freeSecret(achSecret);
+			break;
+		}
+		else
+		{
+			skipString(pMazinger->achSecrets, sourceCounter);
+			freeSecret (achSecret);
+		}
+	}
+
+	putString(pMazinger->achSecrets, targetCounter, secret);
+	putString(pMazinger->achSecrets, targetCounter, value);
+	putString(pMazinger->achSecrets, targetCounter, L"");
+}

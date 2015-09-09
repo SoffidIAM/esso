@@ -121,6 +121,7 @@
 								<bzip2 src="target/resources/about.dtd" destfile="target/resources/about.dtd.bzip" />
 								<bzip2 src="target/resources/about.xul" destfile="target/resources/about.xul.bzip" />
 								<bzip2 src="target/resources/afrodita.jsm" destfile="target/resources/afrodita.jsm.bzip" />
+								<bzip2 src="target/resources/Preferences.jsm" destfile="target/resources/Preferences.jsm.bzip" />
 								<bzip2 src="target/resources/overlay.js" destfile="target/resources/overlay.js.bzip" />
 								<bzip2 src="target/resources/ff-overlay.xul" destfile="target/resources/ff-overlay.xul.bzip" />
 								<bzip2 src="target/resources/overlay.properties" destfile="target/resources/overlay.properties.bzip" />

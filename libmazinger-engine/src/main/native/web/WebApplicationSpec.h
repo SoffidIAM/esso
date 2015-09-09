@@ -16,7 +16,7 @@ class Action;
 class AbstractWebApplication;
 class WebComponentSpec;
 
-class WebApplicationSpec {
+class WebApplicationSpec{
 public:
 	WebApplicationSpec();
 	virtual ~WebApplicationSpec();

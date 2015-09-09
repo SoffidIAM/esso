@@ -94,6 +94,26 @@ void ExplorerElement::getAttribute(const char *attribute, std::string & value)
 	}
 }
 
+void ExplorerElement::getProperty(const char *attribute, std::string & value)
+{
+	IHTMLElement *e;
+	value.clear();
+	HRESULT hr = m_pElement->QueryInterface(IID_IHTMLElement, reinterpret_cast<void**>(&e));
+	if (!FAILED(hr))
+	{
+		BSTR bstr = Utils::str2bstr(attribute);
+		VARIANT v;
+		hr = e->getAttribute(bstr, 2 /* as bstr*/, &v);
+		if (!FAILED(hr) && v.vt == VT_BSTR)
+		{
+			Utils::bstr2str(value, v.bstrVal);
+			SysFreeString(v.bstrVal);
+		}
+		SysFreeString(bstr);
+		e->Release();
+	}
+}
+
 
 
 void ExplorerElement::blur()
@@ -187,4 +207,27 @@ AbstractWebElement *ExplorerElement::clone()
 	return new ExplorerElement(m_pElement);
 }
 
+
+void ExplorerElement::subscribe(const char* eventName, WebListener* listener) {
+}
+
+void ExplorerElement::unSubscribe(const char* eventName, WebListener* listener) {
+}
+
+
+AbstractWebElement* ExplorerElement::getPreviousSibling() {
+	return NULL;
+}
+
+
+AbstractWebElement* ExplorerElement::getNextSibling() {
+	return NULL;
+}
+
+void ExplorerElement::appendChild(AbstractWebElement* element) {
+}
+
+void ExplorerElement::insertBefore(AbstractWebElement* element,
+		AbstractWebElement* before) {
+}
 

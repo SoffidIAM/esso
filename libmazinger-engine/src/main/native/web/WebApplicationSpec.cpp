@@ -72,7 +72,7 @@ bool WebApplicationSpec::matches(AbstractWebApplication &app) {
 			{
 				ok = true;
 			}
-			delete (*it2); // Release AbstractWebElement
+			(*it2) -> release(); // Release AbstractWebElement
 		}
 		elements.clear();
 		if (!ok && ! (*it) ->m_bOptional)

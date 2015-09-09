@@ -134,6 +134,7 @@ void SeyconSession::weakSessionStartup (const char* lpszUser, const wchar_t* lps
 		SeyconCommon::updateConfig("SSOSoffidAgent");
 		SeyconCommon::updateConfig("soffid.esso.idleTimeout");
 		SeyconCommon::updateConfig("soffid.esso.sharedWorkstation");
+		SeyconCommon::updateConfig("AutoSSOSystem");
 		// Propagar password
 		propagatePassword();
 		createWeakSession();
@@ -467,10 +468,12 @@ int SeyconSession::kerberosSessionStartup ()
     SeyconCommon::updateConfig ( "soffid.hostname.format" );
     SeyconCommon::updateConfig ( "soffid.esso.protocol" );
 	SeyconCommon::updateConfig("SSOServer");
+	SeyconCommon::updateConfig("AutoSSOSystem");
 	SeyconCommon::updateConfig("QueryServer");
 	SeyconCommon::updateConfig("PreferedServers");
 	SeyconCommon::updateConfig("seycon.https.port");
 	SeyconCommon::updateConfig("SSOSoffidAgent");
+	SeyconCommon::updateConfig("AutoSSOSystem");
 
 	KerberosIterator it(this);
 	SeyconService service;
