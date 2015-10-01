@@ -12,8 +12,12 @@
 #include "ThreadStatus.h"
 
 #include <AbstractWebApplication.h>
+#include <SmartWebPage.h>
+
 namespace mazinger_chrome
 {
+
+class ThreadStatus;
 
 class ChromeWebApplication: public AbstractWebApplication {
 public:
@@ -35,11 +39,18 @@ public:
 	virtual void write (const char*str);
 	virtual void writeln (const char*str) ;
 	virtual AbstractWebElement * createElement(const char *tagName) ;
+	virtual void alert (const char *str);
+	virtual void subscribe ( const char *eventName, WebListener *listener) ;
+	virtual void unSubscribe ( const char *eventName, WebListener *listener) ;
+	virtual std::string toString ();
 
 	ThreadStatus *threadStatus;
+	virtual SmartWebPage* getWebPage () { return webPage;}
+
 private:
     std::string url;
     std::string title;
+    SmartWebPage *webPage;
 
 	void generateCollection(const char* msg[],
 			std::vector<AbstractWebElement*>& elements);

@@ -13,8 +13,11 @@
 #include "ChromeWebApplication.h"
 #include <WebListener.h>
 
+
 namespace mazinger_chrome
 {
+
+class ChromeWebApplication;
 
 class ChromeElement: public AbstractWebElement {
 public:
@@ -36,6 +39,14 @@ public:
 	virtual AbstractWebElement* clone();
 	virtual void subscribe ( const char *eventName, WebListener *listener) ;
 	virtual void unSubscribe ( const char *eventName, WebListener *listener) ;
+	virtual void setTextContent (const char*text);
+	virtual AbstractWebApplication* getApplication () ;
+	virtual bool equals (AbstractWebElement *other) ;
+	virtual std::string toString() ;
+	virtual void removeAttribute (const char* attribute) ;
+	virtual void removeChild (AbstractWebElement* child) ;
+	virtual void setProperty (const char* property, const char *value);
+
 private:
 	ChromeWebApplication *app;
 	std::string externalId;

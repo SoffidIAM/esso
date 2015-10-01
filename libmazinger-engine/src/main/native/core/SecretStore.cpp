@@ -90,8 +90,8 @@ void SecretStore::dump (wchar_t *wchSecrets, int debugLevel)
 
 wchar_t * SecretStore::getSecret(const wchar_t * secret) {
 	wchar_t * result = getSecret (secret, true);
-	if (result [0] == L'\0') {
-		free (result);
+	if (result == NULL || result [0] == L'\0') {
+		freeSecret(result);
 		result = getSecret(secret, false);
 	}
 	return result;
@@ -118,10 +118,11 @@ wchar_t * SecretStore::getSecret(const wchar_t * secret, bool caseSensitive) {
 			return result;
 		}
 		else if ((caseSensitive && wcscmp  (achSecret, secret) == 0) ||
-				 (!caseSensitive && wcsicmp  (achSecret, secret) == 0) )
+				 (!caseSensitive && wcsicmp  (achSecret, secret) == 0))
 		{
 			freeSecret (achSecret);
-			return readString(pMazinger->achSecrets, counter);
+			wchar_t* result = readString(pMazinger->achSecrets, counter);
+			return result;
 		}
 		else
 		{
@@ -132,6 +133,43 @@ wchar_t * SecretStore::getSecret(const wchar_t * secret, bool caseSensitive) {
 	return NULL;
 }
 
+
+std::map<std::wstring, std::wstring> SecretStore::getSecretsByPrefix(const wchar_t * secret) {
+	std::map<std::wstring, std::wstring> secrets;
+	PMAZINGER_DATA pMazinger = m_pEnv->getData();
+	if (pMazinger == NULL) {
+		MZNSendDebugMessageA("*** FATAL ***");
+		MZNSendDebugMessageA("Cannot access secret store ");
+		wchar_t *result = (wchar_t*) malloc(sizeof (wchar_t));
+		result[0] = L'\0';
+		return secrets;
+	}
+
+	int counter = 0;
+	while(true) {
+		wchar_t *achSecret = readString(pMazinger->achSecrets, counter);
+		if (achSecret == NULL || achSecret[0] == '\0')
+		{
+			freeSecret(achSecret);
+			break;
+		}
+		else if ( wcsncmp  (achSecret, secret, wcslen (secret)) == 0 )
+		{
+			std::wstring tag = achSecret;
+			freeSecret (achSecret);
+			wchar_t *value = readString(pMazinger->achSecrets, counter);
+			secrets[tag] = std::wstring(value);
+			freeSecret(value);
+		}
+		else
+		{
+			freeSecret (achSecret);
+			skipString (pMazinger->achSecrets, counter);
+		}
+	}
+
+	return secrets;
+}
 
 std::vector<std::wstring> SecretStore::getSecrets(const wchar_t * secret) {
 	std::vector<std::wstring> secrets;
@@ -152,7 +190,7 @@ std::vector<std::wstring> SecretStore::getSecrets(const wchar_t * secret) {
 			freeSecret(achSecret);
 			break;
 		}
-		else if ( wcscmp  (achSecret, secret) == 0 )
+		else if ( wcscmp  (achSecret, secret) == 0)
 		{
 			freeSecret (achSecret);
 			wchar_t *value = readString(pMazinger->achSecrets, counter);
@@ -232,7 +270,7 @@ void SecretStore::setSecrets(const wchar_t * secrets) {
 
 
 wchar_t *SecretStore::readString (const wchar_t* buffer, int &index) {
-	short int size = (short int) buffer[index] ; // size in wchars
+	unsigned short int size = (short int) buffer[index] ; // size in wchars
 	if (size == 0)
 		return NULL;
 
@@ -246,7 +284,7 @@ wchar_t *SecretStore::readString (const wchar_t* buffer, int &index) {
 	unsigned char *out = (unsigned char*) malloc (bufferSizeBytes);
 
 	unsigned char b[AESCHUNK_SIZE];
-	for (int i = 0; i < bufferSizeBytes; i+=AESCHUNK_SIZE)
+	for (unsigned int i = 0; i < bufferSizeBytes; i+=AESCHUNK_SIZE)
 	{
 		memcpy (b, (unsigned char*) &buffer[index], AESCHUNK_SIZE);
 #ifdef TRACE_AES

@@ -38,6 +38,7 @@ public:
 	virtual void unSubscribe ( const char *eventName, WebListener *listener) ;
 
 	virtual SmartWebPage* getWebPage ();
+	virtual std::string toString () ;
 
 	void setPage(SmartWebPage* page) {
 		this->page = page;

@@ -12,10 +12,12 @@
 #include <AbstractWebElement.h>
 #include <vector>
 #include <map>
-#include "SmartForm.h"
+
+class SmartForm;
 
 class AccountStruct {
 public:
+	std::string id;
 	std::wstring account;
 	std::wstring system;
 	std::wstring friendlyName;
@@ -24,6 +26,14 @@ public:
 		this->account = other.account;
 		this->system = other.system;
 		this->friendlyName = other.friendlyName;
+		this->id = other.id;
+	}
+
+	AccountStruct& operator = (const AccountStruct &other) {
+		this->account = other.account;
+		this->system = other.system;
+		this->friendlyName = other.friendlyName;
+		return *this;
 	}
 };
 
@@ -39,14 +49,16 @@ public:
 	SmartForm *rootForm;
 
 	void parse (AbstractWebApplication *app);
-	void upgradeElements (AbstractWebApplication *app);
-	void fetchAccounts (AbstractWebApplication *app);
-	void fetchAttributes (AbstractWebApplication *app, const char *account, std::map<std::string,std::string> &attributes);
-	bool updateAttributes (const char *account, std::map<std::string,std::string> &attributes, std::string &errorMsg);
-	bool updatePassword (const char *account, std::string &password, std::string &errorMsg);
-	void getAccountStruct (const char *account, AccountStruct &as);
+	void fetchAccounts (AbstractWebApplication *app, const char *systemName);
+	void fetchAttributes (AbstractWebApplication *app, AccountStruct &as, std::map<std::string,std::string> &attributes);
+	bool updateAttributes (AccountStruct &account, std::map<std::string,std::string> &attributes, std::string &errorMsg);
+	bool createAccount (const char *description, std::string &msg, AccountStruct &as);
+	bool updatePassword (AccountStruct &daccount, std::string &password, std::string &errorMsg);
+	void getAccountStruct (const char* id, AccountStruct &as);
+	virtual std::string toString () ;
+
 private:
-	bool sendSecret (const char *account, const char* sso, std::string &value, std::string &errorMsg);
+	bool sendSecret (AccountStruct &account, const char* sso, std::string &value, std::string &errorMsg);
 
 
 public:

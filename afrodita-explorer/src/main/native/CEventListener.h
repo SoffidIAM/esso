@@ -1,16 +1,17 @@
-#ifndef CSAYAKAEVENTHANDLER_H_
-#define CSAYAKAEVENTHANDLER_H_
+#ifndef CEVENT_LISTENER_H_
+#define CEVENT_LISTENER_H_
 
 #include <ocidl.h>
 #include <exdisp.h>
 #include <oleauto.h>
+#include <dispex.h>
 
-class ConfigReader;
-class ExplorerWebApplication;
-extern long g_nComObjsInUse;
+#include <WebListener.h>
+#include "ExplorerElement.h"
 
-class CExplorerEventHandler :
-        public DWebBrowserEvents2
+
+class CEventListener :
+        public IDispatch
     {
     public:
 
@@ -27,16 +28,21 @@ class CExplorerEventHandler :
 	STDMETHOD(GetIDsOfNames)(THIS_ REFIID,LPOLESTR*,UINT,LCID,DISPID*);
 	STDMETHOD(Invoke)(THIS_ DISPID,REFIID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*,UINT*);
 
-	CExplorerEventHandler ();
-	void connect (IWebBrowser2 *pBrowser);
+
+	CEventListener ();
+	virtual ~CEventListener ();
+	void connect (ExplorerElement *pElement, const char*event, WebListener *listener);
+	void connectRefresh (ExplorerWebApplication *app);
+
+	std::string m_event;
+	WebListener *m_listener;
 
 private:
-	void onLoad(IWebBrowser2 *pBrowser, const char *url);
+	ExplorerElement * m_pElement;
+	ExplorerWebApplication *m_pApplication;
 
-	ExplorerWebApplication *m_app;
-	IWebBrowser2* m_pBrowser;
 	DWORD m_dwCookie;
-	long m_nRefCount;   //for managing the reference count
+	LONG m_nRefCount;   //for managing the reference count
 
 };
 

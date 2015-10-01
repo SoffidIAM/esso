@@ -227,3 +227,13 @@ void FFElement::removeChild(AbstractWebElement* child) {
 		AfroditaHandler::handler.removeChildHandler(docId, elementId, ffElement->elementId);
 	}
 }
+
+std::string FFElement::toString() {
+	char ach[100];
+	sprintf (ach, "FFElement %d/%d ", docId, elementId);
+	std::string result = ach;
+	std::string tag;
+	getTagName(tag);
+	result += tag;
+	return result;
+}

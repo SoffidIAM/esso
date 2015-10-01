@@ -31,8 +31,10 @@ void SeyconSession::parseAndStoreSecrets (SeyconResponse *resp)
 	resp->getToken(secretNumber, secret);
 	while (secret.size() > 0)
 	{
-		wcscpy(&wchComposedSecrets[last], secret.c_str());
-		last += secret.size() + 1;
+		std::wstring secret2 = SeyconCommon::urlDecode (MZNC_wstrtoutf8(secret.c_str()).c_str());
+		wcscpy(&wchComposedSecrets[last], secret2.c_str());
+		last += secret2.size() + 1;
+		SeyconCommon::wipe(secret2);
 		SeyconCommon::wipe(secret);
 		secretNumber++;
 		resp->getToken(secretNumber, secret);
@@ -166,10 +168,12 @@ void SeyconSession::downloadMazingerConfig (std::string &configFile)
 		if (pwd != NULL)
 		chown(configFile.c_str(), pwd->pw_uid, pwd->pw_gid);
 #endif
+		MZNSendDebugMessageA("Creating file %s", configFile.c_str());
 		FILE *f = fopen(configFile.c_str(), "wb");
 		if (f == NULL)
 		{
 			SeyconCommon::warn("Cannot create file %s", configFile.c_str());
+			MZNSendDebugMessageA("Cannot create file %s", configFile.c_str());
 		}
 		else
 		{
@@ -189,7 +193,7 @@ ServiceIteratorResult SeyconSession::launchMazinger (const char* wchHostName, in
 
 	SeyconCommon::debug("Launching Mazinger for user %s", soffidUser.c_str());
 	SeyconResponse *resp = service.sendUrlMessage(wchHostName, dwPort,
-			L"/%hs?action=getSecrets&challengeId=%hs", lpszServlet, sessionKey.c_str());
+			L"/%hs?action=getSecrets&challengeId=%hs&encode=true", lpszServlet, sessionKey.c_str());
 	// Parse results
 	if (resp != NULL)
 	{
@@ -287,7 +291,7 @@ void SeyconSession::renewSecrets (const char* achNewKey)
 
 				SeyconService service;
 				SeyconResponse *resp = service.sendUrlMessage(
-						L"/getSecrets?user=%hs&key=%hs&key2=%hs", soffidUser.c_str(),
+						L"/getSecrets?user=%hs&key=%hs&key2=%hs&encode=true", soffidUser.c_str(),
 						oldSession, newKey.c_str());
 				// Parse results
 				if (resp != NULL)
@@ -317,6 +321,7 @@ void SeyconSession::renewSecrets (const char* achNewKey)
 void SeyconSession::updateMazingerConfig ()
 {
 	SeyconCommon::info("Updating rules for user %s\n", soffidUser.c_str());
+	MZNSendDebugMessage("Updating rules for user %s", soffidUser.c_str());
 
 	std::string configFile;
 	downloadMazingerConfig(configFile);

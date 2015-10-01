@@ -86,7 +86,8 @@
 						<linkerMiddleOption>-shared</linkerMiddleOption>
 						<linkerMiddleOption>-lole32</linkerMiddleOption>
 						<linkerMiddleOption>-loleaut32</linkerMiddleOption>
-						<linkerMiddleOption>-luuid</linkerMiddleOption>
+						<linkerMiddleOption>-lmshtml</linkerMiddleOption>
+						<linkerMiddleOption>-lrpcrt4</linkerMiddleOption>
 						<linkerMiddleOption>-static-libgcc</linkerMiddleOption>
 						<linkerMiddleOption>-static-libstdc++</linkerMiddleOption>
 					</linkerMiddleOptions>
@@ -98,6 +99,7 @@
 						<linkerEndOption>-lpcreposix</linkerEndOption>
 						<linkerEndOption>-lgdi32</linkerEndOption>
 						<linkerEndOption>-lwinhttp</linkerEndOption>
+						<linkerEndOption>-luuid</linkerEndOption>
 						<linkerEndOption>-lcrypt32</linkerEndOption>
 						<linkerEndOption>-static</linkerEndOption>
 					</linkerEndOptions>

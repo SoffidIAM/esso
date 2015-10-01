@@ -10,6 +10,8 @@
 #include "FFElement.h"
 #include "EventHandler.h"
 
+#include <stdio.h>
+
 FFWebApplication::~FFWebApplication() {
 }
 
@@ -218,3 +220,9 @@ void FFWebApplication::unSubscribe(const char* eventName,
 	EventHandler::getInstance()->unregisterEvent(listener, this, eventName);
 }
 
+std::string FFWebApplication::toString() {
+	char ach[100];
+	sprintf (ach, "FFWebApplication %d", docId);
+	return std::string(ach);
+
+}

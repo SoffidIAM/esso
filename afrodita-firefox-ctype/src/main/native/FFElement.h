@@ -40,6 +40,7 @@ public:
 	virtual AbstractWebApplication* getApplication () ;
 	virtual bool equals (AbstractWebElement *other);
 	virtual void setTextContent (const char *text);
+	virtual std::string toString ();
 private:
 	long docId;
 	long elementId;

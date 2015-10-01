@@ -201,7 +201,7 @@ static void createMapFile(PMAZINGER_DATA pData, DWORD dwSize, HANDLE hFile) {
 	swprintf(wchBuffer, L"MAZINGER_RULES_%ld_%ld", (long) GetCurrentProcessId(),
 			(long) t);
 	HANDLE hMapFile = CreateFileMappingW((HANDLE) - 1, // Current file handle.
-	NULL, // Default security.
+			NULL, // Default security.
 			PAGE_READWRITE, // Read/write permission.
 			0, dwSize, // Size of hFile.
 			wchBuffer); // Name of mapping object.

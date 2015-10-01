@@ -124,17 +124,7 @@ void SeyconSession::weakSessionStartup (const char* lpszUser, const wchar_t* lps
 
 	if (!SeyconCommon::bNormalized())
 	{
-	    SeyconCommon::updateConfig ( "soffid.hostname.format" );
-	    SeyconCommon::updateConfig ( "soffid.esso.protocol" );
-		SeyconCommon::updateConfig("SSOServer");
-		SeyconCommon::updateConfig("QueryServer");
-		SeyconCommon::updateConfig("PreferedServers");
-		SeyconCommon::updateConfig("seycon.alternate.https.port");
-		SeyconCommon::updateConfig("seycon.https.port");
-		SeyconCommon::updateConfig("SSOSoffidAgent");
-		SeyconCommon::updateConfig("soffid.esso.idleTimeout");
-		SeyconCommon::updateConfig("soffid.esso.sharedWorkstation");
-		SeyconCommon::updateConfig("AutoSSOSystem");
+		updateConfiguration();
 		// Propagar password
 		propagatePassword();
 		createWeakSession();
@@ -464,16 +454,7 @@ int SeyconSession::kerberosSessionStartup ()
 	m_passwordLogin = false;
 	json::JsonAbstractObject::ConfigureChromePreferences();
 
-	SeyconCommon::updateHostAddress();
-    SeyconCommon::updateConfig ( "soffid.hostname.format" );
-    SeyconCommon::updateConfig ( "soffid.esso.protocol" );
-	SeyconCommon::updateConfig("SSOServer");
-	SeyconCommon::updateConfig("AutoSSOSystem");
-	SeyconCommon::updateConfig("QueryServer");
-	SeyconCommon::updateConfig("PreferedServers");
-	SeyconCommon::updateConfig("seycon.https.port");
-	SeyconCommon::updateConfig("SSOSoffidAgent");
-	SeyconCommon::updateConfig("AutoSSOSystem");
+	updateConfiguration();
 
 	KerberosIterator it(this);
 	SeyconService service;

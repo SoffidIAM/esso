@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <MazingerHook.h>
 #include <ssoclient.h>
+#include <time.h>
 
 extern bool MZNEvaluateJS(const char *script, std::string &msg);
 
@@ -429,8 +430,11 @@ DWORD CALLBACK LeerMailSlot(LPVOID lpData) {
 				(LPOVERLAPPED) NULL);
 		if (cbRead > 0 )
 		{
+			time_t t;
+			time(&t);
+			struct tm* tm = localtime(&t);
 			achMessage[cbRead/2] = L'\0';
-			fwprintf (logFile == NULL ? stdout: logFile, L"%ls\n", achMessage);
+			fwprintf (logFile == NULL ? stdout: logFile, L"%02d:%02d:%02d %ls\n", tm->tm_hour, tm->tm_min, tm->tm_sec, achMessage);
 		}
 	}
 	return 0;

@@ -48,6 +48,7 @@ public:
 	virtual void setTextContent (const char*text) = 0;
 	virtual AbstractWebApplication* getApplication () = 0;
 	virtual bool equals (AbstractWebElement *other) = 0;
+	virtual std::string toString() = 0;
 
 };
 

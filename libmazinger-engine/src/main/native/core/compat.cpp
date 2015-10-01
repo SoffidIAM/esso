@@ -27,7 +27,9 @@ bool MZNC_waitMutex () {
 	{
 		DWORD dwResult = WaitForSingleObject (hMutex, INFINITE);
 		if (dwResult == WAIT_OBJECT_0)
+		{
 			return true;
+		}
 	}
 	return false;
 }

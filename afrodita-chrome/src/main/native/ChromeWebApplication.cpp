@@ -16,13 +16,14 @@
 #include "json/JsonValue.h"
 
 #include "CommunicationManager.h"
-
+#include <MazingerInternal.h>
 
 namespace mazinger_chrome
 {
 
 
 ChromeWebApplication::~ChromeWebApplication() {
+	this->webPage->release();
 }
 
 
@@ -108,6 +109,10 @@ void ChromeWebApplication::getDomain(std::string & value)
 		value = response->value;
 		delete response;
 	}
+}
+
+std::string ChromeWebApplication::toString() {
+	return std::string("ChromeWebApplication ")+threadStatus->pageId;
 }
 
 void ChromeWebApplication::generateCollection(const char* msg[],
@@ -207,11 +212,41 @@ ChromeWebApplication::ChromeWebApplication(ThreadStatus *threadStatus) {
 	this->threadStatus = threadStatus;
 	title = threadStatus->title;
 	url = threadStatus->url;
+	this->webPage = new SmartWebPage;
 }
 
 
 AbstractWebElement* ChromeWebApplication::createElement(const char* tagName) {
-	return NULL;
+	bool error;
+	AbstractWebElement * result = NULL;
+	const char * msg [] = {"action","createElement", "pageId", threadStatus->pageId.c_str(), "tagName", tagName, NULL};
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL )
+	{
+		if (! error  && !response->value.empty())
+			result = new ChromeElement(this, response->value.c_str());
+		delete response;
+	}
+	return result;
+}
+
+void ChromeWebApplication::alert(const char* str) {
+	bool error;
+	const char * msg [] = {"action","alert", "pageId", threadStatus->pageId.c_str(), "text", str, NULL};
+	json::JsonAbstractObject * response = CommunicationManager::getInstance()->call(error,msg);
+
+	if (response != NULL)
+		delete response;
+}
+
+void ChromeWebApplication::subscribe(const char* eventName,
+		WebListener* listener) {
+}
+
+void ChromeWebApplication::unSubscribe(const char* eventName,
+		WebListener* listener) {
 }
 
 }
+

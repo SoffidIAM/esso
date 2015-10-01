@@ -67,6 +67,13 @@ ConfigReader::ConfigReader(PMAZINGER_DATA pMazingerData) {
 			else if (memcmp(m_pointer, "MZN",3) !=0 )
 			{
 				MZNSendDebugMessageW(L"Unable to parse rules %s. Bad signature (%c%c%c)\n", pMazingerData->achRulesFile, m_pointer[0],m_pointer[1],m_pointer[2]);
+				char* ach = (char*) malloc (m_size+1);
+				memcpy (ach, m_pointer, m_size);
+				if (m_size > 100)
+					ach[100] = '\0';
+				else
+					ach[m_size] = '\0';
+				MZNSendDebugMessageW(L"Content = %hs", ach);
 				m_pointer = NULL;
 			} else {
 				m_pointer += 3;

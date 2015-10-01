@@ -116,7 +116,14 @@ var AfroditaExtension = {
            counter: 1
          };
        }
-       AfroditaExtension.AfrEvaluate (docid);
+	   if (AfroditaExtension.documents[docid].timeout != undefined)
+	   {
+		   AfroditaExtension.getWindow(docid).clearTimeout(AfroditaExtension.documents[docid].timeout);
+	   }
+	   AfroditaExtension.documents[docid].timeout =
+			AfroditaExtension.getWindow(docid).setTimeout (
+				function(){ AfroditaExtension.AfrEvaluate (docid)}, 1000);
+//       AfroditaExtension.AfrEvaluate (docid);
        return;
      });
   },
@@ -275,6 +282,11 @@ var AfroditaExtension = {
 			     var atr = atr.readString();
 			     var v = v.readString();
 			     el.setAttribute(atr,v);
+			     if (atr == "value") {
+					var evt  = document.createEvent ("HTMLEvents");
+					evt.initEvent ("change", true, true);
+					el.dispatchEvent(evt);
+			     }
 			   }
 		    } );
 		AfroditaExtension.setHandler ("RemoveAttribute", ctypes.void_t, [ctypes.long, ctypes.long, ctypes.char.ptr],
@@ -300,6 +312,11 @@ var AfroditaExtension = {
 			     var atr = atr.readString();
 			     var v = v.readString();
 			     el[atr]=v;
+			     if (atr == "value") {
+					var evt  = document.createEvent ("HTMLEvents");
+					evt.initEvent ("change", true, true);
+					el.dispatchEvent(evt);
+			     }
 			   }
 		    } );
 		AfroditaExtension.setHandler ("GetParent", ctypes.long, [ctypes.long, ctypes.long],

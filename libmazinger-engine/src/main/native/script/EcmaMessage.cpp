@@ -172,7 +172,6 @@ static BOOL createProgressWndClass ()
     return RegisterClassEx(&wcx);
 }
 
-
 static DWORD WINAPI progressMessageLoop (LPVOID param) {
 
     DWORD units = GetDialogBaseUnits();
@@ -331,6 +330,7 @@ static INT_PTR CALLBACK selectAccountDialogProc(
 		}
 		SendMessage(hwndList, LB_SETCURSEL, 0, 0);
 
+		SetWindowPos (hwndDlg, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW );
 		return 0;
 	}
 	case WM_NEXTDLGCTL:

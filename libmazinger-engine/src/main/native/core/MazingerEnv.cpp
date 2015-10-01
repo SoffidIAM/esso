@@ -391,16 +391,21 @@ void MazingerEnv::close () {
 #endif
 
 ConfigReader * MazingerEnv::getConfigReader () {
-	MZNC_waitMutex();
-	if (reader == NULL) {
-		PMAZINGER_DATA pData = getData();
-		if (pData == NULL)
-			return NULL;
-		reader = new ConfigReader (open(true));
-		MZNSendDebugMessageA("Parsing Mazinger data");
-		reader->parse();
-		MZNSendDebugMessageA("END Parsing Mazinger data");
+	if (MZNC_waitMutex())
+	{
+		if (reader == NULL) {
+			PMAZINGER_DATA pData = getData();
+			if (pData == NULL)
+			{
+				MZNC_endMutex();
+				return NULL;
+			}
+			reader = new ConfigReader (open(true));
+			MZNSendDebugMessageA("Parsing Mazinger data");
+			reader->parse();
+			MZNSendDebugMessageA("END Parsing Mazinger data");
+		}
+		MZNC_endMutex();
 	}
-	MZNC_endMutex();
 	return reader;
 }

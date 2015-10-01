@@ -40,7 +40,11 @@ std::string Encoder::encode(const char* str) {
 
 std::string Encoder::decode(const char* str) {
 	std::string result;
-	if (str[0] == '\'' || str[0] == '\"')
+	if (strcmp (str, "null") == 0)
+	{
+		// empty string
+	}
+	else if (str[0] == '\'' || str[0] == '\"')
 	{
 		int len = strlen(str) - 1;
 		for (int i = 1; i < len; i++)

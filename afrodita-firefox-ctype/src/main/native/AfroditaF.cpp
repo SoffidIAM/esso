@@ -120,6 +120,7 @@ extern "C" void AFRevaluate (long  id) {
 	{
 		SmartWebPage * page = new SmartWebPage();
 		app->setPage(page);
+		status[id] = page;
 	} else {
 		app->setPage(it->second);
 	}
