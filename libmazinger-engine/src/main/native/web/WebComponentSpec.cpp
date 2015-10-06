@@ -22,7 +22,7 @@ WebComponentSpec::WebComponentSpec() {
 
 WebComponentSpec::~WebComponentSpec() {
 	if (m_pElement != NULL)
-		delete m_pElement;
+		m_pElement -> release();
 }
 
 
@@ -66,7 +66,7 @@ void WebComponentSpec::setMatched(AbstractWebElement *element)
 void WebComponentSpec::clearMatches()
 {
 	if (m_pElement != NULL)
-		delete m_pElement;
+		m_pElement -> release();
 	m_pElement = NULL;
 }
 

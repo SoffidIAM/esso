@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <MazingerHook.h>
 #include <ssoclient.h>
+#include <time.h>
 
 extern bool MZNEvaluateJS(const char *script, std::string &msg);
 
@@ -379,8 +380,6 @@ void SetLowLabelToMailslot(HANDLE hKernelObj) {
 			// all NULL and set the new LABEL_SECURITY_INFORMATION
 			dwErr = SetSecurityInfo(hKernelObj, SE_KERNEL_OBJECT,
 					LABEL_SECURITY_INFORMATION, NULL, NULL, NULL, pSacl);
-			if (dwErr != ERROR_SUCCESS)
-				printf ("Error %ld (%lx) setting mail slot security\n", (long)GetLastError(), (long) GetLastError());
 		}
 		LocalFree(pSD);
 	}
@@ -431,8 +430,11 @@ DWORD CALLBACK LeerMailSlot(LPVOID lpData) {
 				(LPOVERLAPPED) NULL);
 		if (cbRead > 0 )
 		{
+			time_t t;
+			time(&t);
+			struct tm* tm = localtime(&t);
 			achMessage[cbRead/2] = L'\0';
-			fwprintf (logFile == NULL ? stdout: logFile, L"%ls\n", achMessage);
+			fwprintf (logFile == NULL ? stdout: logFile, L"%02d:%02d:%02d %ls\n", tm->tm_hour, tm->tm_min, tm->tm_sec, achMessage);
 		}
 	}
 	return 0;

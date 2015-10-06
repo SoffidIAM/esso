@@ -10,17 +10,20 @@
 
 #include <string>
 #include <vector>
-
+#include <LockableObject.h>
 class AbstractWebElement;
+class SmartWebPage;
+class WebListener;
 
-class AbstractWebApplication {
+class AbstractWebApplication: public LockableObject {
 public:
 	AbstractWebApplication() {
 
 	}
+protected:
 	virtual ~AbstractWebApplication() {
-
 	}
+public:
 	virtual void getUrl (std::string &value) = 0;
 	virtual void getTitle (std::string &value) = 0;
 	virtual void getContent (std::string &value) = 0;
@@ -28,6 +31,7 @@ public:
 	virtual void getCookie (std::string &value) = 0;
 	virtual AbstractWebElement* getDocumentElement () = 0;
 	virtual AbstractWebElement * getElementById (const char*id) = 0;
+	virtual AbstractWebElement * createElement(const char *tagName) = 0;
 	virtual void getElementsByTagName (const char* tag, std::vector<AbstractWebElement*> &elements) = 0;
 	virtual void getAnchors (std::vector<AbstractWebElement*> &elements) = 0;
 	virtual void getForms (std::vector<AbstractWebElement*> &elements) = 0;
@@ -35,5 +39,10 @@ public:
 	virtual void getImages (std::vector<AbstractWebElement*> &elements) = 0;
 	virtual void write (const char*str) = 0;
 	virtual void writeln (const char*str) = 0;
+	virtual void alert (const char *str) = 0;
+	virtual void subscribe ( const char *eventName, WebListener *listener) = 0;
+	virtual void unSubscribe ( const char *eventName, WebListener *listener) = 0;
+
+	virtual SmartWebPage* getWebPage () = 0;
 };
 #endif /* WEBAPPLICATION_H_ */

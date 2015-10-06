@@ -26,7 +26,7 @@
 #include <ConfigReader.h>
 #include <Action.h>
 #include <SecretStore.h>
-
+#include <time.h>
 
 #ifdef WIN32
 // Missing at sddl.h
@@ -35,7 +35,10 @@ static FILE *logFile = NULL;
 void sendMessage(HANDLE hMailSlot, LPCWSTR lpszMessage) {
 
 	if (hMailSlot != NULL) {
+		time_t t;
 		DWORD dwWritten = 0;
+		wchar_t ach[10];
+
 		WriteFile(hMailSlot, lpszMessage, 2 * wcslen(lpszMessage), &dwWritten,
 				NULL);
 	}

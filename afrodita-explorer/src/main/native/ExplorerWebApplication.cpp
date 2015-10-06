@@ -13,9 +13,10 @@
 #include "Utils.h"
 #include <stdio.h>
 #include <MazingerInternal.h>
-
+#include "CEventListener.h"
 
 ExplorerWebApplication::~ExplorerWebApplication() {
+	MZNSendDebugMessage("Removing application %p", this);
 	if (m_pBrowser != NULL)
 		m_pBrowser->Release();
 	if (m_pDispatch != NULL)
@@ -24,6 +25,32 @@ ExplorerWebApplication::~ExplorerWebApplication() {
 		m_pHtmlDoc2->Release();
 	if (m_pHtmlDoc3 != NULL)
 		m_pHtmlDoc3->Release();
+	if (smartWebPage != NULL)
+		smartWebPage->release();
+	if (pIntervalListener != NULL)
+		pIntervalListener->Release();
+}
+
+ExplorerWebApplication::ExplorerWebApplication(IWebBrowser2 *pBrowser, IDispatch *pDispatch, const char *url)
+{
+	MZNSendDebugMessage("Creating application %p", this);
+	m_counter = 1;
+	if (url != NULL)
+		m_url = url;
+	m_pBrowser = pBrowser;
+	if (m_pBrowser != NULL)
+		m_pBrowser->AddRef ();
+	if (pDispatch != NULL)
+	{
+		m_pDispatch = pDispatch;
+		m_pDispatch->AddRef();
+	}
+	else
+		m_pDispatch = NULL;
+	m_pHtmlDoc2 = NULL;
+	m_pHtmlDoc3 = NULL;
+	pIntervalListener = NULL;
+	smartWebPage = new SmartWebPage();
 }
 
 
@@ -32,12 +59,12 @@ void ExplorerWebApplication::getUrl(std::string & value)
 	if (m_url.empty())
 	{
 		value.clear ();
-		if (m_pBrowser != NULL)
-		{
-			BSTR url;
+		BSTR url;
 
-	//		HRESULT hr = m_pBrowser->get_LocationURL(&url);
-			HRESULT hr = getHTMLDocument2()->get_URL(&url);
+		IHTMLDocument2 *pDoc = getHTMLDocument2();
+		if (pDoc != NULL)
+		{
+			HRESULT hr = pDoc->get_URL(&url);
 			if (! FAILED(hr) )
 			{
 				Utils::bstr2str (value, url);
@@ -54,11 +81,12 @@ void ExplorerWebApplication::getUrl(std::string & value)
 void ExplorerWebApplication::getTitle(std::string & value)
 {
 	value.clear ();
-	if (m_pBrowser != NULL)
+	IHTMLDocument2 *pDoc = getHTMLDocument2();
+	if (pDoc != NULL)
 	{
 		BSTR url;
 
-		HRESULT hr = m_pBrowser->get_LocationName(&url);
+		HRESULT hr = pDoc->get_title(&url);
 		if (! FAILED(hr) )
 		{
 			Utils::bstr2str (value, url);
@@ -96,6 +124,8 @@ IDispatch * ExplorerWebApplication::getIDispatch ()
 	{
 		m_pBrowser->get_Document(&m_pDispatch);
 	}
+	if (m_pDispatch == NULL)
+		MZNSendDebugMessageA("Unable to get ExplorerWebApplications's IDispatch");
 	return m_pDispatch;
 }
 
@@ -107,6 +137,8 @@ IHTMLDocument2 * ExplorerWebApplication::getHTMLDocument2 ()
 	{
 		pDispatch->QueryInterface(IID_IHTMLDocument2,reinterpret_cast<void**>(&m_pHtmlDoc2));
 	}
+	if (m_pHtmlDoc2 == NULL)
+		MZNSendDebugMessageA("Unable to get ExplorerWebApplications's IHTMLDocument2");
 	return m_pHtmlDoc2;
 }
 
@@ -117,25 +149,9 @@ IHTMLDocument3 * ExplorerWebApplication::getHTMLDocument3 ()
 	{
 		pDispatch->QueryInterface(IID_IHTMLDocument3,reinterpret_cast<void**>(&m_pHtmlDoc3));
 	}
+	if (m_pHtmlDoc3 == NULL)
+		MZNSendDebugMessageA("Unable to get ExplorerWebApplications's IHTMLDocument3");
 	return m_pHtmlDoc3;
-}
-
-ExplorerWebApplication::ExplorerWebApplication(IWebBrowser2 *pBrowser, IDispatch *pDispatch, const char *url)
-{
-	if (url != NULL)
-		m_url = url;
-	m_pBrowser = pBrowser;
-	if (m_pBrowser != NULL)
-		m_pBrowser->AddRef ();
-	if (pDispatch != NULL)
-	{
-		m_pDispatch = pDispatch;
-		m_pDispatch->AddRef();
-	}
-	else
-		m_pDispatch = NULL;
-	m_pHtmlDoc2 = NULL;
-	m_pHtmlDoc3 = NULL;
 }
 
 AbstractWebElement *ExplorerWebApplication::getDocumentElement()
@@ -149,7 +165,7 @@ AbstractWebElement *ExplorerWebApplication::getDocumentElement()
 	{
 		return NULL;
 	}
-	return NULL;
+	return new ExplorerElement(p, this);
 }
 
 
@@ -170,7 +186,7 @@ void ExplorerWebApplication::populateVector(IHTMLElementCollection *pCol, std::v
 			hr = pCol->item (v, v, &pElement);
 			if (!FAILED(hr))
 			{
-				elements.push_back(new ExplorerElement(pElement));
+				elements.push_back(new ExplorerElement(pElement, this));
 			}
 		}
 }
@@ -191,15 +207,6 @@ void ExplorerWebApplication::getElementsByTagName(const char*tag, std::vector<Ab
 		if (FAILED(hr)) return;
 	    populateVector(pCol, elements);
 	    pCol->Release();
-	    for (std::vector<AbstractWebElement*>::iterator it = elements.begin();
-	    		it != elements.end(); it++)
-	    {
-	    	AbstractWebElement *e = *it;
-	    	std::string s;
-	    	e->getTagName(s);
-	    	MZNSendDebugMessage ("FOUND element with tag %s",
-	    			s.c_str());
-	    }
 	}
 }
 
@@ -209,11 +216,15 @@ void ExplorerWebApplication::getImages(std::vector<AbstractWebElement*> & elemen
 {
 	elements.clear ();
 	IHTMLElementCollection *pCol;
-	HRESULT hr = getHTMLDocument2()->get_images(&pCol);
-	if (! FAILED (hr))
+	IHTMLDocument2 *pDoc = getHTMLDocument2();
+	if (pDoc != NULL)
 	{
-	    populateVector(pCol, elements);
-	    pCol->Release();
+		HRESULT hr = pDoc->get_images(&pCol);
+		if (! FAILED (hr))
+		{
+		    populateVector(pCol, elements);
+		    pCol->Release();
+		}
 	}
 }
 
@@ -226,7 +237,11 @@ void ExplorerWebApplication::writeln(const char *str)
 	long index = 0;
 	psa = SafeArrayCreateVector(VT_BSTR, 0, 1);
 	SafeArrayPutElement(psa, &index,  bstrVal);
-	getHTMLDocument2()->write(psa);
+	IHTMLDocument2 *pDoc = getHTMLDocument2();
+	if (pDoc != NULL)
+	{
+		pDoc->write(psa);
+	}
 	SysFreeString(bstrVal);
 	SafeArrayDestroy(psa);
 }
@@ -237,11 +252,15 @@ void ExplorerWebApplication::getLinks(std::vector<AbstractWebElement*> & element
 {
 	elements.clear ();
 	IHTMLElementCollection *pCol;
-	HRESULT hr = getHTMLDocument2()->get_links(&pCol);
-	if (! FAILED (hr))
+	IHTMLDocument2 *pDoc = getHTMLDocument2();
+	if (pDoc != NULL)
 	{
-	    populateVector(pCol, elements);
-	    pCol->Release();
+		HRESULT hr = pDoc->get_links(&pCol);
+		if (! FAILED (hr))
+		{
+			populateVector(pCol, elements);
+			pCol->Release();
+		}
 	}
 }
 
@@ -250,11 +269,12 @@ void ExplorerWebApplication::getLinks(std::vector<AbstractWebElement*> & element
 void ExplorerWebApplication::getDomain(std::string & value)
 {
 	value.clear ();
-	if (m_pBrowser != NULL)
-	{
-		BSTR url;
+	BSTR url;
 
-		HRESULT hr = getHTMLDocument2()->get_domain(&url);
+	IHTMLDocument2 *pDoc = getHTMLDocument2();
+	if (pDoc != NULL)
+	{
+		HRESULT hr = pDoc->get_domain(&url);
 		if (! FAILED(hr) )
 		{
 			Utils::bstr2str (value, url);
@@ -269,11 +289,15 @@ void ExplorerWebApplication::getAnchors(std::vector<AbstractWebElement*> & eleme
 {
 	elements.clear ();
 	IHTMLElementCollection *pCol;
-	HRESULT hr = getHTMLDocument2()->get_anchors(&pCol);
-	if (! FAILED (hr))
+	IHTMLDocument2 *pDoc = getHTMLDocument2();
+	if (pDoc != NULL)
 	{
-	    populateVector(pCol, elements);
-	    pCol->Release();
+		HRESULT hr = pDoc->get_anchors(&pCol);
+		if (! FAILED (hr))
+		{
+			populateVector(pCol, elements);
+			pCol->Release();
+		}
 	}
 }
 
@@ -282,11 +306,12 @@ void ExplorerWebApplication::getAnchors(std::vector<AbstractWebElement*> & eleme
 void ExplorerWebApplication::getCookie(std::string & value)
 {
 	value.clear ();
-	if (m_pBrowser != NULL)
-	{
-		BSTR url;
+	BSTR url;
 
-		HRESULT hr = getHTMLDocument2()->get_cookie(&url);
+	IHTMLDocument2 *pDoc = getHTMLDocument2();
+	if (pDoc != NULL)
+	{
+		HRESULT hr = pDoc->get_cookie(&url);
 		if (! FAILED(hr) )
 		{
 			Utils::bstr2str (value, url);
@@ -304,22 +329,28 @@ AbstractWebElement *ExplorerWebApplication::getElementById(const char *id)
 	if (pDoc != NULL)
 	{
 		BSTR bstr = Utils::str2bstr(id);
-		IHTMLElement *pElement;
+		IHTMLElement *pElement = NULL;
 		HRESULT hr = pDoc-> getElementById(bstr, &pElement);
 		SysFreeString (bstr);
 
-		if (FAILED(hr)) return NULL;
+		if (FAILED(hr) || pElement == NULL)
+			return NULL;
 
 		IDispatch *pDispatch;
 		hr = pElement->QueryInterface(IID_IDispatch, reinterpret_cast<void**>(&pDispatch));
 		pElement->Release();
 
-		if (FAILED(hr)) return NULL;
+		if (FAILED(hr))
+		{
+			return NULL;
+		}
 
-		return new ExplorerElement (pDispatch);
+		return new ExplorerElement (pDispatch, this);
 	}
 	else
+	{
 		return NULL;
+	}
 }
 
 
@@ -328,11 +359,15 @@ void ExplorerWebApplication::getForms(std::vector<AbstractWebElement*> & element
 {
 	elements.clear ();
 	IHTMLElementCollection *pCol;
-	HRESULT hr = getHTMLDocument2()->get_forms(&pCol);
-	if (! FAILED (hr))
+	IHTMLDocument2 *pDoc = getHTMLDocument2();
+	if (pDoc != NULL)
 	{
-	    populateVector(pCol, elements);
-	    pCol->Release();
+		HRESULT hr = pDoc->get_forms(&pCol);
+		if (! FAILED (hr))
+		{
+			populateVector(pCol, elements);
+			pCol->Release();
+		}
 	}
 }
 
@@ -345,13 +380,73 @@ void ExplorerWebApplication::write(const char *str)
 	long index = 0;
 	psa = SafeArrayCreateVector(VT_BSTR, 0, 1);
 	SafeArrayPutElement(psa, &index,  bstrVal);
-	getHTMLDocument2()->write(psa);
+	IHTMLDocument2 *pDoc = getHTMLDocument2();
+	if (pDoc != NULL)
+	{
+		pDoc->write(psa);
+	}
 	SysFreeString(bstrVal);
 	SafeArrayDestroy(psa);
 }
 
 
+AbstractWebElement* ExplorerWebApplication::createElement(const char* tagName) {
+	BSTR bstr = Utils::str2bstr(tagName);
+	IHTMLElement *element;
+	AbstractWebElement *result = NULL;
+	IHTMLDocument2 *pDoc = getHTMLDocument2();
+	if (pDoc != NULL)
+	{
+		HRESULT hr = pDoc->createElement(bstr, &element);
+		if ( !FAILED (hr))
+		{
+			result =  new ExplorerElement(element, this);
+			MZNSendDebugMessage("Crated element %s", result->toString().c_str());
+		}
+		else
+			result = NULL;
+		SysFreeString(bstr);
+	}
+	return result;
+}
 
+void ExplorerWebApplication::alert(const char* str) {
+	IHTMLWindow2 *w;
+	BSTR bstr = Utils::str2bstr(str);
+	IHTMLDocument2 *pDoc = getHTMLDocument2();
+	if (pDoc != NULL)
+	{
+		HRESULT hr = pDoc->get_parentWindow(&w);
+		if (! FAILED (hr))
+		{
+			w->alert(bstr);
+		}
+	}
+	SysFreeString(bstr);
+}
 
+void ExplorerWebApplication::subscribe(const char* eventName,
+		WebListener* listener) {
+}
 
+void ExplorerWebApplication::unSubscribe(const char* eventName,
+		WebListener* listener) {
+}
 
+SmartWebPage* ExplorerWebApplication::getWebPage() {
+	return smartWebPage;
+}
+
+std::string ExplorerWebApplication::toString() {
+	char ach[50];
+	sprintf (ach, "ExplorerWebApplication %p", this);
+	return std::string (ach);
+}
+
+void ExplorerWebApplication::installIntervalListener() {
+	if (pIntervalListener == NULL)
+	{
+		pIntervalListener = new CEventListener();
+		pIntervalListener->connectRefresh(this);
+	}
+}

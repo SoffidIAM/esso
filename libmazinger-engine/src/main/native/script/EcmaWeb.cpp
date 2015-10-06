@@ -6,6 +6,7 @@
 #include "../web/WebComponentSpec.h"
 #include <AbstractWebApplication.h>
 #include <AbstractWebElement.h>
+#include <SmartWebPage.h>
 #include <vector>
 #include <see/see.h>
 #include "ecma.h"
@@ -51,6 +52,9 @@ static void MZN_document_write(struct SEE_interpreter *interp,
 static void MZN_document_writeln(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res);
+static void MZN_document_autofill (struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res);
 
 static void MZN_collection_item(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
@@ -62,7 +66,13 @@ static void MZN_collection_namedItem(struct SEE_interpreter *interp,
 static void MZN_element_getAttribute (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res);
+static void MZN_element_getProperty (struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res);
 static void MZN_element_setAttribute (struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res);
+static void MZN_element_setProperty (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res);
 static void MZN_element_getElementsByTagName (struct SEE_interpreter *interp,
@@ -142,8 +152,10 @@ static struct SEE_string *STR(forms);
 static struct SEE_string *STR(images);
 static struct SEE_string *STR(links);
 static struct SEE_string *STR(documentElement);
+static struct SEE_string *STR(getProperty);
 static struct SEE_string *STR(getAttribute);
 static struct SEE_string *STR(setAttribute);
+static struct SEE_string *STR(setProperty);
 static struct SEE_string *STR(removeAttribute);
 static struct SEE_string *STR(click);
 static struct SEE_string *STR(blur);
@@ -153,6 +165,7 @@ static struct SEE_string *STR(disabled);
 static struct SEE_string *STR(id);
 static struct SEE_string *STR(tagName);
 static struct SEE_string *STR(parentNode);
+static struct SEE_string *STR(autofill);
 
 static struct SEE_objectclass prototype_class = {
 	"Object", /* Class */
@@ -260,8 +273,10 @@ static int Web_mod_init() {
 	STR(images) = SEE_intern_global("images");
 	STR(links) = SEE_intern_global("links");
 	STR(documentElement) = SEE_intern_global("documentElement");
+	STR(getProperty) = SEE_intern_global("getProperty");
 	STR(getAttribute) = SEE_intern_global("getAttribute");
 	STR(setAttribute) = SEE_intern_global("setAttribute");
+	STR(setProperty) = SEE_intern_global("setProperty");
 	STR(removeAttribute) = SEE_intern_global("removeAttribute");
 	STR(click) = SEE_intern_global("click");
 	STR(blur) = SEE_intern_global("blur");
@@ -271,6 +286,7 @@ static int Web_mod_init() {
 	STR(id) = SEE_intern_global("id");
 	STR(tagName) = SEE_intern_global("tagName");
 	STR(parentNode) = SEE_intern_global("parentNode");
+	STR(autofill) = SEE_intern_global("autofill");
 	return 0;
 }
 
@@ -333,6 +349,7 @@ static void Web_init(struct SEE_interpreter *interp) {
 	PUTFUNC(proto, MZN_document, getElementsByTagName, 1)
 	PUTFUNC(proto, MZN_document, write, 1)
 	PUTFUNC(proto, MZN_document, writeln, 1)
+	PUTFUNC(proto, MZN_document, autofill, 1)
 	PRIVATE(interp)->documentPrototype = &proto->object;
 
 	/** Crear los prototipos de Collection  **/
@@ -347,8 +364,10 @@ static void Web_init(struct SEE_interpreter *interp) {
 	/** Crear los prototipos de Element  **/
     proto = SEE_NEW(interp, SEE_native);
     SEE_native_init(proto, interp, &prototype_class, interp->Object_prototype);
+	PUTFUNC(proto, MZN_element, getProperty, 1)
 	PUTFUNC(proto, MZN_element, getAttribute, 1)
 	PUTFUNC(proto, MZN_element, setAttribute, 2)
+	PUTFUNC(proto, MZN_element, setProperty, 2)
 	PUTFUNC(proto, MZN_element, getElementsByTagName, 1)
 	PUTFUNC(proto, MZN_element, removeAttribute, 1)
 	PUTFUNC(proto, MZN_element, click, 0)
@@ -387,7 +406,7 @@ void finalizeElementObject (struct SEE_interpreter *i, void *object,
 	struct MZN_element_object * seeElement = (struct MZN_element_object*) object;
 	if (seeElement->spec != NULL)
 	{
-		delete seeElement->spec;
+		seeElement->spec -> release();
 		seeElement->spec = NULL;
 	}
 }
@@ -424,7 +443,7 @@ void finalizeCollectionObject (struct SEE_interpreter *i, void *object,
 			it ++)
 	{
 		AbstractWebElement *pElement = *it;
-		delete pElement;
+		pElement -> release ();
 	}
 	seeCollection->elements->clear();
 	delete seeCollection->elements;
@@ -643,6 +662,29 @@ static void MZN_document_writeln(struct SEE_interpreter *interp,
 
 }
 
+static void MZN_document_autofill(struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res)
+{
+	char* s = NULL;
+
+	MZN_document_object *pObj = (MZN_document_object*) thisobj;
+
+	SEE_parse_args(interp, argc, argv, "A", &s);
+	if (s != NULL)
+	{
+		AbstractWebApplication *app = pObj -> spec;
+		SmartWebPage *page = app->getWebPage();
+		if (page != NULL)
+		{
+			page->fetchAccounts(app, s);
+			page->parse(app);
+		}
+	}
+	SEE_SET_UNDEFINED(res);
+
+}
+
 
 
 static void MZN_collection_item(struct SEE_interpreter *interp,
@@ -816,6 +858,27 @@ static void MZN_element_setAttribute (struct SEE_interpreter *interp,
 		std::string ach1 = SEE_StringToUTF8(interp, s1);
 		std::string ach2 = SEE_StringToUTF8(interp, s2);
 		pObj->spec->setAttribute(ach1.c_str(), ach2.c_str());
+		if (ach1 == "value")
+		{
+			pObj->spec->setProperty(ach1.c_str(), ach2.c_str());
+		}
+	}
+}
+
+static void MZN_element_setProperty (struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res)
+{
+	SEE_string *s1;
+	SEE_string *s2;
+	MZN_element_object *pObj = (MZN_element_object*) thisobj;
+	SEE_SET_UNDEFINED(res);
+	if (argc == 2)
+	{
+		SEE_parse_args(interp, argc, argv, "s|s", &s1, &s2);
+		std::string ach1 = SEE_StringToUTF8(interp, s1);
+		std::string ach2 = SEE_StringToUTF8(interp, s2);
+		pObj->spec->setProperty(ach1.c_str(), ach2.c_str());
 	}
 }
 
@@ -837,7 +900,7 @@ static void findElementsByTagName( AbstractWebElement *node, const std::string &
 		}
 		else
 		{
-			delete el;
+			el->release();
 		}
 	}
 
@@ -896,7 +959,29 @@ static void MZN_element_getAttribute (struct SEE_interpreter *interp,
 		SEE_parse_args(interp, argc, argv, "s", &s1, &s2);
 		std::string ach1 = SEE_StringToUTF8(interp, s1);
 		std::string v;
-		pObj->spec->getAttribute(ach1.c_str(), v);
+		if (v == "value")
+			pObj->spec->getProperty(ach1.c_str(), v);
+		else
+			pObj->spec->getAttribute(ach1.c_str(), v);
+		SEE_string *str = SEE_UTF8ToString(interp, v.c_str());
+		SEE_SET_STRING(res, str);
+	}
+}
+
+static void MZN_element_getProperty (struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res)
+{
+	SEE_string *s1;
+	SEE_string *s2;
+	MZN_element_object *pObj = (MZN_element_object*) thisobj;
+	SEE_SET_UNDEFINED(res);
+	if (argc > 0)
+	{
+		SEE_parse_args(interp, argc, argv, "s", &s1, &s2);
+		std::string ach1 = SEE_StringToUTF8(interp, s1);
+		std::string v;
+		pObj->spec->getProperty(ach1.c_str(), v);
 		SEE_string *str = SEE_UTF8ToString(interp, v.c_str());
 		SEE_SET_STRING(res, str);
 	}

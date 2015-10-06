@@ -577,3 +577,82 @@ void SeyconCommon::updateHostAddress () {
 		}
 	}
 }
+
+
+
+int hextoint (char ch)
+{
+	if (ch >= '0' && ch <= '9')
+		return ch - '0';
+	else if (ch >= 'a' && ch <= 'f')
+		return ch - 'a' + 10;
+	else if (ch >= 'A' && ch <= 'F')
+		return ch - 'A' + 10;
+	else
+		return -1;
+}
+
+char inttohex (int i)
+{
+	if (i < 10)
+		return '0' + i;
+	else
+		return 'a' + i - 10;
+}
+
+std::wstring SeyconCommon::urlDecode (const char* str) {
+	std::string result;
+	const unsigned char *sz = (const unsigned char*) str;
+	int i = 0;
+	while (sz[i])
+	{
+		if (sz[i] == '%')
+		{
+			int hex1 = hextoint (sz[++i]);
+			if (hex1 >= 0)
+			{
+				int hex2 = hextoint (sz[++i]);
+				if (hex2 >= 0)
+				{
+					i++;
+					result += (char) (hex1 << 4 | hex2);
+				}
+			}
+		}
+		else if (sz[i] == '+')
+		{
+			result += ' ';
+			i++;
+		}
+		else
+		{
+			result += sz[i++];
+		}
+	}
+	return MZNC_utf8towstr(result.c_str());
+}
+
+std::string SeyconCommon::urlEncode  (const wchar_t* str)
+{
+	std::string utf8 = MZNC_wstrtoutf8(str);
+	const unsigned char* sz = (const unsigned char*) utf8.c_str();
+	std::string result;
+	int i = 0;
+	while (sz[i])
+	{
+		if (sz[i] == ' ')
+			result += "+";
+		else if (sz[i] < '0' || sz[i] > '9' && sz[i] < 'A' || (sz[i] > 'Z' && sz[i] < 'a') || sz[i] > 'z' )
+		{
+			int s = (int) sz[i];
+			if (s < 0) s += 256;
+			result += "%";
+			result += inttohex ( s / 16);
+			result += inttohex ( s % 16);
+		}
+		else
+			result += sz[i];
+		i++;
+	}
+	return result;
+}

@@ -4,3 +4,5 @@ LIBRARY SayakaF
 EXPORTS
     AFRsetHandler
     AFRevaluate
+    AFRevent
+	AFRdismiss

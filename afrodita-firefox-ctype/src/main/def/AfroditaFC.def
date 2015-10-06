@@ -4,5 +4,7 @@ LIBRARY SayakaIE
 EXPORTS
                 AFRsetHandler
                 AFRevaluate
+                AFRevent
+                AFRdismiss
                 
                 

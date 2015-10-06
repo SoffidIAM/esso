@@ -8,7 +8,9 @@
 #include "AfroditaF.h"
 #include "FFWebApplication.h"
 #include "FFElement.h"
+#include "EventHandler.h"
 
+#include <stdio.h>
 
 FFWebApplication::~FFWebApplication() {
 }
@@ -188,9 +190,39 @@ void FFWebApplication::writeln(const char *str)
 	}
 }
 
+AbstractWebElement* FFWebApplication::createElement(const char* tagName) {
+	if (AfroditaHandler::handler.createElementHandler != NULL) {
+		long internalId = AfroditaHandler::handler.createElementHandler(docId, tagName);
+		if (internalId == 0)
+			return NULL;
+		else
+			return new FFElement(docId, internalId);
+	}
+	else
+		return NULL;
+}
 
+SmartWebPage* FFWebApplication::getWebPage() {
+	return page;
+}
 
+void FFWebApplication::alert(const char* str) {
+	if (AfroditaHandler::handler.alertHandler != NULL)
+		AfroditaHandler::handler.alertHandler(docId, str);
+}
 
+void FFWebApplication::subscribe(const char* eventName, WebListener* listener) {
+	EventHandler::getInstance()->registerEvent(listener, this, eventName);
+}
 
+void FFWebApplication::unSubscribe(const char* eventName,
+		WebListener* listener) {
+	EventHandler::getInstance()->unregisterEvent(listener, this, eventName);
+}
 
+std::string FFWebApplication::toString() {
+	char ach[100];
+	sprintf (ach, "FFWebApplication %d", docId);
+	return std::string(ach);
 
+}

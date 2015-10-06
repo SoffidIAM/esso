@@ -13,7 +13,7 @@
 #include "CommunicationManager.h"
 #include "json/JsonMap.h"
 #include "json/JsonValue.h"
-
+#include <SeyconServer.h>
 #include <stdlib.h>
 
 #define MIME_TYPE_DESCRIPTION "application/soffid-sso-plugin:sso:Soffid SSO Plugin"
@@ -37,6 +37,7 @@ extern "C" void __attribute__((constructor)) startup() {
 extern "C" int main (int argc, char **argv)
 {
 
+	SeyconCommon::setDebugLevel(0);
 	DEBUG ("Started AfroditaC");
 	CommunicationManager* manager = CommunicationManager::getInstance();
 

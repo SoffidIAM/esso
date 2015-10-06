@@ -6,6 +6,7 @@
 #include <oleauto.h>
 
 class ConfigReader;
+class ExplorerWebApplication;
 extern long g_nComObjsInUse;
 
 class CExplorerEventHandler :
@@ -32,6 +33,7 @@ class CExplorerEventHandler :
 private:
 	void onLoad(IWebBrowser2 *pBrowser, const char *url);
 
+	ExplorerWebApplication *m_app;
 	IWebBrowser2* m_pBrowser;
 	DWORD m_dwCookie;
 	long m_nRefCount;   //for managing the reference count

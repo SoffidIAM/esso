@@ -616,7 +616,7 @@ void registerJetScrander()
 	//
 	//write the .jsm entry
 	//
-	wsprintf(szDescriptionVal, "%s", ".jsm");
+	wsprintf(szDescriptionVal, "%s", ".mzn");
 	wsprintf(szBuff, "%s", szProgId);
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szDescriptionVal, NULL, //write to the "default" value
 			REG_SZ, (void*) szBuff, lstrlen(szBuff));
@@ -2269,6 +2269,7 @@ int install(int full)
 	installResource(NULL, "sewbr.dll");
 	installResource(NULL, "profyumi.jar");
 	installResource("FFExtension\\modules", "afrodita.jsm");
+	installResource("FFExtension\\modules", "Preferences.jsm");
 	installResource("FFExtension\\chrome\\content", "about.xul");
 	installResource("FFExtension\\chrome\\content", "ff-overlay.xul");
 	installResource("FFExtension\\chrome\\content", "overlay.js");
