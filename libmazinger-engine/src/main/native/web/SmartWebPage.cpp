@@ -266,11 +266,11 @@ static std::string storeSecret(AccountStruct &as, const char *tag, const char *v
 
 	if (! found)
 	{
-		wchar_t ach[10];
-		swprintf (ach, 10, L"%d", counter);
-		secretName += ach;
+		char ach[20];
+		sprintf (ach, "%d", counter);
+		secretName += MZNC_strtowstr(ach);
 		s.putSecret(secretName.c_str(), encodedSecret.c_str());
-		attributeNumber = MZNC_wstrtostr(ach);
+		attributeNumber = ach;
 	}
 	return attributeNumber;
 }
