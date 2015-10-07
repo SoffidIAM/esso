@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>com.soffid.iam.esso.pom</groupId>
 		<artifactId>Mazinger</artifactId>
-		<version>1.6.0-beta-1-enterprise</version>
+		<version>1.6.0-SNAPSHOT</version>
 	</parent>
 	<dependencies>
 		<dependency>
