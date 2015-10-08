@@ -43,39 +43,33 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 
 	app->getForms(forms);
 
-	if (forms.size() == 0)
+	if (app->getDocumentElement() != NULL)
 	{
-		if (app->getDocumentElement() != NULL)
-		{
-			if (rootForm->getRootElement() == NULL)
-				rootForm->parse(app, app->getDocumentElement());
-			else
-				rootForm->reparse();
-		}
+		if (rootForm->getRootElement() == NULL)
+			rootForm->parse(app, app->getDocumentElement());
+		else
+			rootForm->reparse();
 	}
-	else
+
+	for (std::vector<AbstractWebElement*>::iterator it = forms.begin(); it != forms.end(); it++)
 	{
-		int i = 0;
-		for (std::vector<AbstractWebElement*>::iterator it = forms.begin(); it != forms.end(); it++)
+		bool found = false;
+		AbstractWebElement *element = *it;
+		for (std::vector<SmartForm*>::iterator it2 = this->forms.begin(); it2 != this->forms.end(); it2++)
 		{
-			bool found = false;
-			AbstractWebElement *element = *it;
-			for (std::vector<SmartForm*>::iterator it2 = this->forms.begin(); it2 != this->forms.end(); it2++)
+			SmartForm *form2 = *it2;
+			if (form2->getRootElement() != NULL && form2->getRootElement()->equals(element))
 			{
-				SmartForm *form2 = *it2;
-				if (form2->getRootElement() != NULL && form2->getRootElement()->equals(element))
-				{
-					form2->reparse();
-					found = true;
-					break;
-				}
+				form2->reparse();
+				found = true;
+				break;
 			}
-			if (! found)
-			{
-				SmartForm *form = new SmartForm(this);
-				this->forms.push_back(form);
-				form->parse ( app, element);
-			}
+		}
+		if (! found)
+		{
+			SmartForm *form = new SmartForm(this);
+			this->forms.push_back(form);
+			form->parse ( app, element);
 		}
 	}
 

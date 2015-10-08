@@ -156,7 +156,7 @@ static long getIntProperty (AbstractWebElement *element, const char* property)
 }
 
 
-static void findInputs (AbstractWebApplication* app, AbstractWebElement *element, std::vector<AbstractWebElement*> &inputs)
+static void findInputs (AbstractWebApplication* app, AbstractWebElement *element, std::vector<AbstractWebElement*> &inputs, bool first)
 {
 	std::string tagname;
 	element->getTagName(tagname);
@@ -165,6 +165,10 @@ static void findInputs (AbstractWebApplication* app, AbstractWebElement *element
 		inputs.push_back(element);
 		element->lock();
 	}
+	else if (! first && strcasecmp (tagname.c_str(), "form") == 0)
+	{
+		// Do not go inside nested forms
+	}
 	else
 	{
 		std::vector<AbstractWebElement*> children;
@@ -172,7 +176,7 @@ static void findInputs (AbstractWebApplication* app, AbstractWebElement *element
 		for (std::vector<AbstractWebElement*>::iterator it = children.begin(); it != children.end(); it++)
 		{
 			AbstractWebElement *child = *it;
-			findInputs (app, child, inputs);
+			findInputs (app, child, inputs, false);
 			child->release();
 		}
 	}
@@ -486,7 +490,17 @@ bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
 	}
 
 	// Do nothing
-	if (! anyPassword || nonPassword > 10)
+	if (! anyPassword)
+	{
+		MZNSendDebugMessage("* No password input found");
+		return true;
+	}
+	else if (nonPassword < 10)
+	{
+		MZNSendDebugMessage("* More than 10 inputs found");
+		return true;
+	}
+	else
 	{
 		for (std::vector<InputDescriptor*>::iterator it = inputs.begin(); it != inputs.end(); it++)
 		{
@@ -503,8 +517,6 @@ bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
 		}
 		return false;
 	}
-	else
-		return true;
 }
 
 void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot) {
@@ -519,7 +531,7 @@ void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot)
 	this->app = app;
 	this->app->lock();
 
-	findInputs(app, formRoot, elements);
+	findInputs(app, formRoot, elements, true);
 
 	releaseElements();
 
@@ -574,7 +586,7 @@ void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot)
 
 void SmartForm::reparse() {
 	std::vector<AbstractWebElement*> elements;
-	findInputs(app, this->element, elements);
+	findInputs(app, this->element, elements, true);
 	bool newPassword = false;
 
 	if (! checkAnyPassword(elements))
