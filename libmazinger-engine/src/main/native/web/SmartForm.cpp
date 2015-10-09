@@ -156,10 +156,12 @@ static long getIntProperty (AbstractWebElement *element, const char* property)
 }
 
 
-static void findInputs (AbstractWebApplication* app, AbstractWebElement *element, std::vector<AbstractWebElement*> &inputs, bool first)
+static void findInputs (AbstractWebApplication* app, AbstractWebElement *element, std::vector<AbstractWebElement*> &inputs, bool first,
+		std::string indent)
 {
 	std::string tagname;
 	element->getTagName(tagname);
+	MZNSendDebugMessageA("Search:: %s %s", indent.c_str(), tagname.c_str());
 	if (strcasecmp (tagname.c_str(), "input") == 0)
 	{
 		inputs.push_back(element);
@@ -176,7 +178,9 @@ static void findInputs (AbstractWebApplication* app, AbstractWebElement *element
 		for (std::vector<AbstractWebElement*>::iterator it = children.begin(); it != children.end(); it++)
 		{
 			AbstractWebElement *child = *it;
-			findInputs (app, child, inputs, false);
+			std::string indent2 = indent;
+			indent2 += "   ";
+			findInputs (app, child, inputs, false, indent2);
 			child->release();
 		}
 	}
@@ -545,7 +549,7 @@ void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot)
 	this->app = app;
 	this->app->lock();
 
-	findInputs(app, formRoot, elements, true);
+	findInputs(app, formRoot, elements, true, std::string());
 
 	releaseElements();
 
@@ -600,7 +604,7 @@ void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot)
 
 void SmartForm::reparse() {
 	std::vector<AbstractWebElement*> elements;
-	findInputs(app, this->element, elements, true);
+	findInputs(app, this->element, elements, true, std::string());
 	bool newPassword = false;
 
 	if (! checkAnyPassword(elements))
