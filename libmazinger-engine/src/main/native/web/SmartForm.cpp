@@ -1226,7 +1226,7 @@ void SmartForm::createModal(AbstractWebElement *img)
 		for (std::vector<AccountStruct>::iterator it = page->accounts.begin(); it != page->accounts.end(); it++)
 		{
 			AccountStruct as = *it;
-			std::string friendlyName = MZNC_wstrtostr(as.friendlyName.c_str());
+			std::string friendlyName = MZNC_wstrtoutf8(as.friendlyName.c_str());
 			AbstractWebElement *user = app->createElement("div");
 			if (user == NULL) return;
 			user->setAttribute("class", (stylePrefix+ "_selector").c_str());
