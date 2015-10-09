@@ -483,7 +483,19 @@ bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
 		{
 //			MZNSendDebugMessage("Found password element %s", input->toString().c_str());
 			anyPassword = true;
-		} else if (strcasecmp ( type.c_str(), "hidden") != 0) {
+		} else if (strcasecmp ( type.c_str(), "date") == 0 ||
+				strcasecmp ( type.c_str(), "") == 0 ||
+				strcasecmp ( type.c_str(), "datetime") == 0 ||
+				strcasecmp ( type.c_str(), "datetime-local") == 0 ||
+				strcasecmp ( type.c_str(), "email") == 0 ||
+				strcasecmp ( type.c_str(), "month") == 0 ||
+				strcasecmp ( type.c_str(), "number") == 0 ||
+				strcasecmp ( type.c_str(), "search") == 0 ||
+				strcasecmp ( type.c_str(), "tel") == 0 ||
+				strcasecmp ( type.c_str(), "text") == 0 ||
+				strcasecmp ( type.c_str(), "time") == 0 ||
+				strcasecmp ( type.c_str(), "url") == 0 ||
+				strcasecmp ( type.c_str(), "week") == 0 ) {
 //			MZNSendDebugMessage("Found non password element %s", input->toString().c_str());
 			nonPassword ++;
 		}
@@ -495,7 +507,7 @@ bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
 		MZNSendDebugMessage("* No password input found");
 		return true;
 	}
-	else if (nonPassword < 10)
+	else if (nonPassword > 10)
 	{
 		MZNSendDebugMessage("* More than 10 inputs found");
 		return true;
