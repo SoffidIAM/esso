@@ -61,8 +61,8 @@ INT_PTR CALLBACK LoginDialog::loginDialogProc(HWND hwndDlg, UINT uMsg,
 		    	ShowWindow (GetDlgItem(hwndDlg, IDI_LIFERING), SW_HIDE);
 		    }
 
-		    ShowWindow(hwndDlg, SW_SHOWMINIMIZED);
-		    ShowWindow(hwndDlg, SW_RESTORE);
+		    //ShowWindow(hwndDlg, SW_SHOWMINIMIZED);
+		    //ShowWindow(hwndDlg, SW_RESTORE);
 		    ShowWindow(hwndDlg, SW_SHOWNORMAL);
 		    UpdateWindow(hwndDlg);
 
@@ -157,8 +157,8 @@ DWORD CALLBACK LoginDialog::raiseLoop (LPVOID param)
 	{
 		if (!loginDialog->hidden)
 		{
-			ShowWindow(loginDialog -> m_hWnd, SW_SHOWNORMAL);
 			ShowWindow(loginDialog -> m_hWnd, SW_RESTORE);
+			ShowWindow(loginDialog -> m_hWnd, SW_SHOWNORMAL);
 		}
 
 		Sleep (1000);
