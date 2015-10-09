@@ -156,10 +156,12 @@ static long getIntProperty (AbstractWebElement *element, const char* property)
 }
 
 
-static void findInputs (AbstractWebApplication* app, AbstractWebElement *element, std::vector<AbstractWebElement*> &inputs, bool first)
+static void findInputs (AbstractWebApplication* app, AbstractWebElement *element, std::vector<AbstractWebElement*> &inputs, bool first,
+		std::string indent)
 {
 	std::string tagname;
 	element->getTagName(tagname);
+	MZNSendDebugMessageA("Search:: %s %s", indent.c_str(), tagname.c_str());
 	if (strcasecmp (tagname.c_str(), "input") == 0)
 	{
 		inputs.push_back(element);
@@ -176,7 +178,9 @@ static void findInputs (AbstractWebApplication* app, AbstractWebElement *element
 		for (std::vector<AbstractWebElement*>::iterator it = children.begin(); it != children.end(); it++)
 		{
 			AbstractWebElement *child = *it;
-			findInputs (app, child, inputs, false);
+			std::string indent2 = indent;
+			indent2 += "   ";
+			findInputs (app, child, inputs, false, indent2);
 			child->release();
 		}
 	}
@@ -470,6 +474,7 @@ bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
 {
 	bool anyPassword = false;
 	int nonPassword = 0;
+	int password = 0;
 //	MZNSendDebugMessage("Analyzing form =============================");
 	for (std::vector<AbstractWebElement*>::iterator it = elements.begin(); it != elements.end(); it++)
 	{
@@ -483,8 +488,20 @@ bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
 		{
 //			MZNSendDebugMessage("Found password element %s", input->toString().c_str());
 			anyPassword = true;
-		} else if (strcasecmp ( type.c_str(), "hidden") != 0) {
-//			MZNSendDebugMessage("Found non password element %s", input->toString().c_str());
+			password ++;
+		} else if (strcasecmp ( type.c_str(), "date") == 0 ||
+				strcasecmp ( type.c_str(), "") == 0 ||
+				strcasecmp ( type.c_str(), "datetime") == 0 ||
+				strcasecmp ( type.c_str(), "datetime-local") == 0 ||
+				strcasecmp ( type.c_str(), "email") == 0 ||
+				strcasecmp ( type.c_str(), "month") == 0 ||
+				strcasecmp ( type.c_str(), "number") == 0 ||
+				strcasecmp ( type.c_str(), "search") == 0 ||
+				strcasecmp ( type.c_str(), "tel") == 0 ||
+				strcasecmp ( type.c_str(), "text") == 0 ||
+				strcasecmp ( type.c_str(), "time") == 0 ||
+				strcasecmp ( type.c_str(), "url") == 0 ||
+				strcasecmp ( type.c_str(), "week") == 0 ) {
 			nonPassword ++;
 		}
 	}
@@ -495,13 +512,14 @@ bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
 		MZNSendDebugMessage("* No password input found");
 		return true;
 	}
-	else if (nonPassword < 10)
+	else if (nonPassword > 10)
 	{
 		MZNSendDebugMessage("* More than 10 inputs found");
 		return true;
 	}
 	else
 	{
+		MZNSendDebugMessage("* Found %d password inputs and %d non password inputs", password, nonPassword);
 		for (std::vector<InputDescriptor*>::iterator it = inputs.begin(); it != inputs.end(); it++)
 		{
 			removeIcon (*it);
@@ -531,7 +549,7 @@ void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot)
 	this->app = app;
 	this->app->lock();
 
-	findInputs(app, formRoot, elements, true);
+	findInputs(app, formRoot, elements, true, std::string());
 
 	releaseElements();
 
@@ -586,7 +604,7 @@ void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot)
 
 void SmartForm::reparse() {
 	std::vector<AbstractWebElement*> elements;
-	findInputs(app, this->element, elements, true);
+	findInputs(app, this->element, elements, true, std::string());
 	bool newPassword = false;
 
 	if (! checkAnyPassword(elements))
