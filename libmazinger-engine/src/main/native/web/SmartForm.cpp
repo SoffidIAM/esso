@@ -161,7 +161,7 @@ static void findInputs (AbstractWebApplication* app, AbstractWebElement *element
 {
 	std::string tagname;
 	element->getTagName(tagname);
-	MZNSendDebugMessageA("Search:: %s %s", indent.c_str(), tagname.c_str());
+//	MZNSendDebugMessageA("Search:: %s %s", indent.c_str(), tagname.c_str());
 	if (strcasecmp (tagname.c_str(), "input") == 0)
 	{
 		inputs.push_back(element);
@@ -507,19 +507,16 @@ bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
 	}
 
 	// Do nothing
-	if (! anyPassword)
+	if (! anyPassword || nonPassword > 10)
 	{
-		MZNSendDebugMessage("* No password input found");
-		return true;
-	}
-	else if (nonPassword > 10)
-	{
-		MZNSendDebugMessage("* More than 10 inputs found");
-		return true;
-	}
-	else
-	{
-		MZNSendDebugMessage("* Found %d password inputs and %d non password inputs", password, nonPassword);
+		if (! anyPassword)
+		{
+			MZNSendDebugMessage("* No password input found");
+		}
+		else
+		{
+			MZNSendDebugMessage("* More than 10 inputs found");
+		}
 		for (std::vector<InputDescriptor*>::iterator it = inputs.begin(); it != inputs.end(); it++)
 		{
 			removeIcon (*it);
@@ -534,6 +531,11 @@ bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
 			input->release();
 		}
 		return false;
+	}
+	else
+	{
+		MZNSendDebugMessage("* Found %d password inputs and %d non password inputs", password, nonPassword);
+		return true;
 	}
 }
 
