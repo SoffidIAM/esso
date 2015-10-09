@@ -535,29 +535,33 @@ time_t SeyconService::lastError = 0;
 
 SeyconService::SeyconService() {
 #ifdef WIN32
-	std::string fileName;
-	SeyconCommon::readProperty ("CertificateFile", fileName);
-	if (fileName.size () == 0)
-		return;
+	if (pSeyconRootCert == NULL)
+	{
+		std::string fileName;
+		SeyconCommon::readProperty ("CertificateFile", fileName);
+		if (fileName.size () == 0)
+			return;
 
-	int allocated = 0;
-	BYTE *buffer = NULL;
-	int size = 0;
-	int chunk = 2048;
-	FILE *file = fopen(fileName.c_str(), "rb");
-	if (file != NULL) {
-		int read = 0;
-		do {
-			allocated += chunk - (allocated - size) + 1;
-			buffer = (BYTE*) realloc(buffer, allocated);
-			read = fread(&buffer[size], 1, chunk, file);
-			size += read;
-			buffer[size] = '\0';
-		} while (read > 0);
-		pSeyconRootCert = CertCreateCertificateContext(X509_ASN_ENCODING,
-				buffer, size);
-	} else {
-		SeyconCommon::warn("Unable to load %s\n", fileName.c_str());
+		int allocated = 0;
+		BYTE *buffer = NULL;
+		int size = 0;
+		int chunk = 2048;
+		FILE *file = fopen(fileName.c_str(), "rb");
+		if (file != NULL) {
+			int read = 0;
+			do {
+				allocated += chunk - (allocated - size) + 1;
+				buffer = (BYTE*) realloc(buffer, allocated);
+				read = fread(&buffer[size], 1, chunk, file);
+				size += read;
+				buffer[size] = '\0';
+			} while (read > 0);
+			pSeyconRootCert = CertCreateCertificateContext(X509_ASN_ENCODING,
+					buffer, size);
+			fclose (file);
+		} else {
+			SeyconCommon::warn("Unable to load certificate file %s\n", fileName.c_str());
+		}
 	}
 #endif
 }
