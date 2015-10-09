@@ -470,6 +470,7 @@ bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
 {
 	bool anyPassword = false;
 	int nonPassword = 0;
+	int password = 0;
 //	MZNSendDebugMessage("Analyzing form =============================");
 	for (std::vector<AbstractWebElement*>::iterator it = elements.begin(); it != elements.end(); it++)
 	{
@@ -483,6 +484,7 @@ bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
 		{
 //			MZNSendDebugMessage("Found password element %s", input->toString().c_str());
 			anyPassword = true;
+			password ++;
 		} else if (strcasecmp ( type.c_str(), "date") == 0 ||
 				strcasecmp ( type.c_str(), "") == 0 ||
 				strcasecmp ( type.c_str(), "datetime") == 0 ||
@@ -496,7 +498,6 @@ bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
 				strcasecmp ( type.c_str(), "time") == 0 ||
 				strcasecmp ( type.c_str(), "url") == 0 ||
 				strcasecmp ( type.c_str(), "week") == 0 ) {
-//			MZNSendDebugMessage("Found non password element %s", input->toString().c_str());
 			nonPassword ++;
 		}
 	}
@@ -514,6 +515,7 @@ bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
 	}
 	else
 	{
+		MZNSendDebugMessage("* Found %d password inputs and %d non password inputs", password, nonPassword);
 		for (std::vector<InputDescriptor*>::iterator it = inputs.begin(); it != inputs.end(); it++)
 		{
 			removeIcon (*it);
