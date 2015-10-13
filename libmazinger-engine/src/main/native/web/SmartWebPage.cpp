@@ -174,9 +174,7 @@ void SmartWebPage::getAccountStruct (const char* id, AccountStruct &as)
 		AccountStruct as2 = *it;
 		if (as2.id  == id)
 		{
-			as.account = as2.account;
-			as.friendlyName = as2.friendlyName;
-			as.system = as2.system;
+			as = as2;
 			return;
 		}
 	}

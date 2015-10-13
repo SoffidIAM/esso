@@ -30,6 +30,7 @@ public:
 	virtual void appendChild (AbstractWebElement *element) = 0;
 	virtual void insertBefore(AbstractWebElement *element, AbstractWebElement *before) = 0;
 	virtual AbstractWebElement* getParent() = 0;
+	virtual AbstractWebElement* getOffsetParent() = 0;
 	virtual AbstractWebElement* getPreviousSibling() = 0;
 	virtual AbstractWebElement* getNextSibling() = 0;
 	virtual void removeChild (AbstractWebElement* child) = 0;
@@ -49,6 +50,7 @@ public:
 	virtual AbstractWebApplication* getApplication () = 0;
 	virtual bool equals (AbstractWebElement *other) = 0;
 	virtual std::string toString() = 0;
+	virtual std::string getComputedStyle(const char* style) = 0;
 
 };
 

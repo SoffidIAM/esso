@@ -161,8 +161,12 @@ static void findInputs (AbstractWebApplication* app, AbstractWebElement *element
 {
 	std::string tagname;
 	element->getTagName(tagname);
-//	MZNSendDebugMessageA("Search:: %s %s", indent.c_str(), tagname.c_str());
-	if (strcasecmp (tagname.c_str(), "input") == 0)
+	std::string display = element->getComputedStyle("display");
+	if (display == "none")
+	{
+		return;
+	}
+	else if (strcasecmp (tagname.c_str(), "input") == 0)
 	{
 		inputs.push_back(element);
 		element->lock();
@@ -341,18 +345,48 @@ void SmartForm::releaseElements ()
 	numPasswords = 0;
 }
 
+static void getPosition (AbstractWebElement *input, long &left, long &top, long &width, long &height,
+		long &width2, long &height2)
+{
+	height = getIntProperty (input, "offsetHeight");
+	width = getIntProperty (input, "offsetWidth");
+	left = getIntProperty (input, "offsetLeft");
+	top= getIntProperty (input, "offsetTop");
+
+	height2 = getIntProperty (input, "clientHeight"); // Without border
+	width2 = getIntProperty (input, "clientWidth"); // Without border
+
+	AbstractWebElement *parentOffset = input->getOffsetParent();
+	while (parentOffset != NULL)
+	{
+		AbstractWebElement *pp = NULL;
+		std::string tag;
+		parentOffset->getTagName(tag);
+		std::string position = parentOffset->getComputedStyle("position");
+		MZNSendDebugMessageA("getting offset of parent %s (%ld / %ld) [%s]", tag.c_str(), left, top, position.c_str() );
+		if (position == "static")
+		{
+			left += getIntProperty(parentOffset, "offsetLeft");
+			top += getIntProperty (parentOffset, "offsetTop");
+			pp = parentOffset->getOffsetParent();
+		}
+		parentOffset->release();
+		parentOffset = pp;
+	}
+	MZNSendDebugMessageA("Offset (%ld / %ld)", left, top );
+
+}
+
+
 void SmartForm::addIcon (InputDescriptor *descriptor)
 {
 	AbstractWebElement *input = descriptor->input;
 	if ( descriptor->img == NULL)
 	{
 		// Calculate position & size
-		long width = getIntProperty(input, "offsetWidth");
-		long height = getIntProperty (input, "offsetHeight");
-		long height2 = getIntProperty (input, "clientHeight"); // Without border
-		long width2 = getIntProperty (input, "clientWidth"); // Without border
-		long left = getIntProperty(input, "offsetLeft");
-		long top = getIntProperty (input, "offsetTop");
+		long left, top, width, height, width2, height2;
+		getPosition (input, left, top, width, height, width2, height2);
+
 		int borderH = (height - height2)/2;
 		int borderW = (width - width2)/2;
 		if (height <= 0) height = 20L;
@@ -560,7 +594,14 @@ void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot)
 
 
 	if (page->accounts.size () == 0)
-		status = SF_STATUS_MODIFYING;
+		status = SF_STATUS_NEW;
+	else if (page->accounts.size() == 1)
+	{
+		AccountStruct as = page->accounts[0];
+		fetchAttributes(as);
+	}
+	else
+		status = SF_STATUS_SELECT;
 
 
 	if (! checkAnyPassword(elements))
@@ -594,16 +635,10 @@ void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot)
 	}
 
 
-	if (page->accounts.size() == 1 && inputs.size() < 5)
+	if (page->accounts.size() == 1)
 	{
 		AccountStruct as = page->accounts[0];
 		fetchAttributes(as);
-	} else if (page->accounts.size() > 1)
-	{
-		changeStatus(SF_STATUS_SELECT);
-	} else if (numPasswords >= 2)
-	{
-//		changeStatus(SF_STATUS_GENERATING);
 	}
 }
 
@@ -1128,17 +1163,19 @@ static const char *STYLE_MODAL = "position: fixed;"
 static const char *STYLE_SELECTOR_HOVER = "_selector:hover {background-color: #a6d100;}\n";
 static const char *STYLE_SELECTOR = "_selector { "
 		"background-color: #5f7993; "
+		"color: white; "
 		"cursor: pointer; "
 		"padding-left:5px; "
 		"padding-right: 5px;"
   	  	"padding-top:3px; "
   	  	"padding-bottom: 3px;}\n";
 static const char *STYLE_HEADER= "_header {"
-	   	   "background-color: #17b5c8; "
-	   	   "padding-left:5px; "
-	   	   "padding-right: 5px;"
-	   	   "padding-top:3px; "
-	   	   "padding-bottom: 3px;}\n";
+	   	"background-color: #17b5c8; "
+		"color: black; "
+	   	"padding-left:5px; "
+	   	"padding-right: 5px;"
+	   	"padding-top:3px; "
+	   	"padding-bottom: 3px;}\n";
 
 void SmartForm::createStyle () {
 
@@ -1195,6 +1232,7 @@ void SmartForm::createStyle () {
 	if (style != NULL) style-> release();
 	if (app != NULL) app->release();
 }
+
 void SmartForm::createModal(AbstractWebElement *img)
 {
 	std::string link;
@@ -1227,13 +1265,13 @@ void SmartForm::createModal(AbstractWebElement *img)
 		}
 
 		masterDiv->setAttribute("_soffid_element", "true");
-		long height = getIntProperty (input, "offsetHeight");
-		long width = getIntProperty (input, "offsetWidth");
-		long left = getIntProperty (input, "offsetLeft");
-		long top= getIntProperty (input, "offsetTop");
 
 		masterDiv->setAttribute("_soffid_modal", "true");
 		char ach[1000];
+
+		long left, top, width, height, width2, height2;
+		getPosition (input, left, top, width, height, width2, height2);
+
 		sprintf (ach, STYLE_MASTER, left+width-200+2, top+height);
 		masterDiv->setAttribute("style", ach);
 		masterDiv->setAttribute("id", id.c_str());
@@ -1324,10 +1362,9 @@ void SmartForm::createGenerateModal(AbstractWebElement *img)
 		masterDiv = app->createElement("div");
 		if (masterDiv == NULL) return;
 		masterDiv->setAttribute("_soffid_element", "true");
-		long height = getIntProperty (input, "offsetHeight");
-		long width = getIntProperty (input, "offsetWidth");
-		long left = getIntProperty (input, "offsetLeft");
-		long top= getIntProperty (input, "offsetTop");
+
+		long left, top, width, height, width2, height2;
+		getPosition (input, left, top, width, height, width2, height2);
 
 		masterDiv->setAttribute("_soffid_modal", "true");
 		char ach[1000];
@@ -1406,10 +1443,9 @@ void SmartForm::createSaveModal(AbstractWebElement *img)
 		masterDiv = app->createElement("div");
 		if (masterDiv == NULL) return;
 		masterDiv->setAttribute("_soffid_element", "true");
-		long height = getIntProperty (input, "offsetHeight");
-		long width = getIntProperty (input, "offsetWidth");
-		long left = getIntProperty (input, "offsetLeft");
-		long top= getIntProperty (input, "offsetTop");
+
+		long left, top, width, height, width2, height2;
+		getPosition (input, left, top, width, height, width2, height2);
 
 		masterDiv->setAttribute("_soffid_modal", "true");
 		char ach[1000];
