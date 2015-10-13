@@ -88,6 +88,17 @@ AbstractWebElement *FFElement::getParent()
 	return NULL;
 }
 
+AbstractWebElement *FFElement::getOffsetParent()
+{
+	if ( AfroditaHandler::handler.getOffsetParentHandler != NULL)
+	{
+		long id = AfroditaHandler::handler.getOffsetParentHandler(docId, elementId);
+		if (id != 0)
+			return new FFElement (docId, id);
+	}
+	return NULL;
+}
+
 
 
 void FFElement::setAttribute(const char *attribute, const char*value)
@@ -227,6 +238,19 @@ void FFElement::removeChild(AbstractWebElement* child) {
 		AfroditaHandler::handler.removeChildHandler(docId, elementId, ffElement->elementId);
 	}
 }
+
+std::string FFElement::getComputedStyle(const char* style)
+{
+	std::string value;
+	if ( AfroditaHandler::handler.getComputedStyleHandler != NULL)
+	{
+		const char *v  = AfroditaHandler::handler.getComputedStyleHandler(docId, elementId, style);
+		if (v != NULL)
+			value = v;
+	}
+	return value;
+}
+
 
 std::string FFElement::toString() {
 	char ach[100];

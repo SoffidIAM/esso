@@ -127,6 +127,21 @@ AbstractWebElement *ChromeElement::getParent()
 		return NULL;
 }
 
+AbstractWebElement *ChromeElement::getOffsetParent()
+{
+	bool error;
+	const char * msg [] = {"action","getOffsetParent", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), NULL};
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL && ! error)
+	{
+		ChromeElement* result = new ChromeElement(app, response->value.c_str());
+		delete response;
+		return result;
+	}
+	else
+		return NULL;
+}
 
 
 void ChromeElement::setAttribute(const char *attribute, const char*value)
@@ -351,6 +366,20 @@ void ChromeElement::setProperty(const char* property, const char* value) {
 	{
 		delete response;
 	}
+}
+
+std::string ChromeElement::getComputedStyle(const char* style) {
+	std::string value;
+	const char * msg [] = {"action","getComputedStyle", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), "style", style, NULL};
+	bool error;
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL && ! error)
+	{
+		value = response->value;
+		delete response;
+	}
+	return value;
 }
 
 }

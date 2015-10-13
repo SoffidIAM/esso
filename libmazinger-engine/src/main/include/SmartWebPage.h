@@ -33,6 +33,7 @@ public:
 		this->account = other.account;
 		this->system = other.system;
 		this->friendlyName = other.friendlyName;
+		this->id = other.id;
 		return *this;
 	}
 };

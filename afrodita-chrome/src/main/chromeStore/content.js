@@ -170,6 +170,19 @@ function soffidLoadProcedure () {
 			    	else
 			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId});
 			    }
+			    else if (request.action == "getComputedStyle")
+			    {
+			    	var elementId = request.element;
+			    	var element = cachedElements[elementId];
+			    	if (typeof element != 'undefined')
+			    	{
+			    		var s = window.getComputedStyle(element,null);
+			    		port.postMessage({response: s[request.style], 
+			    			requestId: request.requestId, pageId: request.pageId});
+			    	}
+			    	else
+			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId});
+			    }
 			    else if (request.action == "getTagName")
 			    {
 			    	var elementId = request.element;
@@ -235,6 +248,20 @@ function soffidLoadProcedure () {
 			    	if (typeof element != 'undefined')
 			    	{
 			    		port.postMessage({response: soffidRegisterElement(element.parentNode), 
+							requestId: request.requestId, 
+							pageId: request.pageId});
+			    	}
+			    	else
+			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId});
+			    }
+			    else if (request.action == "getOffsetParent")
+			    {
+			    	var elementId = request.element;
+			    	var element = cachedElements[elementId];
+			    	
+			    	if (typeof element != 'undefined')
+			    	{
+			    		port.postMessage({response: soffidRegisterElement(element.offsetParent), 
 							requestId: request.requestId, 
 							pageId: request.pageId});
 			    	}

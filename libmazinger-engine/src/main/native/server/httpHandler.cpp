@@ -120,7 +120,7 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 		wchar_t *query = wcsstr(path2, L"?");
 		if (query != NULL)
 			*query = L'\0';
-		SeyconCommon::debug("Performing request https://%hs:%d%ls...\n", host, port, path2);
+//		SeyconCommon::debug("Performing request https://%hs:%d%ls...\n", host, port, path2);
 		free (path2);
 
 		/*	WinHttpSetOption ( hSession, WINHTTP_OPTION_CLIENT_CERT_CONTEXT,
@@ -535,13 +535,12 @@ time_t SeyconService::lastError = 0;
 
 SeyconService::SeyconService() {
 #ifdef WIN32
-	if (pSeyconRootCert == NULL)
-	{
+	if (pSeyconRootCert == NULL) {
 		std::string fileName;
 		SeyconCommon::readProperty ("CertificateFile", fileName);
 		if (fileName.size () == 0)
 			return;
-
+	
 		int allocated = 0;
 		BYTE *buffer = NULL;
 		int size = 0;

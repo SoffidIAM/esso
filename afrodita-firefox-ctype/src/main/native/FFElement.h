@@ -17,6 +17,7 @@ class FFElement: public AbstractWebElement {
 public:
 	FFElement(long docId, long elementId);
 	virtual void getChildren (std::vector<AbstractWebElement*> &children);
+	virtual AbstractWebElement* getOffsetParent();
 	virtual AbstractWebElement* getParent();
 	virtual AbstractWebElement* getPreviousSibling();
 	virtual AbstractWebElement* getNextSibling() ;
@@ -41,6 +42,7 @@ public:
 	virtual bool equals (AbstractWebElement *other);
 	virtual void setTextContent (const char *text);
 	virtual std::string toString ();
+	virtual std::string getComputedStyle(const char* style) ;
 private:
 	long docId;
 	long elementId;

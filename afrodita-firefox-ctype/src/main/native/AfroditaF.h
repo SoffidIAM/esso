@@ -35,9 +35,12 @@ typedef const long *(*GetChildrenHandler) (long  docid, long elementid);
 typedef const char *(*GetTagNameHandler) (long  docid, long elementid);
 typedef void (*SetPropertyHandler) (long  docid, long elementid, const char* atribute, const char *value);
 typedef void (*SetAttributeHandler) (long  docid, long elementid, const char* atribute, const char *value);
+typedef long (*GetOffsetParentHandler) (long  docid, long elementid);
 typedef long (*GetParentHandler) (long  docid, long elementid);
 typedef long (*GetPreviousSiblingHandler) (long  docid, long elementid);
 typedef long (*GetNextSiblingHandler) (long  docid, long elementid);
+
+typedef const char* (*GetComputedStyleHandler) (long  docid, long elementid, const char *style);
 
 typedef long (*AlertHandler) (long  docid, const char *msg);
 
@@ -78,12 +81,14 @@ public:
 	RemoveAttributeHandler removeAttributeHandler;
 	RemoveChildHandler removeChildHandler;
 	GetParentHandler getParentHandler;
+	GetOffsetParentHandler getOffsetParentHandler;
 	GetPreviousSiblingHandler getPreviousSiblingHandler;
 	GetNextSiblingHandler getNextSiblingHandler;
 	GetChildrenHandler getChildrenHandler;
 	GetTagNameHandler getTagNameHandler;
 
 	SetTextContentHandler setTextContentHandler;
+	GetComputedStyleHandler getComputedStyleHandler;
 
 	ClickHandler clickHandler;
 	FocusHandler focusHandler;

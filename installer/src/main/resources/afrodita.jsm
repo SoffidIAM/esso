@@ -324,6 +324,11 @@ var AfroditaExtension = {
 			   var el = AfroditaExtension.getElement(docid, elementid);    
 			   return AfroditaExtension.registerElement(docid, el.parentNode);
 		       } );
+		AfroditaExtension.setHandler ("GetOffsetParent", ctypes.long, [ctypes.long, ctypes.long],
+		       function (docid, elementid, atr, v) {
+			   var el = AfroditaExtension.getElement(docid, elementid);    
+			   return AfroditaExtension.registerElement(docid, el.offsetParent);
+		       } );
 		AfroditaExtension.setHandler ("GetPreviousSibling", ctypes.long, [ctypes.long, ctypes.long],
 		       function (docid, elementid, atr, v) {
 			  var el = AfroditaExtension.getElement(docid, elementid);    
@@ -393,6 +398,14 @@ var AfroditaExtension = {
 				  var el = AfroditaExtension.getElement(docid, elementid);    
 				  var txt = txt.readString();
 				  el.textContent=txt;
+		       } );
+		AfroditaExtension.setHandler ("GetComputedStyle", ctypes.char.ptr, [ctypes.long, ctypes.long, ctypes.char.ptr],
+		       function (docid, elementid, txt) {
+				  var el = AfroditaExtension.getElement(docid, elementid);
+				  var w = AfroditaExtension.getWindow(docid);    
+				  var n = txt.readString();
+				  var p = w.getComputedStyle (el, null)[n];
+				  return AfroditaExtension.createStringResult(docid, p);
 		       } );
       } else {
           AfroditaExtension.newInterface = false;

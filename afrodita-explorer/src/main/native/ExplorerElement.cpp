@@ -173,6 +173,8 @@ static void setStyleAttribute (IDispatch *object, const char *szStyle)
 	setDispatchProperty(v.pdispVal, "cssText", v2);
 	VariantClear (&v2);
 
+	v.pdispVal->Release();
+
 	VariantClear(&v);
 }
 
@@ -207,6 +209,7 @@ static void getStyleAttribute (IDispatch *object, std::string &style)
 	}
 
 
+	v.pdispVal->Release();
 	VariantClear(&v);
 }
 
@@ -263,6 +266,23 @@ AbstractWebElement *ExplorerElement::getParent()
 	return parent;
 }
 
+AbstractWebElement *ExplorerElement::getOffsetParent()
+{
+	IHTMLElement *e;
+	HRESULT hr = m_pElement->QueryInterface(IID_IHTMLElement, reinterpret_cast<void**>(&e));
+	ExplorerElement *parent = NULL;
+	if (!FAILED(hr))
+	{
+		IHTMLElement *nativeParent;
+		hr = e->get_offsetParent(&nativeParent);
+		if (nativeParent != NULL) {
+			parent = new ExplorerElement(nativeParent, m_pApp);
+			nativeParent->Release();
+		}
+		e->Release();
+	}
+	return parent;
+}
 
 
 void ExplorerElement::getAttribute(const char *attribute, std::string & value)
@@ -584,3 +604,71 @@ void ExplorerElement::setProperty(const char* property, const char* value) {
 	SysFreeString(bstr);
 }
 
+
+// MIDL_INTERFACE("305104b7-98b5-11cf-bb82-00aa00bdce0b")
+static IID local_IID_IHTMLWindow7 = { 0x305104b7, 0x98b5, 0x11cf, {0xbb, 0x82, 0x00, 0xaa ,0x00, 0xbd, 0xce, 0x0b}};
+
+std::string ExplorerElement::getComputedStyle(const char* style)
+{
+	std::string value;
+
+//	MZNSendDebugMessageA("Getting style property %s", style);
+
+	// pDoc = element.document
+	IHTMLDocument2 *pDoc = m_pApp->getHTMLDocument2();
+	if (pDoc != NULL)
+	{
+//		MZNSendDebugMessageA("Got pDoc");
+		IHTMLWindow2 *w = NULL;
+		// w = pDoc.parentWindow
+		HRESULT hr = pDoc->get_parentWindow(&w);
+		if (! FAILED (hr))
+		{
+//			MZNSendDebugMessageA("Got w");
+			IHTMLWindow7 *w7 = NULL;
+			w->QueryInterface(local_IID_IHTMLWindow7, reinterpret_cast<void**>(&w7));
+			if (FAILED(hr))
+			{
+				MZNSendDebugMessageA("Cannot get w7");
+			}
+			else
+			{
+//				MZNSendDebugMessageA("Got w7");
+				IHTMLDOMNode *node;
+				HRESULT hr = m_pElement->QueryInterface(IID_IHTMLDOMNode, reinterpret_cast<void**>(&node));
+				if (FAILED(hr))
+					MZNSendDebugMessageA("Cannot cast to htmldomnode");
+				else {
+//					MZNSendDebugMessageA("Got htmldomnode");
+					IHTMLCSSStyleDeclaration *pComputedStyle;
+					hr = w7->getComputedStyle(node, NULL, &pComputedStyle);
+					if ( FAILED(hr))
+					{
+						MZNSendDebugMessage("Cannot get computedStyle");
+					} else {
+//						MZNSendDebugMessageA("Got computedstyle");
+						BSTR bstr = Utils::str2bstr(style);
+						BSTR bstr2 = NULL;
+						hr = pComputedStyle->getPropertyValue(bstr, &bstr2);
+						if (FAILED(hr))
+							MZNSendDebugMessage("Cannot get property on computedStyle %s", style);
+						else
+						{
+//							MZNSendDebugMessage("Got property %s=[%ls]", style, bstr2);
+							Utils::bstr2str(value, bstr2);
+							if (bstr2 != NULL)
+								SysFreeString(bstr2);
+						}
+						SysFreeString(bstr);
+						pComputedStyle -> Release();
+					}
+					node->Release();
+				}
+				w7->Release();
+			}
+			w->Release();
+		}
+	}
+
+	return value;
+}
