@@ -21,17 +21,27 @@
 #include <MZNcompat.h>
 #include <MazingerInternal.h>
 #include <ScriptDialog.h>
+#include <MazingerEnv.h>
 
 void SeyconSession::parseAndStoreSecrets (SeyconResponse *resp)
 {
-	wchar_t wchComposedSecrets[MAX_CHALLENGE];
-	int last = 0;
+	wchar_t *wchComposedSecrets = (wchar_t*) malloc(resp->getSize() * 2);
+	if (wchComposedSecrets == NULL)
+		return;
+	long last = 0;
 	int secretNumber = 1;
 	std::wstring secret;
 	resp->getToken(secretNumber, secret);
 	while (secret.size() > 0)
 	{
 		std::wstring secret2 = SeyconCommon::urlDecode (MZNC_wstrtoutf8(secret.c_str()).c_str());
+		if (last + secret2.size() > SECRETS_BUFFER_SIZE-2)
+		{
+			if (m_dialog != NULL)
+				m_dialog -> notify("Cannot handle so many secrets. Internal buffer size is too small");
+			wchComposedSecrets[last] = wchComposedSecrets[last+1] = L'\0';
+			break;
+		}
 		wcscpy(&wchComposedSecrets[last], secret2.c_str());
 		last += secret2.size() + 1;
 		SeyconCommon::wipe(secret2);
@@ -40,7 +50,8 @@ void SeyconSession::parseAndStoreSecrets (SeyconResponse *resp)
 		resp->getToken(secretNumber, secret);
 	}
 	MZNSetSecrets(MZNC_getUserName(), wchComposedSecrets);
-	memset(wchComposedSecrets, MAX_CHALLENGE * sizeof(wchar_t), 0);
+	memset(wchComposedSecrets, sizeof wchComposedSecrets, 0);
+	free (wchComposedSecrets);
 }
 
 void SeyconSession::startMazinger (SeyconResponse *resp, const char* configFile)
@@ -61,7 +72,6 @@ void SeyconSession::startMazinger (SeyconResponse *resp, const char* configFile)
 		MZNLoadConfiguration(MZNC_getUserName(), NULL);
 	}
 	parseAndStoreSecrets(resp);
-	SeyconCommon::debug("Parsed secrets");
 	MZNStart(MZNC_getUserName());
 	SeyconCommon::debug("Mazinger started");
 	MZNCheckPasswords(MZNC_getUserName());
@@ -202,7 +212,7 @@ ServiceIteratorResult SeyconSession::launchMazinger (const char* wchHostName, in
 		if (status == "OK")
 		{
 			// Generar el archivo de configuración
-			std::string configFile;
+			std::string configFile ("");
 			downloadMazingerConfig(configFile);
 			startMazinger(resp, configFile.c_str());
 			result = SIR_SUCCESS;

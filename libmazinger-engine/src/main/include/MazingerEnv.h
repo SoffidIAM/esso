@@ -18,7 +18,7 @@
 class ConfigReader;
 
 #define SECRET_MAX_SIZE 256
-#define SECRETS_BUFFER_SIZE 128000
+#define SECRETS_BUFFER_SIZE 1280000
 
 typedef
 struct MazingerDataStruct {
