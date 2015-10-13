@@ -351,6 +351,8 @@ void SmartForm::addIcon (InputDescriptor *descriptor)
 		long height = getIntProperty (input, "offsetHeight");
 		long height2 = getIntProperty (input, "clientHeight"); // Without border
 		long width2 = getIntProperty (input, "clientWidth"); // Without border
+		long left = getIntProperty(input, "offsetLeft");
+		long top = getIntProperty (input, "offsetTop");
 		int borderH = (height - height2)/2;
 		int borderW = (width - width2)/2;
 		if (height <= 0) height = 20L;
@@ -362,7 +364,8 @@ void SmartForm::addIcon (InputDescriptor *descriptor)
 			{
 				descriptor->img = img;
 				char achStyle[200];
-				sprintf (achStyle, "margin-left: %ldpx; margin-top: %ldpx; position: absolute; height: %ldpx; width:%ldpx; z-index:+1",
+				sprintf (achStyle, "left:%ldpx; top:%ldpx; margin-left: %ldpx; margin-top: %ldpx; position: absolute; height: %ldpx; width:%ldpx; z-index:+1",
+						(long) left, (long) top,
 						(long) (width-height2-4L-borderW), 1L + borderH, (long) height2 - 2L, (long) height2 - 2L);
 				img->setAttribute("style", achStyle);
 				char ach[50];
@@ -1112,7 +1115,7 @@ void SmartForm::onBeforeUnload ()
 {
 }
 
-static const char *STYLE_MASTER = "z-index: 10000; text-align:left; border: solid white 2px; display: inline-block; margin-left:%ldpx; margin-top: %ldpx; position: absolute; min-width: 200px; "
+static const char *STYLE_MASTER = "z-index: 10000; text-align:left; border: solid white 2px; display: inline-block; left:%ldpx; top: %ldpx; position: absolute; min-width: 200px; "
 		"box-shadow: 10px 10px 4px #888888; background-color: white; ";
 static const char *STYLE_MODAL = "position: fixed;"
 	   	   "top:0; right: 0 ; bottom: 0; left:0;"
@@ -1226,10 +1229,12 @@ void SmartForm::createModal(AbstractWebElement *img)
 		masterDiv->setAttribute("_soffid_element", "true");
 		long height = getIntProperty (input, "offsetHeight");
 		long width = getIntProperty (input, "offsetWidth");
+		long left = getIntProperty (input, "offsetLeft");
+		long top= getIntProperty (input, "offsetTop");
 
 		masterDiv->setAttribute("_soffid_modal", "true");
 		char ach[1000];
-		sprintf (ach, STYLE_MASTER, width-200+2, height);
+		sprintf (ach, STYLE_MASTER, left+width-200+2, top+height);
 		masterDiv->setAttribute("style", ach);
 		masterDiv->setAttribute("id", id.c_str());
 		parent->insertBefore(masterDiv, img);
@@ -1321,10 +1326,12 @@ void SmartForm::createGenerateModal(AbstractWebElement *img)
 		masterDiv->setAttribute("_soffid_element", "true");
 		long height = getIntProperty (input, "offsetHeight");
 		long width = getIntProperty (input, "offsetWidth");
+		long left = getIntProperty (input, "offsetLeft");
+		long top= getIntProperty (input, "offsetTop");
 
 		masterDiv->setAttribute("_soffid_modal", "true");
 		char ach[1000];
-		sprintf (ach, STYLE_MASTER, width-200+2, height);
+		sprintf (ach, STYLE_MASTER, left+width-200+2, top+height);
 		masterDiv->setAttribute("style", ach);
 		masterDiv->setAttribute("id", id.c_str());
 		parent->insertBefore(masterDiv, input);
@@ -1401,10 +1408,12 @@ void SmartForm::createSaveModal(AbstractWebElement *img)
 		masterDiv->setAttribute("_soffid_element", "true");
 		long height = getIntProperty (input, "offsetHeight");
 		long width = getIntProperty (input, "offsetWidth");
+		long left = getIntProperty (input, "offsetLeft");
+		long top= getIntProperty (input, "offsetTop");
 
 		masterDiv->setAttribute("_soffid_modal", "true");
 		char ach[1000];
-		sprintf (ach, STYLE_MASTER, width-200+2, height);
+		sprintf (ach, STYLE_MASTER, left+width-200+2, top+height);
 		masterDiv->setAttribute("style", ach);
 		masterDiv->setAttribute("id", id.c_str());
 		parent->insertBefore(masterDiv, input);
