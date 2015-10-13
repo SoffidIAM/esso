@@ -19,6 +19,7 @@ public:
 	ExplorerElement(IDispatch *pdispElement, ExplorerWebApplication *app);
 	virtual ~ExplorerElement();
 	virtual void getChildren (std::vector<AbstractWebElement*> &children);
+	virtual AbstractWebElement* getOffsetParent();
 	virtual AbstractWebElement* getParent();
 	virtual AbstractWebElement* getPreviousSibling();
 	virtual AbstractWebElement* getNextSibling() ;
@@ -41,6 +42,8 @@ public:
 	virtual void removeAttribute (const char* attribute) ;
 	virtual void removeChild (AbstractWebElement* child) ;
 	virtual void setProperty (const char* property, const char *value);
+	virtual std::string getComputedStyle(const char* style) ;
+
 
 	IDispatch *getIDispatch () { return m_pElement;}
 private:
