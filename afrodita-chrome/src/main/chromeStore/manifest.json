@@ -20,5 +20,5 @@
    "manifest_version": 2,
    "name": "Soffid ESSO v2",
    "permissions": [ "*://*/", "tabs", "nativeMessaging" ],
-   "version": "2.3.2"
+   "version": "2.3.4"
 }

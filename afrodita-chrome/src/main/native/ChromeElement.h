@@ -25,6 +25,7 @@ public:
 	virtual ~ChromeElement();
 	virtual void getChildren (std::vector<AbstractWebElement*> &children);
 	virtual AbstractWebElement* getParent();
+	virtual AbstractWebElement* getOffsetParent();
 	virtual AbstractWebElement* getPreviousSibling();
 	virtual AbstractWebElement* getNextSibling() ;
 	virtual void getTagName (std::string &value);
@@ -46,6 +47,7 @@ public:
 	virtual void removeAttribute (const char* attribute) ;
 	virtual void removeChild (AbstractWebElement* child) ;
 	virtual void setProperty (const char* property, const char *value);
+	virtual std::string getComputedStyle(const char* style) ;
 
 private:
 	ChromeWebApplication *app;
