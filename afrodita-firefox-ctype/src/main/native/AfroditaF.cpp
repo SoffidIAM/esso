@@ -67,6 +67,8 @@ extern "C" void AFRsetHandler (const char *id, void * handler) {
 			AfroditaHandler::handler.setAttributeHandler = (SetAttributeHandler) handler;
 	else if (strcmp (id, "GetParent" ) == 0)
 			AfroditaHandler::handler.getParentHandler = (GetParentHandler) handler;
+	else if (strcmp (id, "GetOffsetParent" ) == 0)
+			AfroditaHandler::handler.getOffsetParentHandler = (GetParentHandler) handler;
 	else if (strcmp (id, "GetChildren" ) == 0)
 			AfroditaHandler::handler.getChildrenHandler = (GetChildrenHandler) handler;
 	else if (strcmp (id, "GetTagName" ) == 0)
@@ -95,6 +97,8 @@ extern "C" void AFRsetHandler (const char *id, void * handler) {
 			AfroditaHandler::handler.alertHandler = (AlertHandler) handler;
 	else if (strcmp (id, "SetTextContent" ) == 0)
 			AfroditaHandler::handler.setTextContentHandler = (SetTextContentHandler) handler;
+	else if (strcmp (id, "GetComputedStyle" ) == 0)
+			AfroditaHandler::handler.getComputedStyleHandler = (GetComputedStyleHandler) handler;
 	else
 	{
 #ifdef WIN32
