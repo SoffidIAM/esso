@@ -1,9 +1,10 @@
 var cachedElements= {};
-var soffidPageId = "";
 var nextElement = 0;
 var timer = undefined;
 
 function soffidRegisterElement(element) {
+	if (element == null)
+		return "";
 	if (typeof (element.__Soffid_Afr_Id) == 'undefined')
 	{
 		element.__Soffid_Afr_Id = ++nextElement;
@@ -25,7 +26,11 @@ function soffidLoadProcedure () {
 			    else if (request.action == "getInfo")
 			    {
 					var pageId = request.pageId;
-					soffidPageId = pageId;
+					var soffidPageId = pageId;
+					window.addEventListener("unload", function () { 
+						port.postMessage ({message: "onUnload", pageId: soffidPageId});
+						port.disconnect();
+					});
 				    port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: pageId});
  				    var observer = new MutationObserver ( function (mutations) {
 					   mutations.forEach (function (mutation) {
@@ -471,16 +476,11 @@ function soffidLoadProcedure () {
 			    	alert ("Unexpected message on page: "+result);
 			    }
 		} catch (error ) {
-	
     		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId,
 				"exception": error.message});
 		}
       }
     );
-	window.addEventListener("unload", function () { 
-//		port.postMessage ({message: "onUnload", pageId: soffidPageId});
-		port.disconnect();
-	});
 };
 
 

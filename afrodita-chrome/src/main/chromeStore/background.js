@@ -7,29 +7,36 @@ var mazingerBridge = {
 	pageId: 0,
 	onConnect: function (port) {
 		  try {
-			  var pageId = mazingerBridge.pageId ++;
-			  mazingerBridge.ports[pageId] = port;
-			  port.onMessage.addListener (mazingerBridge.pageEventReceived);
- 			  port.postMessage({action: "getInfo", pageId: pageId});
-			  port.onDisconnect.addListener ( function (port) {
-				  mazingerBridge.ports[pageId] = undefined;
-				  mazingerBridge.port.postMessage({
-						"pageId": response.pageId,
-						"message": "onUnload"
-					});
+			var console = chrome.extension.getBackgroundPage().console;
+			var pageId = mazingerBridge.pageId ++;
+			console.log("Got new connection from "+pageId);
+			mazingerBridge.ports[pageId] = port;
+			port.onMessage.addListener (mazingerBridge.pageEventReceived);
+ 			port.postMessage({action: "getInfo", pageId: pageId});
+			port.onDisconnect.addListener ( function (port) {
+			mazingerBridge.ports[pageId] = null;
+//			mazingerBridge.port.postMessage({
+//						"pageId": pageId,
+//						"message": "onUnload"
+//					});
 
-			  });
+			});
 		  } catch (e) { 
 		  	alert ("Error on Soffid ESSO extension: "+e+" for "+document.URL);
 		  }
 	},
 	pageEventReceived: function (msg, port) {
+		var console = chrome.extension.getBackgroundPage().console;
 		var pageId = msg.pageId;
+//		console.log("Got message "+msg.requestId+" from "+pageId);
 		if (msg.message == "onUnload")
 		{
 			var p = mazingerBridge.port[pageId];
-			mazingerBridge.ports[pageId] = undefined;
-			p.disconnect ();
+			if (p != null) 
+			{
+				mazingerBridge.ports[pageId] = null;
+				p.disconnect ();
+			}
 		}
 		else
 		{
@@ -44,27 +51,42 @@ var mazingerBridge = {
 			}
 		}
 	},
- 	ssoEventReceived: function (response) {
-		var result = "";
-		for (var key in response) {
-			result = result + key+":"+response[key]+" ";
-		}
-		var pageId = parseInt(response.pageId);
-		port = mazingerBridge.ports[pageId];
-		if (port == undefined) {
-				if ( response.requestId != undefined )
-				{
-					mazingerBridge.port.postMessage({
-						"requestId": response.requestId,
-						"pageId": response.pageId,
-						"message": "response",
-						error: true,
-						"exception": "Page already unloaded"
-					});
-				}
-		} else {
-			port.postMessage(response);
-		}
+ 	ssoEventReceived: function (request) {
+ 		try {
+			var console = chrome.extension.getBackgroundPage().console;
+			var result = "";
+			var pageId = parseInt(request.pageId);
+//			console.log("Got message "+request.requestId+" for "+pageId+"/"+request.pageId);
+			var port = mazingerBridge.ports[pageId];
+			if (port == null) {
+				console.log("Port is closed for "+pageId);
+					if ( request.requestId != null )
+					{
+						console.log("Sending error for "+request.requestId);
+						mazingerBridge.port.postMessage({
+							"response": "error",
+							"requestId": request.requestId,
+							"pageId": request.pageId,
+							"message": "response",
+							error: true,
+							"exception": "Page already unloaded"
+						});
+						console.log("Sent error for "+request.requestId);
+					}
+			} else {
+				port.postMessage(request);
+//				console.log("Forwarded message "+request.requestId+" to "+pageId);
+			}
+ 		} catch (error) {
+			console.log("Error generating message: "+error.message);
+			mazingerBridge.port.postMessage({
+				"requestId": request.requestId,
+				"pageId": request.pageId,
+				"message": "response",
+				"error": true,
+				"exception": error.message
+			});
+ 		}
 	},
 	onDisconnect:  function (port) {
 		// Reconnect on failure

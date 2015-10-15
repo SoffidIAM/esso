@@ -165,7 +165,7 @@ AbstractWebElement *ChromeWebApplication::getElementById(const char *id)
 	const char * msg [] = {"action","getElementById", "pageId", threadStatus->pageId.c_str(), "elementId", id, NULL};
 	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
 
-	if (response != NULL && ! error)
+	if (response != NULL && ! error && response->value.size() > 0)
 	{
 		ChromeElement* result = new ChromeElement(this, response->value.c_str());
 		delete response;
