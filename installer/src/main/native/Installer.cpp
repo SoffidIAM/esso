@@ -560,7 +560,7 @@ void registerChromePlugin()
 				"  \"path\": \"%s\\\\afrodita-chrome.exe\",\n"
 				"  \"type\": \"stdio\",\n"
 				"  \"allowed_origins\": [\n"
-				"    \"chrome-extension://ecdihhgdjciiabklgobilokhejhecjbm/\"\n"
+				"    \"chrome-extension://gacgphonbajokjblndebfhakgcpbemdl/\"\n"
 				"  ]\n"
 				"}\n",
 				dir2.c_str());
@@ -569,9 +569,18 @@ void registerChromePlugin()
 
 	// Register extension
 	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
-			"Software\\Google\\Chrome\\Extensions\\ecdihhgdjciiabklgobilokhejhecjbm",
+			"Software\\Google\\Chrome\\Extensions\\gacgphonbajokjblndebfhakgcpbemdl",
 			"update_url", REG_SZ, (void*) "https://clients2.google.com/service/update2/crx", -1);
 
+
+	HKEY hKey;
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+			"Software\\Google\\Chrome\\Extensions", 0,
+			KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
+	{
+		RegDeleteKey(hKey, "ecdihhgdjciiabklgobilokhejhecjbm");
+		RegCloseKey(hKey);
+	}
 
 }
 
