@@ -22,13 +22,13 @@ ExplorerElement::ExplorerElement(IDispatch *pdispElement, ExplorerWebApplication
 	m_pElement->AddRef();
 	m_pApp = app;
 	app->lock();
-	getAttribute("__Soffid_Afr_id", m_internalId);
+	getProperty("__Soffid_Afr_id", m_internalId);
 	if (m_internalId.empty())
 	{
 		char ach[20];
 		sprintf (ach, "%ld", (long) m_pApp->getNextCounter());
 		m_internalId = ach;
-		setAttribute("__Soffid_Afr_id", ach);
+		setProperty("__Soffid_Afr_id", ach);
 	}
 }
 
@@ -96,24 +96,44 @@ static HRESULT getDispatchProperty (IDispatch *object, const char *property, VAR
 {
 	BSTR bstr = Utils::str2bstr(property);
 	DISPID dispId;
-	HRESULT hr = object->GetIDsOfNames(IID_NULL, &bstr, 1, LOCALE_SYSTEM_DEFAULT, &dispId);
-	if ( !FAILED(hr))
+	IDispatchEx *pDispatchEx;
+	static IID IDispatchEx_CLSID = { 0xa6ef9860, 0xc720, 0x11d0, {0x93, 0x37, 0x00,0xa0,0xc9,0x0d,0xca,0xa9}};
+	HRESULT hr = object->QueryInterface(IDispatchEx_CLSID, reinterpret_cast<void**>(&pDispatchEx)) ;
+	if (! FAILED (hr))
 	{
-		DISPPARAMS dp;
-		dp.cArgs = 0;
-		dp.cNamedArgs = 0;
-		UINT error;
-		EXCEPINFO ei;
-		ZeroMemory (&ei, sizeof ei);
-		hr = object->Invoke(dispId, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_PROPERTYGET, &dp, &value, &ei, &error);
-		if (FAILED(hr))
+		hr = pDispatchEx->GetDispID(bstr, fdexNameEnsure, &dispId);
+		if (FAILED (hr))
 		{
-			MZNSendDebugMessage("Error en %lX en attributes %d", (long) hr,  (int) error);
-			MZNSendDebugMessage("Error code %d ", (int) ei.wCode);
-			MZNSendDebugMessage("Source %ls", ei.bstrSource);
-			MZNSendDebugMessage("Description %ls", ei.bstrDescription);
+			MZNSendDebugMessage("Unable to get property %ls", bstr);
 		}
-		return hr;
+		else
+		{
+			DISPPARAMS dp;
+			dp.cArgs = 0;
+			dp.cNamedArgs = 0;
+			dp.rgvarg = NULL;
+			VARIANT result ;
+			result.vt = VT_NULL;
+			UINT error;
+			EXCEPINFO ei;
+			ZeroMemory (&ei, sizeof ei);
+			hr = pDispatchEx->InvokeEx(dispId, LOCALE_SYSTEM_DEFAULT, DISPATCH_PROPERTYGET, &dp, &value, &ei, NULL);
+
+			if ( FAILED(hr))
+			{
+				MZNSendDebugMessage("Error en InvokeEx");
+				MZNSendDebugMessage("Error en %lX en attributes %d", (long) hr,  (int) error);
+				MZNSendDebugMessage("Error code %d ", (int) ei.wCode);
+				MZNSendDebugMessage("Source %ls", ei.bstrSource);
+				MZNSendDebugMessage("Description %ls", ei.bstrDescription);
+			}
+
+		}
+		pDispatchEx -> Release();
+	}
+	else
+	{
+		MZNSendDebugMessage("Cannot get IDispatchEx");
 	}
 	SysFreeString(bstr);
 	return hr;
@@ -123,21 +143,39 @@ static HRESULT setDispatchProperty (IDispatch *object, const char *property, VAR
 {
 	BSTR bstr = Utils::str2bstr(property);
 	DISPID dispId;
-	HRESULT hr = object->GetIDsOfNames(IID_NULL, &bstr, 1, LOCALE_SYSTEM_DEFAULT, &dispId);
-	if ( !FAILED(hr))
+	IDispatchEx *pDispatchEx;
+	static IID IDispatchEx_CLSID = { 0xa6ef9860, 0xc720, 0x11d0, {0x93, 0x37, 0x00,0xa0,0xc9,0x0d,0xca,0xa9}};
+	HRESULT hr = object->QueryInterface(IDispatchEx_CLSID, reinterpret_cast<void**>(&pDispatchEx)) ;
+	if (! FAILED (hr))
 	{
-		DISPPARAMS dp;
-		dp.cArgs = 1;
-		dp.cNamedArgs = 0;
-		dp.rgvarg = &value;
-		VARIANT result ;
-		result.vt = VT_NULL;
-		UINT error;
-		hr = object->Invoke(dispId, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_PROPERTYPUT, &dp, &value, NULL, &error);
+		hr = pDispatchEx->GetDispID(bstr, fdexNameEnsure, &dispId);
+		if (FAILED (hr))
+		{
+			MZNSendDebugMessage("Unable to create property %ls", bstr);
+		}
+		else
+		{
+			DISPPARAMS dp;
+			dp.cArgs = 1;
+			dp.cNamedArgs = 0;
+			dp.rgvarg = &value;
+			VARIANT result ;
+			result.vt = VT_NULL;
+			UINT error;
+			hr = pDispatchEx->InvokeEx(dispId, LOCALE_SYSTEM_DEFAULT, DISPATCH_PROPERTYPUT, &dp, &result, NULL, NULL);
 
-		return hr;
-	} else {
-		MZNSendDebugMessageA("Property does not exist %s", property);
+			if ( !FAILED(hr))
+			{
+			}
+			else
+				MZNSendDebugMessage("Error en InvokeEx");
+
+		}
+		pDispatchEx -> Release();
+	}
+	else
+	{
+		MZNSendDebugMessage("Cannot get IDispatchEx");
 	}
 	SysFreeString(bstr);
 	return hr;
@@ -366,8 +404,6 @@ void ExplorerElement::getTagName(std::string & value)
 			SysFreeString(bstrTag);
 		}
 		e->Release();
-	} else {
-		MZNSendDebugMessageA("Error getting tag name: %lx", (long) hr);
 	}
 }
 
@@ -382,7 +418,6 @@ AbstractWebElement *ExplorerElement::clone()
 static std::map<WebListener *, CEventListener*> activeListeners;
 
 void ExplorerElement::subscribe(const char* eventName, WebListener* listener) {
-	MZNSendDebugMessage("==========> Subscribing");
 	CEventListener *el = new CEventListener();
 	el->connect(this, eventName, listener);
 	activeListeners[listener] = el;
@@ -541,7 +576,6 @@ bool ExplorerElement::equals(AbstractWebElement* other) {
 	{
 		std::string otherString = otherElement->m_internalId;
 		std::string thisString = m_internalId;
-		MZNSendDebugMessage("Comparing %s == %s", otherString.c_str(), thisString.c_str());
 		return otherString == thisString;
 	}
 }
@@ -612,49 +646,46 @@ std::string ExplorerElement::getComputedStyle(const char* style)
 {
 	std::string value;
 
-//	MZNSendDebugMessageA("Getting style property %s", style);
 
 	// pDoc = element.document
 	IHTMLDocument2 *pDoc = m_pApp->getHTMLDocument2();
 	if (pDoc != NULL)
 	{
-//		MZNSendDebugMessageA("Got pDoc");
 		IHTMLWindow2 *w = NULL;
 		// w = pDoc.parentWindow
 		HRESULT hr = pDoc->get_parentWindow(&w);
 		if (! FAILED (hr))
 		{
-//			MZNSendDebugMessageA("Got w");
 			IHTMLWindow7 *w7 = NULL;
 			w->QueryInterface(local_IID_IHTMLWindow7, reinterpret_cast<void**>(&w7));
 			if (FAILED(hr))
 			{
-				MZNSendDebugMessageA("Cannot get w7");
+//				MZNSendDebugMessageA("Cannot get w7");
 			}
 			else
 			{
-//				MZNSendDebugMessageA("Got w7");
 				IHTMLDOMNode *node;
 				HRESULT hr = m_pElement->QueryInterface(IID_IHTMLDOMNode, reinterpret_cast<void**>(&node));
 				if (FAILED(hr))
-					MZNSendDebugMessageA("Cannot cast to htmldomnode");
+				{
+//					MZNSendDebugMessageA("Cannot cast to htmldomnode");
+				}
 				else {
-//					MZNSendDebugMessageA("Got htmldomnode");
 					IHTMLCSSStyleDeclaration *pComputedStyle;
 					hr = w7->getComputedStyle(node, NULL, &pComputedStyle);
 					if ( FAILED(hr))
 					{
-						MZNSendDebugMessage("Cannot get computedStyle");
+//						MZNSendDebugMessage("Cannot get computedStyle");
 					} else {
-//						MZNSendDebugMessageA("Got computedstyle");
 						BSTR bstr = Utils::str2bstr(style);
 						BSTR bstr2 = NULL;
 						hr = pComputedStyle->getPropertyValue(bstr, &bstr2);
 						if (FAILED(hr))
-							MZNSendDebugMessage("Cannot get property on computedStyle %s", style);
+						{
+//							MZNSendDebugMessage("Cannot get property on computedStyle %s", style);
+						}
 						else
 						{
-//							MZNSendDebugMessage("Got property %s=[%ls]", style, bstr2);
 							Utils::bstr2str(value, bstr2);
 							if (bstr2 != NULL)
 								SysFreeString(bstr2);

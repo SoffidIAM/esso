@@ -16,7 +16,7 @@
 #include "CEventListener.h"
 
 ExplorerWebApplication::~ExplorerWebApplication() {
-	MZNSendDebugMessage("Removing application %p", this);
+//	MZNSendDebugMessage("Removing application %p", this);
 	if (m_pBrowser != NULL)
 		m_pBrowser->Release();
 	if (m_pDispatch != NULL)
@@ -33,7 +33,7 @@ ExplorerWebApplication::~ExplorerWebApplication() {
 
 ExplorerWebApplication::ExplorerWebApplication(IWebBrowser2 *pBrowser, IDispatch *pDispatch, const char *url)
 {
-	MZNSendDebugMessage("Creating application %p", this);
+//	MZNSendDebugMessage("Creating application %p", this);
 	m_counter = 1;
 	if (url != NULL)
 		m_url = url;
@@ -197,10 +197,10 @@ void ExplorerWebApplication::getElementsByTagName(const char*tag, std::vector<Ab
 	IHTMLDocument3 *pDoc = getHTMLDocument3();
 	elements.clear();
 
-	MZNSendDebugMessage ("Ask to look for tag %s", tag);
+//	MZNSendDebugMessage ("Ask to look for tag %s", tag);
 	if (pDoc != NULL)
 	{
-		MZNSendDebugMessage ("Looking for tag %s", tag);
+//		MZNSendDebugMessage ("Looking for tag %s", tag);
 		BSTR bstr = Utils::str2bstr(tag);
 		IHTMLElementCollection *pCol;
 		HRESULT hr = pDoc-> getElementsByTagName(bstr, &pCol);
@@ -401,7 +401,7 @@ AbstractWebElement* ExplorerWebApplication::createElement(const char* tagName) {
 		if ( !FAILED (hr))
 		{
 			result =  new ExplorerElement(element, this);
-			MZNSendDebugMessage("Crated element %s", result->toString().c_str());
+//			MZNSendDebugMessage("Crated element %s", result->toString().c_str());
 		}
 		else
 			result = NULL;

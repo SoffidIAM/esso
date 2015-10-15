@@ -74,7 +74,7 @@ void CEventListener::connect (ExplorerElement *pElement,const char *event, WebLi
 		UINT error;
 		EXCEPINFO ei;
 		ZeroMemory (&ei, sizeof ei);
-		MZNSendDebugMessageA("Invoking %s", "addEventListener");
+//		MZNSendDebugMessageA("Invoking %s", "addEventListener");
 		hr = pElement->getIDispatch()->Invoke(dispId, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &dp, &result, &ei, &error);
 		if (FAILED(hr))
 		{
@@ -85,11 +85,11 @@ void CEventListener::connect (ExplorerElement *pElement,const char *event, WebLi
 		}
 		SysFreeString(va[2].bstrVal);
 	} else {
-		MZNSendDebugMessage("Cannot get addEventListener: %lx", hr);
+//		MZNSendDebugMessage("Cannot get addEventListener: %lx", hr);
 		BSTR bstr = Utils::str2bstr("attachEvent");
 		DISPID dispId = 0;
 		hr = pElement->getIDispatch()->GetIDsOfNames(IID_NULL, &bstr, 1, LOCALE_SYSTEM_DEFAULT, &dispId);
-		MZNSendDebugMessageA("Looking for property %s on %s", "attachEvent", pElement->toString().c_str());
+//		MZNSendDebugMessageA("Looking for property %s on %s", "attachEvent", pElement->toString().c_str());
 		if ( !FAILED(hr))
 		{
 			DISPPARAMS dp;
@@ -108,7 +108,7 @@ void CEventListener::connect (ExplorerElement *pElement,const char *event, WebLi
 			UINT error;
 			EXCEPINFO ei;
 			ZeroMemory (&ei, sizeof ei);
-			MZNSendDebugMessageA("Invoking %s", "attachEvent");
+//			MZNSendDebugMessageA("Invoking %s", "attachEvent");
 			hr = pElement->getIDispatch()->Invoke(dispId, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &dp, &result, &ei, &error);
 			if (FAILED(hr))
 			{
@@ -141,7 +141,7 @@ HRESULT __stdcall CEventListener::QueryInterface(REFIID riid, void **ppObj) {
 		AddRef();
 		return S_OK;
 	} else if (riid == DIID_DWebBrowserEvents2) {
-		MZNSendDebugMessage("Query DIID_DWebBrowserEvents2 interface");
+//		MZNSendDebugMessage("Query DIID_DWebBrowserEvents2 interface");
 		DWebBrowserEvents2 *pDispatch = reinterpret_cast<DWebBrowserEvents2*> (this);
 		*ppObj = static_cast<void*> (pDispatch);
 		AddRef();
@@ -194,7 +194,7 @@ HRESULT __stdcall CEventListener::Invoke(DISPID dispIdMember,REFIID riid,LCID lc
 
 	if(!IsEqualIID(riid,IID_NULL)) return DISP_E_UNKNOWNINTERFACE; // riid should always be IID_NULL
 
-	MZNSendDebugMessage("Invoked %d / %d", (int) lcid, (int) wFlags);
+	MZNSendDebugMessage("Invoked CEventListener %d / %d", (int) lcid, (int) wFlags);
 
 	if (m_pElement != NULL && m_listener != NULL)
 	{
@@ -203,19 +203,27 @@ HRESULT __stdcall CEventListener::Invoke(DISPID dispIdMember,REFIID riid,LCID lc
 		switch (dispIdMember)
 		{
 		case DISPID_HTMLELEMENTEVENTS2_ONCLICK:
+			MZNSendDebugMessage("Invoked click event");
 			if ( m_event != "click") return S_OK;
 			break;
 		case DISPID_HTMLINPUTTEXTELEMENTEVENTS2_ONCHANGE:
+			MZNSendDebugMessage("Invoked input event");
 			if ( m_event != "change") return S_OK;
+			break;
+		case DISPID_HTMLELEMENTEVENTS2_ONFOCUS:
+			MZNSendDebugMessage("Invoked input event");
+			if ( m_event != "focus") return S_OK;
 			break;
 		}
 
 
 		m_listener->onEvent(m_event.c_str(), m_pElement->getApplication(), m_pElement);
 	}
-
-	if (m_pApplication != NULL)
+	else if (m_pApplication != NULL)
 	{
+		std::string url;
+		m_pApplication->getUrl(url);
+		MZNSendDebugMessage("Invoked refresh event %p; %s", m_pApplication, url.c_str());
 		MZNWebMatchRefresh(m_pApplication);
 	}
 	return S_OK;
@@ -230,7 +238,7 @@ void CEventListener::connectRefresh (ExplorerWebApplication *app)
 	va.vt = VT_DISPATCH;
 	va.pdispVal  = this;
 
-	MZNSendDebugMessageA("Installing listener");
+//	MZNSendDebugMessageA("Installing listener");
 
 	IHTMLWindow2 *w = NULL;
 	IHTMLDocument2* pDoc = app->getHTMLDocument2();
@@ -259,7 +267,7 @@ void CEventListener::connectRefresh (ExplorerWebApplication *app)
 
 				if ( !FAILED(hr))
 				{
-					MZNSendDebugMessageA("Success !!");
+//					MZNSendDebugMessageA("Success !!");
 					BSTR b = Utils::str2bstr("window.soffidRefresh();");
 					BSTR b2 = Utils::str2bstr("javascript");
 					VARIANT v;
@@ -278,7 +286,7 @@ void CEventListener::connectRefresh (ExplorerWebApplication *app)
 		}
 		else
 		{
-			MZNSendDebugMessage("Cannot get IDispatchEx");
+//			MZNSendDebugMessage("Cannot get IDispatchEx");
 		}
 		w->Release();
 	}
