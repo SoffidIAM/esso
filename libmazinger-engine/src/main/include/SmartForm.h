@@ -21,6 +21,7 @@ class AbstractWebElement;
 class OnChangeListener;
 class OnClickListener;
 class OnBeforeUnloadListener;
+class OnHiddenElementFocusListener;
 class AccountStruct;
 
 #define SF_STATUS_NEW 0
@@ -85,14 +86,20 @@ protected:
 	OnChangeListener *onChangeListener;
 	OnClickListener *onClickListener;
 	OnBeforeUnloadListener *onBeforeUnloadListener;
+	OnHiddenElementFocusListener *onHiddenElementFocusListener;
 	void releaseElements ();
-	void fetchAttributes (AccountStruct &as);
+	void fetchAttributes (AccountStruct &as, AbstractWebElement *selectedElement);
 	bool addNoDuplicate (AbstractWebElement* input);
 	InputDescriptor* findInputDescriptor (AbstractWebElement *element);
 	bool checkAnyPassword (std::vector<AbstractWebElement*> &elements);
+	void findInputs (AbstractWebApplication* app, AbstractWebElement *element, std::vector<AbstractWebElement*> &inputs,
+			bool first, bool visible, std::string indent);
+	AbstractWebElement* createModalDialog (AbstractWebElement *input);
 
 
 	std::string stylePrefix;
+
+	int currentModalInput;
 
 public:
 	unsigned int numPasswords;
