@@ -14,6 +14,7 @@
 #include "json/JsonMap.h"
 #include "json/JsonVector.h"
 #include "CommunicationManager.h"
+#include <MazingerInternal.h>
 
 namespace mazinger_chrome
 {
@@ -117,7 +118,7 @@ AbstractWebElement *ChromeElement::getParent()
 	const char * msg [] = {"action","getParent", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), NULL};
 	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
 
-	if (response != NULL && ! error)
+	if (response != NULL && ! error && response->value.length() > 0)
 	{
 		ChromeElement* result = new ChromeElement(app, response->value.c_str());
 		delete response;
@@ -133,7 +134,7 @@ AbstractWebElement *ChromeElement::getOffsetParent()
 	const char * msg [] = {"action","getOffsetParent", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), NULL};
 	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
 
-	if (response != NULL && ! error)
+	if (response != NULL && ! error  && response->value.length() > 0)
 	{
 		ChromeElement* result = new ChromeElement(app, response->value.c_str());
 		delete response;
@@ -217,7 +218,7 @@ AbstractWebElement* ChromeElement::getPreviousSibling() {
 	bool error;
 	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
 
-	if (response != NULL && ! error)
+	if (response != NULL && ! error  && response->value.length() > 0)
 	{
 		ChromeElement* result = new ChromeElement(app, response->value.c_str());
 		delete response;
@@ -231,7 +232,7 @@ AbstractWebElement* ChromeElement::getNextSibling() {
 	bool error;
 	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
 
-	if (response != NULL && ! error)
+	if (response != NULL && ! error  && response->value.length() > 0)
 	{
 		ChromeElement* result = new ChromeElement(app, response->value.c_str());
 		delete response;
@@ -370,6 +371,11 @@ void ChromeElement::setProperty(const char* property, const char* value) {
 
 std::string ChromeElement::getComputedStyle(const char* style) {
 	std::string value;
+	std::string tag;
+	getTagName(tag);
+	if (tag.size() == 0)
+		return std::string("");
+
 	const char * msg [] = {"action","getComputedStyle", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), "style", style, NULL};
 	bool error;
 	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
@@ -378,6 +384,10 @@ std::string ChromeElement::getComputedStyle(const char* style) {
 	{
 		value = response->value;
 		delete response;
+	}
+	else
+	{
+		MZNSendDebugMessage("Error on %s: %s", tag.c_str(), toString().c_str());
 	}
 	return value;
 }

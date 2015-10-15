@@ -184,12 +184,16 @@ JsonAbstractObject* CommunicationManager::call(bool &error, const char*messages[
 	JsonAbstractObject *jsonMsg = ts->waitForMessage();
 	if (jsonMsg == NULL)
 	{
-//		MZNSendDebugMessage("ERROR : No response got", pageId.c_str());
+		MZNSendDebugMessage("ERROR : No response got for %s", msg.c_str());
 		error = true;
 		return NULL;
 	}
 
 
+	std::string s;
+	jsonMsg->write(s, 3);
+//	MZNSendDebugMessage("Message      %s", msg.c_str());
+//	MZNSendDebugMessage("Got response %s", s.c_str());
 	JsonMap  *map = dynamic_cast<JsonMap*> (jsonMsg);
 	if (map != NULL)
 	{
@@ -207,8 +211,8 @@ JsonAbstractObject* CommunicationManager::call(bool &error, const char*messages[
 			JsonValue *ex = dynamic_cast<JsonValue*>(map->getObject("exception"));
 			if (ex != NULL)
 			{
-				map->remove("exception");
 				MZNSendDebugMessage("Error got from Chrome port: %s", ex->value.c_str());
+				map->remove("exception");
 				delete ex;
 			}
 			delete jsonMsg;

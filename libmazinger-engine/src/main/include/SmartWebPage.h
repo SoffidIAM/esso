@@ -57,6 +57,7 @@ public:
 	bool updatePassword (AccountStruct &daccount, std::string &password, std::string &errorMsg);
 	void getAccountStruct (const char* id, AccountStruct &as);
 	virtual std::string toString () ;
+	std::string getAccountURL (AccountStruct &account);
 
 private:
 	bool sendSecret (AccountStruct &account, const char* sso, std::string &value, std::string &errorMsg);
@@ -65,6 +66,7 @@ private:
 public:
 	std::string defaultSoffidSystem;
 	std::string accountDomain;
+	std::string url;
 	std::vector<AccountStruct> accounts;
 	bool getAccounts(const char *system, const char *prefix);
 

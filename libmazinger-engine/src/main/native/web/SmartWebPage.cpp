@@ -45,14 +45,17 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 
 	if (app->getDocumentElement() != NULL)
 	{
+		MZNSendDebugMessageA("* Parsing HTML document");
 		if (rootForm->getRootElement() == NULL)
 			rootForm->parse(app, app->getDocumentElement());
 		else
 			rootForm->reparse();
 	}
 
+	int i = 0;
 	for (std::vector<AbstractWebElement*>::iterator it = forms.begin(); it != forms.end(); it++)
 	{
+		MZNSendDebugMessageA("* Parsing HTML form %d", i++);
 		bool found = false;
 		AbstractWebElement *element = *it;
 		for (std::vector<SmartForm*>::iterator it2 = this->forms.begin(); it2 != this->forms.end(); it2++)
@@ -125,7 +128,6 @@ bool SmartWebPage::getAccounts(const char *system, const char *prefix) {
 
 void SmartWebPage::fetchAccounts(AbstractWebApplication *app, const char *systemName) {
 	accounts.clear();
-	std::string url;
 	app->getUrl(url);
 	size_t i = url.find("://");
 	if ( i != std::string::npos)
@@ -191,6 +193,7 @@ void SmartWebPage::fetchAttributes(AbstractWebApplication *app, AccountStruct &a
 	secret += as.system;
 	secret += L".";
 	secret += as.account;
+	secret += L".";
 
 
 	std::map<std::wstring,std::wstring> atts = s.getSecretsByPrefix(secret.c_str());
@@ -198,7 +201,7 @@ void SmartWebPage::fetchAttributes(AbstractWebApplication *app, AccountStruct &a
 	{
 		std::wstring att = it->first;
 		std::wstring value = it->second;
-		if (att != secret + L".Server");
+		if (att != secret + L"Server" && att != secret + L"URL");
 		{
 			size_t i = value.find('=');
 			if ( i != std::string::npos)
@@ -206,9 +209,28 @@ void SmartWebPage::fetchAttributes(AbstractWebApplication *app, AccountStruct &a
 				std::string split1 = MZNC_wstrtostr(SeyconCommon::urlDecode(MZNC_wstrtoutf8(value.substr(0, i).c_str()).c_str()).c_str());
 				std::string split2 = MZNC_wstrtostr(SeyconCommon::urlDecode(MZNC_wstrtoutf8(value.substr(i+1).c_str()).c_str()).c_str());
 				attributes[split1] = split2;
+//				MZNSendDebugMessage("Attribute %s=%s", split1.c_str(),split2.c_str());
 			}
 		}
 	}
+}
+
+std::string SmartWebPage::getAccountURL(AccountStruct &as) {
+	SecretStore s (MZNC_getUserName());
+
+	std::wstring secret = L"sso.";
+	secret += as.system;
+	secret += L".";
+	secret += as.account;
+	secret += L".";
+	secret += L"URL";
+
+
+	wchar_t* secretValue = s.getSecret(secret.c_str());
+	std::string url = MZNC_wstrtoutf8(secretValue);
+	s.freeSecret(secretValue);
+
+	return url;
 }
 
 static std::string storeSecret(AccountStruct &as, const char *tag, const char *value, std::wstring &encodedSecret)
@@ -249,7 +271,7 @@ static std::string storeSecret(AccountStruct &as, const char *tag, const char *v
 			std::string tag2 = MZNC_wstrtostr(sv.substr(0, i).c_str());
 			if (tag2 == encodedTag)
 			{
-				s.putSecret(sv.c_str(), encodedSecret.c_str());
+				s.setSecret(sn.c_str(), encodedSecret.c_str());
 				found = true;
 				break;
 			}
@@ -324,15 +346,21 @@ bool SmartWebPage::sendSecret (AccountStruct &as, const char* tag, std::string &
 
 bool SmartWebPage::updateAttributes (AccountStruct &account, std::map<std::string,std::string> &attributes, std::string &errorMsg)
 {
-	int i = 0;
 	for (std::map<std::string,std::string>::iterator it = attributes.begin(); it != attributes.end(); it++)
 	{
-		char ach[10];
 		std::wstring encodedSecret;
 		std::string attributeId = storeSecret(account, it->first.c_str(), it->second.c_str(), encodedSecret);
 		std::string encodedSecretUtf8 = MZNC_wstrtostr(encodedSecret.c_str());
 		if (! sendSecret(account, attributeId.c_str(), encodedSecretUtf8, errorMsg))
 			return false;
+	}
+	if (getAccountURL(account).size() == 0)
+	{
+		if (! sendSecret(account, "URL", this->url, errorMsg) )
+			return false;
+		SecretStore ss(MZNC_getUserName());
+		ss.setSecret((std::wstring(L"sso.")+account.system+L"."+account.account+L".URL").c_str(),
+				MZNC_utf8towstr(url.c_str()).c_str());
 	}
 	return true;
 }
@@ -402,6 +430,7 @@ bool SmartWebPage::createAccount (const  char *descr, std::string &errorMsg, Acc
 			as.system = MZNC_strtowstr(ssoSystem.c_str());
 			accounts.push_back(as);
 			ok = sendSecret(as, "Server", this->accountDomain, errorMsg);
+			ok = ok | sendSecret(as, "URL", this->url, errorMsg);
 		}
 		delete response;
 	}

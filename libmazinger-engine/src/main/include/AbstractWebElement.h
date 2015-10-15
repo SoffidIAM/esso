@@ -21,6 +21,24 @@ public:
 	AbstractWebElement() {
 
 	}
+
+	bool isVisible()
+	{
+		bool visible;
+		if (getComputedStyle("display")  == "none" || getComputedStyle("visibility")  == "hidden")
+			visible = false;
+		else {
+			AbstractWebElement *parent = getParent();
+			if (parent == NULL)
+				visible = true;
+			else
+			{
+				visible = parent->isVisible();
+				parent->release();
+			}
+		}
+		return visible;
+	}
 protected:
 	virtual ~AbstractWebElement() {
 
