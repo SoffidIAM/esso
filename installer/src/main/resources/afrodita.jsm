@@ -283,7 +283,8 @@ var AfroditaExtension = {
 			     var v = v.readString();
 			     el.setAttribute(atr,v);
 			     if (atr == "value") {
-					var evt  = document.createEvent ("HTMLEvents");
+					var doc = AfroditaExtension.getDocument(docid);    
+					var evt  = doc.createEvent ("HTMLEvents");
 					evt.initEvent ("change", true, true);
 					el.dispatchEvent(evt);
 			     }
@@ -313,7 +314,8 @@ var AfroditaExtension = {
 			     var v = v.readString();
 			     el[atr]=v;
 			     if (atr == "value") {
-					var evt  = document.createEvent ("HTMLEvents");
+					var doc = AfroditaExtension.getDocument(docid);    
+					var evt  = doc.createEvent ("HTMLEvents");
 					evt.initEvent ("change", true, true);
 					el.dispatchEvent(evt);
 			     }
