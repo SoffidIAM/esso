@@ -6,7 +6,7 @@
  */
 
 
-#define MEMORY_TEST
+// #define MEMORY_TEST
 
 #include <LockableObject.h>
 #include <MazingerInternal.h>
