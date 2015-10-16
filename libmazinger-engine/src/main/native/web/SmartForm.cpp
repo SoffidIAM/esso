@@ -1080,6 +1080,14 @@ void SmartForm::onClickAccount(AbstractWebElement* element) {
 
 	page->sanityCheck();
 	element->sanityCheck();
+
+	if (currentModalInput >= 0 && currentModalInput < inputs.size())
+	{
+		InputDescriptor *descriptor = inputs[currentModalInput];
+		if (descriptor != NULL && descriptor->input != NULL)
+			input = descriptor->input;
+	}
+
 	element->getAttribute("_soffid_account", id);
 	page->getAccountStruct(id.c_str(), as);
 
@@ -1156,7 +1164,9 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 //				MZNSendDebugMessageA("Cannot find value for %s", name.c_str());
 			}
 		}
-		else if (descr->type == IT_PASSWORD && e->isVisible())
+		else if (e->isVisible() &&
+					(descr->type == IT_PASSWORD ||
+					 descr->type == IT_NEW_PASSWORD && selectedElement != NULL && e->equals(selectedElement) ))
 		{
 			SecretStore s(MZNC_getUserName());
 			std::wstring secret = L"pass.";
@@ -1178,7 +1188,11 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 					ss.escapeString(MZNC_getCommandLine()).c_str());
 			if (response != NULL)
 				delete response;
-
+			if (descr->type == IT_NEW_PASSWORD)
+			{
+				descr->type = IT_PASSWORD;
+				updateIcon(descr);
+			}
 		}
 	}
 
@@ -1236,7 +1250,7 @@ void SmartForm::onBeforeUnload ()
 
 static const char *STYLE_MASTER = "z-index: 1000000001; text-align:left; border: solid white 2px; "
 		"display: inline-block; left:%ldpx; top: %ldpx; position: fixed; min-width: 200px; "
-		"max-height: 10em; overflow-y: scroll; "
+		"max-height: 10em; overflow-y: auto; "
 		"box-shadow: 10px 10px 4px #888888; background-color: white; "
 		"font-family: Verdana, sans-serif; font-size: 1em; ";
 static const char *STYLE_MODAL = "position: fixed;"
@@ -1462,7 +1476,7 @@ void SmartForm::createGenerateModal(AbstractWebElement *img)
 		if (user == NULL) return;
 
 		user->setAttribute("class", (stylePrefix+ "_header").c_str());
-		user->setTextContent("Security level");
+		user->setTextContent("Generate new password");
 		masterDiv->appendChild(user);
 		user->release();
 		static const char *levels[] = {"high", "medium", "low"} ;
@@ -1474,6 +1488,19 @@ void SmartForm::createGenerateModal(AbstractWebElement *img)
 			user->setAttribute("class", (stylePrefix+ "_selector").c_str());
 			user->setAttribute("_soffid_level", levels[i]);
 			user->setTextContent(levelDescription[i]);
+			masterDiv->appendChild(user);
+			user->subscribe("click", onClickListener);
+			user->release();
+		}
+
+		// ---------------- Save current account
+		if (!currentAccount.id.empty())
+		{
+			user = app->createElement("div");
+			if (user == NULL) return;
+			user->setAttribute("class", (stylePrefix+ "_selector").c_str());
+			user->setAttribute("_soffid_account", currentAccount.id.c_str());
+			user->setTextContent(MZNC_wstrtoutf8( (std::wstring(L"Get password for ")+currentAccount.friendlyName).c_str() ).c_str());
 			masterDiv->appendChild(user);
 			user->subscribe("click", onClickListener);
 			user->release();
