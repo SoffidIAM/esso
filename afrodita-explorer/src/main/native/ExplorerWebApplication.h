@@ -19,6 +19,7 @@ class CEventListener;
 #include <SmartWebPage.h>
 
 class IHTMLElementCollection;
+class IHTMLDocument4;
 
 class ExplorerWebApplication: public AbstractWebApplication {
 public:
@@ -53,6 +54,7 @@ public:
 	IWebBrowser2 *getBrowser() { return m_pBrowser; }
 	long getNextCounter() { return m_counter ++;}
 	IHTMLDocument2 * getHTMLDocument2 ();
+	IHTMLDocument4 * getHTMLDocument4 ();
 	void installIntervalListener ();
 private:
 
@@ -62,6 +64,7 @@ private:
 	IDispatch* m_pDispatch;
 	IHTMLDocument2* m_pHtmlDoc2;
 	IHTMLDocument3* m_pHtmlDoc3;
+	IHTMLDocument4* m_pHtmlDoc4;
     void populateVector(IHTMLElementCollection *pCol, std::vector<AbstractWebElement*> & elements);
 	IDispatch * getIDispatch ();
 	IHTMLDocument3 * getHTMLDocument3 ();

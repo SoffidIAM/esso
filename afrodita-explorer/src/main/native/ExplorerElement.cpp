@@ -636,6 +636,31 @@ void ExplorerElement::setProperty(const char* property, const char* value) {
 	va.bstrVal = Utils::str2bstr(value);
 	setDispatchProperty(m_pElement, property, va);
 	SysFreeString(bstr);
+	if (strcmp (property, "value") == 0)
+	{
+		BSTR eventName = Utils::str2bstr("onchange");
+		IHTMLElement3 *pElement3 = NULL;
+		static IID local_IIDHtmlElement3 = {0x3050f673,0x98b5,0x11cf,{0xbb, 0x82, 0x00, 0xaa, 0x00, 0xbd, 0xce, 0x0b}};
+		HRESULT hr = m_pElement->QueryInterface(local_IIDHtmlElement3, reinterpret_cast<void**>(&pElement3));
+		if (!FAILED(hr))
+		{
+			VARIANT_BOOL cancelled = 0;
+			IHTMLEventObj *pEventObj;
+			hr = m_pApp->getHTMLDocument4()->createEventObject(NULL, &pEventObj);
+			if (! FAILED(hr))
+			{
+				VARIANT_BOOL cancelled = 0;
+				VARIANT v;
+				v.vt = VT_DISPATCH;
+				v.pdispVal = pEventObj;
+				hr = pElement3->fireEvent(eventName, &v, &cancelled);
+				if (!FAILED(hr))
+				pEventObj->Release();
+			}
+			pElement3->Release();
+		}
+		SysFreeString(eventName);
+	}
 }
 
 

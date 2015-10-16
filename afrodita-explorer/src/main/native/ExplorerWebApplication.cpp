@@ -25,6 +25,8 @@ ExplorerWebApplication::~ExplorerWebApplication() {
 		m_pHtmlDoc2->Release();
 	if (m_pHtmlDoc3 != NULL)
 		m_pHtmlDoc3->Release();
+	if (m_pHtmlDoc4 != NULL)
+		m_pHtmlDoc4->Release();
 	if (smartWebPage != NULL)
 		smartWebPage->release();
 	if (pIntervalListener != NULL)
@@ -152,6 +154,20 @@ IHTMLDocument3 * ExplorerWebApplication::getHTMLDocument3 ()
 	if (m_pHtmlDoc3 == NULL)
 		MZNSendDebugMessageA("Unable to get ExplorerWebApplications's IHTMLDocument3");
 	return m_pHtmlDoc3;
+}
+
+IHTMLDocument4 * ExplorerWebApplication::getHTMLDocument4 ()
+{
+	static IID local_IID_IHTMLDocument4 = {0x3050f69a, 0x98b5, 0x11cf, {0xbb, 0x82, 0x00, 0xaa, 0x00, 0xbd, 0xce, 0x0b}};
+
+	IDispatch *pDispatch = getIDispatch();
+	if (m_pHtmlDoc4 == NULL && pDispatch != NULL)
+	{
+		pDispatch->QueryInterface(local_IID_IHTMLDocument4,reinterpret_cast<void**>(&m_pHtmlDoc4));
+	}
+	if (m_pHtmlDoc4 == NULL)
+		MZNSendDebugMessageA("Unable to get ExplorerWebApplications's IHTMLDocument4");
+	return m_pHtmlDoc4;
 }
 
 AbstractWebElement *ExplorerWebApplication::getDocumentElement()

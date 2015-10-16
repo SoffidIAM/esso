@@ -15,6 +15,7 @@
 CEventListener::CEventListener ()
 {
 	m_pElement = NULL;
+	m_listener = NULL;
 	m_pApplication = NULL;
 }
 
@@ -46,7 +47,6 @@ void CEventListener::connect (ExplorerElement *pElement,const char *event, WebLi
 	this -> m_pElement->lock();
 	this -> m_event = event;
 	this -> m_listener = listener;
-
 	listener->lock();
 
 	std::string tagName;
@@ -233,6 +233,7 @@ HRESULT __stdcall CEventListener::Invoke(DISPID dispIdMember,REFIID riid,LCID lc
 void CEventListener::connectRefresh (ExplorerWebApplication *app)
 {
 	m_pApplication = app;
+	m_pApplication -> lock();
 	BSTR bstr = Utils::str2bstr("soffidRefresh");
 	VARIANT va;
 	va.vt = VT_DISPATCH;
