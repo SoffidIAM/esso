@@ -82,6 +82,7 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 
 
 bool SmartWebPage::getAccounts(const char *system, const char *prefix) {
+	MZNSendDebugMessageA("** Fetching accounts for [%s]", system);
 	std::wstring wPrefix;
 	if (prefix != NULL)
 		wPrefix = MZNC_strtowstr(prefix);
@@ -94,7 +95,9 @@ bool SmartWebPage::getAccounts(const char *system, const char *prefix) {
 	std::vector<std::wstring> accountNames = s.getSecrets(secret.c_str());
 
 	if (accountNames.empty())
+	{
 		return false;
+	}
 
 	int prefixLength = strlen (prefix);
 	for (std::vector<std::wstring>::iterator it = accountNames.begin(); it != accountNames.end(); it++)
@@ -119,6 +122,7 @@ bool SmartWebPage::getAccounts(const char *system, const char *prefix) {
 				as.friendlyName = fn;
 			s.freeSecret(fn);
 			accounts.push_back(as);
+			MZNSendDebugMessageA("*** Found account %ls", account.c_str());
 		}
 		if (server != NULL) s.freeSecret(server);
 	}
@@ -127,21 +131,22 @@ bool SmartWebPage::getAccounts(const char *system, const char *prefix) {
 
 
 void SmartWebPage::fetchAccounts(AbstractWebApplication *app, const char *systemName) {
+	MZNSendDebugMessageA("* Fetching accounts for %s", systemName);
 	accounts.clear();
 	app->getUrl(url);
 	size_t i = url.find("://");
 	if ( i != std::string::npos)
 	{
 		std::string host = url.substr(i+3);
+		i = host.find("/");
+		if ( i  != std::string::npos) host = host.substr (0, i);
+		i = host.find(':');
+		if ( i  != std::string::npos) host = host.substr (0, i);
 
 		if (systemName != NULL)
 		{
 			getAccounts(systemName, "");
 		} else {
-			i = host.find(':');
-			if ( i  != std::string::npos) host = host.substr (0, i);
-			i = host.find("/");
-			if ( i  != std::string::npos) host = host.substr (0, i);
 			std::string subhost = host;
 
 
