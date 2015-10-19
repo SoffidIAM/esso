@@ -319,18 +319,18 @@ void SmartForm::updateIcon (InputDescriptor *input)
 			setDisplayStyle(input->img, "none");
 		else
 		{
-			setDisplayStyle(input->img, "inline");
+			setDisplayStyle(input->img, "block");
 			input->img->setAttribute("src", _img_resource_generate);
 		}
 	}
 	else if (input->status == IS_LOCKED)
 	{
-		setDisplayStyle(input->img, "inline");
+		setDisplayStyle(input->img, "block");
 		input->img->setAttribute("src", _img_resource_unlock);
 	}
 	else if (input->status == IS_SELECT)
 	{
-		setDisplayStyle(input->img, "inline");
+		setDisplayStyle(input->img, "block");
 		if (input->type == IT_PASSWORD)
 		{
 			if (status == SF_STATUS_MODIFYING || page->accounts.size() == 0)
@@ -349,7 +349,7 @@ void SmartForm::updateIcon (InputDescriptor *input)
 	}
 	else // if (input->status == IS_MODIFIED)
 	{
-		setDisplayStyle(input->img, "inline");
+		setDisplayStyle(input->img, "block");
 		input->img->setAttribute("src", _img_resource_save);
 	}
 }
@@ -451,12 +451,23 @@ void SmartForm::addIcon (InputDescriptor *descriptor)
 						zIndex ++;
 					}
 				}
-				sprintf (achStyle, "left:%ldpx; top:%ldpx; margin-left: %ldpx; margin-top: %ldpx; "
-						"position: absolute; height: %ldpx; width:%ldpx; "
-						"z-index:%d",
-						(long) left, (long) top,
-						(long) (width-height2-4L-borderW), 1L + borderH, (long) height2 - 2L, (long) height2 - 2L,
-						zIndex);
+				if (input->getComputedStyle("position") == "static" && input->getComputedStyle("float").size() == 0)
+				{
+					sprintf (achStyle, "margin-left: %ldpx; margin-top: %ldpx; "
+							"position: absolute; height: %ldpx; width:%ldpx; "
+							"z-index:%d",
+							(long) (width-height2-4L-borderW), 1L + borderH, (long) height2 - 2L, (long) height2 - 2L,
+							zIndex);
+				}
+				else
+				{
+					sprintf (achStyle, "left:%ldpx; top:%ldpx; margin-left: %ldpx; margin-top: %ldpx; "
+							"position: absolute; height: %ldpx; width:%ldpx; "
+							"z-index:%d",
+							(long) left, (long) top,
+							(long) (width-height2-4L-borderW), 1L + borderH, (long) height2 - 2L, (long) height2 - 2L,
+							zIndex);
+				}
 				img->setAttribute("style", achStyle);
 				char ach[50];
 				sprintf (ach, "%ldpx", height);
@@ -792,7 +803,7 @@ void SmartForm::onChange(AbstractWebElement* element) {
 	element->getProperty("value", value);
 	if (this->status == SF_STATUS_NEW)
 	{
-		if (input->status != IS_EMPTY && !value.empty())
+		if (!value.empty())
 		{
 			changeStatus (SF_STATUS_MODIFYING);
 		}
