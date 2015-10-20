@@ -436,7 +436,18 @@ bool SmartWebPage::createAccount (const  char *descr, std::string &errorMsg, Acc
 			as.system = MZNC_strtowstr(ssoSystem.c_str());
 			accounts.push_back(as);
 			ok = sendSecret(as, "Server", this->accountDomain, errorMsg);
-			ok = ok | sendSecret(as, "URL", this->url, errorMsg);
+			ok = ok && sendSecret(as, "URL", this->url, errorMsg);
+			if (ok)
+			{
+				std::wstring secretName = L"sso.";
+				secretName += as.system;
+				secretName += L".";
+				secretName += as.account;
+				secretName += L".";
+
+				s.setSecret((secretName+L"Server").c_str(), MZNC_utf8towstr(this->accountDomain.c_str()).c_str());
+				s.setSecret((secretName+L"URL").c_str(), MZNC_utf8towstr(this->url.c_str()).c_str());
+			}
 		}
 		delete response;
 	}
