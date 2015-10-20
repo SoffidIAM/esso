@@ -143,6 +143,8 @@ void SmartWebPage::fetchAccounts(AbstractWebApplication *app, const char *system
 		i = host.find(':');
 		if ( i  != std::string::npos) host = host.substr (0, i);
 
+		accountDomain = host;
+
 		if (systemName != NULL)
 		{
 			getAccounts(systemName, "");
@@ -150,7 +152,6 @@ void SmartWebPage::fetchAccounts(AbstractWebApplication *app, const char *system
 			std::string subhost = host;
 
 
-			accountDomain = subhost;
 
 			do
 			{
