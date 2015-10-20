@@ -5,11 +5,11 @@
 	<artifactId>libpcreposix</artifactId>
 	<packaging>a</packaging>
 	<name>Avaluació d'expressions regulars (Linux 64 bits)</name>
-	<version>1.6.0-beta-8</version>
+	<version>1.6.0-SNAPSHOT</version>
 	<parent>
 		<groupId>com.soffid.iam.esso.pom</groupId>
 		<artifactId>libpcreposix</artifactId>
-		<version>1.6.0-beta-8</version>
+		<version>1.6.0-SNAPSHOT</version>
 	</parent>
 	<issueManagement>
 		<system>RTIR</system>
