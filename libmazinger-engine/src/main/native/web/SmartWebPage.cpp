@@ -450,8 +450,14 @@ bool SmartWebPage::createAccount (const  char *descr, std::string &errorMsg, Acc
 
 				secretName = L"account.";
 				secretName += as.system;
-
 				s.putSecret(secretName.c_str(), as.account.c_str());
+
+				secretName = L"accdesc.";
+				secretName += as.system;
+				secretName += L".";
+				secretName += as.account;
+				s.putSecret(secretName.c_str(), as.friendlyName.c_str());
+
 				this->accounts.push_back(as);
 			}
 		}
