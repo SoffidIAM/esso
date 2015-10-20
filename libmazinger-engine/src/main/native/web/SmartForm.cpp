@@ -1366,6 +1366,20 @@ AbstractWebElement* SmartForm::createModalDialog (AbstractWebElement *input)
 	long left = 0, top = 0, width = 0, height = 0, width2 = 0, height2 = 0;
 	getPosition (input, left, top, width, height, width2, height2, true);
 
+	AbstractWebElement *html = app->getDocumentElement();
+	left -= getIntProperty(html, "scrollLeft");
+	top -= getIntProperty(html, "scrollTop");
+	html->release();
+	std::vector<AbstractWebElement *> bodies;
+	app->getElementsByTagName("body", bodies);
+	for (std::vector<AbstractWebElement*>::iterator it = bodies.begin(); it != bodies.end(); it++)
+	{
+		AbstractWebElement *body = *it;
+		left -= getIntProperty(body, "scrollLeft");
+		top -= getIntProperty(body, "scrollTop");
+		body->release();
+	}
+
 	sprintf (ach, STYLE_MASTER, left+width-200+2, top+height);
 	masterDiv->setAttribute("style", ach);
 	masterDiv->setAttribute("id", id.c_str());
@@ -1390,7 +1404,7 @@ AbstractWebElement* SmartForm::createModalDialog (AbstractWebElement *input)
 	}
 
 	currentModalInput = 0;
-	for (int i = 0; i < inputs.size(); i++)
+	for (unsigned int i = 0; i < inputs.size(); i++)
 	{
 		if (inputs[i]->img != NULL && inputs[i]->img->equals(input) ||
 				inputs[i]->input != NULL && inputs[i]->input->equals(input))
