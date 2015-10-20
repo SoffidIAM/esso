@@ -447,6 +447,12 @@ bool SmartWebPage::createAccount (const  char *descr, std::string &errorMsg, Acc
 
 				s.setSecret((secretName+L"Server").c_str(), MZNC_utf8towstr(this->accountDomain.c_str()).c_str());
 				s.setSecret((secretName+L"URL").c_str(), MZNC_utf8towstr(this->url.c_str()).c_str());
+
+				std::wstring secretName = L"account.";
+				secretName += as.system;
+
+				s.putSecret(secretName.c_str(), as.account.c_str());
+				this->accounts.push_back(as);
 			}
 		}
 		delete response;
