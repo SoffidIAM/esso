@@ -162,6 +162,7 @@ SmartForm::SmartForm(SmartWebPage *page) {
 	sprintf (ach, "_soffid_%ld_id_", (long) (long long) this);
 	stylePrefix = ach;
 	numPasswords = 0;
+	parsed = false;
 }
 
 SmartForm::~SmartForm() {
@@ -231,6 +232,62 @@ void SmartForm::findInputs (AbstractWebApplication* app, AbstractWebElement *ele
 			child->release();
 		}
 	}
+}
+
+void SmartForm::findRootInputs (AbstractWebApplication* app, std::vector<AbstractWebElement*> &inputs)
+{
+	std::vector<AbstractWebElement*> inputs2;
+	MZNSendDebugMessageA("Got %d elements", inputs2.size());
+	app->sanityCheck();
+	MZNSendDebugMessageA("APP = %s", app->toString().c_str());
+	app->getElementsByTagName("input", inputs2 );
+	MZNSendDebugMessageA("Got %d elements", inputs2.size());
+	for (std::vector<AbstractWebElement*>::iterator it = inputs2.begin () ; it!= inputs2.end(); it++)
+	{
+		AbstractWebElement *element = *it;
+		bool visible = true;
+		bool omit = false;
+		AbstractWebElement *loopElement = element;
+		loopElement->lock();
+		do
+		{
+			std::string tagname;
+			loopElement->getTagName(tagname);
+			if (strcasecmp (tagname.c_str(), "form") == 0)
+			{
+				omit = true;
+				loopElement->release();
+				break;
+			}
+			else if (loopElement->getComputedStyle("display")  == "none" ||
+					loopElement->getComputedStyle("visibility")  == "hidden")
+			{
+				visible = false;
+			}
+			AbstractWebElement *parent = loopElement->getParent();
+			loopElement->release();
+			loopElement = parent;
+		} while (loopElement != NULL);
+		if (omit)
+		{
+			element->release();
+		}
+		else
+		{
+			inputs.push_back(element);
+			if( ! visible)
+			{
+				std::string soft;
+				element->getProperty("soffidOnFocusTrigger", soft);
+				if (soft != "true")
+				{
+					element->subscribe("focus", onHiddenElementFocusListener);
+					element->setProperty("soffidOnFocusTrigger", "true");
+				}
+			}
+		}
+	}
+	inputs2.clear();
 }
 
 static void setDisplayStyle (AbstractWebElement *element, const char* display)
@@ -677,14 +734,24 @@ void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot)
 	if (this->element != NULL)
 		this->element->release();
 	this->element = formRoot;
-//	MZNSendDebugMessage(formRoot->toString().c_str());
-	this->element -> lock();
+	if (this->element != NULL)
+		this->element -> lock();
 	if (this->app != NULL)
 		this->app->release();
 	this->app = app;
 	this->app->lock();
 
-	findInputs(app, formRoot, elements, true, true, std::string());
+	if (formRoot == NULL)
+	{
+		MZNSendDebugMessage("Parsing formless inputs");
+		findRootInputs(app, elements);
+		MZNSendDebugMessage("Parsed formless inputs");
+	}
+	else
+	{
+		MZNSendDebugMessage("Parsing inputs on %s", formRoot->toString().c_str());
+		findInputs(app, formRoot, elements, true, formRoot->isVisible(), std::string());
+	}
 
 	releaseElements();
 
@@ -703,6 +770,8 @@ void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot)
 	if (! checkAnyPassword(elements))
 		return;
 
+
+	parsed = true;
 
 	for (std::vector<AbstractWebElement*>::iterator it = elements.begin(); it != elements.end(); it++)
 	{
@@ -740,8 +809,13 @@ void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot)
 
 void SmartForm::reparse() {
 	std::vector<AbstractWebElement*> elements;
-	findInputs(app, this->element, elements, true, true, std::string());
-	bool newPassword = false;
+	if (this->element == NULL)
+	{
+		MZNSendDebugMessageA("Reparsing root element ...");
+		findRootInputs(app, elements);
+	}
+	else
+		findInputs(app, this->element, elements, true, true, std::string());
 	bool newItem = false;
 
 	if (! checkAnyPassword(elements))
@@ -1291,7 +1365,6 @@ static const char *STYLE_HEADER= "_header {"
 
 void SmartForm::createStyle () {
 
-	AbstractWebApplication * app = element->getApplication();
 	if( app == NULL)
 		return;
 
@@ -1342,7 +1415,6 @@ void SmartForm::createStyle () {
 			head->release();
 	}
 	if (style != NULL) style-> release();
-	if (app != NULL) app->release();
 }
 
 
@@ -1613,6 +1685,8 @@ std::string SmartForm::toString() {
 	{
 		element->sanityCheck();
 		s += element -> toString();
+	} else {
+		s += "Root";
 	}
 	return s;
 }
