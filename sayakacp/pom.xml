@@ -4,11 +4,11 @@
 	<artifactId>sayaka-cp</artifactId>
 	<packaging>pom</packaging>
 	<name>Dll per a login amb targeta a windows vista i superior</name>
-	<version>1.6.0-SNAPSHOT</version>
+	<version>1.6.0-enterprise-beta-10</version>
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.6.0-SNAPSHOT</version>
+		<version>1.6.0-enterprise-beta-10</version>
 	</parent>
 	<issueManagement>
 		<system>RTIR</system>

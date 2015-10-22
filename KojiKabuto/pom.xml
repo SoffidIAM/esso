@@ -4,11 +4,11 @@
 	<artifactId>KojiKabuto</artifactId>
 	<packaging>pom</packaging>
 	<name>Executable per a la configuració de la sessió</name>
-	<version>1.6.0-SNAPSHOT</version>
+	<version>1.6.0-enterprise-beta-10</version>
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.6.0-SNAPSHOT</version>
+		<version>1.6.0-enterprise-beta-10</version>
 	</parent>
 	<issueManagement>
 		<system>RTIR</system>
