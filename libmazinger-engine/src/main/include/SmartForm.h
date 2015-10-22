@@ -65,11 +65,13 @@ public:
 	void createGenerateModal(AbstractWebElement *img);
 	void createSaveModal(AbstractWebElement *img);
 	void onBeforeUnload ();
+	bool isParsed () { return parsed; }
 	AbstractWebElement *getRootElement () {return element;}
 	virtual std::string toString ();
 	AccountStruct currentAccount;
 
 protected:
+	bool parsed;
 	void createStyle ();
 	void save ();
 	bool detectAttributeChange ();
@@ -94,6 +96,7 @@ protected:
 	bool checkAnyPassword (std::vector<AbstractWebElement*> &elements);
 	void findInputs (AbstractWebApplication* app, AbstractWebElement *element, std::vector<AbstractWebElement*> &inputs,
 			bool first, bool visible, std::string indent);
+	void findRootInputs (AbstractWebApplication* app, std::vector<AbstractWebElement*> &inputs);
 	AbstractWebElement* createModalDialog (AbstractWebElement *input);
 
 

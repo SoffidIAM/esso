@@ -38,26 +38,29 @@ SmartWebPage::~SmartWebPage() {
 
 
 void SmartWebPage::parse(AbstractWebApplication* app) {
-
+	std::vector<AbstractWebElement*> inputs2;
 	std::vector<AbstractWebElement*> forms;
 
-	app->getForms(forms);
+	MZNSendDebugMessageA("* Searching inputs");
+	app->getElementsByTagName("input", inputs2 );
+	MZNSendDebugMessageA("* Found %d inputs", inputs2.size());
 
-	if (app->getDocumentElement() != NULL)
-	{
-		MZNSendDebugMessageA("* Parsing HTML document");
-		if (rootForm->getRootElement() == NULL)
-			rootForm->parse(app, app->getDocumentElement());
-		else
-			rootForm->reparse();
-	}
+
+	MZNSendDebugMessageA("* Parsing HTML document");
+	if (! rootForm->isParsed())
+		rootForm->parse(app, NULL);
+	else
+		rootForm->reparse();
+	app->getForms(forms);
 
 	int i = 0;
 	for (std::vector<AbstractWebElement*>::iterator it = forms.begin(); it != forms.end(); it++)
 	{
-		MZNSendDebugMessageA("* Parsing HTML form %d", i++);
-		bool found = false;
 		AbstractWebElement *element = *it;
+		std::string action;
+		element->getAttribute("action", action);
+		MZNSendDebugMessageA("* Parsing HTML form %d: %s", i++, action.c_str());
+		bool found = false;
 		for (std::vector<SmartForm*>::iterator it2 = this->forms.begin(); it2 != this->forms.end(); it2++)
 		{
 			SmartForm *form2 = *it2;
