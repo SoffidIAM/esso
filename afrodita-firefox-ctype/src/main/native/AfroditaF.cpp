@@ -136,13 +136,16 @@ extern "C" void AFRevaluate (long  id) {
 }
 
 extern "C" void AFRdismiss (long  id) {
-
+	MZNSendDebugMessageA("<<<<<<<<<<<<<<<<<<<< Cleaning page %ld >>>>>>>>>>>>>>>>>>>>>>>>", id);
 	std::map<long,SmartWebPage*>::iterator it = status.find(id);
 	if (it != status.end())
 	{
 		it->second->release();
 		status.erase(it);
 	}
+	FFWebApplication *app = new FFWebApplication(id);
+	EventHandler::getInstance()->unregisterAllEvents(app);
+	app->release();
 }
 
 

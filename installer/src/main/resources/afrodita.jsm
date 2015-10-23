@@ -1,12 +1,5 @@
 var EXPORTED_SYMBOLS = ["AfroditaExtension"];  
 
-function logea (doc, msg)
-{
-
-       doc.documentElement.appendChild (doc.createTextNode(msg));
-};
-
-
 var AfroditaExtension = {
   docids: new Array(),
   documents: new Array(),
@@ -128,8 +121,8 @@ var AfroditaExtension = {
      });
   },
   onPageUnload: function(docid) {
-       AfroditaExtension.documents[docid] = null;
-       // AfroditaExtension.Afr
+  	 AfroditaExtension.AfrDismiss (docid);
+     AfroditaExtension.documents[docid] = null;
   },
 
   checkInit: function () { 
@@ -164,6 +157,7 @@ var AfroditaExtension = {
 		AfroditaExtension.AfrSetHandler_ = AfroditaExtension.lib . declare ("AFRsetHandler", ctypes.default_abi, ctypes.void_t, ctypes.char.ptr, ctypes.void_t.ptr);
 		AfroditaExtension.AfrEvaluate = AfroditaExtension.lib . declare ("AFRevaluate", ctypes.default_abi, ctypes.void_t, ctypes.long);
 		AfroditaExtension.AfrEvent = AfroditaExtension.lib . declare ("AFRevent", ctypes.default_abi, ctypes.void_t, ctypes.long);
+		AfroditaExtension.AfrDismiss = AfroditaExtension.lib . declare ("AFRdismiss", ctypes.default_abi, ctypes.void_t, ctypes.long);
 	
 		// Crear handlers
 		AfroditaExtension.setHandler ("GetUrl", ctypes.char.ptr, [ctypes.long],
