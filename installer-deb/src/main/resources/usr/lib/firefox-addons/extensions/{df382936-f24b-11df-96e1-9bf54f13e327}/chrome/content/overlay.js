@@ -1,4 +1,4 @@
-Components.utils.import("resource://MazingerExtension/afrodita.jsm");  
+Components.utils.import("resource://SoffidESSOExtension/afrodita.jsm");  
    
 window.addEventListener("load", function() {
     // initialization code

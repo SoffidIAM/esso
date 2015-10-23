@@ -86,13 +86,7 @@ static char *getDefaultDesktop ()
 }
 
 MazingerEnv* MazingerEnv::getDefaulEnv() {
-	if (pDefaultEnv == NULL) {
-		pDefaultEnv = new MazingerEnv;
-		pDefaultEnv->user.assign (MZNC_getUserName());
-		pDefaultEnv->desktop = getDefaultDesktop();
-		environments.push_back(pDefaultEnv);
-	}
-	return pDefaultEnv;
+	return getEnv(MZNC_getUserName());
 }
 
 static char currentDesktop[1000] = "";
@@ -101,20 +95,22 @@ MazingerEnv* MazingerEnv::getEnv(const char *user) {
 }
 
 MazingerEnv* MazingerEnv::getEnv(const char *user, const char*desktop) {
-	if ( (user == NULL || strcmp(user, MZNC_getUserName()) == 0) &&
-			(desktop == NULL || strcmp(desktop, getDefaultDesktop()) == 0))
-		return getDefaulEnv();
+	SeyconCommon::debug ("Getting env for %s", user);
 	for (std::vector<MazingerEnv*>::iterator it = environments.begin ();
 			it != environments.end(); it++)
 	{
 		MazingerEnv* env = *it;
 		if (env->user == user && env->desktop == desktop)
+		{
+			SeyconCommon::debug ("Got env %p for %s", env, env->user.c_str());
 			return env;
+		}
 	}
 	MazingerEnv *env = new MazingerEnv;
 	env->user.assign (user);
 	env->desktop = desktop;
 	environments.push_back(env);
+	SeyconCommon::debug ("Got env %p for %s", env, env->user.c_str());
 	return env;
 }
 
@@ -340,6 +336,7 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 		if (shmName.size() == 0) {
 			shmName.assign ("/MazingerData-");
 			shmName.append (user);
+			SeyconCommon::debug ("Setting file name for %p (%s) = %s\n", this, user.c_str(), shmName.c_str());
 		}
 		SeyconCommon::debug ("Opening %s\n", shmName.c_str());
 		shm = shm_open (shmName.c_str(), readOnly ? O_RDONLY : O_RDWR, 0600);

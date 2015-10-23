@@ -515,7 +515,7 @@ void SeyconCommon::debug (const char *szFormat, ...) {
 				tm->tm_mday, tm->tm_mon+1, tm->tm_year+1900, tm->tm_hour, tm->tm_min, tm->tm_sec);
 		va_list v;
 		va_start(v, szFormat);
-		vprintf(szFormat, v);
+		vfprintf(stderr, szFormat, v);
 		va_end(v);
 		if (szFormat[strlen(szFormat)-1] != '\n')
 			fprintf (stderr,"\n");
