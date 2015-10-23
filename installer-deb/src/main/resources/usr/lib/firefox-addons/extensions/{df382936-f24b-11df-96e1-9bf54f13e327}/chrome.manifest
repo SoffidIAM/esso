@@ -5,9 +5,7 @@ locale    MazingerExtension   en-US         chrome/locale/en-US/
 
 overlay   chrome://browser/content/browser.xul   chrome://MazingerExtension/content/ff-overlay.xul
 
-resource  MazingerExtension				modules/ 
+resource  SoffidESSOExtension				modules/ 
 
-interfaces components/afrodita-firefox.xpt
-binary-component components/libafroditaff.so
 
 

@@ -1,11 +1,5 @@
 var EXPORTED_SYMBOLS = ["AfroditaExtension"];  
 
-function logea (doc, msg)
-{
-
-       doc.documentElement.appendChild (doc.createTextNode(msg));
-};
-
 
 var AfroditaExtension = {
   docids: new Array(),
@@ -128,8 +122,8 @@ var AfroditaExtension = {
      });
   },
   onPageUnload: function(docid) {
-       AfroditaExtension.documents[docid] = null;
-       // AfroditaExtension.Afr
+  	 AfroditaExtension.AfrDismiss (docid);
+     AfroditaExtension.documents[docid] = null;
   },
 
   checkInit: function () { 
@@ -137,6 +131,7 @@ var AfroditaExtension = {
           return;
 	var c = Components.classes["@caib.es/afroditaf;1"];
 	if (c == null) {          
+	  try {
 	    AfroditaExtension.newInterface = true;
 	    
 	    var os = Components.classes["@mozilla.org/system-info;1"].getService(Components.interfaces.nsIPropertyBag).getProperty("name");
@@ -156,6 +151,8 @@ var AfroditaExtension = {
 		}
 	
 		Components.utils.import("resource://gre/modules/ctypes.jsm");
+		Components.utils.import('resource://gre/modules/devtools/Console.jsm');
+		console.log("path = "+path);
 		Components.utils.import("resource://SoffidESSOExtension/Preferences.jsm");
 		Preferences.defaults.set("signon.rememberSignons", false);
 		// Carregar biblioteca
@@ -164,6 +161,7 @@ var AfroditaExtension = {
 		AfroditaExtension.AfrSetHandler_ = AfroditaExtension.lib . declare ("AFRsetHandler", ctypes.default_abi, ctypes.void_t, ctypes.char.ptr, ctypes.void_t.ptr);
 		AfroditaExtension.AfrEvaluate = AfroditaExtension.lib . declare ("AFRevaluate", ctypes.default_abi, ctypes.void_t, ctypes.long);
 		AfroditaExtension.AfrEvent = AfroditaExtension.lib . declare ("AFRevent", ctypes.default_abi, ctypes.void_t, ctypes.long);
+		AfroditaExtension.AfrDismiss = AfroditaExtension.lib . declare ("AFRdismiss", ctypes.default_abi, ctypes.void_t, ctypes.long);
 	
 		// Crear handlers
 		AfroditaExtension.setHandler ("GetUrl", ctypes.char.ptr, [ctypes.long],
@@ -283,7 +281,8 @@ var AfroditaExtension = {
 			     var v = v.readString();
 			     el.setAttribute(atr,v);
 			     if (atr == "value") {
-					var evt  = document.createEvent ("HTMLEvents");
+					var doc = AfroditaExtension.getDocument(docid);    
+					var evt  = doc.createEvent ("HTMLEvents");
 					evt.initEvent ("change", true, true);
 					el.dispatchEvent(evt);
 			     }
@@ -313,7 +312,8 @@ var AfroditaExtension = {
 			     var v = v.readString();
 			     el[atr]=v;
 			     if (atr == "value") {
-					var evt  = document.createEvent ("HTMLEvents");
+					var doc = AfroditaExtension.getDocument(docid);    
+					var evt  = doc.createEvent ("HTMLEvents");
 					evt.initEvent ("change", true, true);
 					el.dispatchEvent(evt);
 			     }
@@ -323,6 +323,11 @@ var AfroditaExtension = {
 		       function (docid, elementid, atr, v) {
 			   var el = AfroditaExtension.getElement(docid, elementid);    
 			   return AfroditaExtension.registerElement(docid, el.parentNode);
+		       } );
+		AfroditaExtension.setHandler ("GetOffsetParent", ctypes.long, [ctypes.long, ctypes.long],
+		       function (docid, elementid, atr, v) {
+			   var el = AfroditaExtension.getElement(docid, elementid);    
+			   return AfroditaExtension.registerElement(docid, el.offsetParent);
 		       } );
 		AfroditaExtension.setHandler ("GetPreviousSibling", ctypes.long, [ctypes.long, ctypes.long],
 		       function (docid, elementid, atr, v) {
@@ -394,6 +399,17 @@ var AfroditaExtension = {
 				  var txt = txt.readString();
 				  el.textContent=txt;
 		       } );
+		AfroditaExtension.setHandler ("GetComputedStyle", ctypes.char.ptr, [ctypes.long, ctypes.long, ctypes.char.ptr],
+		       function (docid, elementid, txt) {
+				  var el = AfroditaExtension.getElement(docid, elementid);
+				  var w = AfroditaExtension.getWindow(docid);    
+				  var n = txt.readString();
+				  var p = w.getComputedStyle (el, null)[n];
+				  return AfroditaExtension.createStringResult(docid, p);
+		       } );
+	} catch (e) {
+		console.log("Error in afrodita startup: "+e.message);
+	}
       } else {
           AfroditaExtension.newInterface = false;
       }

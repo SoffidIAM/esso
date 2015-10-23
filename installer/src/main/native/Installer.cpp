@@ -1932,8 +1932,22 @@ bool extractResource(LPCSTR resource, const char *lpszFileName)
 	}
 }
 
+/**
+ *
+ * @param lpszTargetDir
+ * @param lpszResourceName
+ * @param lpszFileName
+ * @param replaceAction => SOFT_REPLACE tries to delete
+ *                         HARD_REPLACE tries to delete or rename
+ *                         NO_REPLACE never replaces
+ * @return true if the installation succeeds
+ */
+
+int SOFT_REPLACE = 0;
+int HARD_REPLACE = 1;
+int NO_REPLACE = 2;
 bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
-		const char *lpszFileName, bool hardReplace)
+		const char *lpszFileName, int replaceAction)
 {
 	std::string dirPath;	// Installation dir path
 	std::string filePath;	// Installation file path
@@ -2012,7 +2026,7 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 			fclose(f);
 
 		// Si no existe o puedo borrarlo => Generar el fichero
-		if (f == NULL || unlink(filePath.c_str()) == 0)
+		if (f == NULL || (replaceAction != NO_REPLACE && unlink(filePath.c_str()) == 0))
 		{
 			if (MoveFileEx(tempFilePath.c_str(), filePath.c_str(),
 					MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
@@ -2025,7 +2039,7 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 		}
 
 		// Si no puedo borrarlo, intento renombrarlo ahora
-		else if (hardReplace
+		else if (replaceAction == HARD_REPLACE
 				&& MoveFileEx(filePath.c_str(), oldFile.c_str(),
 						MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
 		{
@@ -2090,16 +2104,28 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 	return success;
 }
 
-void installResource(const char *lpszTargetDir, const char *lpszFileName,
+bool installResource(const char *lpszTargetDir, const char *lpszFileName,
 		const char *lpszTargetName)
 {
-	installResource(lpszTargetDir, lpszFileName, lpszTargetName, true);
+	return installResource(lpszTargetDir, lpszFileName, lpszTargetName, HARD_REPLACE);
 }
 
-void installResource(const char *lpszTargetDir, const char *lpszFileName)
+bool installResource(const char *lpszTargetDir, const char *lpszFileName, int replaceAction)
 {
-	installResource(lpszTargetDir, lpszFileName, lpszFileName, true);
+	return installResource(lpszTargetDir, lpszFileName, lpszFileName, replaceAction);
 }
+
+/**
+ *
+ * @param lpszTargetDir
+ * @param lpszFileName
+ * @return true if the installation succeeds
+ */
+bool installResource(const char *lpszTargetDir, const char *lpszFileName)
+{
+	return installResource(lpszTargetDir, lpszFileName, HARD_REPLACE);
+}
+
 
 struct Files
 {
@@ -2213,18 +2239,21 @@ int install(int full)
 	if (IsWow64())
 	{
 		installResource(NULL, "Mazinger64.exe", "Mazinger.exe");
-		installResource(NULL, "MazingerHook64.dll", "MazingerHook.dll", false);
-		installResource(NULL, "MazingerHook.dll", "MazingerHook32.dll", false);
+		installResource(NULL, "MazingerHook64.dll", "MazingerHook.dll", SOFT_REPLACE);
+		installResource(NULL, "MazingerHook.dll", "MazingerHook32.dll", SOFT_REPLACE);
 		installResource(NULL, "KojiKabuto64.exe", "KojiKabuto.exe");
 		installResource(NULL, "KojiHook64.dll", "KojiHook.dll");
 
-//		installResource(NULL, "AfroditaFC64.dll", "AfroditaFC.dll");
-		installResource(NULL, "AfroditaFC.dll", "AfroditaFC.dll");
-		installResource(NULL, "AfroditaFC.dll", "AfroditaFC32.dll");
-		installResource(NULL, "AfroditaC64.exe", "Afrodita-chrome.exe");
+		/* Browser extensions should not be replaced if a reboot is needed
+		 *
+		 */
+		int replaceAction = reboot ? NO_REPLACE : HARD_REPLACE;
+		installResource(NULL, "AfroditaFC.dll", "AfroditaFC.dll", replaceAction);
+		installResource(NULL, "AfroditaFC.dll", "AfroditaFC32.dll", replaceAction);
+		installResource(NULL, "AfroditaC64.exe", "Afrodita-chrome.exe", replaceAction);
 
-		installResource(NULL, "AfroditaE64.dll", "AfroditaE.dll");
-		installResource(NULL, "AfroditaE.dll", "AfroditaE32.dll");
+		installResource(NULL, "AfroditaE64.dll", "AfroditaE.dll", replaceAction);
+		installResource(NULL, "AfroditaE.dll", "AfroditaE32.dll", replaceAction);
 		installResource(NULL, "JetScrander.exe");
 		installResource(NULL, "SayakaCP64.dll", "SayakaCP.dll");
 
@@ -2237,9 +2266,10 @@ int install(int full)
 		installResource(NULL, "KojiKabuto.exe");
 		installResource(NULL, "KojiHook.dll");
 
-		installResource(NULL, "AfroditaE.dll");
-		installResource(NULL, "AfroditaFC.dll");
-		installResource(NULL, "AfroditaC.exe", "Afrodita-chrome.exe");
+		int replaceAction = reboot ? NO_REPLACE : HARD_REPLACE;
+		installResource(NULL, "AfroditaE.dll", replaceAction);
+		installResource(NULL, "AfroditaFC.dll", replaceAction);
+		installResource(NULL, "AfroditaC.exe", "Afrodita-chrome.exe", replaceAction);
 		installResource(NULL, "JetScrander.exe");
 		installResource(NULL, "SayakaCP.dll");
 

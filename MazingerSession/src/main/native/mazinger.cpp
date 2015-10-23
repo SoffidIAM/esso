@@ -25,7 +25,7 @@
 
 void SeyconSession::parseAndStoreSecrets (SeyconResponse *resp)
 {
-	wchar_t *wchComposedSecrets = (wchar_t*) malloc(resp->getSize() * 2);
+	wchar_t *wchComposedSecrets = (wchar_t*) malloc(resp->getSize() * sizeof (wchar_t));
 	if (wchComposedSecrets == NULL)
 		return;
 	long last = 0;
@@ -60,7 +60,7 @@ void SeyconSession::startMazinger (SeyconResponse *resp, const char* configFile)
 	if (configFile != NULL && configFile[0] != '\0')
 	{
 		std::wstring wConfigFile = MZNC_strtowstr(configFile);
-		SeyconCommon::debug("Loading %ls", wConfigFile.c_str());
+		SeyconCommon::debug("Loading %ls for %s", wConfigFile.c_str(), MZNC_getUserName());
 		if (!MZNLoadConfiguration(MZNC_getUserName(), wConfigFile.c_str()))
 		{
 			SeyconCommon::warn("Unable to load file %s\n", configFile);
@@ -72,6 +72,7 @@ void SeyconSession::startMazinger (SeyconResponse *resp, const char* configFile)
 		MZNLoadConfiguration(MZNC_getUserName(), NULL);
 	}
 	parseAndStoreSecrets(resp);
+	SeyconCommon::debug("Starting mazinger for %s", MZNC_getUserName());
 	MZNStart(MZNC_getUserName());
 	SeyconCommon::debug("Mazinger started");
 	MZNCheckPasswords(MZNC_getUserName());
@@ -191,6 +192,8 @@ void SeyconSession::downloadMazingerConfig (std::string &configFile)
 			fclose(f);
 		}
 		delete resp;
+	} else {
+		SeyconCommon::warn("Cannot get mazinger config from server");
 	}
 }
 
@@ -214,7 +217,8 @@ ServiceIteratorResult SeyconSession::launchMazinger (const char* wchHostName, in
 			// Generar el archivo de configuración
 			std::string configFile ("");
 			downloadMazingerConfig(configFile);
-			startMazinger(resp, configFile.c_str());
+			if (configFile.length() > 0)
+				startMazinger(resp, configFile.c_str());
 			result = SIR_SUCCESS;
 		}
 		delete resp;
