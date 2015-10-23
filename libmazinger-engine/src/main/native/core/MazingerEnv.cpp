@@ -95,14 +95,12 @@ MazingerEnv* MazingerEnv::getEnv(const char *user) {
 }
 
 MazingerEnv* MazingerEnv::getEnv(const char *user, const char*desktop) {
-	SeyconCommon::debug ("Getting env for %s", user);
 	for (std::vector<MazingerEnv*>::iterator it = environments.begin ();
 			it != environments.end(); it++)
 	{
 		MazingerEnv* env = *it;
 		if (env->user == user && env->desktop == desktop)
 		{
-			SeyconCommon::debug ("Got env %p for %s", env, env->user.c_str());
 			return env;
 		}
 	}
@@ -110,7 +108,6 @@ MazingerEnv* MazingerEnv::getEnv(const char *user, const char*desktop) {
 	env->user.assign (user);
 	env->desktop = desktop;
 	environments.push_back(env);
-	SeyconCommon::debug ("Got env %p for %s", env, env->user.c_str());
 	return env;
 }
 
