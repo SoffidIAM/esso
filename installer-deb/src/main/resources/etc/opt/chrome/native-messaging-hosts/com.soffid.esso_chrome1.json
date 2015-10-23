@@ -4,6 +4,6 @@
 	"path": "/usr/bin/afrodita-chrome",
 	"type": "stdio",
 	"allowed_origins": [
-		"chrome-extension://ecdihhgdjciiabklgobilokhejhecjbm/"
+		"chrome-extension://gacgphonbajokjblndebfhakgcpbemdl/"
 	]
 }
