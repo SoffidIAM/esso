@@ -4,11 +4,11 @@
 	<artifactId>sewbr</artifactId>
 	<packaging>${architecture.dll}</packaging>
 	<name>Bridge from normal to extended HLLAPI</name>
-	<version>1.6.0-enterprise</version>
+	<version>1.6.1-enterprise-SNAPSHOT</version>
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.6.0-enterprise</version>
+		<version>1.6.1-enterprise-SNAPSHOT</version>
 	</parent>
 	<scm>
 		<connection>scm:cvs:ext:@cvs.gforge.caib.es:/cvsroot/seycon:mazinger/MazingerTester</connection>

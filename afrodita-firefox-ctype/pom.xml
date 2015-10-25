@@ -4,11 +4,11 @@
 	<artifactId>afrodita-firefox-ctype</artifactId>
 	<packaging>pom</packaging>
 	<name>Dll per a injecció d'Usuaris i Passwords al Firefox mitjançant ctype</name>
-	<version>1.6.0-enterprise</version>
+	<version>1.6.1-enterprise-SNAPSHOT</version>
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.6.0-enterprise</version>
+		<version>1.6.1-enterprise-SNAPSHOT</version>
 	</parent>
 	<modules>
 		<module>w32</module>
