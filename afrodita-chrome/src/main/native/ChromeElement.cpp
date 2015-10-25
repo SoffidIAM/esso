@@ -14,6 +14,7 @@
 #include "json/JsonMap.h"
 #include "json/JsonVector.h"
 #include "CommunicationManager.h"
+#include <MazingerInternal.h>
 
 namespace mazinger_chrome
 {
@@ -22,10 +23,12 @@ ChromeElement::ChromeElement(ChromeWebApplication *app, const char *externalId)
 {
 	this -> app = app;
 	this -> externalId = externalId;
+	app->lock();
 
 }
 
 ChromeElement::~ChromeElement() {
+	app->release();
 }
 
 
@@ -81,6 +84,19 @@ void ChromeElement::getAttribute(const char *attribute, std::string & value)
 
 }
 
+void ChromeElement::getProperty(const char *attribute, std::string & value)
+{
+	const char * msg [] = {"action","getProperty", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), "attribute", attribute, NULL};
+	bool error;
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL && ! error)
+	{
+		value = response->value;
+		delete response;
+	}
+
+}
 
 
 void ChromeElement::blur()
@@ -102,7 +118,7 @@ AbstractWebElement *ChromeElement::getParent()
 	const char * msg [] = {"action","getParent", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), NULL};
 	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
 
-	if (response != NULL && ! error)
+	if (response != NULL && ! error && response->value.length() > 0)
 	{
 		ChromeElement* result = new ChromeElement(app, response->value.c_str());
 		delete response;
@@ -112,6 +128,21 @@ AbstractWebElement *ChromeElement::getParent()
 		return NULL;
 }
 
+AbstractWebElement *ChromeElement::getOffsetParent()
+{
+	bool error;
+	const char * msg [] = {"action","getOffsetParent", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), NULL};
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL && ! error  && response->value.length() > 0)
+	{
+		ChromeElement* result = new ChromeElement(app, response->value.c_str());
+		delete response;
+		return result;
+	}
+	else
+		return NULL;
+}
 
 
 void ChromeElement::setAttribute(const char *attribute, const char*value)
@@ -161,6 +192,204 @@ void ChromeElement::getTagName(std::string & value)
 AbstractWebElement *ChromeElement::clone()
 {
 	return new ChromeElement(app, externalId.c_str());
+}
+
+void ChromeElement::subscribe(const char* eventName, WebListener* listener) {
+	std::string listenerId = CommunicationManager::getInstance()
+		->registerListener (this, eventName, listener);
+
+	const char * msg [] = {"action","subscribe",
+			"pageId", app->threadStatus->pageId.c_str(),
+			"element", externalId.c_str(),
+			"event", eventName,
+			"listener", listenerId.c_str(), NULL};
+	bool error;
+
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL)
+	{
+		delete response;
+	}
+}
+
+AbstractWebElement* ChromeElement::getPreviousSibling() {
+	const char * msg [] = {"action","getPreviousSibling", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), NULL};
+	bool error;
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL && ! error  && response->value.length() > 0)
+	{
+		ChromeElement* result = new ChromeElement(app, response->value.c_str());
+		delete response;
+		return result;
+	}
+	return NULL;
+}
+
+AbstractWebElement* ChromeElement::getNextSibling() {
+	const char * msg [] = {"action","getNextSibling", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), NULL};
+	bool error;
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL && ! error  && response->value.length() > 0)
+	{
+		ChromeElement* result = new ChromeElement(app, response->value.c_str());
+		delete response;
+		return result;
+	}
+	return NULL;
+}
+
+void ChromeElement::appendChild(AbstractWebElement* element) {
+	ChromeElement *child = dynamic_cast<ChromeElement*> (element);
+	if (child != NULL)
+	{
+		const char * msg [] = {"action","appendChild", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(),
+					"child", child->externalId.c_str(),
+					NULL};
+		bool error;
+		json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+		if (response != NULL)
+		{
+			delete response;
+		}
+	}
+}
+
+void ChromeElement::insertBefore(AbstractWebElement* element,
+		AbstractWebElement* before) {
+	if (before == NULL)
+		appendChild(element);
+	else
+	{
+		ChromeElement *child = dynamic_cast<ChromeElement*> (element);
+		ChromeElement *sibling = dynamic_cast<ChromeElement*> (before);
+		if (child != NULL &&  sibling != NULL)
+		{
+			const char * msg [] = {"action","insertBefore", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(),
+						"child", child->externalId.c_str(),
+						"before", sibling->externalId.c_str(),
+						NULL};
+			bool error;
+			json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+			if (response != NULL && ! error)
+			{
+				delete response;
+			}
+		}
+	}
+}
+
+void ChromeElement::unSubscribe(const char* eventName, WebListener* listener) {
+	std::string listenerId = CommunicationManager::getInstance()->unregisterListener (this, eventName, listener);
+
+	const char * msg [] = {"action","unSubscribe",
+			"pageId", app->threadStatus->pageId.c_str(),
+			"element", externalId.c_str(),
+			"event", eventName,
+			"listener", listenerId.c_str(),
+			NULL};
+	bool error;
+
+
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL)
+	{
+		delete response;
+	}
+}
+
+void ChromeElement::setTextContent(const char* text) {
+	const char * msg [] = {"action","setTextContent", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(),
+			"text", text, NULL};
+	bool error;
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL && ! error)
+	{
+		delete response;
+	}
+}
+
+AbstractWebApplication* ChromeElement::getApplication() {
+	return app;
+}
+
+bool ChromeElement::equals(AbstractWebElement* other) {
+	ChromeElement *other2 = dynamic_cast<ChromeElement*> (other);
+	return other2 != NULL && other2->externalId == externalId;
+}
+
+std::string ChromeElement::toString() {
+	return std::string("ChromeElement "+externalId);
+}
+
+void ChromeElement::removeAttribute(const char* attribute) {
+	const char * msg [] = {"action","removeAttribute", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(),
+			"attribute", attribute, NULL};
+	bool error;
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL && ! error)
+	{
+		delete response;
+	}
+}
+
+void ChromeElement::removeChild(AbstractWebElement* element) {
+	ChromeElement *child = dynamic_cast<ChromeElement*> (element);
+	if (child != NULL)
+	{
+		const char * msg [] = {"action","removeChild", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(),
+					"child", child->externalId.c_str(),
+					NULL};
+		bool error;
+		json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+		if (response != NULL && ! error)
+		{
+			delete response;
+		}
+	}
+}
+
+void ChromeElement::setProperty(const char* property, const char* value) {
+	const char * msg [] = {"action","setProperty", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(),
+			"attribute", property, "value", value, NULL};
+	bool error;
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL && ! error)
+	{
+		delete response;
+	}
+}
+
+std::string ChromeElement::getComputedStyle(const char* style) {
+	std::string value;
+	std::string tag;
+	getTagName(tag);
+	if (tag.size() == 0)
+		return std::string("");
+
+	const char * msg [] = {"action","getComputedStyle", "pageId", app->threadStatus->pageId.c_str(), "element", externalId.c_str(), "style", style, NULL};
+	bool error;
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL && ! error)
+	{
+		value = response->value;
+		delete response;
+	}
+	else
+	{
+		MZNSendDebugMessage("Error on %s: %s", tag.c_str(), toString().c_str());
+	}
+	return value;
 }
 
 }

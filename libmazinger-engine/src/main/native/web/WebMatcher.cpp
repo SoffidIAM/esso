@@ -14,6 +14,7 @@
 #include <string>
 #include <stdlib.h>
 #include <stdio.h>
+#include <SmartWebPage.h>
 
 WebMatcher::WebMatcher():
 	m_apps(0)
@@ -35,21 +36,18 @@ int WebMatcher::isFound() {
 
 int WebMatcher::search (ConfigReader &reader, AbstractWebApplication& focus) {
 
-	if (MZNC_waitMutex()) {
-		m_pWebApp = &focus;
-		m_apps.clear();
-		for (std::vector<WebApplicationSpec*>::iterator it = reader.getWebApplicationSpecs().begin();
-				it != reader.getWebApplicationSpecs().end();
-				it ++)
+	m_pWebApp = &focus;
+	m_apps.clear();
+	for (std::vector<WebApplicationSpec*>::iterator it = reader.getWebApplicationSpecs().begin();
+			it != reader.getWebApplicationSpecs().end();
+			it ++)
+	{
+		WebApplicationSpec* pSpec = *it;
+		if (pSpec->matches(focus))
 		{
-			WebApplicationSpec* pSpec = *it;
-			if (pSpec->matches(focus))
-			{
-				m_apps.push_back(pSpec);
-				m_bMatched = true;
-			}
+			m_apps.push_back(pSpec);
+			m_bMatched = true;
 		}
-		MZNC_endMutex();
 	}
 
 	return m_bMatched;
@@ -80,24 +78,67 @@ void WebMatcher::triggerLoadEvent () {
 void MZNWebMatch (AbstractWebApplication *app) {
 
 	static ConfigReader *c = NULL;
-
+	static bool recursive = false;
 	if (MZNC_waitMutex())
 	{
-		PMAZINGER_DATA pMazinger = MazingerEnv::getDefaulEnv()->getData();
-		if (pMazinger != NULL && pMazinger->started)
+		if (! recursive)
 		{
-			WebMatcher m;
-			if (c == NULL)
+			recursive = true;
+			PMAZINGER_DATA pMazinger = MazingerEnv::getDefaulEnv()->getData();
+			if (pMazinger != NULL && pMazinger->started)
 			{
-				c = new ConfigReader(pMazinger);
-				c->parseWeb();
+				WebMatcher m;
+				if (c == NULL)
+				{
+					c = new ConfigReader(pMazinger);
+					c->parseWeb();
 
+				}
+				std::string url;
+				app->getUrl(url);
+				MZNSendDebugMessageA("PAGE  %s", url.c_str());
+				MZNSendDebugMessageA("      ================================================================");
+				m.search(*c, *app);
+				MZNSendDebugMessageA("      ================================================================");
+				if (m.isFound())
+					m.triggerLoadEvent();
+				else
+				{
+					SmartWebPage *page = app->getWebPage();
+					if (page != NULL)
+					{
+						page->fetchAccounts(app, NULL);
+						page->parse(app);
+					}
+				}
+				MZNSendDebugMessageA("DONE  ================================================================");
 			}
-			std::string url;
-			app->getUrl(url);
-			MZNSendDebugMessageA("Looking match for %s", url.c_str());
-			m.search(*c, *app);
-			m.triggerLoadEvent();
+			recursive = false;
+		}
+		MZNC_endMutex();
+	}
+}
+
+void MZNWebMatchRefresh (AbstractWebApplication *app) {
+
+	static ConfigReader *c = NULL;
+	static bool recursive = false;
+	if (MZNC_waitMutex())
+	{
+		if (! recursive)
+		{
+			recursive = true;
+			PMAZINGER_DATA pMazinger = MazingerEnv::getDefaulEnv()->getData();
+			if (pMazinger != NULL && pMazinger->started)
+			{
+				SmartWebPage *page = app->getWebPage();
+				if (page != NULL)
+				{
+					page->fetchAccounts(app, NULL);
+					page->parse(app);
+				}
+			}
+			recursive = false;
 		}
 		MZNC_endMutex();
 	}

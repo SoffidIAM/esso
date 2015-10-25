@@ -13,8 +13,12 @@
 #include "ThreadStatus.h"
 #include <map>
 
+#include <WebListener.h>
+#include "ChromeElement.h"
 
 namespace mazinger_chrome {
+
+class ActiveListenerInfo;
 
 class CommunicationManager {
 public:
@@ -30,6 +34,8 @@ public:
 
 	void mainLoop ();
 	void threadLoop (ThreadStatus *threadStatus);
+	std::string registerListener (ChromeElement *element, const char *event, WebListener *listener);
+	std::string unregisterListener (ChromeElement *element, const char *event, WebListener *listener);
 
 private:
 	std::map<std::string, ThreadStatus*> threads;
@@ -43,6 +49,8 @@ private:
 #else
 	sem_t semaphore;
 #endif
+	int nextListener;
+	std::map<std::string,ActiveListenerInfo*> activeListeners;
 };
 
 } /* namespace mazinger_chrome */

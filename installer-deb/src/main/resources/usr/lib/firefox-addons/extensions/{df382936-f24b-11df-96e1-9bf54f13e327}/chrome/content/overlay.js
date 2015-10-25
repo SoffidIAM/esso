@@ -1,4 +1,4 @@
-Components.utils.import("resource://MazingerExtension/afrodita.jsm");  
+Components.utils.import("resource://SoffidESSOExtension/afrodita.jsm");  
    
 window.addEventListener("load", function() {
     // initialization code
@@ -6,7 +6,7 @@ window.addEventListener("load", function() {
     
     var appcontent = document.getElementById("appcontent");   // browser
     if(appcontent)
-      appcontent.addEventListener("DOMContentLoaded", AfroditaExtension.onPageLoad, true);
+      appcontent.addEventListener("load", AfroditaExtension.onPageLoad, true);
 
  }, false);
        

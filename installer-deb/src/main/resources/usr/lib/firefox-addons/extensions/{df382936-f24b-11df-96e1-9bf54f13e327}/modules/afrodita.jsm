@@ -1,7 +1,10 @@
 var EXPORTED_SYMBOLS = ["AfroditaExtension"];  
 
+
 var AfroditaExtension = {
+  docids: new Array(),
   documents: new Array(),
+  listeners: new Array(),
   callbacks: new Array(),
   counter: 1, 
   initialized: false,
@@ -19,6 +22,12 @@ var AfroditaExtension = {
      if (data == null)
         return null;
      return data.elements[elid];
+  },
+  getWindow: function(docid) {
+     var data = AfroditaExtension.documents[docid];
+     if (data == null)
+        return null;
+     return data.window;
   },
   createStringResult: function (docid, str) {
      var data = AfroditaExtension.documents[docid];
@@ -51,19 +60,30 @@ var AfroditaExtension = {
     AfroditaExtension.checkInit ();
     var doc = aEvent.originalTarget; // doc is document that triggered "onload" event
     if (AfroditaExtension.newInterface) {
+
+       // Listen for page changes
+
+       window = doc.defaultView;
        var docid = AfroditaExtension.counter ++;
+       var observer = new window.MutationObserver ( 
+       	function(mutations) { AfroditaExtension.onPageChanged(mutations, docid);} );
+       var config = {attributes: false, childList: true, characterData: false, subtree: true };
+       observer.observe (doc, config);
+
        AfroditaExtension.documents[docid] = {
          id: docid, 
          document: doc, 
          elements: new Array(),
-         counter: 1
+         counter: 1,
+         window: window
        };
        AfroditaExtension.AfrEvaluate (docid);
-       AfroditaExtension.documents[docid] = null;
+
        // add event listener for page unload 
        aEvent.originalTarget.defaultView.addEventListener("unload", 
-              function() { AfroditaExtension.onPageUnload(); }, true);
-	} else {
+              function() { AfroditaExtension.onPageUnload(docid); }, true);
+
+   } else {
        var c = Components.classes["@caib.es/afroditaf;1"];          
        c = c.getService ();
        c = c.QueryInterface(Components.interfaces.caibIAfroditaF);
@@ -71,8 +91,39 @@ var AfroditaExtension = {
     }
     
   },
-
+  onPageChanged: function(mutations, docid) {
+     mutations.forEach (function (mutation) {
+       var doc =  mutation.target.ownerDocument;
+       if (docid != undefined)
+       {
+         var ad = AfroditaExtension.getDocument(docid);
+         if (ad != doc) 
+           docid = undefined; 
+       }
+       if (docid == undefined)
+       {
+         docid=AfroditaExtension.counter ++;
+         AfroditaExtension.documents[docid] = {
+           id: docid, 
+           document: doc, 
+           elements: new Array(),
+           counter: 1
+         };
+       }
+	   if (AfroditaExtension.documents[docid].timeout != undefined)
+	   {
+		   AfroditaExtension.getWindow(docid).clearTimeout(AfroditaExtension.documents[docid].timeout);
+	   }
+	   AfroditaExtension.documents[docid].timeout =
+			AfroditaExtension.getWindow(docid).setTimeout (
+				function(){ AfroditaExtension.AfrEvaluate (docid)}, 1000);
+//       AfroditaExtension.AfrEvaluate (docid);
+       return;
+     });
+  },
   onPageUnload: function(docid) {
+  	 AfroditaExtension.AfrDismiss (docid);
+     AfroditaExtension.documents[docid] = null;
   },
 
   checkInit: function () { 
@@ -80,6 +131,7 @@ var AfroditaExtension = {
           return;
 	var c = Components.classes["@caib.es/afroditaf;1"];
 	if (c == null) {          
+	  try {
 	    AfroditaExtension.newInterface = true;
 	    
 	    var os = Components.classes["@mozilla.org/system-info;1"].getService(Components.interfaces.nsIPropertyBag).getProperty("name");
@@ -93,17 +145,23 @@ var AfroditaExtension = {
 		} else {
 	   	   var path = e.get ("ProgramW6432");
 		   if (path == null || path == "")
-		     path = e.get ("ProgramFiles") + "\\Mazinger\\AfroditaFC.dll";
+		     path = e.get ("ProgramFiles") + "\\SoffidESSO\\AfroditaFC.dll";
 		   else
-		     path = path +"\\Mazinger\\AfroditaFC32.dll"
+		     path = path +"\\SoffidESSO\\AfroditaFC32.dll"
 		}
 	
 		Components.utils.import("resource://gre/modules/ctypes.jsm");
+		Components.utils.import('resource://gre/modules/devtools/Console.jsm');
+		console.log("path = "+path);
+		Components.utils.import("resource://SoffidESSOExtension/Preferences.jsm");
+		Preferences.defaults.set("signon.rememberSignons", false);
 		// Carregar biblioteca
 		AfroditaExtension.lib = ctypes.open(path);
 		// Crear funcions
 		AfroditaExtension.AfrSetHandler_ = AfroditaExtension.lib . declare ("AFRsetHandler", ctypes.default_abi, ctypes.void_t, ctypes.char.ptr, ctypes.void_t.ptr);
 		AfroditaExtension.AfrEvaluate = AfroditaExtension.lib . declare ("AFRevaluate", ctypes.default_abi, ctypes.void_t, ctypes.long);
+		AfroditaExtension.AfrEvent = AfroditaExtension.lib . declare ("AFRevent", ctypes.default_abi, ctypes.void_t, ctypes.long);
+		AfroditaExtension.AfrDismiss = AfroditaExtension.lib . declare ("AFRdismiss", ctypes.default_abi, ctypes.void_t, ctypes.long);
 	
 		// Crear handlers
 		AfroditaExtension.setHandler ("GetUrl", ctypes.char.ptr, [ctypes.long],
@@ -181,7 +239,33 @@ var AfroditaExtension = {
 			  var line = line.readString();
 			  doc.writeln (line);
 		       } );
+		AfroditaExtension.setHandler ("CreateElement", ctypes.long, [ctypes.long, ctypes.char.ptr],
+		       function (docid, tag) {
+			  var doc = AfroditaExtension.getDocument(docid);    
+			  var tag = tag.readString();
+			  var element = doc.createElement(tag);
+			  return AfroditaExtension.registerElement(docid, element);
+		       } );
 		// ------- Element Handlers 
+		AfroditaExtension.setHandler ("AppendChild", ctypes.void_t, [ctypes.long, ctypes.long, ctypes.long],
+		       function (docid, elementid, childid) {
+			  var el = AfroditaExtension.getElement(docid, elementid);    
+			  var child = AfroditaExtension.getElement(docid, childid);    
+			  el.appendChild(child);
+		       } );
+		AfroditaExtension.setHandler ("InsertBefore", ctypes.void_t, [ctypes.long, ctypes.long, ctypes.long, ctypes.long],
+		       function (docid, elementid, childid, beforeid) {
+			  var el = AfroditaExtension.getElement(docid, elementid);    
+			  var child = AfroditaExtension.getElement(docid, childid);    
+			  var before = AfroditaExtension.getElement(docid, beforeid);    
+			  el.insertBefore(child, before);
+		       } );
+		AfroditaExtension.setHandler ("GetProperty", ctypes.char.ptr, [ctypes.long, ctypes.long, ctypes.char.ptr],
+		       function (docid, elementid, atr) {
+			  var el = AfroditaExtension.getElement(docid, elementid);    
+			  var atr = atr.readString();
+			  return AfroditaExtension.createStringResult(docid, ""+el[atr]);
+		       } );
 		AfroditaExtension.setHandler ("GetAttribute", ctypes.char.ptr, [ctypes.long, ctypes.long, ctypes.char.ptr],
 		       function (docid, elementid, atr) {
 			  var el = AfroditaExtension.getElement(docid, elementid);    
@@ -190,18 +274,70 @@ var AfroditaExtension = {
 		       } );
 	
 		AfroditaExtension.setHandler ("SetAttribute", ctypes.void_t, [ctypes.long, ctypes.long, ctypes.char.ptr, ctypes.char.ptr],
-		       function (docid, elementid, atr, v) {
+		   function (docid, elementid, atr, v) {
 			  var el = AfroditaExtension.getElement(docid, elementid);    
 			  if (el != null) {
 			     var atr = atr.readString();
 			     var v = v.readString();
 			     el.setAttribute(atr,v);
-			  }
-		       } );
+			     if (atr == "value") {
+					var doc = AfroditaExtension.getDocument(docid);    
+					var evt  = doc.createEvent ("HTMLEvents");
+					evt.initEvent ("change", true, true);
+					el.dispatchEvent(evt);
+			     }
+			   }
+		    } );
+		AfroditaExtension.setHandler ("RemoveAttribute", ctypes.void_t, [ctypes.long, ctypes.long, ctypes.char.ptr],
+		   function (docid, elementid, atr) {
+			  var el = AfroditaExtension.getElement(docid, elementid);    
+			  if (el != null) {
+			     var atr = atr.readString();
+			     el.removeAttribute(atr);
+			   }
+		    } );
+		AfroditaExtension.setHandler ("RemoveChild", ctypes.void_t, [ctypes.long, ctypes.long, ctypes.long],
+		   function (docid, elementid, childid) {
+			  var el = AfroditaExtension.getElement(docid, elementid);    
+			  if (el != null) {
+				  var el2 = AfroditaExtension.getElement(docid, childid);    
+ 			      el.removeChild(el2);
+			   }
+		    } );
+		AfroditaExtension.setHandler ("SetProperty", ctypes.void_t, [ctypes.long, ctypes.long, ctypes.char.ptr, ctypes.char.ptr],
+		   function (docid, elementid, atr, v) {
+			  var el = AfroditaExtension.getElement(docid, elementid);    
+			  if (el != null) {
+			     var atr = atr.readString();
+			     var v = v.readString();
+			     el[atr]=v;
+			     if (atr == "value") {
+					var doc = AfroditaExtension.getDocument(docid);    
+					var evt  = doc.createEvent ("HTMLEvents");
+					evt.initEvent ("change", true, true);
+					el.dispatchEvent(evt);
+			     }
+			   }
+		    } );
 		AfroditaExtension.setHandler ("GetParent", ctypes.long, [ctypes.long, ctypes.long],
 		       function (docid, elementid, atr, v) {
+			   var el = AfroditaExtension.getElement(docid, elementid);    
+			   return AfroditaExtension.registerElement(docid, el.parentNode);
+		       } );
+		AfroditaExtension.setHandler ("GetOffsetParent", ctypes.long, [ctypes.long, ctypes.long],
+		       function (docid, elementid, atr, v) {
+			   var el = AfroditaExtension.getElement(docid, elementid);    
+			   return AfroditaExtension.registerElement(docid, el.offsetParent);
+		       } );
+		AfroditaExtension.setHandler ("GetPreviousSibling", ctypes.long, [ctypes.long, ctypes.long],
+		       function (docid, elementid, atr, v) {
 			  var el = AfroditaExtension.getElement(docid, elementid);    
-			  return AfroditaExtension.registerElement(docid, el.parentNode);
+			  return AfroditaExtension.registerElement(docid, el.previousSibling);
+		       } );
+		AfroditaExtension.setHandler ("GetNextSibling", ctypes.long, [ctypes.long, ctypes.long],
+		       function (docid, elementid, atr, v) {
+			  var el = AfroditaExtension.getElement(docid, elementid);    
+			  return AfroditaExtension.registerElement(docid, el.nextSibling);
 		       } );
 		AfroditaExtension.setHandler ("GetTagName", ctypes.char.ptr, [ctypes.long, ctypes.long],
 		       function (docid, elementid, atr, v) {
@@ -229,6 +365,51 @@ var AfroditaExtension = {
 			  var el = AfroditaExtension.getElement(docid, elementid);    
 			  el.blur();
 		       } );
+		AfroditaExtension.setHandler ("SubscribeEvent", ctypes.void_t, [ctypes.long, ctypes.long, ctypes.char.ptr, ctypes.long],
+		       function (docid, elementid, eventName, eventId) {
+				     AfroditaExtension.listeners[eventId] = function () { AfroditaExtension.AfrEvent (eventId); };
+				     var en = eventName.readString();
+				     if (elementid == 0)
+   				     	AfroditaExtension.getWindow(docid).
+				     		addEventListener (en,  AfroditaExtension.listeners[eventId]);
+   				     else
+   				     	AfroditaExtension.getElement(docid, elementid).
+   				     		addEventListener (en,  AfroditaExtension.listeners[eventId]);
+		       } );
+		AfroditaExtension.setHandler ("UnsubscribeEvent", ctypes.void_t, [ctypes.long, ctypes.long, ctypes.char.ptr, ctypes.long],
+		       function (docid, elementid) {
+				  var en = eventName.readString();
+ 			      if (elementid == 0)
+   				     	AfroditaExtension.getElement(docid, elementid).
+   				     		removeEventListener (en,  AfroditaExtension.listeners[eventId]);
+   				  else
+   				     	AfroditaExtension.getWindow(docid).
+				     		removeEventListener (en,  AfroditaExtension.listeners[eventId]);
+				  AfroditaExtension.listeners[eventId] = undefined;
+		       } );
+		AfroditaExtension.setHandler ("Alert", ctypes.void_t, [ctypes.long, ctypes.char.ptr],
+		       function (docid,msg) {
+				  w = AfroditaExtension.getWindow(docid);    
+				  var msg = msg.readString();
+				  w.alert (msg);
+		       } );
+		AfroditaExtension.setHandler ("SetTextContent", ctypes.void_t, [ctypes.long, ctypes.long, ctypes.char.ptr],
+		       function (docid, elementid, txt) {
+				  var el = AfroditaExtension.getElement(docid, elementid);    
+				  var txt = txt.readString();
+				  el.textContent=txt;
+		       } );
+		AfroditaExtension.setHandler ("GetComputedStyle", ctypes.char.ptr, [ctypes.long, ctypes.long, ctypes.char.ptr],
+		       function (docid, elementid, txt) {
+				  var el = AfroditaExtension.getElement(docid, elementid);
+				  var w = AfroditaExtension.getWindow(docid);    
+				  var n = txt.readString();
+				  var p = w.getComputedStyle (el, null)[n];
+				  return AfroditaExtension.createStringResult(docid, p);
+		       } );
+	} catch (e) {
+		console.log("Error in afrodita startup: "+e.message);
+	}
       } else {
           AfroditaExtension.newInterface = false;
       }

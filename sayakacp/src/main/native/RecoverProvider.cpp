@@ -249,7 +249,7 @@ HRESULT RecoverProvider::GetCredentialCount(
     	*pdwCount = 0;
     else
     	*pdwCount = 1;
-	*pdwDefault = 0;
+	*pdwDefault = CREDENTIAL_PROVIDER_NO_DEFAULT;
 	*pbAutoLogonWithDefault = false;
     return S_OK;
 }

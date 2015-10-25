@@ -275,8 +275,6 @@ void SsoDaemon::runSessionServer ()
 
 void SsoDaemon::runKeepAlive ()
 {
-	SeyconCommon::updateConfig("soffid.esso.session.keepalive");
-
 	std::string kastring;
 	long keepalive = 600;
 	if (SeyconCommon::readProperty("soffid.esso.session.keepalive", kastring))

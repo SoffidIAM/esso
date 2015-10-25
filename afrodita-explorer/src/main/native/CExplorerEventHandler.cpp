@@ -6,15 +6,19 @@
 #include "ExplorerWebApplication.h"
 #include <MazingerInternal.h>
 #include "Utils.h"
-
+#include <mshtml.h>
 
 CExplorerEventHandler::CExplorerEventHandler ()
 {
+	m_app = NULL;
 }
 
 
 void  CExplorerEventHandler::connect(IWebBrowser2 *pBrowser)
 {
+	if (m_app != NULL)
+		m_app->release();
+	m_app = NULL;
 	m_pBrowser = pBrowser;
 	m_pBrowser->AddRef();
 	IConnectionPointContainer* pCPC = NULL;
@@ -103,8 +107,42 @@ HRESULT __stdcall CExplorerEventHandler::GetIDsOfNames(REFIID ID,LPOLESTR* bstr,
 
 void CExplorerEventHandler::onLoad(IWebBrowser2 *pBrowser, const char *url)
 {
-	ExplorerWebApplication app (pBrowser == NULL ? m_pBrowser: pBrowser, NULL, url);
-	MZNWebMatch(&app);
+	if (m_app != NULL)
+		m_app->release();
+	m_app = new ExplorerWebApplication(pBrowser == NULL ? m_pBrowser: pBrowser, NULL, url);
+	MZNWebMatch(m_app);
+}
+
+
+static DWORD WINAPI documentThreadProc(
+  LPVOID arg
+)
+{
+	IDispatch *pDispatch = (IDispatch*) arg;
+	MZNSendDebugMessageA("pDispatch = %p", pDispatch);
+	ExplorerWebApplication *app = new ExplorerWebApplication(NULL, pDispatch, NULL);
+	std::string url;
+	std::string url2;
+	MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+	app->getUrl(url);
+	MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+	do
+	{
+		MZNSendDebugMessage("URL = %s", url.c_str());
+		MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+		MZNWebMatch(app);
+		MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+		Sleep(3000);
+		MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+		app->getUrl(url2);
+		MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+	} while (url == url2);
+	MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+	app->release();
+	MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+	pDispatch->Release();
+	MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+	return 0;
 }
 
 HRESULT __stdcall CExplorerEventHandler::Invoke(DISPID dispIdMember,REFIID riid,LCID lcid,WORD wFlags,DISPPARAMS *pDispParams,VARIANT *pVarResult,EXCEPINFO *pExcepInfo,UINT *puArgErr) {
@@ -113,18 +151,23 @@ HRESULT __stdcall CExplorerEventHandler::Invoke(DISPID dispIdMember,REFIID riid,
 
 
 	if(dispIdMember==DISPID_DOCUMENTCOMPLETE) { // Handle the BeforeNavigate2 event
-		IWebBrowser2 *pBrowser = NULL;
+		IDispatch *pDispatch = NULL;
+
 		std::string url;
 
 		if (pDispParams != NULL && pDispParams->cArgs > 1
 				&& (pDispParams->rgvarg[1].vt & VT_TYPEMASK)== VT_DISPATCH)
 		{
+			IWebBrowser2 *pBrowser = NULL;
 			IDispatch *doc = pDispParams->rgvarg[1].pdispVal;
 
 		    // Is this the DocumentComplete event for the top frame window?
 		    // Check COM identity: compare IUnknown interface pointers.
-		    if (S_OK != doc->QueryInterface(IID_IWebBrowser2, (void**)&pBrowser))
-		    	pBrowser = NULL;
+		    if (S_OK == doc->QueryInterface(IID_IWebBrowser2, (void**)&pBrowser))
+		    {
+    		    pBrowser->get_Document(&pDispatch);
+    		    pBrowser->Release();
+		    }
 		}
 		if (pDispParams != NULL && pDispParams->cArgs > 0)
 		{
@@ -139,7 +182,32 @@ HRESULT __stdcall CExplorerEventHandler::Invoke(DISPID dispIdMember,REFIID riid,
 				VariantClear (&dest);
 			}
 		}
-		onLoad(pBrowser, url.c_str());
+		if (pDispatch != NULL)
+		{
+#if 0
+			pDispatch->AddRef();
+			CreateThread (NULL,  0, documentThreadProc, pDispatch, 0, NULL);
+//			documentThreadProc(pDispatch);
+#else
+			ExplorerWebApplication *app = new ExplorerWebApplication(NULL, pDispatch, NULL);
+			MZNWebMatch(app);
+			IHTMLWindow2 *w;
+			app->installIntervalListener();
+//			app->release();
+
+#endif
+			return 0;
+		}
+	} else if (dispIdMember == DISPID_PROGRESSCHANGE){
+
+//		MZNSendDebugMessageA("Progress Change %ld / %ld" , pDispParams->rgvarg[0].lVal,
+//				pDispParams->rgvarg[1].lVal) ;
+	} else if (dispIdMember == DISPID_NAVIGATECOMPLETE2){
+		MZNSendDebugMessageA("Navigate complete 2") ;
+	} else if (dispIdMember == DISPID_NAVIGATECOMPLETE){
+		MZNSendDebugMessageA("Navigate complete 1") ;
+	} else {
+//		MZNSendDebugMessageA("Ignoreing dispatcher %d", (int) dispIdMember) ;
 	}
 	return S_OK;
 }

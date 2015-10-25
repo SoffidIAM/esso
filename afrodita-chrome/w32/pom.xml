@@ -3,7 +3,7 @@
 	<groupId>com.soffid.iam.esso.w32</groupId>
 	<artifactId>afrodita-chrome</artifactId>
 	<packaging>exe</packaging>
-	<name>Dll per a injecció d'Usuaris i Passwords al Firefox 4 (Windows)</name>
+	<name>Dll to inject users and passwords on Google Chrome (win 32)</name>
 	<parent>
 		<artifactId>afrodita-chrome</artifactId>
 		<groupId>com.soffid.iam.esso</groupId>

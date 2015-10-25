@@ -61,6 +61,7 @@ public:
 	void notify (const char *message);
 	void remoteClose (const char *host);
 	void executeOfflineScript ();
+	void updateConfiguration();
 
 	ServiceIteratorResult iteratePassword (const char* hostName, size_t dwPort, bool prepareOnly);
 	ServiceIteratorResult iterateKerberos (const char* hostName, size_t dwPort);
@@ -121,6 +122,5 @@ private:
 	bool m_passwordLogin;
 	std::vector<std::string> newKeys;
 };
-
 
 #endif /* SSOCLIENT_H_ */

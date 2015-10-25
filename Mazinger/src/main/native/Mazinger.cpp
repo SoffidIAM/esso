@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <MazingerHook.h>
 #include <ssoclient.h>
+#include <time.h>
 
 extern bool MZNEvaluateJS(const char *script, std::string &msg);
 
@@ -355,7 +356,7 @@ static void SetLowLabelToFile(LPWSTR lpszFileName) {
 				&fSaclDefaulted)) {
 			// Note that psidOwner, psidGroup, and pDacl are
 			// all NULL and set the new LABEL_SECURITY_INFORMATION
-			dwErr = SetNamedSecurityInfoW(lpszFileName, SE_FILE_OBJECT,
+			dwErr = SetNamedSecurityInfoW(lpszFileName, SE_KERNEL_OBJECT,
 					LABEL_SECURITY_INFORMATION, NULL, NULL, NULL, pSacl);
 		}
 		LocalFree(pSD);
@@ -394,7 +395,7 @@ HANDLE createDebugMailSlot ()
 	wsprintfW(ach, L"\\\\.\\mailslot\\MAZINGER_%s", achUser);
 	HANDLE hResult = CreateMailslotW(ach, 10024, MAILSLOT_WAIT_FOREVER, NULL);
 	SetLowLabelToMailslot(hResult);
-	SetLowLabelToFile(ach);
+//	SetLowLabelToFile(ach);
 	return hResult;
 }
 
@@ -429,8 +430,11 @@ DWORD CALLBACK LeerMailSlot(LPVOID lpData) {
 				(LPOVERLAPPED) NULL);
 		if (cbRead > 0 )
 		{
+			time_t t;
+			time(&t);
+			struct tm* tm = localtime(&t);
 			achMessage[cbRead/2] = L'\0';
-			fwprintf (logFile == NULL ? stdout: logFile, L"%ls\n", achMessage);
+			fwprintf (logFile == NULL ? stdout: logFile, L"%02d:%02d:%02d %ls\n", tm->tm_hour, tm->tm_min, tm->tm_sec, achMessage);
 		}
 	}
 	return 0;

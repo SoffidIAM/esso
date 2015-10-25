@@ -16,13 +16,14 @@
 #include "json/JsonValue.h"
 
 #include "CommunicationManager.h"
-
+#include <MazingerInternal.h>
 
 namespace mazinger_chrome
 {
 
 
 ChromeWebApplication::~ChromeWebApplication() {
+	this->webPage->release();
 }
 
 
@@ -57,7 +58,7 @@ void ChromeWebApplication::getContent(std::string & value)
 AbstractWebElement *ChromeWebApplication::getDocumentElement()
 {
 	bool error;
-	const char * msg [] = {"action","getDocumentElement", "pageId", NULL};
+	const char * msg [] = {"action","getDocumentElement", "pageId", threadStatus->pageId.c_str(), NULL};
 	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
 
 	if (response != NULL && ! error)
@@ -110,6 +111,10 @@ void ChromeWebApplication::getDomain(std::string & value)
 	}
 }
 
+std::string ChromeWebApplication::toString() {
+	return std::string("ChromeWebApplication ")+threadStatus->pageId;
+}
+
 void ChromeWebApplication::generateCollection(const char* msg[],
 		std::vector<AbstractWebElement*>& elements) {
 	elements.clear ();
@@ -160,7 +165,7 @@ AbstractWebElement *ChromeWebApplication::getElementById(const char *id)
 	const char * msg [] = {"action","getElementById", "pageId", threadStatus->pageId.c_str(), "elementId", id, NULL};
 	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
 
-	if (response != NULL && ! error)
+	if (response != NULL && ! error && response->value.size() > 0)
 	{
 		ChromeElement* result = new ChromeElement(this, response->value.c_str());
 		delete response;
@@ -207,6 +212,41 @@ ChromeWebApplication::ChromeWebApplication(ThreadStatus *threadStatus) {
 	this->threadStatus = threadStatus;
 	title = threadStatus->title;
 	url = threadStatus->url;
+	this->webPage = new SmartWebPage;
+}
+
+
+AbstractWebElement* ChromeWebApplication::createElement(const char* tagName) {
+	bool error;
+	AbstractWebElement * result = NULL;
+	const char * msg [] = {"action","createElement", "pageId", threadStatus->pageId.c_str(), "tagName", tagName, NULL};
+	json::JsonValue * response = dynamic_cast<json::JsonValue*>(CommunicationManager::getInstance()->call(error,msg));
+
+	if (response != NULL )
+	{
+		if (! error  && !response->value.empty())
+			result = new ChromeElement(this, response->value.c_str());
+		delete response;
+	}
+	return result;
+}
+
+void ChromeWebApplication::alert(const char* str) {
+	bool error;
+	const char * msg [] = {"action","alert", "pageId", threadStatus->pageId.c_str(), "text", str, NULL};
+	json::JsonAbstractObject * response = CommunicationManager::getInstance()->call(error,msg);
+
+	if (response != NULL)
+		delete response;
+}
+
+void ChromeWebApplication::subscribe(const char* eventName,
+		WebListener* listener) {
+}
+
+void ChromeWebApplication::unSubscribe(const char* eventName,
+		WebListener* listener) {
 }
 
 }
+

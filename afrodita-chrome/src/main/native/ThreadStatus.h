@@ -15,7 +15,27 @@
 
 #include "json/JsonAbstractObject.h"
 
+#include <map>
+
+#include <WebListener.h>
+#include "ChromeWebApplication.h"
+#include "ChromeElement.h"
+#include <list>
+
 namespace mazinger_chrome {
+
+class ChromeWebApplication;
+class ChromeElement;
+
+class ActiveListenerInfo
+{
+public:
+	std::string event;
+	WebListener *listener;
+	ChromeElement *element;
+	ChromeWebApplication *app;
+};
+
 
 class ThreadStatus {
 public:
@@ -24,17 +44,23 @@ public:
 
 #ifdef WIN32
 	HANDLE hMutex;
+	HANDLE hEventMutex;
 #else
 	sem_t semaphore;
+	sem_t eventSemaphore;
 #endif
 
+	ActiveListenerInfo *waitForEvent ();
 	json::JsonAbstractObject* waitForMessage ();
+	void notifyEventMessage ();
 	void notifyMessage (json::JsonAbstractObject* message);
 
 	std::string pageId;
 	std::string title;
 	std::string url;
 	bool end;
+	bool refresh;
+	std::list<ActiveListenerInfo*> pendingEvents;
 
 private:
 

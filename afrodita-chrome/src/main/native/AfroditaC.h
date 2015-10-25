@@ -11,6 +11,7 @@
 #ifdef WIN32
 #include <windows.h>
 #define DEBUG(x)
+//#define DEBUG(x) MZNSendDebugMessage("%s",x);
 #else
 #define DEBUG(x)
 //#define DEBUG(x) printf("%s\n", x)

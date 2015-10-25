@@ -53,6 +53,45 @@
 						<preparationGoals>clean verify</preparationGoals>
 					</configuration>
 				</plugin>
+				<plugin>
+				  <groupId>org.codehaus.mojo</groupId>          
+				  <artifactId>exec-maven-plugin</artifactId>
+				  <executions>
+				   <execution>
+				    <id>sh</id>
+				    <phase>generate-sources</phase>          
+				    <goals>
+				     <goal>exec</goal>
+				    </goals>
+				    <configuration>
+				     <executable>bash</executable>
+				     <arguments>
+	                    <argument>${project.parent.basedir}/src/main/resources/generate.sh</argument>
+	                    <argument>${project.build.directory}/native/include</argument>
+				     </arguments>
+				    </configuration>
+				   </execution>
+				  </executions>
+				 </plugin>
+				<plugin>
+					<groupId>com.atlassian.maven.plugins</groupId>
+	                <artifactId>bash-maven-plugin</artifactId>
+	                <version>1.0</version>
+	                <executions>
+	                    <execution>
+	                        <id>generate</id>
+	                        <phase>generate-sources</phase>
+	                        <goals>
+	                            <goal>run</goal>
+	                        </goals>
+	                    </execution>
+	                </executions>
+	                <configuration>
+	                    <script>
+	                    	source ${project.baseDir}/src/main/resources/generate.sh ${project.build.directory}/native/include
+	                    </script>
+	                </configuration>
+                </plugin>
 			</plugins>
 		</pluginManagement>
 	</build>

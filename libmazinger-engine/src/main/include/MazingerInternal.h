@@ -32,6 +32,7 @@ void dumpDiagnostic (NativeComponent *top);
 const char*xmlEncode (const char* value);
 
 void MZNWebMatch (AbstractWebApplication *app) ;
+void MZNWebMatchRefresh (AbstractWebApplication *app) ;
 void MZNHllMatch (HllApplication *app) ;
 
 void MZNEvaluateJSMatch(ComponentMatcher &match, const char *script) ;

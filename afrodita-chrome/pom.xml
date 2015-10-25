@@ -3,7 +3,7 @@
 	<groupId>com.soffid.iam.esso</groupId>
 	<artifactId>afrodita-chrome</artifactId>
 	<packaging>pom</packaging>
-	<name>Dll per a injecció d'Usuaris i Passwords al Firefox</name>
+	<name>Dll to inject users and passwords on Google Chrome</name>
 	<version>1.6.0-SNAPSHOT</version>
 	<parent>
 		<artifactId>root</artifactId>

@@ -8,6 +8,9 @@
 #include "AfroditaF.h"
 #include "FFWebApplication.h"
 #include <MazingerInternal.h>
+#include "EventHandler.h"
+#include <map>
+#include <SmartWebPage.h>
 
 #ifdef WIN32
 #include <windows.h>
@@ -50,12 +53,22 @@ extern "C" void AFRsetHandler (const char *id, void * handler) {
 			AfroditaHandler::handler.writeHandler = (WriteHandler) handler;
 	else if (strcmp (id, "WriteLn" ) == 0)
 			AfroditaHandler::handler.writeLnHandler = (WriteLnHandler) handler;
+	else if (strcmp (id, "GetProperty" ) == 0)
+			AfroditaHandler::handler.getPropertyHandler = (GetPropertyHandler) handler;
+	else if (strcmp (id, "SetProperty" ) == 0)
+			AfroditaHandler::handler.setPropertyHandler = (SetPropertyHandler) handler;
 	else if (strcmp (id, "GetAttribute" ) == 0)
 			AfroditaHandler::handler.getAttributeHandler = (GetAttributeHandler) handler;
+	else if (strcmp (id, "RemoveAttribute" ) == 0)
+			AfroditaHandler::handler.removeAttributeHandler = (RemoveAttributeHandler) handler;
+	else if (strcmp (id, "RemoveChild" ) == 0)
+			AfroditaHandler::handler.removeChildHandler = (RemoveChildHandler) handler;
 	else if (strcmp (id, "SetAttribute" ) == 0)
 			AfroditaHandler::handler.setAttributeHandler = (SetAttributeHandler) handler;
 	else if (strcmp (id, "GetParent" ) == 0)
 			AfroditaHandler::handler.getParentHandler = (GetParentHandler) handler;
+	else if (strcmp (id, "GetOffsetParent" ) == 0)
+			AfroditaHandler::handler.getOffsetParentHandler = (GetParentHandler) handler;
 	else if (strcmp (id, "GetChildren" ) == 0)
 			AfroditaHandler::handler.getChildrenHandler = (GetChildrenHandler) handler;
 	else if (strcmp (id, "GetTagName" ) == 0)
@@ -66,7 +79,26 @@ extern "C" void AFRsetHandler (const char *id, void * handler) {
 			AfroditaHandler::handler.blurHandler = (BlurHandler) handler;
 	else if (strcmp (id, "Focus" ) == 0)
 			AfroditaHandler::handler.focusHandler = (FocusHandler) handler;
-
+	else if (strcmp (id, "SubscribeEvent" ) == 0)
+			AfroditaHandler::handler.subscribeHandler = (SubscribeHandler) handler;
+	else if (strcmp (id, "UnsubscribeEvent" ) == 0)
+			AfroditaHandler::handler.unsubscribeHandler = (UnsubscribeHandler) handler;
+	else if (strcmp (id, "CreateElement" ) == 0)
+			AfroditaHandler::handler.createElementHandler = (CreateElementHandler) handler;
+	else if (strcmp (id, "InsertBefore" ) == 0)
+			AfroditaHandler::handler.insertBeforeHandler = (InsertBeforeHandler) handler;
+	else if (strcmp (id, "AppendChild" ) == 0)
+			AfroditaHandler::handler.appendChildHandler = (AppendChildHandler) handler;
+	else if (strcmp (id, "GetNextSibling" ) == 0)
+			AfroditaHandler::handler.getNextSiblingHandler = (GetNextSiblingHandler) handler;
+	else if (strcmp (id, "GetPreviousSibling" ) == 0)
+			AfroditaHandler::handler.getPreviousSiblingHandler = (GetPreviousSiblingHandler) handler;
+	else if (strcmp (id, "Alert" ) == 0)
+			AfroditaHandler::handler.alertHandler = (AlertHandler) handler;
+	else if (strcmp (id, "SetTextContent" ) == 0)
+			AfroditaHandler::handler.setTextContentHandler = (SetTextContentHandler) handler;
+	else if (strcmp (id, "GetComputedStyle" ) == 0)
+			AfroditaHandler::handler.getComputedStyleHandler = (GetComputedStyleHandler) handler;
 	else
 	{
 #ifdef WIN32
@@ -76,14 +108,50 @@ extern "C" void AFRsetHandler (const char *id, void * handler) {
 }
 
 
+static std::map<long,SmartWebPage*> status;
+
+
 extern "C" void AFRevaluate (long  id) {
 
 	//MZNC_waitMutex();
-	FFWebApplication app(id);
 
-	MZNWebMatch(&app);
+	MZNSendDebugMessage("Evaluating page %ld", id);
 
+	FFWebApplication *app = new FFWebApplication(id);
+
+	std::map<long,SmartWebPage*>::iterator it = status.find(id);
+	if (it == status.end())
+	{
+		SmartWebPage * page = new SmartWebPage();
+		app->setPage(page);
+		status[id] = page;
+	} else {
+		app->setPage(it->second);
+	}
+
+	MZNWebMatch(app);
+
+	app->release();
 	//MZNC_endMutex();
+}
+
+extern "C" void AFRdismiss (long  id) {
+	MZNSendDebugMessageA("<<<<<<<<<<<<<<<<<<<< Cleaning page %ld >>>>>>>>>>>>>>>>>>>>>>>>", id);
+	std::map<long,SmartWebPage*>::iterator it = status.find(id);
+	if (it != status.end())
+	{
+		it->second->release();
+		status.erase(it);
+	}
+	FFWebApplication *app = new FFWebApplication(id);
+	EventHandler::getInstance()->unregisterAllEvents(app);
+	app->release();
+}
+
+
+
+extern "C" void AFRevent (long  eventId) {
+	EventHandler::getInstance()->process (eventId);
 }
 
 extern "C" void Test (const char *id) {

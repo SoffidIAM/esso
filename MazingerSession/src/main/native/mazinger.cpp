@@ -21,24 +21,37 @@
 #include <MZNcompat.h>
 #include <MazingerInternal.h>
 #include <ScriptDialog.h>
+#include <MazingerEnv.h>
 
 void SeyconSession::parseAndStoreSecrets (SeyconResponse *resp)
 {
-	wchar_t wchComposedSecrets[MAX_CHALLENGE];
-	int last = 0;
+	wchar_t *wchComposedSecrets = (wchar_t*) malloc(resp->getSize() * sizeof (wchar_t));
+	if (wchComposedSecrets == NULL)
+		return;
+	long last = 0;
 	int secretNumber = 1;
 	std::wstring secret;
 	resp->getToken(secretNumber, secret);
 	while (secret.size() > 0)
 	{
-		wcscpy(&wchComposedSecrets[last], secret.c_str());
-		last += secret.size() + 1;
+		std::wstring secret2 = SeyconCommon::urlDecode (MZNC_wstrtoutf8(secret.c_str()).c_str());
+		if (last + secret2.size() > SECRETS_BUFFER_SIZE-2)
+		{
+			if (m_dialog != NULL)
+				m_dialog -> notify("Cannot handle so many secrets. Internal buffer size is too small");
+			wchComposedSecrets[last] = wchComposedSecrets[last+1] = L'\0';
+			break;
+		}
+		wcscpy(&wchComposedSecrets[last], secret2.c_str());
+		last += secret2.size() + 1;
+		SeyconCommon::wipe(secret2);
 		SeyconCommon::wipe(secret);
 		secretNumber++;
 		resp->getToken(secretNumber, secret);
 	}
 	MZNSetSecrets(MZNC_getUserName(), wchComposedSecrets);
-	memset(wchComposedSecrets, MAX_CHALLENGE * sizeof(wchar_t), 0);
+	memset(wchComposedSecrets, sizeof wchComposedSecrets, 0);
+	free (wchComposedSecrets);
 }
 
 void SeyconSession::startMazinger (SeyconResponse *resp, const char* configFile)
@@ -47,7 +60,7 @@ void SeyconSession::startMazinger (SeyconResponse *resp, const char* configFile)
 	if (configFile != NULL && configFile[0] != '\0')
 	{
 		std::wstring wConfigFile = MZNC_strtowstr(configFile);
-		SeyconCommon::debug("Loading %ls", wConfigFile.c_str());
+		SeyconCommon::debug("Loading %ls for %s", wConfigFile.c_str(), MZNC_getUserName());
 		if (!MZNLoadConfiguration(MZNC_getUserName(), wConfigFile.c_str()))
 		{
 			SeyconCommon::warn("Unable to load file %s\n", configFile);
@@ -59,7 +72,7 @@ void SeyconSession::startMazinger (SeyconResponse *resp, const char* configFile)
 		MZNLoadConfiguration(MZNC_getUserName(), NULL);
 	}
 	parseAndStoreSecrets(resp);
-	SeyconCommon::debug("Parsed secrets");
+	SeyconCommon::debug("Starting mazinger for %s", MZNC_getUserName());
 	MZNStart(MZNC_getUserName());
 	SeyconCommon::debug("Mazinger started");
 	MZNCheckPasswords(MZNC_getUserName());
@@ -166,10 +179,12 @@ void SeyconSession::downloadMazingerConfig (std::string &configFile)
 		if (pwd != NULL)
 		chown(configFile.c_str(), pwd->pw_uid, pwd->pw_gid);
 #endif
+		MZNSendDebugMessageA("Creating file %s", configFile.c_str());
 		FILE *f = fopen(configFile.c_str(), "wb");
 		if (f == NULL)
 		{
 			SeyconCommon::warn("Cannot create file %s", configFile.c_str());
+			MZNSendDebugMessageA("Cannot create file %s", configFile.c_str());
 		}
 		else
 		{
@@ -177,6 +192,8 @@ void SeyconSession::downloadMazingerConfig (std::string &configFile)
 			fclose(f);
 		}
 		delete resp;
+	} else {
+		SeyconCommon::warn("Cannot get mazinger config from server");
 	}
 }
 
@@ -189,7 +206,7 @@ ServiceIteratorResult SeyconSession::launchMazinger (const char* wchHostName, in
 
 	SeyconCommon::debug("Launching Mazinger for user %s", soffidUser.c_str());
 	SeyconResponse *resp = service.sendUrlMessage(wchHostName, dwPort,
-			L"/%hs?action=getSecrets&challengeId=%hs", lpszServlet, sessionKey.c_str());
+			L"/%hs?action=getSecrets&challengeId=%hs&encode=true", lpszServlet, sessionKey.c_str());
 	// Parse results
 	if (resp != NULL)
 	{
@@ -198,9 +215,10 @@ ServiceIteratorResult SeyconSession::launchMazinger (const char* wchHostName, in
 		if (status == "OK")
 		{
 			// Generar el archivo de configuración
-			std::string configFile;
+			std::string configFile ("");
 			downloadMazingerConfig(configFile);
-			startMazinger(resp, configFile.c_str());
+			if (configFile.length() > 0)
+				startMazinger(resp, configFile.c_str());
 			result = SIR_SUCCESS;
 		}
 		delete resp;
@@ -287,7 +305,7 @@ void SeyconSession::renewSecrets (const char* achNewKey)
 
 				SeyconService service;
 				SeyconResponse *resp = service.sendUrlMessage(
-						L"/getSecrets?user=%hs&key=%hs&key2=%hs", soffidUser.c_str(),
+						L"/getSecrets?user=%hs&key=%hs&key2=%hs&encode=true", soffidUser.c_str(),
 						oldSession, newKey.c_str());
 				// Parse results
 				if (resp != NULL)
@@ -317,6 +335,7 @@ void SeyconSession::renewSecrets (const char* achNewKey)
 void SeyconSession::updateMazingerConfig ()
 {
 	SeyconCommon::info("Updating rules for user %s\n", soffidUser.c_str());
+	MZNSendDebugMessage("Updating rules for user %s", soffidUser.c_str());
 
 	std::string configFile;
 	downloadMazingerConfig(configFile);

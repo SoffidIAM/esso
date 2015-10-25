@@ -86,13 +86,7 @@ static char *getDefaultDesktop ()
 }
 
 MazingerEnv* MazingerEnv::getDefaulEnv() {
-	if (pDefaultEnv == NULL) {
-		pDefaultEnv = new MazingerEnv;
-		pDefaultEnv->user.assign (MZNC_getUserName());
-		pDefaultEnv->desktop = getDefaultDesktop();
-		environments.push_back(pDefaultEnv);
-	}
-	return pDefaultEnv;
+	return getEnv(MZNC_getUserName());
 }
 
 static char currentDesktop[1000] = "";
@@ -101,15 +95,14 @@ MazingerEnv* MazingerEnv::getEnv(const char *user) {
 }
 
 MazingerEnv* MazingerEnv::getEnv(const char *user, const char*desktop) {
-	if ( (user == NULL || strcmp(user, MZNC_getUserName()) == 0) &&
-			(desktop == NULL || strcmp(desktop, getDefaultDesktop()) == 0))
-		return getDefaulEnv();
 	for (std::vector<MazingerEnv*>::iterator it = environments.begin ();
 			it != environments.end(); it++)
 	{
 		MazingerEnv* env = *it;
 		if (env->user == user && env->desktop == desktop)
+		{
 			return env;
+		}
 	}
 	MazingerEnv *env = new MazingerEnv;
 	env->user.assign (user);
@@ -340,6 +333,7 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 		if (shmName.size() == 0) {
 			shmName.assign ("/MazingerData-");
 			shmName.append (user);
+			SeyconCommon::debug ("Setting file name for %p (%s) = %s\n", this, user.c_str(), shmName.c_str());
 		}
 		SeyconCommon::debug ("Opening %s\n", shmName.c_str());
 		shm = shm_open (shmName.c_str(), readOnly ? O_RDONLY : O_RDWR, 0600);
@@ -391,16 +385,21 @@ void MazingerEnv::close () {
 #endif
 
 ConfigReader * MazingerEnv::getConfigReader () {
-	MZNC_waitMutex();
-	if (reader == NULL) {
-		PMAZINGER_DATA pData = getData();
-		if (pData == NULL)
-			return NULL;
-		reader = new ConfigReader (open(true));
-		MZNSendDebugMessageA("Parsing Mazinger data");
-		reader->parse();
-		MZNSendDebugMessageA("END Parsing Mazinger data");
+	if (MZNC_waitMutex())
+	{
+		if (reader == NULL) {
+			PMAZINGER_DATA pData = getData();
+			if (pData == NULL)
+			{
+				MZNC_endMutex();
+				return NULL;
+			}
+			reader = new ConfigReader (open(true));
+			MZNSendDebugMessageA("Parsing Mazinger data");
+			reader->parse();
+			MZNSendDebugMessageA("END Parsing Mazinger data");
+		}
+		MZNC_endMutex();
 	}
-	MZNC_endMutex();
 	return reader;
 }

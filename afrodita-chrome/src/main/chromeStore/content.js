@@ -1,10 +1,22 @@
-cachedElements= {};
+var cachedElements= {};
+var nextElement = 0;
+var timer = undefined;
 
-nextElement = 0;
+function soffidRegisterElement(element) {
+	if (element == null)
+		return "";
+	if (typeof (element.__Soffid_Afr_Id) == 'undefined')
+	{
+		element.__Soffid_Afr_Id = ++nextElement;
+		cachedElements [element.__Soffid_Afr_Id] = element;
+	}
+	return element.__Soffid_Afr_Id;
+}
 
-var port = chrome.runtime.connect ({name: "soffidesso"});
-
-port.onMessage.addListener (function (request) {
+function soffidLoadProcedure () {
+     // alert("Connect on "+document.URL);
+    var port = chrome.runtime.connect ();
+    port.onMessage.addListener (function (request) {
 		try {
 				if (request.action == "getContent")
 			    {
@@ -13,7 +25,37 @@ port.onMessage.addListener (function (request) {
 			    }
 			    else if (request.action == "getInfo")
 			    {
-				    port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: request.pageId});
+					var pageId = request.pageId;
+					var soffidPageId = pageId;
+					window.addEventListener("unload", function () { 
+						port.postMessage ({message: "onUnload", pageId: soffidPageId});
+						port.disconnect();
+					});
+				    port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: pageId});
+ 				    var observer = new MutationObserver ( function (mutations) {
+					   mutations.forEach (function (mutation) {
+						  if (mutation.type == 'childList' && mutation.addedNodes.length > 0 )
+						  {
+							  for (var i = 0; i < mutation.addedNodes.length; i++)
+							  {
+								  var node = mutation.addedNodes.item(i);
+								  if (node.tagName != undefined && node.tagName.toLowerCase() === "input")
+								  {
+									  var doc =  mutation.target.ownerDocument;
+									  if (timer != undefined) {
+										  window.clearTimeout(timer);
+									  }
+									  timer = window.setTimeout(1000, function () {
+										port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: pageId});});
+									  return;
+								  }
+							  }
+						  }
+					    });
+				      } );
+				    var config = {attributes: false, childList: true, characterData: false, subtree: true };
+				    observer.observe (document.documentElement, config);
+					window.addEventListener("unload", function () { observer.disconnect();})
 			    }
 			    else if (request.action == "getUrl")
 			    {
@@ -37,21 +79,17 @@ port.onMessage.addListener (function (request) {
 			    }
 			    else if (request.action == "getDocumentElement")
 			    {
-			    	element = nextElement ++;
 			    	var txt = document.documentElement;
-			    	cachedElements[element] = txt;
-				    port.postMessage({response: element, requestId: request.requestId, pageId: request.pageId});
+				    port.postMessage({response: soffidRegisterElement(txt), requestId: request.requestId, pageId: request.pageId});
 			    }
 			    else if (request.action == "getElementById")
 			    {
-			    	element = nextElement ++;
 			    	var txt = document.getElementById(request.elementId);
 			    	if ( typeof txt == 'undefined')
 					    port.postMessage({requestId: request.requestId, pageId: request.pageId});
 			    	else
 			    	{
-				    	cachedElements[element] = txt;
-					    port.postMessage({response: element, requestId: request.requestId, pageId: request.pageId});
+					    port.postMessage({response: soffidRegisterElement(txt), requestId: request.requestId, pageId: request.pageId});
 			    	}
 			    }
 			    else if (request.action == "getElementsByTagName")
@@ -61,9 +99,7 @@ port.onMessage.addListener (function (request) {
 			    	for (var i = 0; i < elements.length; i++)
 			    	{
 			    		e = elements[i];
-				    	element = nextElement ++;
-				    	cachedElements[element] = e;
-				    	response[i] = element;
+				    	response[i] = soffidRegisterElement(e);
 			    	}
 				    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
 			    }
@@ -74,9 +110,7 @@ port.onMessage.addListener (function (request) {
 			    	for (var i = 0; i < elements.length; i++)
 			    	{
 			    		e = elements[i];
-				    	element = nextElement ++;
-				    	cachedElements[element] = e;
-				    	response[i] = element;
+				    	response[i] = soffidRegisterElement(e);
 			    	}
 				    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
 			    }
@@ -87,9 +121,7 @@ port.onMessage.addListener (function (request) {
 			    	for (var i = 0; i < elements.length; i++)
 			    	{
 			    		e = elements[i];
-				    	element = nextElement ++;
-				    	cachedElements[element] = e;
-				    	response[i] = element;
+				    	response[i] = soffidRegisterElement(e);
 			    	}
 				    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
 			    }
@@ -100,9 +132,7 @@ port.onMessage.addListener (function (request) {
 			    	for (var i = 0; i < elements.length; i++)
 			    	{
 			    		e = elements[i];
-				    	element = nextElement ++;
-				    	cachedElements[element] = e;
-				    	response[i] = element;
+				    	response[i] = soffidRegisterElement(e);
 			    	}
 				    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
 			    }
@@ -113,9 +143,7 @@ port.onMessage.addListener (function (request) {
 			    	for (var i = 0; i < elements.length; i++)
 			    	{
 			    		e = elements[i];
-				    	element = nextElement ++;
-				    	cachedElements[element] = e;
-				    	response[i] = element;
+				    	response[i] = soffidRegisterElement(e);
 			    	}
 				    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
 			    }
@@ -134,7 +162,29 @@ port.onMessage.addListener (function (request) {
 			    	var elementId = request.element;
 			    	var element = cachedElements[elementId];
 			    	if (typeof element != 'undefined')
+			    		port.postMessage({response: element.getAttribute(request.attribute), requestId: request.requestId, pageId: request.pageId});
+			    	else
+			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId});
+			    }
+			    else if (request.action == "getProperty")
+			    {
+			    	var elementId = request.element;
+			    	var element = cachedElements[elementId];
+			    	if (typeof element != 'undefined')
 			    		port.postMessage({response: element[request.attribute], requestId: request.requestId, pageId: request.pageId});
+			    	else
+			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId});
+			    }
+			    else if (request.action == "getComputedStyle")
+			    {
+			    	var elementId = request.element;
+			    	var element = cachedElements[elementId];
+			    	if (typeof element != 'undefined')
+			    	{
+			    		var s = window.getComputedStyle(element,null);
+			    		port.postMessage({response: s[request.style], 
+			    			requestId: request.requestId, pageId: request.pageId});
+			    	}
 			    	else
 			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId});
 			    }
@@ -202,9 +252,167 @@ port.onMessage.addListener (function (request) {
 			    	
 			    	if (typeof element != 'undefined')
 			    	{
-				    	elementId = nextElement ++;
-				    	cachedElements[element] = element.parentNode;
-			    		port.postMessage({response: elementId, requestId: request.requestId, pageId: request.pageId});
+			    		port.postMessage({response: soffidRegisterElement(element.parentNode), 
+							requestId: request.requestId, 
+							pageId: request.pageId});
+			    	}
+			    	else
+			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId});
+			    }
+			    else if (request.action == "getOffsetParent")
+			    {
+			    	var elementId = request.element;
+			    	var element = cachedElements[elementId];
+			    	
+			    	if (typeof element != 'undefined')
+			    	{
+			    		port.postMessage({response: soffidRegisterElement(element.offsetParent), 
+							requestId: request.requestId, 
+							pageId: request.pageId});
+			    	}
+			    	else
+			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId});
+			    }
+			    else if (request.action == "getPreviousSibling")
+			    {
+			    	var elementId = request.element;
+			    	var element = cachedElements[elementId];
+			    	
+			    	if (typeof element != 'undefined')
+			    	{
+			    		port.postMessage({response: soffidRegisterElement(element.previousSibling), 
+							requestId: request.requestId, 
+							pageId: request.pageId});
+			    	}
+			    	else
+			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId});
+			    }
+			    else if (request.action == "getNextSibling")
+			    {
+			    	var elementId = request.element;
+			    	var element = cachedElements[elementId];
+			    	
+			    	if (typeof element != 'undefined')
+			    	{
+			    		port.postMessage({response: soffidRegisterElement(element.nextSibling), 
+							requestId: request.requestId, 
+							pageId: request.pageId});
+			    	}
+			    	else
+			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId});
+			    }
+			    else if (request.action == "createElement")
+			    {
+			    	var tag = request.tagName;
+			    	var element = document.createElement(tag);
+		    		port.postMessage({response: soffidRegisterElement(element), 
+							requestId: request.requestId, 
+							pageId: request.pageId});
+			    }
+			    else if (request.action == "alert")
+			    {
+					alert (request.text);
+		    		port.postMessage({response: "OK", requestId: request.requestId, pageId: request.pageId});
+			    }
+			    else if (request.action == "appendChild")
+			    {
+			    	var elementId = request.element;
+			    	var elementId2 = request.child;
+			    	var element = cachedElements[elementId];
+			    	var element2 = cachedElements[elementId2];
+			    	
+			    	if (typeof element != 'undefined' && typeof element2 != 'undefined')
+			    	{
+			    		element.appendChild (element2);
+			    		port.postMessage({response: "OK", requestId: request.requestId, pageId: request.pageId});
+			    	}
+			    	else
+			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId});
+			    }
+			    else if (request.action == "removeChild")
+			    {
+			    	var elementId = request.element;
+			    	var elementId2 = request.child;
+			    	var element = cachedElements[elementId];
+			    	var element2 = cachedElements[elementId2];
+			    	
+			    	if (typeof element != 'undefined' && typeof element2 != 'undefined')
+			    	{
+			    		element.removeChild (element2);
+			    		port.postMessage({response: "OK", requestId: request.requestId, pageId: request.pageId});
+			    	}
+			    	else
+			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId});
+			    }
+			    else if (request.action == "insertBefore")
+			    {
+			    	var elementId = request.element;
+			    	var elementId2 = request.child;
+			    	var elementId3 = request.before;
+			    	var element = cachedElements[elementId];
+			    	var element2 = cachedElements[elementId2];
+			    	var element3 = cachedElements[elementId3];
+			    	
+			    	if (typeof element != 'undefined' && 
+						typeof element2 != 'undefined' && 
+						typeof element3 != 'undefined')
+			    	{
+			    		element.insertBefore (element2, element3);
+			    		port.postMessage({response: "OK", requestId: request.requestId, pageId: request.pageId});
+			    	}
+			    	else
+			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId});
+			    }
+			    else if (request.action == "subscribe")
+			    {
+			    	var elementId = request.element;
+			    	var element = cachedElements[elementId];
+			    	var event = request.event;
+			    	var listener = request.listener;
+			    	
+			    	if (typeof element != 'undefined')
+			    	{
+			    		element.addEventListener (event, function () {
+				    		port.postMessage({message: "event", eventId: listener, pageId: request.pageId});
+			    		}, true);
+						port.postMessage({response: "OK", requestId: request.requestId, pageId: request.pageId});
+			    	}
+			    	else
+					{
+			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId,
+							"exception": "Unknown element"});
+					}
+			    }
+			    else if (request.action == "unSubscribe")
+			    {
+		    		port.postMessage({response: "OK", requestId: request.requestId, pageId: request.pageId});
+			    }
+			    else if (request.action == "setProperty")
+			    {
+			    	var elementId = request.element;
+			    	var element = cachedElements[elementId];
+			    	if (typeof element != 'undefined')
+			    	{
+			    		element[request.attribute] = request.value;
+			    		port.postMessage({response: true, requestId: request.requestId, pageId: request.pageId});
+						if (request.attribute == "value")
+						{
+							var evt  = document.createEvent ("HTMLEvents");
+							evt.initEvent ("change", true, true);
+							element.dispatchEvent(evt);
+						}
+			    	}
+			    	else
+			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId});
+			    }
+			    else if (request.action == "setTextContent")
+			    {
+			    	var elementId = request.element;
+			    	var element = cachedElements[elementId];
+			    	if (typeof element != 'undefined')
+			    	{
+			    		element.textContent = ( request.text );
+			    		port.postMessage({response: true, requestId: request.requestId, pageId: request.pageId});
 			    	}
 			    	else
 			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId});
@@ -215,7 +423,28 @@ port.onMessage.addListener (function (request) {
 			    	var element = cachedElements[elementId];
 			    	if (typeof element != 'undefined')
 			    	{
-			    		element[request.attribute] = request.value;
+			    		element.setAttribute(request.attribute, request.value);
+			    		port.postMessage({response: true, requestId: request.requestId, pageId: request.pageId});
+						if (request.attribute == "value")
+						{
+							var evt  = document.createEvent ("HTMLEvents");
+							evt.initEvent ("change", true, true);
+							element.dispatchEvent(evt);
+						}
+			    	}
+			    	else
+			    		port.postMessage({error: true, 
+							requestId: request.requestId, 
+							pageId: request.pageId, 
+							"exception": "Attribute not found"});
+			    }
+			    else if (request.action == "removeAttribute")
+			    {
+			    	var elementId = request.element;
+			    	var element = cachedElements[elementId];
+			    	if (typeof element != 'undefined')
+			    	{
+			    		element.removeAttribute(request.attribute);
 			    		port.postMessage({response: true, requestId: request.requestId, pageId: request.pageId});
 			    	}
 			    	else
@@ -233,9 +462,7 @@ port.onMessage.addListener (function (request) {
 				    	for (var i = 0; i < elements.length; i++)
 				    	{
 				    		e = elements[i];
-					    	eid = nextElement ++;
-					    	cachedElements[eid] = e;
-					    	response[i] = eid;
+							response[i]  = soffidRegisterElement(e); 
 				    	}
 					    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
 			    	}
@@ -246,17 +473,21 @@ port.onMessage.addListener (function (request) {
 					for (var key in request) {
 						result = result + key+":"+request[key]+" ";
 					}
-			    	alert ("Unexpecte message on page: "+result);
+			    	alert ("Unexpected message on page: "+result);
 			    }
-		} catch (e ) {
-			var r = "";
-			for (var key in request) {
-				r = r + key+":"+request[key]+" ";
-			}
-
-			alert ("Error processing message "+r+":"+e);
+		} catch (error ) {
+    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId,
+				"exception": error.message});
 		}
-    }
-);
+      }
+    );
+};
 
+
+var state = document.readyState ;
+if (state == "uninitialized" || state == "loading")
+	window.addEventListener("load", soffidLoadProcedure);
+else {
+	soffidLoadProcedure();
+}
 

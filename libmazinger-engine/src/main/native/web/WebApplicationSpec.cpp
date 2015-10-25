@@ -30,16 +30,13 @@ WebApplicationSpec::~WebApplicationSpec() {
 }
 
 bool WebApplicationSpec::matches(AbstractWebApplication &app) {
-	MZNSendTraceMessageA("Testing web application %s",
-			szUrl);
 	if (reUrl != NULL)
 	{
 		std::string v;
 		app.getUrl(v);
 		if (regexec (reUrl, v.c_str(), (size_t) 0, NULL, 0 ) != 0 )
 		{
-			MZNSendTraceMessageA("Web application %s does not match %s",
-					szUrl, v.c_str());
+			MZNSendDebugMessageA("MISS  %s", szUrl);
 			return false;
 		}
 	}
@@ -49,8 +46,7 @@ bool WebApplicationSpec::matches(AbstractWebApplication &app) {
 		app.getTitle(v);
 		if (regexec (reTitle, v.c_str(), (size_t) 0, NULL, 0 ) != 0 )
 		{
-			MZNSendTraceMessageA("Web application title %s does not match title %s",
-					szTitle, v.c_str());
+			MZNSendDebugMessageA("MISS  Title %s", szTitle);
 			return false;
 		}
 	}
@@ -72,18 +68,19 @@ bool WebApplicationSpec::matches(AbstractWebApplication &app) {
 			{
 				ok = true;
 			}
-			delete (*it2); // Release AbstractWebElement
+			(*it2) -> release(); // Release AbstractWebElement
 		}
 		elements.clear();
 		if (!ok && ! (*it) ->m_bOptional)
 		{
-			MZNSendDebugMessageA("Missing required component: ");
+			MZNSendDebugMessageA("MISS Component");
 			(*it)->dump();
 			return false;
 		}
 	}
-	MZNSendDebugMessageA("Matched web application. url=%s title=%s",
-			szUrl == NULL ? "<any>" : szUrl,
+	MZNSendDebugMessageA("MATCH URL   %s",
+			szUrl == NULL ? "<any>": szUrl);
+	MZNSendDebugMessageA("MATCH TITLE %s",
 			szTitle == NULL ? "<any>": szTitle);
 
 	return true;
