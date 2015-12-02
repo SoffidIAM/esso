@@ -17,6 +17,7 @@ CEventListener::CEventListener ()
 	m_pElement = NULL;
 	m_listener = NULL;
 	m_pApplication = NULL;
+	preventLoop = false;
 }
 
 CEventListener::~CEventListener() {
@@ -55,7 +56,6 @@ void CEventListener::connect (ExplorerElement *pElement,const char *event, WebLi
 	BSTR bstr = Utils::str2bstr("addEventListener");
 	DISPID dispId = 0;
 	hr = pElement->getIDispatch()->GetIDsOfNames(IID_NULL, &bstr, 1, LOCALE_SYSTEM_DEFAULT, &dispId);
-	MZNSendDebugMessageA("Looking for property %s on %s", "addEventListener", pElement->toString().c_str());
 	if ( !FAILED(hr))
 	{
 		DISPPARAMS dp;
@@ -112,10 +112,10 @@ void CEventListener::connect (ExplorerElement *pElement,const char *event, WebLi
 			hr = pElement->getIDispatch()->Invoke(dispId, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &dp, &result, &ei, &error);
 			if (FAILED(hr))
 			{
-				MZNSendDebugMessage("Error en %lX en attributes %d", (long) hr,  (int) error);
-				MZNSendDebugMessage("Error code %d ", (int) ei.wCode);
-				MZNSendDebugMessage("Source %ls", ei.bstrSource);
-				MZNSendDebugMessage("Description %ls", ei.bstrDescription);
+//				MZNSendDebugMessage("Error en %lX en attributes %d", (long) hr,  (int) error);
+//				MZNSendDebugMessage("Error code %d ", (int) ei.wCode);
+//				MZNSendDebugMessage("Source %ls", ei.bstrSource);
+//				MZNSendDebugMessage("Description %ls", ei.bstrDescription);
 			}
 			SysFreeString(va[1].bstrVal);
 		} else {
@@ -194,12 +194,11 @@ HRESULT __stdcall CEventListener::Invoke(DISPID dispIdMember,REFIID riid,LCID lc
 
 	if(!IsEqualIID(riid,IID_NULL)) return DISP_E_UNKNOWNINTERFACE; // riid should always be IID_NULL
 
-	MZNSendDebugMessage("Invoked CEventListener %d / %d", (int) lcid, (int) wFlags);
+//	MZNSendDebugMessage("Invoked CEventListener %d / %x", (int) dispIdMember, (int) wFlags);
 
 	if (m_pElement != NULL && m_listener != NULL)
 	{
-		m_pElement->sanityCheck();
-
+//		MZNSendDebugMessageA("m_pElement != null");
 		switch (dispIdMember)
 		{
 		case DISPID_HTMLELEMENTEVENTS2_ONCLICK:
@@ -214,17 +213,26 @@ HRESULT __stdcall CEventListener::Invoke(DISPID dispIdMember,REFIID riid,LCID lc
 			MZNSendDebugMessage("Invoked input event");
 			if ( m_event != "focus") return S_OK;
 			break;
+		default:
+			return S_OK;
 		}
 
+		m_pElement->sanityCheck();
 
 		m_listener->onEvent(m_event.c_str(), m_pElement->getApplication(), m_pElement);
 	}
-	else if (m_pApplication != NULL)
+	else if (m_pApplication != NULL && false)
 	{
-		std::string url;
-		m_pApplication->getUrl(url);
-		MZNSendDebugMessage("Invoked refresh event %p; %s", m_pApplication, url.c_str());
-		MZNWebMatchRefresh(m_pApplication);
+//		MZNSendDebugMessageA("m_pApplication != null");
+		if (!preventLoop)
+		{
+			preventLoop = true;
+			std::string url;
+			m_pApplication->getUrl(url);
+			MZNSendDebugMessage("Invoked refresh event %p; %s", m_pApplication, url.c_str());
+			MZNWebMatchRefresh(m_pApplication);
+			preventLoop = false;
+		}
 	}
 	return S_OK;
 }
@@ -279,8 +287,8 @@ void CEventListener::connectRefresh (ExplorerWebApplication *app)
 					SysFreeString(b);
 					SysFreeString(b2);
 				}
-				else
-					MZNSendDebugMessage("Error en InvokeEx");
+//				else
+//					MZNSendDebugMessage("Error en InvokeEx");
 
 			}
 			pDispatchEx -> Release();

@@ -118,14 +118,16 @@ static HRESULT getDispatchProperty (IDispatch *object, const char *property, VAR
 			EXCEPINFO ei;
 			ZeroMemory (&ei, sizeof ei);
 			hr = pDispatchEx->InvokeEx(dispId, LOCALE_SYSTEM_DEFAULT, DISPATCH_PROPERTYGET, &dp, &value, &ei, NULL);
-
 			if ( FAILED(hr))
 			{
+#if 0
+				MZNSendDebugMessage("Cannot get property %s", property);
 				MZNSendDebugMessage("Error en InvokeEx");
 				MZNSendDebugMessage("Error en %lX en attributes %d", (long) hr,  (int) error);
 				MZNSendDebugMessage("Error code %d ", (int) ei.wCode);
 				MZNSendDebugMessage("Source %ls", ei.bstrSource);
 				MZNSendDebugMessage("Description %ls", ei.bstrDescription);
+#endif
 			}
 
 		}
@@ -426,9 +428,10 @@ void ExplorerElement::subscribe(const char* eventName, WebListener* listener) {
 void ExplorerElement::unSubscribe(const char* eventName, WebListener* listener) {
 	if (activeListeners.find(listener) != activeListeners.end())
 	{
+//		MZNSendDebugMessageA("Unsubscribing %s on %s", eventName, toString().c_str());
 		CEventListener *el = activeListeners[listener];
-		el->Release();
 		activeListeners.erase(listener);
+		el->Release();
 	}
 }
 
@@ -655,7 +658,7 @@ void ExplorerElement::setProperty(const char* property, const char* value) {
 				v.pdispVal = pEventObj;
 				hr = pElement3->fireEvent(eventName, &v, &cancelled);
 				if (!FAILED(hr))
-				pEventObj->Release();
+					pEventObj->Release();
 			}
 			pElement3->Release();
 		}

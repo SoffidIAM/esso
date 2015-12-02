@@ -41,12 +41,7 @@ void  CExplorerEventHandler::connect(IWebBrowser2 *pBrowser)
 		  pCP -> Release ();
 		  pCPC -> Release ();
 	}
-
-
 }
-
-
-
 
 
 HRESULT __stdcall CExplorerEventHandler::QueryInterface(REFIID riid, void **ppObj) {
@@ -148,9 +143,8 @@ static DWORD WINAPI documentThreadProc(
 HRESULT __stdcall CExplorerEventHandler::Invoke(DISPID dispIdMember,REFIID riid,LCID lcid,WORD wFlags,DISPPARAMS *pDispParams,VARIANT *pVarResult,EXCEPINFO *pExcepInfo,UINT *puArgErr) {
 	if(!IsEqualIID(riid,IID_NULL)) return DISP_E_UNKNOWNINTERFACE; // riid should always be IID_NULL
 
-
-
 	if(dispIdMember==DISPID_DOCUMENTCOMPLETE) { // Handle the BeforeNavigate2 event
+//		MZNSendDebugMessageA("OnDocumentComplete");
 		IDispatch *pDispatch = NULL;
 
 		std::string url;
@@ -184,28 +178,17 @@ HRESULT __stdcall CExplorerEventHandler::Invoke(DISPID dispIdMember,REFIID riid,
 		}
 		if (pDispatch != NULL)
 		{
-#if 0
-			pDispatch->AddRef();
-			CreateThread (NULL,  0, documentThreadProc, pDispatch, 0, NULL);
-//			documentThreadProc(pDispatch);
-#else
 			ExplorerWebApplication *app = new ExplorerWebApplication(NULL, pDispatch, NULL);
 			MZNWebMatch(app);
 			IHTMLWindow2 *w;
 			app->installIntervalListener();
-//			app->release();
-
-#endif
-			return 0;
 		}
 	} else if (dispIdMember == DISPID_PROGRESSCHANGE){
 
 //		MZNSendDebugMessageA("Progress Change %ld / %ld" , pDispParams->rgvarg[0].lVal,
 //				pDispParams->rgvarg[1].lVal) ;
 	} else if (dispIdMember == DISPID_NAVIGATECOMPLETE2){
-		MZNSendDebugMessageA("Navigate complete 2") ;
 	} else if (dispIdMember == DISPID_NAVIGATECOMPLETE){
-		MZNSendDebugMessageA("Navigate complete 1") ;
 	} else {
 //		MZNSendDebugMessageA("Ignoreing dispatcher %d", (int) dispIdMember) ;
 	}
