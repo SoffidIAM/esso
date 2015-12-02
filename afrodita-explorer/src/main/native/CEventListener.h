@@ -12,7 +12,7 @@
 
 class CEventListener :
         public IDispatch
-    {
+{
     public:
 
     //IUnknown interface
@@ -43,6 +43,8 @@ private:
 
 	DWORD m_dwCookie;
 	LONG m_nRefCount;   //for managing the reference count
+
+	bool preventLoop;
 
 };
 

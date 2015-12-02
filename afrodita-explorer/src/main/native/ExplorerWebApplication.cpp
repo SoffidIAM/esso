@@ -28,7 +28,11 @@ ExplorerWebApplication::~ExplorerWebApplication() {
 	if (m_pHtmlDoc4 != NULL)
 		m_pHtmlDoc4->Release();
 	if (smartWebPage != NULL)
+	{
+		MZNSendDebugMessage("** Releasing smart web page");
 		smartWebPage->release();
+		MZNSendDebugMessage("** Released smart web page");
+	}
 	if (pIntervalListener != NULL)
 		pIntervalListener->Release();
 }
@@ -51,6 +55,7 @@ ExplorerWebApplication::ExplorerWebApplication(IWebBrowser2 *pBrowser, IDispatch
 		m_pDispatch = NULL;
 	m_pHtmlDoc2 = NULL;
 	m_pHtmlDoc3 = NULL;
+	m_pHtmlDoc4 = NULL;
 	pIntervalListener = NULL;
 	smartWebPage = new SmartWebPage();
 }
@@ -166,7 +171,9 @@ IHTMLDocument4 * ExplorerWebApplication::getHTMLDocument4 ()
 		pDispatch->QueryInterface(local_IID_IHTMLDocument4,reinterpret_cast<void**>(&m_pHtmlDoc4));
 	}
 	if (m_pHtmlDoc4 == NULL)
+	{
 		MZNSendDebugMessageA("Unable to get ExplorerWebApplications's IHTMLDocument4");
+	}
 	return m_pHtmlDoc4;
 }
 
