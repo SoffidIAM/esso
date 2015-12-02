@@ -4,11 +4,11 @@
 	<artifactId>afrodita-explorer</artifactId>
 	<packaging>pom</packaging>
 	<name>Dll per a injecció d'Usuaris i Passwords a l'InternetExplorer</name>
-	<version>1.6.1-enterprise</version>
+	<version>1.6.2-enterprise-SNAPSHOT</version>
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.6.1-enterprise</version>
+		<version>1.6.2-enterprise-SNAPSHOT</version>
 	</parent>
 
 	<issueManagement>
