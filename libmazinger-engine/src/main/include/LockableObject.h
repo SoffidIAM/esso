@@ -20,6 +20,7 @@ public:
 	virtual void release ();
 	virtual std::string toString () = 0;
 	virtual void sanityCheck ();
+	bool debug;
 
 protected:
 	virtual ~LockableObject();
