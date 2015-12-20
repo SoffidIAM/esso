@@ -520,10 +520,16 @@ void registerFFHook()
 	//
 	//write the default value
 	//
-	wsprintf(szBuff, "%s\\FFExtension", getMazingerDir());
+	wsprintf(szBuff, "%s\\afroditaFf.xpi", getMazingerDir());
 
 	log("Registering Firefox extension");
 	HelperWriteKey(32, HKEY_LOCAL_MACHINE,
+			"Software\\Mozilla\\Firefox\\Extensions",
+			"{df382936-f24b-11df-96e1-9bf54f13e327}", REG_SZ, (void*) szBuff,
+			lstrlen(szBuff));
+
+	log("Registering Firefox extension 64 bits");
+	HelperWriteKey(64, HKEY_LOCAL_MACHINE,
 			"Software\\Mozilla\\Firefox\\Extensions",
 			"{df382936-f24b-11df-96e1-9bf54f13e327}", REG_SZ, (void*) szBuff,
 			lstrlen(szBuff));
@@ -2248,8 +2254,8 @@ int install(int full)
 		 *
 		 */
 		int replaceAction = reboot ? NO_REPLACE : HARD_REPLACE;
-		installResource(NULL, "AfroditaFC.dll", "AfroditaFC.dll", replaceAction);
-		installResource(NULL, "AfroditaFC.dll", "AfroditaFC32.dll", replaceAction);
+		installResource(NULL, "AfroditaFC64.dll", "AfroditaFC.dll", replaceAction);
+		installResource(NULL, "AfroditaFC32.dll", "AfroditaFC32.dll", replaceAction);
 		installResource(NULL, "AfroditaC64.exe", "Afrodita-chrome.exe", replaceAction);
 
 		installResource(NULL, "AfroditaE64.dll", "AfroditaE.dll", replaceAction);
@@ -2268,7 +2274,7 @@ int install(int full)
 
 		int replaceAction = reboot ? NO_REPLACE : HARD_REPLACE;
 		installResource(NULL, "AfroditaE.dll", replaceAction);
-		installResource(NULL, "AfroditaFC.dll", replaceAction);
+		installResource(NULL, "AfroditaFC32.dll", "AfroditaFC.dll", replaceAction);
 		installResource(NULL, "AfroditaC.exe", "Afrodita-chrome.exe", replaceAction);
 		installResource(NULL, "JetScrander.exe");
 		installResource(NULL, "SayakaCP.dll");
@@ -2307,19 +2313,7 @@ int install(int full)
 	installResource(NULL, "sewashi.exe");
 	installResource(NULL, "sewbr.dll");
 	installResource(NULL, "profyumi.jar");
-	installResource("FFExtension\\modules", "afrodita.jsm");
-	installResource("FFExtension\\modules", "Preferences.jsm");
-	installResource("FFExtension\\chrome\\content", "about.xul");
-	installResource("FFExtension\\chrome\\content", "ff-overlay.xul");
-	installResource("FFExtension\\chrome\\content", "overlay.js");
-	installResource("FFExtension\\chrome\\locale\\en-US", "about.dtd");
-	installResource("FFExtension\\chrome\\locale\\en-US", "overlay.properties");
-	installResource("FFExtension\\default\\preferences", "prefs.js");
-	installResource("FFExtension", "chrome.manifest");
-	installResource("FFExtension", "install.rdf");
-	uninstallResource("FFExtension\\components\\AfroditaF.dll");
-	uninstallResource("FFExtension\\components\\AfroditaF5.dll");
-	uninstallResource("FFExtension\\components\\AfroditaF.xpt");
+	installResource(NULL, "afroditaFf.xpi");
 
 
 //	installTCL();
