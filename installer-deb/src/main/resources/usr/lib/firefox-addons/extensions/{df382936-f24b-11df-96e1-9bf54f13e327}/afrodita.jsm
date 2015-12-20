@@ -1,5 +1,6 @@
 var EXPORTED_SYMBOLS = ["AfroditaExtension"];  
 
+
 var AfroditaExtension = {
   docids: new Array(),
   documents: new Array(),
@@ -130,6 +131,7 @@ var AfroditaExtension = {
           return;
 	var c = Components.classes["@caib.es/afroditaf;1"];
 	if (c == null) {          
+	  try {
 	    AfroditaExtension.newInterface = true;
 	    
 	    var os = Components.classes["@mozilla.org/system-info;1"].getService(Components.interfaces.nsIPropertyBag).getProperty("name");
@@ -149,6 +151,8 @@ var AfroditaExtension = {
 		}
 	
 		Components.utils.import("resource://gre/modules/ctypes.jsm");
+		Components.utils.import('resource://gre/modules/devtools/Console.jsm');
+		console.log("path = "+path);
 		Components.utils.import("resource://SoffidESSOExtension/Preferences.jsm");
 		Preferences.defaults.set("signon.rememberSignons", false);
 		// Carregar biblioteca
@@ -403,6 +407,9 @@ var AfroditaExtension = {
 				  var p = w.getComputedStyle (el, null)[n];
 				  return AfroditaExtension.createStringResult(docid, p);
 		       } );
+	} catch (e) {
+		console.log("Error in afrodita startup: "+e.message);
+	}
       } else {
           AfroditaExtension.newInterface = false;
       }

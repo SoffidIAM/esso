@@ -7,7 +7,7 @@
 	<parent>
 		<artifactId>afrodita-firefox-ctype</artifactId>
 		<groupId>com.soffid.iam.esso</groupId>
-		<version>3.0.1-SNAPSHOT</version>
+		<version>1.6.0-SNAPSHOT</version>
 	</parent>
 	<build>
 		<plugins>
@@ -31,7 +31,7 @@
 						<configuration>
 							<tasks>
 								<mkdir dir="target/objs" />
-								<exec executable="i586-mingw32msvc-windres">
+								<exec executable="${windres.64w}">
 									<arg value="-i../src/main/resources/Templ1.rc" />
 									<arg value="-Itarget/native/include" />
 									<arg value="-otarget/objs/resources.o" />
@@ -47,9 +47,9 @@
 				<extensions>true</extensions>
 				<configuration>
 					<compilerProvider>generic</compilerProvider>
-					<compilerExecutable>i586-mingw32msvc-g++</compilerExecutable>
+					<compilerExecutable>${cpp.64w}</compilerExecutable>
 					<linkerProvider>generic</linkerProvider>
-					<linkerExecutable>i586-mingw32msvc-g++</linkerExecutable>
+					<linkerExecutable>${cpp.64w}</linkerExecutable>
 					<compilerMiddleOptions>
 						<compilerMiddleOption>-Wall</compilerMiddleOption>
 						<compilerMiddleOption>-g3</compilerMiddleOption>
@@ -104,13 +104,13 @@
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>com.soffid.iam.esso.w32</groupId>
+			<groupId>${pom.groupId}</groupId>
 			<artifactId>libmazinger-engine</artifactId>
 			<version>${pom.version}</version>
 			<type>inczip</type>
 		</dependency>
 		<dependency>
-			<groupId>com.soffid.iam.esso.w32</groupId>
+			<groupId>${pom.groupId}</groupId>
 			<artifactId>libmazinger-engine</artifactId>
 			<version>${pom.version}</version>
 			<type>a</type>
