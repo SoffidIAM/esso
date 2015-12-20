@@ -4,7 +4,7 @@
 	<artifactId>MazingerInstaller</artifactId>
 	<name>Instal·lador de MAZINGER 64 bits Ubuntu</name>
 	<parent>
-		<version>1.6.2-enterprise-SNAPSHOT</version>
+		<version>1.6.2-enterprise</version>
 		<groupId>com.soffid.iam.esso.pom</groupId>
 		<artifactId>MazingerInstaller</artifactId>
 	</parent>
