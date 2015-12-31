@@ -237,7 +237,6 @@ void SmartForm::findInputs (AbstractWebApplication* app, AbstractWebElement *ele
 void SmartForm::findRootInputs (AbstractWebApplication* app, std::vector<AbstractWebElement*> &inputs)
 {
 	std::vector<AbstractWebElement*> inputs2;
-	MZNSendDebugMessageA("Got %d elements", inputs2.size());
 	app->sanityCheck();
 	MZNSendDebugMessageA("APP = %s", app->toString().c_str());
 	app->getElementsByTagName("input", inputs2 );
@@ -268,11 +267,7 @@ void SmartForm::findRootInputs (AbstractWebApplication* app, std::vector<Abstrac
 			loopElement->release();
 			loopElement = parent;
 		} while (loopElement != NULL);
-		if (omit)
-		{
-			element->release();
-		}
-		else
+		if (!omit)
 		{
 			inputs.push_back(element);
 			if( ! visible)
