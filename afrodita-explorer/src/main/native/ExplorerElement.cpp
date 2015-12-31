@@ -49,13 +49,13 @@ void ExplorerElement::getChildren(std::vector<AbstractWebElement*> &children)
 	IDispatch *childrenDisp;
 	IHTMLElementCollection *col;
 	HRESULT hr = m_pElement->QueryInterface(IID_IHTMLElement, reinterpret_cast<void**>(&e));
-	if (!FAILED(hr))
+	if (!FAILED(hr) && e != NULL)
 	{
 		hr = e->get_children(&childrenDisp);
 	}
 	if (!FAILED(hr))
 		hr = childrenDisp-> QueryInterface(IID_IHTMLElementCollection, reinterpret_cast<void**>(&col));
-	if (!FAILED(hr))
+	if (!FAILED(hr) && col != NULL)
 		hr=col->get_length(&size);
 	if (!FAILED(hr))
 	{
@@ -83,7 +83,7 @@ void ExplorerElement::click()
 {
 	IHTMLElement *e;
 	HRESULT hr = m_pElement->QueryInterface(IID_IHTMLElement, reinterpret_cast<void**>(&e));
-	if (!FAILED(hr))
+	if (!FAILED(hr) && e != NULL)
 	{
 		hr = e->click();
 		e->Release();
@@ -99,7 +99,7 @@ static HRESULT getDispatchProperty (IDispatch *object, const char *property, VAR
 	IDispatchEx *pDispatchEx;
 	static IID IDispatchEx_CLSID = { 0xa6ef9860, 0xc720, 0x11d0, {0x93, 0x37, 0x00,0xa0,0xc9,0x0d,0xca,0xa9}};
 	HRESULT hr = object->QueryInterface(IDispatchEx_CLSID, reinterpret_cast<void**>(&pDispatchEx)) ;
-	if (! FAILED (hr))
+	if (! FAILED (hr) && pDispatchEx != NULL)
 	{
 		hr = pDispatchEx->GetDispID(bstr, fdexNameEnsure, &dispId);
 		if (FAILED (hr))
@@ -148,7 +148,7 @@ static HRESULT setDispatchProperty (IDispatch *object, const char *property, VAR
 	IDispatchEx *pDispatchEx;
 	static IID IDispatchEx_CLSID = { 0xa6ef9860, 0xc720, 0x11d0, {0x93, 0x37, 0x00,0xa0,0xc9,0x0d,0xca,0xa9}};
 	HRESULT hr = object->QueryInterface(IDispatchEx_CLSID, reinterpret_cast<void**>(&pDispatchEx)) ;
-	if (! FAILED (hr))
+	if (! FAILED (hr) && pDispatchEx != NULL)
 	{
 		hr = pDispatchEx->GetDispID(bstr, fdexNameEnsure, &dispId);
 		if (FAILED (hr))
@@ -279,7 +279,7 @@ void ExplorerElement::blur()
 {
 	IHTMLElement2 *e;
 	HRESULT hr = m_pElement->QueryInterface(IID_IHTMLElement2, reinterpret_cast<void**>(&e));
-	if (!FAILED(hr))
+	if (!FAILED(hr) && e != NULL)
 	{
 		hr = e->blur();
 		e->Release();
@@ -293,7 +293,7 @@ AbstractWebElement *ExplorerElement::getParent()
 	IHTMLElement *e;
 	HRESULT hr = m_pElement->QueryInterface(IID_IHTMLElement, reinterpret_cast<void**>(&e));
 	ExplorerElement *parent = NULL;
-	if (!FAILED(hr))
+	if (!FAILED(hr) && e != NULL)
 	{
 		IHTMLElement *nativeParent;
 		hr = e->get_parentElement(&nativeParent);
@@ -311,7 +311,7 @@ AbstractWebElement *ExplorerElement::getOffsetParent()
 	IHTMLElement *e;
 	HRESULT hr = m_pElement->QueryInterface(IID_IHTMLElement, reinterpret_cast<void**>(&e));
 	ExplorerElement *parent = NULL;
-	if (!FAILED(hr))
+	if (!FAILED(hr)  && e != NULL)
 	{
 		IHTMLElement *nativeParent;
 		hr = e->get_offsetParent(&nativeParent);
@@ -334,7 +334,7 @@ void ExplorerElement::getAttribute(const char *attribute, std::string & value)
 		IHTMLElement *e;
 		value.clear();
 		HRESULT hr = m_pElement->QueryInterface(IID_IHTMLElement, reinterpret_cast<void**>(&e));
-		if (!FAILED(hr))
+		if (!FAILED(hr) && e != NULL)
 		{
 			BSTR bstr = Utils::str2bstr(attribute);
 			VARIANT v;
@@ -361,7 +361,7 @@ void ExplorerElement::setAttribute(const char *attribute, const char*value)
 			attribute = "className";
 		IHTMLElement *e;
 		HRESULT hr = m_pElement->QueryInterface(IID_IHTMLElement, reinterpret_cast<void**>(&e));
-		if (!FAILED(hr))
+		if (!FAILED(hr) && e != NULL)
 		{
 			BSTR bstrAttribute = Utils::str2bstr(attribute);
 			BSTR bstrValue = Utils::str2bstr(value);
@@ -382,7 +382,7 @@ void ExplorerElement::focus()
 {
 	IHTMLElement2 *e;
 	HRESULT hr = m_pElement->QueryInterface(IID_IHTMLElement2, reinterpret_cast<void**>(&e));
-	if (!FAILED(hr))
+	if (!FAILED(hr) && e != NULL)
 	{
 		hr = e->focus();
 		e->Release();
@@ -397,7 +397,7 @@ void ExplorerElement::getTagName(std::string & value)
 	IHTMLElement *e;
 	value.clear ();
 	HRESULT hr = m_pElement->QueryInterface(IID_IHTMLElement, reinterpret_cast<void**>(&e));
-	if (!FAILED(hr))
+	if (!FAILED(hr) && e != NULL)
 	{
 		BSTR bstrTag;
 		hr = e->get_tagName(&bstrTag);
@@ -440,7 +440,7 @@ AbstractWebElement* ExplorerElement::getPreviousSibling() {
 	AbstractWebElement *result = NULL;
 	IHTMLDOMNode *e;
 	HRESULT hr = m_pElement->QueryInterface(IID_IHTMLDOMNode, reinterpret_cast<void**>(&e));
-	if (!FAILED(hr))
+	if (!FAILED(hr) && e != NULL)
 	{
 		IHTMLDOMNode *next;
 		hr = e->get_previousSibling(&next);
@@ -457,7 +457,7 @@ AbstractWebElement* ExplorerElement::getNextSibling() {
 	AbstractWebElement *result = NULL;
 	IHTMLDOMNode *e;
 	HRESULT hr = m_pElement->QueryInterface(IID_IHTMLDOMNode, reinterpret_cast<void**>(&e));
-	if (!FAILED(hr))
+	if (!FAILED(hr) && e != NULL)
 	{
 		IHTMLDOMNode *next;
 		hr = e->get_nextSibling(&next);
@@ -475,27 +475,15 @@ void ExplorerElement::appendChild(AbstractWebElement* element) {
 		return;
 	IHTMLDOMNode *e;
 	HRESULT hr = m_pElement->QueryInterface(IID_IHTMLDOMNode, reinterpret_cast<void**>(&e));
-	if (!FAILED(hr))
+	if (!FAILED(hr) && e != NULL)
 	{
 		IHTMLDOMNode *e2;
 		IHTMLDOMNode *e3 = NULL;
 		HRESULT hr = child->m_pElement->QueryInterface(IID_IHTMLDOMNode, reinterpret_cast<void**>(&e2));
-		if (!FAILED(hr))
+		if (!FAILED(hr) && e2 != NULL)
 		{
 			hr = e->appendChild(e2, &e3);
 			if (e3 != NULL) {
-#if 0
-				IDispatch *old = child->m_pElement;
-				HRESULT hr = e3->QueryInterface(IID_IDispatch, reinterpret_cast<void**>(&child->m_pElement));
-				if (!FAILED(hr))
-				{
-					old->Release();
-				}
-				else
-				{
-					child->m_pElement = old;
-				}
-#endif
 				e3->Release();
 			}
 			e2->Release();
@@ -512,11 +500,11 @@ void ExplorerElement::insertBefore(AbstractWebElement* element,
 		return;
 	IHTMLDOMNode *e;
 	HRESULT hr = m_pElement->QueryInterface(IID_IHTMLDOMNode, reinterpret_cast<void**>(&e));
-	if (!FAILED(hr))
+	if (!FAILED(hr) && e != NULL)
 	{
 		IHTMLDOMNode *e2;
 		HRESULT hr = child->m_pElement->QueryInterface(IID_IHTMLDOMNode, reinterpret_cast<void**>(&e2));
-		if (!FAILED(hr))
+		if (!FAILED(hr) && e2 != NULL)
 		{
 			VARIANT v;
 			v.pdispVal = NULL;
@@ -557,7 +545,7 @@ void ExplorerElement::insertBefore(AbstractWebElement* element,
 void ExplorerElement::setTextContent(const char* text) {
 	IHTMLElement *e;
 	HRESULT hr = m_pElement->QueryInterface(IID_IHTMLElement, reinterpret_cast<void**>(&e));
-	if (!FAILED(hr))
+	if (!FAILED(hr) && e != NULL)
 	{
 		BSTR bstrValue = Utils::str2bstr(text);
 		hr = e->put_innerText(bstrValue);
@@ -599,7 +587,7 @@ std::string ExplorerElement::toString() {
 void ExplorerElement::removeAttribute(const char* attribute) {
 	IHTMLElement *e;
 	HRESULT hr = m_pElement->QueryInterface(IID_IHTMLElement, reinterpret_cast<void**>(&e));
-	if (!FAILED(hr))
+	if (!FAILED(hr) && e != NULL)
 	{
 		BSTR bstrValue = Utils::str2bstr(attribute);
 		VARIANT_BOOL v;
@@ -615,12 +603,12 @@ void ExplorerElement::removeChild(AbstractWebElement* element) {
 		return;
 	IHTMLDOMNode *e;
 	HRESULT hr = m_pElement->QueryInterface(IID_IHTMLDOMNode, reinterpret_cast<void**>(&e));
-	if (!FAILED(hr))
+	if (!FAILED(hr) && e != NULL)
 	{
 		IHTMLDOMNode *e2;
 		IHTMLDOMNode *e3 = NULL;
 		HRESULT hr = child->m_pElement->QueryInterface(IID_IHTMLDOMNode, reinterpret_cast<void**>(&e2));
-		if (!FAILED(hr))
+		if (!FAILED(hr) && e2 != NULL)
 		{
 			hr = e->removeChild(e2, &e3);
 			if (e3 != NULL) {
@@ -645,7 +633,7 @@ void ExplorerElement::setProperty(const char* property, const char* value) {
 		IHTMLElement3 *pElement3 = NULL;
 		static IID local_IIDHtmlElement3 = {0x3050f673,0x98b5,0x11cf,{0xbb, 0x82, 0x00, 0xaa, 0x00, 0xbd, 0xce, 0x0b}};
 		HRESULT hr = m_pElement->QueryInterface(local_IIDHtmlElement3, reinterpret_cast<void**>(&pElement3));
-		if (!FAILED(hr))
+		if (!FAILED(hr) && pElement3 != NULL)
 		{
 			VARIANT_BOOL cancelled = 0;
 			IHTMLEventObj *pEventObj;
@@ -686,7 +674,7 @@ std::string ExplorerElement::getComputedStyle(const char* style)
 		{
 			IHTMLWindow7 *w7 = NULL;
 			w->QueryInterface(local_IID_IHTMLWindow7, reinterpret_cast<void**>(&w7));
-			if (FAILED(hr))
+			if (FAILED(hr) || w7 == NULL)
 			{
 //				MZNSendDebugMessageA("Cannot get w7");
 			}
@@ -694,7 +682,7 @@ std::string ExplorerElement::getComputedStyle(const char* style)
 			{
 				IHTMLDOMNode *node;
 				HRESULT hr = m_pElement->QueryInterface(IID_IHTMLDOMNode, reinterpret_cast<void**>(&node));
-				if (FAILED(hr))
+				if (FAILED(hr) || node == NULL)
 				{
 //					MZNSendDebugMessageA("Cannot cast to htmldomnode");
 				}
