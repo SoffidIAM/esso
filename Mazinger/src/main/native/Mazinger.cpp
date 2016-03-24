@@ -47,10 +47,12 @@ extern "C" BOOL WINAPI ConvertStringSecurityDescriptorToSecurityDescriptorW(
 //
 
 DWORD CALLBACK LeerMailSlot(LPVOID lpData);
+DWORD CALLBACK LeerSpySlot(LPVOID lpData);
 HANDLE createDebugMailSlot ();
 #else
 
 void* LeerMailSlot (void * lpv) ;
+void* LeerSpySlot (void * lpv) ;
 
 #endif
 
@@ -440,6 +442,33 @@ DWORD CALLBACK LeerMailSlot(LPVOID lpData) {
 	return 0;
 }
 
+DWORD CALLBACK LeerSpySlot(LPVOID lpData) {
+	DWORD cbRead;
+	WCHAR achMessage[10024];
+
+	HANDLE hSlot = (HANDLE) lpData;
+	if (hSlot == NULL)
+		hSlot = createDebugMailSlot ();
+
+	while (TRUE)
+	{
+		cbRead = 0;
+		ReadFile (hSlot,
+				achMessage,
+				sizeof achMessage,
+				&cbRead,
+				(LPOVERLAPPED) NULL);
+		if (cbRead > 0 )
+		{
+			achMessage[cbRead/2] = L'\0';
+			if (logFile != NULL)
+				fwprintf (logFile, L"%ls\n", achMessage);
+			fwprintf (stdout, L"%ls\n", achMessage);
+		}
+	}
+	return 0;
+}
+
 #else
 void* LeerMailSlot (void * lpv) {
 	char *name = (char*) lpv;
@@ -474,6 +503,10 @@ void* LeerMailSlot (void * lpv) {
 }
 
 
+void* LeerSpySlot (void * lpv) {
+	return LeerMailSlot (lpv);
+}
+
 #endif
 
 void doSpy(const char *fileName) {
@@ -500,12 +533,12 @@ void doSpy(const char *fileName) {
 	HANDLE mailSlot = createSpyMailSlot ();
 	CreateThread(NULL, // sECURITY ATTRIBUTES
 			0, // Stack Size,
-			LeerMailSlot, mailSlot, // Param
+			LeerSpySlot, mailSlot, // Param
 			0, // Options,
 			NULL); // Thread id
 #else
 	pthread_t thread1;
-	pthread_create( &thread1, NULL, LeerMailSlot, (void*) "spy");
+	pthread_create( &thread1, NULL, LeerSpySlot, (void*) "spy");
 #endif
 	MZNEnableSpy(achUser,1);
 
