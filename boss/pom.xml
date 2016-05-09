@@ -4,12 +4,12 @@
 	<groupId>com.soffid.iam.esso.w32</groupId>
 	<packaging>exe</packaging>
 	<name>Executable per a iniciar programes com a Administrador</name>
-	<version>1.6.4-enterprise-SNAPSHOT</version>
+	<version>1.6.4-enterprise</version>
 	<artifactId>boss</artifactId>
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.6.4-enterprise-SNAPSHOT</version>
+		<version>1.6.4-enterprise</version>
 	</parent>
 	<issueManagement>
 		<system>RTIR</system>
