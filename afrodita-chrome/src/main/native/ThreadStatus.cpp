@@ -17,20 +17,82 @@ ThreadStatus::ThreadStatus() {
 	hMutex = CreateEvent (NULL, FALSE, FALSE, NULL);
 	hEventMutex = CreateEvent (NULL, FALSE, FALSE, NULL);
 #else
-	sem_init(&semaphore, true, 0);
-	sem_init(&eventSemaphore, true, 0);
+	sem_init(&semaphore, false, 0);
+	sem_init(&eventSemaphore, false, 0);
 #endif
 	end = false;
 
 }
 
+PendingEventList::PendingEventList() {
+#ifdef WIN32
+	hMutex = CreateMutex (NULL, FALSE, NULL);
+#else
+	sem_init(&semaphore, true, 1);
+#endif
+}
+
+
 ThreadStatus::~ThreadStatus() {
+#ifdef WIN32
+	CloseHandle (hMutex);
+	CloseHandle (hEventMutex);
+#else
+	sem_close(&semaphore);
+	sem_close(&eventSemaphore);
+#endif
+
+}
+
+PendingEventList::~PendingEventList() {
 #ifdef WIN32
 	CloseHandle (hMutex);
 #else
 	sem_close(&semaphore);
 #endif
 
+}
+
+void PendingEventList::push (Event *event)
+{
+#ifdef WIN32
+	DWORD dwResult = WaitForSingleObject (hMutex, INFINITE); // Forever
+	if (dwResult == WAIT_OBJECT_0)
+#else
+	if ( sem_wait (&semaphore) == 0)
+#endif
+	{
+		list.push_back(event);
+#ifdef WIN32
+		ReleaseMutex (hMutex);
+#else
+		sem_post(&semaphore);
+#endif
+	}
+}
+
+Event* PendingEventList::pop ()
+{
+	Event * result = NULL;
+#ifdef WIN32
+	DWORD dwResult = WaitForSingleObject (hMutex, INFINITE); // Forever
+	if (dwResult == WAIT_OBJECT_0)
+#else
+	if ( sem_wait (&semaphore) == 0)
+#endif
+	{
+		if (!list.empty())
+		{
+			result = list.front();
+			list.pop_front();
+		}
+#ifdef WIN32
+		ReleaseMutex (hMutex);
+#else
+		sem_post(&semaphore);
+#endif
+	}
+	return result;
 }
 
 static json::JsonValue NULL_MESSAGE;
@@ -102,9 +164,17 @@ void ThreadStatus::notifyEventMessage() {
 #endif
 }
 
-ActiveListenerInfo* ThreadStatus::waitForEvent() {
+Event* ThreadStatus::waitForEvent() {
 	bool acquired = false;
-#ifdef WIN32
+
+	// Search pending events
+	Event *ev  = pendingEvents.pop();
+	if (ev != NULL)
+		return ev;
+
+
+	// Wait for a new event
+	#ifdef WIN32
 	DWORD dwResult = WaitForSingleObject (hEventMutex, 5000); // 5 seconds wait
 	acquired = (dwResult == WAIT_OBJECT_0);
 #else
@@ -118,18 +188,8 @@ ActiveListenerInfo* ThreadStatus::waitForEvent() {
 	{
 //		MZNSendDebugMessageA("Got event message signal");
 		fflush(stderr);
-		if (pendingEvents.empty())
-		{
-//			MZNSendDebugMessageA("No event message found");
-			return NULL;
-		}
-		else
-		{
-			ActiveListenerInfo *listener = pendingEvents.back();
-//			MZNSendDebugMessageA("Got event message");
-			pendingEvents.pop_back();
-			return listener;
-		}
+		Event *ev  = pendingEvents.pop();
+		return ev;
 	}
 	else
 	{

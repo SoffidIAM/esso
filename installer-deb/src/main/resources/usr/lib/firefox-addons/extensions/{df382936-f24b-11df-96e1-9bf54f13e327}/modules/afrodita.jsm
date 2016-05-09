@@ -1,6 +1,5 @@
 var EXPORTED_SYMBOLS = ["AfroditaExtension"];  
 
-
 var AfroditaExtension = {
   docids: new Array(),
   documents: new Array(),
@@ -131,7 +130,6 @@ var AfroditaExtension = {
           return;
 	var c = Components.classes["@caib.es/afroditaf;1"];
 	if (c == null) {          
-	  try {
 	    AfroditaExtension.newInterface = true;
 	    
 	    var os = Components.classes["@mozilla.org/system-info;1"].getService(Components.interfaces.nsIPropertyBag).getProperty("name");
@@ -140,19 +138,23 @@ var AfroditaExtension = {
 		c = c.getService ();
 		e = c.QueryInterface(Components.interfaces.nsIEnvironment);
 		// Calcular mazinger dir
+		Components.utils.import("resource://gre/modules/devtools/Console.jsm");
+		console.log("OS = ["+os+"]");
 		if (os == "Linux") {
-		   var path = "/usr/lib/libafroditafc.so"
+		    var path = "/usr/lib/libafroditafc.so"
 		} else {
-	   	   var path = e.get ("ProgramW6432");
-		   if (path == null || path == "")
-		     path = e.get ("ProgramFiles") + "\\SoffidESSO\\AfroditaFC.dll";
-		   else
-		     path = path +"\\SoffidESSO\\AfroditaFC32.dll"
+ 	   	    var path = e.get ("ProgramW6432");
+	   	    var arch = e.get ("PROCESSOR_ARCHITECTURE");
+			console.log("arch = ["+arch+"]");
+	   	    if (arch == "AMD64") // Firefox 64 n Windows 64
+		        path = e.get ("ProgramFiles") + "\\SoffidESSO\\AfroditaFC.dll";
+	   	    else if (path == null || path == "") // Windows 32
+			    path = e.get ("ProgramFiles") + "\\SoffidESSO\\AfroditaFC.dll";
+			else // Firefox 32 on Windows 64
+			    path = path +"\\SoffidESSO\\AfroditaFC32.dll"
 		}
 	
 		Components.utils.import("resource://gre/modules/ctypes.jsm");
-		Components.utils.import('resource://gre/modules/devtools/Console.jsm');
-		console.log("path = "+path);
 		Components.utils.import("resource://SoffidESSOExtension/Preferences.jsm");
 		Preferences.defaults.set("signon.rememberSignons", false);
 		// Carregar biblioteca
@@ -161,6 +163,11 @@ var AfroditaExtension = {
 		AfroditaExtension.AfrSetHandler_ = AfroditaExtension.lib . declare ("AFRsetHandler", ctypes.default_abi, ctypes.void_t, ctypes.char.ptr, ctypes.void_t.ptr);
 		AfroditaExtension.AfrEvaluate = AfroditaExtension.lib . declare ("AFRevaluate", ctypes.default_abi, ctypes.void_t, ctypes.long);
 		AfroditaExtension.AfrEvent = AfroditaExtension.lib . declare ("AFRevent", ctypes.default_abi, ctypes.void_t, ctypes.long);
+		AfroditaExtension.AfrEvent2 = false;
+		try {
+			AfroditaExtension.AfrEvent2 = AfroditaExtension.lib . declare ("AFRevent2", ctypes.default_abi, ctypes.void_t, ctypes.long, ctypes.long);
+		} catch (e) {
+		}
 		AfroditaExtension.AfrDismiss = AfroditaExtension.lib . declare ("AFRdismiss", ctypes.default_abi, ctypes.void_t, ctypes.long);
 	
 		// Crear handlers
@@ -367,7 +374,15 @@ var AfroditaExtension = {
 		       } );
 		AfroditaExtension.setHandler ("SubscribeEvent", ctypes.void_t, [ctypes.long, ctypes.long, ctypes.char.ptr, ctypes.long],
 		       function (docid, elementid, eventName, eventId) {
-				     AfroditaExtension.listeners[eventId] = function () { AfroditaExtension.AfrEvent (eventId); };
+				     AfroditaExtension.listeners[eventId] = function (event) {
+				     	if (AfroditaExtension.AfrEvent2)
+				     	{ 
+   				     	    v = AfroditaExtension.registerElement (docid, event.target);
+   					     	AfroditaExtension.AfrEvent2 (eventId, v);
+					    }
+					    else 
+					     	AfroditaExtension.AfrEvent (eventId); 
+				     };
 				     var en = eventName.readString();
 				     if (elementid == 0)
    				     	AfroditaExtension.getWindow(docid).
@@ -377,7 +392,7 @@ var AfroditaExtension = {
    				     		addEventListener (en,  AfroditaExtension.listeners[eventId]);
 		       } );
 		AfroditaExtension.setHandler ("UnsubscribeEvent", ctypes.void_t, [ctypes.long, ctypes.long, ctypes.char.ptr, ctypes.long],
-		       function (docid, elementid) {
+		       function (docid, elementid, eventName, eventId) {
 				  var en = eventName.readString();
  			      if (elementid == 0)
    				     	AfroditaExtension.getElement(docid, elementid).
@@ -407,9 +422,6 @@ var AfroditaExtension = {
 				  var p = w.getComputedStyle (el, null)[n];
 				  return AfroditaExtension.createStringResult(docid, p);
 		       } );
-	} catch (e) {
-		console.log("Error in afrodita startup: "+e.message);
-	}
       } else {
           AfroditaExtension.newInterface = false;
       }

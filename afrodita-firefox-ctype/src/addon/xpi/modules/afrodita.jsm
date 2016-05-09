@@ -163,6 +163,11 @@ var AfroditaExtension = {
 		AfroditaExtension.AfrSetHandler_ = AfroditaExtension.lib . declare ("AFRsetHandler", ctypes.default_abi, ctypes.void_t, ctypes.char.ptr, ctypes.void_t.ptr);
 		AfroditaExtension.AfrEvaluate = AfroditaExtension.lib . declare ("AFRevaluate", ctypes.default_abi, ctypes.void_t, ctypes.long);
 		AfroditaExtension.AfrEvent = AfroditaExtension.lib . declare ("AFRevent", ctypes.default_abi, ctypes.void_t, ctypes.long);
+		AfroditaExtension.AfrEvent2 = false;
+		try {
+			AfroditaExtension.AfrEvent2 = AfroditaExtension.lib . declare ("AFRevent2", ctypes.default_abi, ctypes.void_t, ctypes.long, ctypes.long);
+		} catch (e) {
+		}
 		AfroditaExtension.AfrDismiss = AfroditaExtension.lib . declare ("AFRdismiss", ctypes.default_abi, ctypes.void_t, ctypes.long);
 	
 		// Crear handlers
@@ -369,7 +374,15 @@ var AfroditaExtension = {
 		       } );
 		AfroditaExtension.setHandler ("SubscribeEvent", ctypes.void_t, [ctypes.long, ctypes.long, ctypes.char.ptr, ctypes.long],
 		       function (docid, elementid, eventName, eventId) {
-				     AfroditaExtension.listeners[eventId] = function () { AfroditaExtension.AfrEvent (eventId); };
+				     AfroditaExtension.listeners[eventId] = function (event) {
+				     	if (AfroditaExtension.AfrEvent2)
+				     	{ 
+   				     	    v = AfroditaExtension.registerElement (docid, event.target);
+   					     	AfroditaExtension.AfrEvent2 (eventId, v);
+					    }
+					    else 
+					     	AfroditaExtension.AfrEvent (eventId); 
+				     };
 				     var en = eventName.readString();
 				     if (elementid == 0)
    				     	AfroditaExtension.getWindow(docid).

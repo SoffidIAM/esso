@@ -3,17 +3,7 @@
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="cdt.managedbuild.config.gnu.mingw.so.debug.1310483781.630370172">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.mingw.so.debug.1310483781.630370172" moduleId="org.eclipse.cdt.core.settings" name="Debug">
-				<externalSettings>
-					<externalSetting>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/MazingerHook"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/MazingerEngine"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/libmazinger-engine"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/MazingerHook/Debug"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/MazingerEngine/Debug"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libmazinger-engine/Debug"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="MazingerHook" srcPrefixMapping="" srcRootPath=""/>
-					</externalSetting>
-				</externalSettings>
+				<externalSettings/>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.MakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -30,31 +20,45 @@
 					<folderInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1310483781.630370172." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.base.1483046211" name="Linux GCC" nonInternalBuilderId="cdt.managedbuild.target.gnu.builder.base" superClass="cdt.managedbuild.toolchain.gnu.base">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.target.gnu.platform.base.1460485352" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
-							<builder buildPath="${workspace_loc:/libmazinger-engine/Debug}" enableAutoBuild="true" enableCleanBuild="false" id="cdt.managedbuild.target.gnu.builder.base.347715612" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="2" superClass="cdt.managedbuild.target.gnu.builder.base"/>
+							<builder buildPath="${workspace_loc:/libmazinger-engine/Debug}" enableAutoBuild="true" enableCleanBuild="false" id="cdt.managedbuild.target.gnu.builder.base.347715612" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="2" superClass="cdt.managedbuild.target.gnu.builder.base">
+								<outputEntries>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Debug"/>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Windows"/>
+								</outputEntries>
+							</builder>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1698162046" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.1564156026" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.include.paths.783381705" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
 									<listOptionValue builtIn="false" value="/usr/include/libsoup-2.4"/>
 									<listOptionValue builtIn="false" value="/usr/lib/glib-2.0/include"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/src/main/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/engine-l64/target/native/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/src/main/include-deps}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/libmazinger-engine/src/main/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/libmazinger-engine/engine-l64/target/native/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/libmazinger-engine/src/main/include-deps}&quot;"/>
 									<listOptionValue builtIn="false" value="/usr/lib/x86_64-linux-gnu/glib-2.0/include/"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/src/main/resources}&quot;"/>
+									<listOptionValue builtIn="false" value="../libmazinger-engine/src/main/resources"/>
+									<listOptionValue builtIn="false" value="../MazingerEngine/src/main/include"/>
+									<listOptionValue builtIn="false" value="../MazingerEngine/src/main/include-deps"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.optimization.level.848726285" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.35203221" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.option.preprocessor.def.2021040914" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="WIN32=WIN32"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1021572823" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.base.912994286" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
 								<option id="gnu.c.compiler.option.include.paths.2136075560" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MazingerEngine/src/main/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MazingerEngine/src/main/include-deps}&quot;"/>
 									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
 									<listOptionValue builtIn="false" value="/usr/include/libsoup-2.4"/>
+									<listOptionValue builtIn="false" value="/usr/lib/glib-2.0/include"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/libmazinger-engine/src/main/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/libmazinger-engine/engine-l64/target/native/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/libmazinger-engine/src/main/include-deps}&quot;"/>
 									<listOptionValue builtIn="false" value="/usr/lib/x86_64-linux-gnu/glib-2.0/include/"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/src/main/resources}&quot;"/>
+									<listOptionValue builtIn="false" value="../libmazinger-engine/src/main/resources"/>
+									<listOptionValue builtIn="false" value="../MazingerEngine/src/main/include"/>
+									<listOptionValue builtIn="false" value="../MazingerEngine/src/main/include-deps"/>
 								</option>
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.633897364" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.debugging.level.1346291317" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
@@ -67,19 +71,23 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.base.1020864620" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.base.2037937892" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base">
 								<option id="gnu.both.asm.option.include.paths.2079207140" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MazingerEngine/src/main/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MazingerEngine/src/main/include-deps}&quot;"/>
 									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
 									<listOptionValue builtIn="false" value="/usr/include/libsoup-2.4"/>
+									<listOptionValue builtIn="false" value="/usr/lib/glib-2.0/include"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/libmazinger-engine/src/main/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/libmazinger-engine/engine-l64/target/native/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/libmazinger-engine/src/main/include-deps}&quot;"/>
 									<listOptionValue builtIn="false" value="/usr/lib/x86_64-linux-gnu/glib-2.0/include/"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/src/main/resources}&quot;"/>
+									<listOptionValue builtIn="false" value="../libmazinger-engine/src/main/resources"/>
+									<listOptionValue builtIn="false" value="../MazingerEngine/src/main/include"/>
+									<listOptionValue builtIn="false" value="../MazingerEngine/src/main/include-deps"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1802051510" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="src/main/native"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src/main/native"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -137,9 +145,8 @@
 							<tool command="i686-w64-mingw32-gcc" id="cdt.managedbuild.tool.gnu.c.compiler.base.2135190455" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
 								<option id="gnu.c.compiler.option.include.paths.1810089410" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/i586-mingw32msvc/include"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MazingerEngine/src/main/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/MazingerEngine/src/main/include-deps}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/src/main/resources}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/src/main/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libmazinger-engine/src/main/include-deps}&quot;"/>
 								</option>
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.1411348758" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.debugging.level.1208958618" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
@@ -163,7 +170,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="src/main/native"/>
+						<entry excluding="web/LocableObject.cpp" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="src/main/native"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

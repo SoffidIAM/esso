@@ -22,6 +22,7 @@ public:
 	void unregisterEvent (WebListener* listener, FFWebApplication *element, const char *eventName);
 	void unregisterAllEvents (FFWebApplication *app);
 	void process (long eventId);
+	void process (long eventId, long elementId);
 private:
 	EventHandler();
 	virtual ~EventHandler();

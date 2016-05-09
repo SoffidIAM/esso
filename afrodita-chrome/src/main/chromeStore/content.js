@@ -404,8 +404,8 @@ function soffidLoadProcedure () {
 			    	
 			    	if (typeof element != 'undefined')
 			    	{
-			    		element.addEventListener (event, function () {
-				    		port.postMessage({message: "event", eventId: listener, pageId: request.pageId});
+			    		element.addEventListener (event, function (ev) {
+				    		port.postMessage({message: "event", eventId: listener, target: soffidRegisterElement(ev.target), pageId: request.pageId});
 			    		}, true);
 						port.postMessage({response: "OK", requestId: request.requestId, pageId: request.pageId});
 			    	}

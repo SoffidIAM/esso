@@ -154,6 +154,11 @@ extern "C" void AFRevent (long  eventId) {
 	EventHandler::getInstance()->process (eventId);
 }
 
+extern "C" void AFRevent2 (long  eventId, long elementId) {
+	EventHandler::getInstance()->process (eventId, elementId);
+}
+
+
 extern "C" void Test (const char *id) {
 //	MessageBox (NULL, id, "Test", MB_OK);
 }

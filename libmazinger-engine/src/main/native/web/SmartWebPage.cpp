@@ -24,6 +24,7 @@
 
 SmartWebPage::SmartWebPage() {
 	parsed = false;
+	listener = NULL;
 	rootForm = new SmartForm(this);
 }
 
@@ -36,15 +37,61 @@ SmartWebPage::~SmartWebPage() {
 	}
 }
 
+class OnAnyElementFocusListener: public WebListener
+{
+public:
+	virtual std::string toString () { return std::string("OnAnyElementFocusListener");}
+	SmartWebPage *page;
+	virtual void onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component);
+};
+
+void OnAnyElementFocusListener::onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component) {
+	if (MZNC_waitMutex())
+	{
+		component->sanityCheck();
+		std::string managed = "";
+		std::string tag = "";
+		component->getTagName(tag);
+		component->getProperty("soffidManaged", managed);
+		MZNSendDebugMessageA("On focus event %s - %s", tag.c_str(), managed.c_str() );
+		if (managed != "true" && strcasecmp (tag.c_str(), "input") == 0)
+		{
+			app->sanityCheck();
+			if (page != NULL)
+			{
+				page->sanityCheck();
+				page -> parse (app);
+			}
+		}
+		MZNSendDebugMessageA("END On focus event %s - %s", tag.c_str(), managed.c_str() );
+		MZNC_endMutex();
+	}
+
+}
 
 void SmartWebPage::parse(AbstractWebApplication* app) {
-	std::vector<AbstractWebElement*> inputs2;
 	std::vector<AbstractWebElement*> forms;
 
-	MZNSendDebugMessageA("* Searching inputs");
-	app->getElementsByTagName("input", inputs2 );
-	MZNSendDebugMessageA("* Found %d inputs", inputs2.size());
+	if (! parsed)
+	{
+		OnAnyElementFocusListener* wl;
+		wl = new OnAnyElementFocusListener ();
+		wl->page = this;
 
+		listener = wl;
+
+		std::vector<AbstractWebElement *> bodies;
+		MZNSendDebugMessage("Searching body");
+		app->getElementsByTagName("body", bodies);
+		for (std::vector<AbstractWebElement*>::iterator it = bodies.begin(); it != bodies.end (); it++)
+		{
+			MZNSendDebugMessage("Registering body.onfocus");
+			(*it)->subscribe("focus", wl);
+			parsed = true;
+		}
+		MZNSendDebugMessage("Searched body");
+		wl->release();
+	}
 
 	MZNSendDebugMessageA("* Parsing HTML document");
 	if (! rootForm->isParsed())

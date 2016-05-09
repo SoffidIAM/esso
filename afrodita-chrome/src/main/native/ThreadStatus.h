@@ -36,6 +36,30 @@ public:
 	ChromeWebApplication *app;
 };
 
+class Event
+{
+public:
+	std::string target;
+	ActiveListenerInfo *listener;
+};
+
+
+class PendingEventList
+{
+public:
+	PendingEventList ();
+	~PendingEventList ();
+	Event * pop ();
+	void push (Event* event);
+
+private:
+#ifdef WIN32
+	HANDLE hMutex;
+#else
+	sem_t semaphore;
+#endif
+	std::list<Event*> list;
+};
 
 class ThreadStatus {
 public:
@@ -50,7 +74,7 @@ public:
 	sem_t eventSemaphore;
 #endif
 
-	ActiveListenerInfo *waitForEvent ();
+	Event *waitForEvent ();
 	json::JsonAbstractObject* waitForMessage ();
 	void notifyEventMessage ();
 	void notifyMessage (json::JsonAbstractObject* message);
@@ -60,7 +84,7 @@ public:
 	std::string url;
 	bool end;
 	bool refresh;
-	std::list<ActiveListenerInfo*> pendingEvents;
+	PendingEventList pendingEvents;
 
 private:
 
