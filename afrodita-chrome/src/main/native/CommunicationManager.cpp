@@ -174,7 +174,7 @@ JsonAbstractObject* CommunicationManager::call(bool &error, const char*messages[
 	if (it == threads.end())
 	{
 		error = true;
-		MZNSendDebugMessage("ERROR :Thread not found for %s", pageId.c_str());
+//		MZNSendDebugMessage("ERROR :Thread not found for %s", pageId.c_str());
 		return NULL;
 	}
 
@@ -309,18 +309,25 @@ void CommunicationManager::mainLoop() {
 		else if (messageName != NULL && messageName->value == "event" && pageId != NULL)
 		{
 			JsonValue* eventId = dynamic_cast<JsonValue*>(jsonMap->getObject("eventId"));
+			JsonValue* target = dynamic_cast<JsonValue*>(jsonMap->getObject("target"));
 
 			if (pageId != NULL && eventId != NULL)
 			{
 				ThreadStatus *ts = threads[pageId->value];
 				if (ts != NULL)
 				{
+//					MZNSendDebugMessage("Received event %s target %s", eventId->value.c_str(), target->value.c_str());
 					std::map<std::string,ActiveListenerInfo*>::iterator it = activeListeners.find(eventId->value);
 					if (it != activeListeners.end())
 					{
 						ActiveListenerInfo *ali = it->second;
-						ts->pendingEvents.push_front(ali);
+						Event *ev = new Event();
+//						MZNSendDebugMessage("ALI event = (%lx) ali = (%lx) %s", (long) ev, (long) ali, ali->event.c_str());
+						ev->target = (target == NULL ? "" : target->value.c_str());
+						ev->listener = ali;
+						ts->pendingEvents.push(ev);
 						ts->notifyEventMessage();
+//						MZNSendDebugMessage("Notified event");
 					}
 				}
 			}
@@ -355,10 +362,19 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 	MZNWebMatch(cwa);
 	while (! threadStatus->end)
 	{
-		ActiveListenerInfo *event = threadStatus->waitForEvent();
+		Event *event = threadStatus->waitForEvent();
 		if (event != NULL)
 		{
-			event->listener->onEvent(event->event.c_str(), event->app, event->element);
+			ActiveListenerInfo *listener = event->listener;
+			if (! event->target.empty())
+			{
+				AbstractWebElement *element = new ChromeElement(listener->app, event->target.c_str());
+				listener->listener->onEvent(listener->event.c_str(), listener->app, element);
+				element->release();
+			} else {
+				listener->listener->onEvent(listener->event.c_str(), listener->app, listener->element);
+			}
+			delete event;
 			// Do not delete as it will be reused for another event instance
 			// delete event;
 		}
@@ -404,6 +420,7 @@ std::string CommunicationManager::registerListener(ChromeElement* element,
 	al->listener->lock();
 	std::string id = ach;
 	activeListeners[ach] = al;
+//	MZNSendDebugMessageA("Registering listener %s [ %s ]",event, ach);
 	return id;
 }
 

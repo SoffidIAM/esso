@@ -80,6 +80,11 @@ void OnChangeListener::onEvent (const char *eventName, AbstractWebApplication *a
 void OnClickListener::onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component) {
 	if (MZNC_waitMutex())
 	{
+		std::string managed = "";
+		std::string tag = "";
+		component->getTagName(tag);
+//		MZNSendDebugMessageA("On click event %s - %s", tag.c_str(), managed.c_str() );
+
 		component->sanityCheck();
 		app->sanityCheck();
 		if (form != NULL)
@@ -114,6 +119,7 @@ void OnClickListener::onEvent (const char *eventName, AbstractWebApplication *ap
 				}
 			}
 		}
+//		MZNSendDebugMessageA("END On click event %s - %s", tag.c_str(), managed.c_str() );
 		MZNC_endMutex();
 	}
 }
@@ -238,9 +244,9 @@ void SmartForm::findRootInputs (AbstractWebApplication* app, std::vector<Abstrac
 {
 	std::vector<AbstractWebElement*> inputs2;
 	app->sanityCheck();
-	MZNSendDebugMessageA("APP = %s", app->toString().c_str());
+//	MZNSendDebugMessageA("APP = %s", app->toString().c_str());
 	app->getElementsByTagName("input", inputs2 );
-	MZNSendDebugMessageA("Got %d elements", inputs2.size());
+//	MZNSendDebugMessageA("Got %d elements", inputs2.size());
 	for (std::vector<AbstractWebElement*>::iterator it = inputs2.begin () ; it!= inputs2.end(); it++)
 	{
 		AbstractWebElement *element = *it;
@@ -360,6 +366,11 @@ void SmartForm::updateIcon (InputDescriptor *input)
 
 	addIcon(input);
 
+
+	if (input->img != NULL)
+	{
+		input->input->setProperty("soffidManaged", "true");
+	}
 
 	if (input->img == NULL)
 	{
@@ -679,10 +690,10 @@ bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
 				strcasecmp ( type.c_str(), "week") == 0 ) {
 			if (input->isVisible())
 			{
-				std::string id;
-				std::string name;
-				input->getAttribute("name", name);
-				input->getAttribute("id", id);
+//				std::string id;
+//				std::string name;
+//				input->getAttribute("name", name);
+//				input->getAttribute("id", id);
 //				MZNSendDebugMessage("Found input element %s (type %s) (name %s) (id %s)",
 //						input->toString().c_str(), type.c_str(),
 //						name.c_str(), id.c_str());
@@ -751,22 +762,16 @@ void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot)
 	releaseElements();
 
 
-	if (page->accounts.size () == 0)
-		status = SF_STATUS_NEW;
-	else if (page->accounts.size() == 1)
-	{
-		AccountStruct as = page->accounts[0];
-		fetchAttributes(as, NULL);
-	}
-	else
-		status = SF_STATUS_SELECT;
-
-
 	if (! checkAnyPassword(elements))
 		return;
 
-
 	parsed = true;
+
+	if (page->accounts.size () == 0)
+		status = SF_STATUS_NEW;
+	else
+		status = SF_STATUS_SELECT;
+
 
 	for (std::vector<AbstractWebElement*>::iterator it = elements.begin(); it != elements.end(); it++)
 	{
@@ -984,9 +989,9 @@ void SmartForm::save ()
 			element->getAttribute("name", name);
 			element->getAttribute("id", id);
 			if (name.empty())
-			{
 				name = id;
-			}
+			if (name.empty())
+				element->getAttribute("data-bind", name);
 
 			if (!name.empty())
 			{
@@ -1197,6 +1202,8 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 			e->getAttribute("name", name);
 			if (name.empty())
 				e->getAttribute("id", name);
+			if (name.empty())
+				e->getAttribute("data-bind", name);
 			e->getProperty("value", currentValue);
 			if (attributes.find(name) != attributes.end())
 			{
@@ -1205,7 +1212,7 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 				{
 					e->focus();
 					e->setProperty("value", v2.c_str());
-					MZNSendDebugMessageA("Setting value of %s=%s", name.c_str(), v2.c_str());
+//					MZNSendDebugMessageA("Setting value of %s=%s", name.c_str(), v2.c_str());
 				}
 			}
 			else if (first && (selectedElement == NULL || selectedElement->equals(e)))
@@ -1220,7 +1227,7 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 					{
 						e->focus();
 						e->setProperty("value", value.c_str());
-						MZNSendDebugMessageA("Setting value of %s=%s", name.c_str(), value.c_str());
+//						MZNSendDebugMessageA("Setting value of %s=%s", name.c_str(), value.c_str());
 					}
 				}
 				else
@@ -1235,7 +1242,7 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 							{
 								e->focus();
 								e->setProperty("value", value.c_str());
-								MZNSendDebugMessageA("Setting value of %s=%s", name.c_str(), value.c_str());
+//								MZNSendDebugMessageA("Setting value of %s=%s", name.c_str(), value.c_str());
 							}
 						}
 					}
@@ -1299,6 +1306,8 @@ bool SmartForm::detectAttributeChange()
 		e->getAttribute("name", name);
 		if (name.empty())
 			e->getAttribute("id", name);
+		if (name.empty())
+			e->getAttribute("data-bind", name);
 		std::string value;
 		if (attributes.find(name) != attributes.end())
 		{
@@ -1358,6 +1367,22 @@ static const char *STYLE_HEADER= "_header {"
 	   	"padding-top:3px; "
 	   	"padding-bottom: 3px;}\n";
 
+static AbstractWebElement* getBody (AbstractWebApplication *app) {
+	AbstractWebElement *body = NULL;
+	std::vector<AbstractWebElement *> bodies;
+	app->getElementsByTagName("body", bodies);
+	for (std::vector<AbstractWebElement*>::iterator it = bodies.begin(); it != bodies.end (); it++)
+	{
+		if (body == NULL)
+			body = *it;
+		else
+			(*it)->release();
+	}
+	if (body == NULL)
+		body = app->getDocumentElement();
+	return body;
+}
+
 void SmartForm::createStyle () {
 
 	if( app == NULL)
@@ -1413,6 +1438,7 @@ void SmartForm::createStyle () {
 }
 
 
+
 AbstractWebElement* SmartForm::createModalDialog (AbstractWebElement *input)
 {
 	std::string id = stylePrefix+"_id";
@@ -1437,21 +1463,32 @@ AbstractWebElement* SmartForm::createModalDialog (AbstractWebElement *input)
 	left -= getIntProperty(html, "scrollLeft");
 	top -= getIntProperty(html, "scrollTop");
 	html->release();
-	std::vector<AbstractWebElement *> bodies;
-	app->getElementsByTagName("body", bodies);
-	for (std::vector<AbstractWebElement*>::iterator it = bodies.begin(); it != bodies.end(); it++)
-	{
-		AbstractWebElement *body = *it;
-		left -= getIntProperty(body, "scrollLeft");
-		top -= getIntProperty(body, "scrollTop");
-		body->release();
-	}
 
-	sprintf (ach, STYLE_MASTER, left+width-200+2, top+height);
+	int dheight = getIntProperty (html, "clientHeight"); // Without border
+	int dwidth = getIntProperty (html, "clientWidth"); // Without border
+
+	AbstractWebElement *body = getBody(app);
+	left -= getIntProperty(body, "scrollLeft");
+	top -= getIntProperty(body, "scrollTop");
+
+	// Adjust to visible space
+	int x = left+width-200+2;
+	MZNSendDebugMessage("x=%d dwidth=%d", x, dwidth);
+	if (x+200 > dwidth) x = dwidth - 200;
+	if (x < 0) x = 0;
+	MZNSendDebugMessage("x=%d dwidth=%d", x, dwidth);
+
+	int y = top+height;
+	MZNSendDebugMessage("y=%d dheight=%d", y, dheight);
+	if (y > dheight - 10) y = dheight - 10;
+	if (y < 0) y = 0;
+	MZNSendDebugMessage("y=%d dheight=%d", y, dheight);
+
+	sprintf (ach, STYLE_MASTER, x, y);
+
 	masterDiv->setAttribute("style", ach);
 	masterDiv->setAttribute("id", id.c_str());
-	app->getDocumentElement()->appendChild(masterDiv);
-	app->getDocumentElement()->release();
+	body->appendChild(masterDiv);
 
 	createStyle();
 
@@ -1465,10 +1502,11 @@ AbstractWebElement* SmartForm::createModalDialog (AbstractWebElement *input)
 		modal->setAttribute("_soffid_modal", "true");
 		masterDiv->appendChild(modal);
 		modal->subscribe("click", onClickListener);
-		app->getDocumentElement()->appendChild(modal);
-		app->getDocumentElement()->release();
+		body->appendChild(modal);
 		modal->release();
 	}
+
+	body->release();
 
 	currentModalInput = 0;
 	for (unsigned int i = 0; i < inputs.size(); i++)
@@ -1608,6 +1646,7 @@ void SmartForm::createGenerateModal(AbstractWebElement *img)
 
 void SmartForm::createSaveModal(AbstractWebElement *img)
 {
+	MZNSendDebugMessageA("Creating save modal");
 	AbstractWebApplication *app = img->getApplication();
 	AbstractWebElement *parent = img->getParent();
 	if (parent != NULL)
@@ -1615,14 +1654,23 @@ void SmartForm::createSaveModal(AbstractWebElement *img)
 		std::string id = stylePrefix+"_id";
 		AbstractWebElement *input = img->getNextSibling();
 		if (input == NULL)
+		{
+			MZNSendDebugMessageA("Unable to find input element");
 			return;
+		}
 
 		AbstractWebElement *masterDiv = createModalDialog(input);
 		if (masterDiv == NULL)
+		{
+			MZNSendDebugMessageA("ERROR: No Master div created");
 			return;
+		}
 
 		AbstractWebElement *user = app->createElement("div");
-		if (user == NULL) return;
+		if (user == NULL) {
+			MZNSendDebugMessageA("Unable to create user element");
+			return;
+		}
 		user->setAttribute("class", (stylePrefix+ "_header").c_str());
 		user->setTextContent("Save identity");
 		masterDiv->appendChild(user);

@@ -32,7 +32,7 @@
 // Missing at sddl.h
 wchar_t achMailSlotName[4096] = L"";
 static FILE *logFile = NULL;
-void sendMessage(HANDLE hMailSlot, LPCWSTR lpszMessage) {
+static void sendMessage(HANDLE hMailSlot, LPCWSTR lpszMessage) {
 
 	if (hMailSlot != NULL) {
 		time_t t;

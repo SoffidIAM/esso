@@ -10,6 +10,7 @@
 
 #include <AbstractWebApplication.h>
 #include <AbstractWebElement.h>
+#include "WebListener.h"
 #include <vector>
 #include <map>
 
@@ -44,6 +45,7 @@ public:
 protected:
 	virtual ~SmartWebPage();
 	bool parsed;
+	WebListener *listener;
 
 public:
 	std::vector<SmartForm*> forms;

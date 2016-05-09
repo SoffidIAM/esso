@@ -30,7 +30,7 @@ public:
 	void triggerFocusEvent () ;
 	std::vector<ComponentSpec*> &getAliasedComponents();
 	ComponentMatcher *clone();
-	void dumpDiagnostic (NativeComponent *top);
+	void dumpDiagnostic (NativeComponent *top, NativeComponent *focus);
 
 private:
 

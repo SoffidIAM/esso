@@ -579,6 +579,11 @@ void registerChromePlugin()
 			"update_url", REG_SZ, (void*) "https://clients2.google.com/service/update2/crx", -1);
 
 
+	// Register extension
+	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
+			"Software\\Policies\\Google\\Chrome\\ExtensionInstallForcelist",
+			"1", REG_SZ, (void*) "gacgphonbajokjblndebfhakgcpbemdl;https://clients2.google.com/service/update2/crx", -1);
+
 	HKEY hKey;
 	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
 			"Software\\Google\\Chrome\\Extensions", 0,
