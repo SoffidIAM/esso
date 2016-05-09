@@ -3,12 +3,12 @@
 	<groupId>com.soffid.iam.esso.pom</groupId>
 	<artifactId>MazingerInstaller</artifactId>
 	<name>Instal·lador de MAZINGER</name>
-	<version>1.6.4-enterprise</version>
+	<version>1.6.5-enterprise-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.6.4-enterprise</version>
+		<version>1.6.5-enterprise-SNAPSHOT</version>
 	</parent>
 	<issueManagement>
 		<system>RTIR</system>

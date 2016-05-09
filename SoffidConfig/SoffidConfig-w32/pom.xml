@@ -9,7 +9,7 @@
 	<parent>
 		<artifactId>SoffidConfig</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.6.4-enterprise</version>
+		<version>1.6.5-enterprise-SNAPSHOT</version>
 	</parent>
 	<build>
 		<plugins>
