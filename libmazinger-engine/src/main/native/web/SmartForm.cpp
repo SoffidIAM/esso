@@ -1462,10 +1462,11 @@ AbstractWebElement* SmartForm::createModalDialog (AbstractWebElement *input)
 	AbstractWebElement *html = app->getDocumentElement();
 	left -= getIntProperty(html, "scrollLeft");
 	top -= getIntProperty(html, "scrollTop");
-	html->release();
 
 	int dheight = getIntProperty (html, "clientHeight"); // Without border
 	int dwidth = getIntProperty (html, "clientWidth"); // Without border
+
+	html->release();
 
 	AbstractWebElement *body = getBody(app);
 	left -= getIntProperty(body, "scrollLeft");
