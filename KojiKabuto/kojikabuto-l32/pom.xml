@@ -93,11 +93,9 @@
 						<linkerEndOption>-lgmodule-2.0</linkerEndOption>
 						<linkerEndOption>-lrt</linkerEndOption>
 						<linkerEndOption>-lz</linkerEndOption>
-<!--
 						<linkerEndOption>-lffi</linkerEndOption>
 						<linkerEndOption>-lselinux</linkerEndOption>
 						<linkerEndOption>-lresolv</linkerEndOption>
--->
 					</linkerEndOptions>
 					<sources>
 						<source>

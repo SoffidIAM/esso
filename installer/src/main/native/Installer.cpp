@@ -39,6 +39,7 @@ static const char* DEF_DEFAULT_SERVERS = "";
 
 bool anyError = false;
 bool quiet = false;
+bool updateConfigFlag = false;
 bool reboot = false;
 bool isUpdate = false;
 bool noGina = false;
@@ -2448,6 +2449,12 @@ extern "C" int main(int argc, char **argv)
 			quiet = true;
 		}
 
+		// Check quiet install method
+		if (strcmp(argv[i], "/updateconfig") == 0 || strcmp(argv[i], "-updateconfig") == 0)
+		{
+			updateConfigFlag = true;
+		}
+
 		// Check server install method
 		if (strcmp(argv[i], "/server") == 0 || strcmp(argv[i], "-server") == 0)
 		{
@@ -2505,10 +2512,16 @@ extern "C" int main(int argc, char **argv)
 
 	if (result == 0 && serverName != NULL)
 	{
-		setProgressMessage("Connecting to %s", serverName);
+		if (isUpdate && ! updateConfigFlag)
+		{
+			// Skip configuration
+			setProgressMessage("Skipping server configuration");
+		} else {
+			setProgressMessage("Connecting to %s", serverName);
 
-		if (!configure(getMazingerDir(), serverName))
-			!quiet ? result = 1 : result = 3;
+			if (!configure(getMazingerDir(), serverName))
+				!quiet ? result = 1 : result = 3;
+		}
 	}
 
 	disableProgressWindow();
