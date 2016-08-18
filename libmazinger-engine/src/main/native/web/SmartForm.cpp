@@ -450,7 +450,7 @@ void SmartForm::releaseElements ()
 }
 
 static void getPosition (AbstractWebElement *input, long &left, long &top, long &width, long &height,
-		long &width2, long &height2, bool global)
+		long &width2, long &height2, bool &rightAlign, bool global)
 {
 	height = getIntProperty (input, "offsetHeight");
 	width = getIntProperty (input, "offsetWidth");
@@ -461,6 +461,8 @@ static void getPosition (AbstractWebElement *input, long &left, long &top, long 
 	width2 = getIntProperty (input, "clientWidth"); // Without border
 
 	AbstractWebElement *parentOffset = input->getOffsetParent();
+	std::string align = input->getComputedStyle("text-align");
+	rightAlign = align == "right";
 	while (parentOffset != NULL)
 	{
 		AbstractWebElement *pp = NULL;
@@ -486,14 +488,19 @@ void SmartForm::addIcon (InputDescriptor *descriptor)
 	if ( descriptor->img == NULL)
 	{
 		// Calculate position & size
+		std::string type;
+		bool isNumber;
+
 		long left, top, width, height, width2, height2;
-		getPosition (input, left, top, width, height, width2, height2, false);
+		getPosition (input, left, top, width, height, width2, height2, isNumber, false);
+		input->getAttribute("type", type);
 
 		int borderH = (height - height2)/2;
 		int borderW = (width - width2)/2;
 		if (height <= 0) height = 20L;
 
-		if (width > height * 3)
+
+		if (width > height * 3 || true)
 		{
 			AbstractWebElement *img = app->createElement("img");
 			if (img != NULL)
@@ -519,7 +526,9 @@ void SmartForm::addIcon (InputDescriptor *descriptor)
 					sprintf (achStyle, "margin-left: %ldpx; margin-top: %ldpx; "
 							"position: absolute; height: %ldpx; width:%ldpx; "
 							"z-index:%d",
-							(long) (width-height2-4L-borderW), 1L + borderH, (long) height2 - 2L, (long) height2 - 2L,
+							(long) (width <= height * 3 ? width + 4L:
+									isNumber ? 4L + borderW: width-height2-4L-borderW),
+								1L + borderH, (long) height2 - 2L, (long) height2 - 2L,
 							zIndex);
 				}
 				else
@@ -528,7 +537,8 @@ void SmartForm::addIcon (InputDescriptor *descriptor)
 							"position: absolute; height: %ldpx; width:%ldpx; "
 							"z-index:%d",
 							(long) left, (long) top,
-							(long) (width-height2-4L-borderW), 1L + borderH, (long) height2 - 2L, (long) height2 - 2L,
+							(long) (width <= height * 3 ? width + 4L :
+									isNumber ? 4L + borderW : width-height2-4L-borderW), 1L + borderH, (long) height2 - 2L, (long) height2 - 2L,
 							zIndex);
 				}
 				img->setAttribute("style", achStyle);
@@ -613,11 +623,18 @@ bool SmartForm::addNoDuplicate (AbstractWebElement* input)
 		descriptor->status = IS_EMPTY;
 		inputs.push_back(descriptor);
 	}
+	else if (strcasecmp ( type.c_str(), "submit") == 0)
+	{
+		input->lock();
+		submits.push_back(input);
+	}
     // if (type == undefined || type.toLowerCase() == "text" || type.toLowerCase() == "input"  || type.toLowerCase() == "email" || type == "")
 	else if (strcasecmp ( type.c_str(), "") == 0 ||
 			strcasecmp ( type.c_str(), "text") == 0 ||
 			strcasecmp ( type.c_str(), "input") == 0 ||
-			strcasecmp ( type.c_str(), "email") == 0)
+			strcasecmp ( type.c_str(), "email") == 0 ||
+			strcasecmp ( type.c_str(), "number") == 0 ||
+			strcasecmp ( type.c_str(), "tel") == 0 )
 	{
 		input->lock();
 		InputDescriptor *descriptor = new InputDescriptor();
@@ -626,11 +643,6 @@ bool SmartForm::addNoDuplicate (AbstractWebElement* input)
 		descriptor->type = IT_GENERAL;
 		descriptor->status = IS_EMPTY;
 		inputs.push_back(descriptor);
-	}
-	else if (strcasecmp ( type.c_str(), "submit") == 0)
-	{
-		input->lock();
-		submits.push_back(input);
 	}
 
 	return true;
@@ -976,6 +988,7 @@ void SmartForm::save ()
 	std::map<std::string,std::string> attributes;
 	std::string msg;
 	std::string description;
+	int unnamed = 1;
 	for (std::vector<InputDescriptor*>::iterator it = inputs.begin(); it != inputs.end(); it++)
 	{
 		if ((*it)->type == IT_GENERAL)
@@ -992,6 +1005,12 @@ void SmartForm::save ()
 				name = id;
 			if (name.empty())
 				element->getAttribute("data-bind", name);
+			if (name.empty())
+			{
+				char ach[10];
+				sprintf (ach,"_%d", unnamed++);
+				name = ach;
+			}
 
 			if (!name.empty())
 			{
@@ -1189,6 +1208,7 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 	page->fetchAttributes(app, as, attributes);
 
 	bool first = true;
+	int unnamed = 1;
 	for (std::vector<InputDescriptor*>::iterator it = inputs.begin(); it != inputs.end(); it++)
 	{
 		InputDescriptor *descr = *it;
@@ -1204,6 +1224,12 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 				e->getAttribute("id", name);
 			if (name.empty())
 				e->getAttribute("data-bind", name);
+			if (name.empty())
+			{
+				char ach[10];
+				sprintf (ach,"_%d", unnamed++);
+				name = ach;
+			}
 			e->getProperty("value", currentValue);
 			if (attributes.find(name) != attributes.end())
 			{
@@ -1296,6 +1322,7 @@ bool SmartForm::detectAttributeChange()
 	std::map<std::string,std::string> attributes;
 	page->fetchAttributes(app, currentAccount, attributes);
 
+	int unnamed = 1;
 	for (std::vector<InputDescriptor*>::iterator it = inputs.begin(); it != inputs.end(); it++)
 	{
 		InputDescriptor *descr = *it;
@@ -1308,6 +1335,12 @@ bool SmartForm::detectAttributeChange()
 			e->getAttribute("id", name);
 		if (name.empty())
 			e->getAttribute("data-bind", name);
+		if (name.empty())
+		{
+			char ach[10];
+			sprintf (ach,"_%d", unnamed++);
+			name = ach;
+		}
 		std::string value;
 		if (attributes.find(name) != attributes.end())
 		{
@@ -1456,8 +1489,9 @@ AbstractWebElement* SmartForm::createModalDialog (AbstractWebElement *input)
 	masterDiv->setAttribute("_soffid_modal", "true");
 	char ach[1000];
 
+	bool isNumber;
 	long left = 0, top = 0, width = 0, height = 0, width2 = 0, height2 = 0;
-	getPosition (input, left, top, width, height, width2, height2, true);
+	getPosition (input, left, top, width, height, width2, height2, isNumber, true);
 
 	AbstractWebElement *html = app->getDocumentElement();
 	left -= getIntProperty(html, "scrollLeft");
