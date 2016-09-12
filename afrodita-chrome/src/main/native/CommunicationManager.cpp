@@ -15,6 +15,7 @@
 #include "ChromeWebApplication.h"
 #include "json/Encoder.h"
 #include <exception>
+#include "WebAddonHelper.h"
 
 #ifndef WIN32
 #include <pthread.h>
@@ -332,11 +333,40 @@ void CommunicationManager::mainLoop() {
 				}
 			}
 		}
+		if (messageName != NULL && messageName->value == "search" && pageId != NULL)
+		{
+			JsonValue* text = dynamic_cast<JsonValue*>(jsonMap->getObject("text"));
+			MZNSendDebugMessage("Received event %s : %s", messageName->value.c_str(), text->value.c_str());
+			WebAddonHelper h;
+			std::vector<UrlStruct> result;
+			h.searchUrls (MZNC_utf8towstr(text->value.c_str()), result);
+			std::string response = " {\"action\":\"searchResult\", \"pageId\":\""+pageId->value +"\",\"result\": [";
+			bool first = true;
+			for ( std::vector<UrlStruct>::iterator it = result.begin(); it != result.end (); it++)
+			{
+				UrlStruct s = *it;
+				if (first) first = false;
+				else response += ",";
+				response += "{\"url\":";
+				response += Encoder::encode (MZNC_wstrtoutf8(s.url.c_str()).c_str());
+				response += ",\"name\":";
+				response += Encoder::encode (MZNC_wstrtoutf8(s.description.c_str()).c_str());
+				response += "}";
+			}
+			response += "]}";
+			MZNSendDebugMessage("Response %s", response.c_str());
+			writeMessage(response);
+		}
 		else if (messageName != NULL && messageName->value == "info" && pageId != NULL)
 		{
+			std::string link;
+			SeyconCommon::readProperty("AutoSSOURL", link);
+
 #define QUOTE(name) #name
 #define STR(macro) QUOTE(macro)
-			std::string response = "{\"action\": \"version\", \"version\":\"" STR(VERSION) "\", \"pageId\":\""+pageId->value +"\"}";
+			std::string response = "{\"action\": \"version\", \"version\":\"" STR(VERSION) "\", \"url\":";
+			response += Encoder::encode(link.c_str());
+			response += ",\"pageId\":\""+pageId->value +"\"}";
 			writeMessage(response);
 		}
 		else if ( messageName != NULL && messageName->value == "response")

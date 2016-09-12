@@ -28,7 +28,6 @@ function soffidHasInputInside (node) {
 }
 
 function soffidLoadProcedure () {
-     // alert("Connect on "+document.URL);
     var port = chrome.runtime.connect ();
     port.onMessage.addListener (function (request) {
 		try {
