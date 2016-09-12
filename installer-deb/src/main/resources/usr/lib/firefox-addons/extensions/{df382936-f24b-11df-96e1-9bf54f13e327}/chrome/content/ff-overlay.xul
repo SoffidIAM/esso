@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<overlay id="MazingerExtension-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<overlay id="SoffidESSOExtension-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="overlay.js"/>
+  <toolbarpalette id="BrowserToolbarPalette">
+    <toolbarbutton id="mazinger-status"
+    			         class="toolbarbutton-1"
+                   tooltiptext="Soffid ESSO engine"
+                   oncommand="openSearchDialog(event)"
+                   label="Soffid ESSO"
+                   image="chrome://SoffidESSOExtension/content/icon.png">
+    </toolbarbutton>
+  </toolbarpalette>
+  
 </overlay>

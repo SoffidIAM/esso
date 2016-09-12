@@ -11,6 +11,8 @@
 #include "EventHandler.h"
 #include <map>
 #include <SmartWebPage.h>
+#include "WebAddonHelper.h"
+#include "Encoder.h"
 
 #ifdef WIN32
 #include <windows.h>
@@ -158,6 +160,41 @@ extern "C" void AFRevent2 (long  eventId, long elementId) {
 	EventHandler::getInstance()->process (eventId, elementId);
 }
 
+
+#define QUOTE(name) #name
+#define STR(macro) QUOTE(macro)
+extern "C" char * AFRgetVersion () {
+	std::string link;
+	SeyconCommon::readProperty("AutoSSOURL", link);
+
+	std::string response = "{\"action\": \"version\", \"version\":\"" STR(VERSION) "\", \"url\":";
+	response += json::Encoder::encode(link.c_str());
+	response += "}";
+
+	return response;
+}
+
+extern "C" char * AFRsearch (const char *text) {
+	WebAddonHelper h;
+	std::vector<UrlStruct> result;
+	h.searchUrls (MZNC_utf8towstr(text), result);
+	std::string response = " [";
+	bool first = true;
+	for ( std::vector<UrlStruct>::iterator it = result.begin(); it != result.end (); it++)
+	{
+		UrlStruct s = *it;
+		if (first) first = false;
+		else response += ",";
+		response += "{\"url\":";
+		response += json::Encoder::encode (MZNC_wstrtoutf8(s.url.c_str()).c_str());
+		response += ",\"name\":";
+		response += json::Encoder::encode (MZNC_wstrtoutf8(s.description.c_str()).c_str());
+		response += "}";
+	}
+	response += "]";
+
+	return strdup (response.c_str());
+}
 
 extern "C" void Test (const char *id) {
 //	MessageBox (NULL, id, "Test", MB_OK);

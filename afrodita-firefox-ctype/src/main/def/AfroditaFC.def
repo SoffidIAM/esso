@@ -6,5 +6,7 @@ EXPORTS
                 AFRevaluate
                 AFRevent
                 AFRdismiss
+                AFRsearch
+                AFRgetVersion
                 
                 
