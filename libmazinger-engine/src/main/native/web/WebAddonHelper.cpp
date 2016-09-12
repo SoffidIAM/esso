@@ -10,6 +10,11 @@
 #include <SecretStore.h>
 #include <SeyconServer.h>
 
+#ifndef WIN32
+#include <wctype.h>
+#endif
+
+
 WebAddonHelper::WebAddonHelper() {
 
 }
