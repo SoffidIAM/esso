@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <map>
+
 class MazingerEnv;
 
 class SecretStore {
@@ -21,6 +22,7 @@ public:
 
 	wchar_t * getSecret(const wchar_t * secret);
 	std::map<std::wstring,std::wstring> getSecretsByPrefix(const wchar_t * prefix);
+	std::vector<std::pair<std::wstring,std::wstring> > getSecretsByPrefix2(const wchar_t * prefix);
 	std::vector<std::wstring> getSecrets(const wchar_t * secret);
 	void setSecret(const wchar_t * secret, const wchar_t * value);
 	void removeSecret(const wchar_t * secret, const wchar_t * value);
