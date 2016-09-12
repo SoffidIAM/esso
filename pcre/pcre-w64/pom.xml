@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>com.soffid.iam.esso.pom</groupId>
 		<artifactId>libpcreposix</artifactId>
-		<version>1.6.7-enterprise</version>
+		<version>1.6.8-enterprise-SNAPSHOT</version>
 	</parent>
 	<build>
 		<plugins>
