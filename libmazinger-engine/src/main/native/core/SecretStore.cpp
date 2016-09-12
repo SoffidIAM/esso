@@ -221,6 +221,44 @@ std::map<std::wstring, std::wstring> SecretStore::getSecretsByPrefix(const wchar
 	return secrets;
 }
 
+std::vector<std::pair<std::wstring, std::wstring> > SecretStore::getSecretsByPrefix2(const wchar_t * secret) {
+	std::vector<std::pair<std::wstring, std::wstring> > secrets;
+	PMAZINGER_DATA pMazinger = m_pEnv->getData();
+	if (pMazinger == NULL) {
+		MZNSendDebugMessageA("*** FATAL ***");
+		MZNSendDebugMessageA("Cannot access secret store ");
+		wchar_t *result = (wchar_t*) malloc(sizeof (wchar_t));
+		result[0] = L'\0';
+		return secrets;
+	}
+
+	int counter = 0;
+	while(true) {
+		wchar_t *achSecret = readString(pMazinger->achSecrets, counter);
+		if (achSecret == NULL || achSecret[0] == '\0')
+		{
+			freeSecret(achSecret);
+			break;
+		}
+		else if ( wcsncmp  (achSecret, secret, wcslen (secret)) == 0 )
+		{
+			std::wstring tag = achSecret;
+			freeSecret (achSecret);
+			wchar_t *value = readString(pMazinger->achSecrets, counter);
+			secrets.push_back(std::pair<std::wstring,std::wstring>(tag, value));
+			freeSecret(value);
+		}
+		else
+		{
+			freeSecret (achSecret);
+			skipString (pMazinger->achSecrets, counter);
+		}
+	}
+
+	return secrets;
+}
+
+
 std::vector<std::wstring> SecretStore::getSecrets(const wchar_t * secret) {
 	std::vector<std::wstring> secrets;
 	PMAZINGER_DATA pMazinger = m_pEnv->getData();

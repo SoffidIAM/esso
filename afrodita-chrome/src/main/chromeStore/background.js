@@ -1,4 +1,4 @@
-var version = "3.0.0";
+var version = "2.6.0";
 //alert ("Started 2");
 
 
@@ -15,10 +15,6 @@ var mazingerBridge = {
  			port.postMessage({action: "getInfo", pageId: pageId});
 			port.onDisconnect.addListener ( function (port) {
 			mazingerBridge.ports[pageId] = null;
-//			mazingerBridge.port.postMessage({
-//						"pageId": pageId,
-//						"message": "onUnload"
-//					});
 
 			});
 		  } catch (e) { 

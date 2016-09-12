@@ -33,6 +33,7 @@
 						<compilerMiddleOption>-Wall</compilerMiddleOption>
 						<compilerMiddleOption>-g3</compilerMiddleOption>
 						<compilerMiddleOption>-O0</compilerMiddleOption>
+						<compilerMiddleOption>-DVERSION="${pom.version}"</compilerMiddleOption>
 					</compilerMiddleOptions>
 					<linkerMiddleOptions>
 						<linkerMiddleOption>-m64</linkerMiddleOption>

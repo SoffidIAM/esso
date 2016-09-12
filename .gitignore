@@ -1,1 +1,6 @@
 target
+Release
+Debug
+.cproject
+.project
+.settings

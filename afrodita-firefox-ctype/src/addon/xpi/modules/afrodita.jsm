@@ -55,23 +55,20 @@ var AfroditaExtension = {
      }
      return element.___Afr_id;
   },
-  onPageLoad: function(aEvent) {
+  onPageLoad: function(document) {
     AfroditaExtension.checkInit ();
-    var doc = aEvent.originalTarget; // doc is document that triggered "onload" event
-    if (AfroditaExtension.newInterface) {
 
        // Listen for page changes
 
-       window = doc.defaultView;
        var docid = AfroditaExtension.counter ++;
        var observer = new window.MutationObserver ( 
        	function(mutations) { AfroditaExtension.onPageChanged(mutations, docid);} );
        var config = {attributes: false, childList: true, characterData: false, subtree: true };
-       observer.observe (doc, config);
+       observer.observe (document, config);
 
        AfroditaExtension.documents[docid] = {
          id: docid, 
-         document: doc, 
+         document: document, 
          elements: new Array(),
          counter: 1,
          window: window
@@ -79,15 +76,8 @@ var AfroditaExtension = {
        AfroditaExtension.AfrEvaluate (docid);
 
        // add event listener for page unload 
-       aEvent.originalTarget.defaultView.addEventListener("unload", 
+       document.addEventListener("unload", 
               function() { AfroditaExtension.onPageUnload(docid); }, true);
-
-   } else {
-       var c = Components.classes["@caib.es/afroditaf;1"];          
-       c = c.getService ();
-       c = c.QueryInterface(Components.interfaces.caibIAfroditaF);
-       c.notify(doc);
-    }
     
   },
   onPageChanged: function(mutations, docid) {
@@ -124,9 +114,19 @@ var AfroditaExtension = {
   	 AfroditaExtension.AfrDismiss (docid);
      AfroditaExtension.documents[docid] = null;
   },
-
+  currentVersion: function () {
+     var v = AfroditaExtension.AfrGetVersion ();
+     return JSON.parse (v.readString());
+  },
+  searchAccounts: function(text) {
+     console.log("Searching for "+text);
+     var result = AfroditaExtension.AfrSearch (text);
+     var str = result.readString (); 
+     console.log("Result = "+str);
+     return JSON.parse (str);
+  },
   checkInit: function () { 
-       if ( AfroditaExtension.initialized )
+    if ( AfroditaExtension.initialized )
           return;
 	var c = Components.classes["@caib.es/afroditaf;1"];
 	if (c == null) {          
@@ -163,6 +163,8 @@ var AfroditaExtension = {
 		AfroditaExtension.AfrSetHandler_ = AfroditaExtension.lib . declare ("AFRsetHandler", ctypes.default_abi, ctypes.void_t, ctypes.char.ptr, ctypes.void_t.ptr);
 		AfroditaExtension.AfrEvaluate = AfroditaExtension.lib . declare ("AFRevaluate", ctypes.default_abi, ctypes.void_t, ctypes.long);
 		AfroditaExtension.AfrEvent = AfroditaExtension.lib . declare ("AFRevent", ctypes.default_abi, ctypes.void_t, ctypes.long);
+		AfroditaExtension.AfrGetVersion = AfroditaExtension.lib . declare ("AFRgetVersion", ctypes.default_abi, ctypes.char.ptr);
+		AfroditaExtension.AfrSearch = AfroditaExtension.lib . declare ("AFRsearch", ctypes.default_abi, ctypes.char.ptr, ctypes.char.ptr);
 		AfroditaExtension.AfrEvent2 = false;
 		try {
 			AfroditaExtension.AfrEvent2 = AfroditaExtension.lib . declare ("AFRevent2", ctypes.default_abi, ctypes.void_t, ctypes.long, ctypes.long);
