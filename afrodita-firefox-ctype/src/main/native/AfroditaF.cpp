@@ -13,6 +13,7 @@
 #include <SmartWebPage.h>
 #include "WebAddonHelper.h"
 #include "Encoder.h"
+#include "SeyconServer.h"
 
 #ifdef WIN32
 #include <windows.h>
@@ -171,7 +172,7 @@ extern "C" char * AFRgetVersion () {
 	response += json::Encoder::encode(link.c_str());
 	response += "}";
 
-	return response;
+	return strdup(response.c_str());
 }
 
 extern "C" char * AFRsearch (const char *text) {

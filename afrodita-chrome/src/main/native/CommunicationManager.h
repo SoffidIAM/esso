@@ -15,6 +15,7 @@
 
 #include <WebListener.h>
 #include "ChromeElement.h"
+#include <SeyconServer.h>
 
 namespace mazinger_chrome {
 
