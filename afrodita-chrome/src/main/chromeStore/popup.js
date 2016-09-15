@@ -9,6 +9,7 @@ port.onMessage.addListener (function (request) {
 			document.getElementById("labelError").style.display = "none";
 			document.getElementById("labelSuccess").style.display = "block";
 			document.getElementById("labelVersion").innerText = request.version;
+	    	document.getElementById("selfServiceLink").setAttribute("href", request.url);
 	    }
 		else if (request.action == "searchResult")
 	    {
@@ -38,7 +39,6 @@ port.onMessage.addListener (function (request) {
 	    else if (request.action == "getInfo")
 	    {
 	    	document.getElementById("searchBox").addEventListener("input", function () {searchResults(request.pageId)});
-	    	document.getElementById("selfServiceLink").setAttribute("href", request.url);
 //	    	document.getElementById("searchBox").focus ();
 	    	port.postMessage({message: "info", pageId: request.pageId});
 	    }

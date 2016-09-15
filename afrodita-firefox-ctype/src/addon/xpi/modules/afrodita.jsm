@@ -55,20 +55,23 @@ var AfroditaExtension = {
      }
      return element.___Afr_id;
   },
-  onPageLoad: function(document) {
+  onPageLoad: function(aEvent) {
     AfroditaExtension.checkInit ();
+    var doc = aEvent.originalTarget; // doc is document that triggered "onload" event
+    if (AfroditaExtension.newInterface) {
 
        // Listen for page changes
 
+       window = doc.defaultView;
        var docid = AfroditaExtension.counter ++;
        var observer = new window.MutationObserver ( 
        	function(mutations) { AfroditaExtension.onPageChanged(mutations, docid);} );
        var config = {attributes: false, childList: true, characterData: false, subtree: true };
-       observer.observe (document, config);
+       observer.observe (doc, config);
 
        AfroditaExtension.documents[docid] = {
          id: docid, 
-         document: document, 
+         document: doc, 
          elements: new Array(),
          counter: 1,
          window: window
@@ -76,8 +79,15 @@ var AfroditaExtension = {
        AfroditaExtension.AfrEvaluate (docid);
 
        // add event listener for page unload 
-       document.addEventListener("unload", 
+       aEvent.originalTarget.defaultView.addEventListener("unload", 
               function() { AfroditaExtension.onPageUnload(docid); }, true);
+
+   } else {
+       var c = Components.classes["@caib.es/afroditaf;1"];          
+       c = c.getService ();
+       c = c.QueryInterface(Components.interfaces.caibIAfroditaF);
+       c.notify(doc);
+    }
     
   },
   onPageChanged: function(mutations, docid) {
@@ -126,7 +136,7 @@ var AfroditaExtension = {
      return JSON.parse (str);
   },
   checkInit: function () { 
-    if ( AfroditaExtension.initialized )
+       if ( AfroditaExtension.initialized )
           return;
 	var c = Components.classes["@caib.es/afroditaf;1"];
 	if (c == null) {          
