@@ -53,7 +53,6 @@ void OnAnyElementFocusListener::onEvent (const char *eventName, AbstractWebAppli
 		std::string tag = "";
 		component->getTagName(tag);
 		component->getProperty("soffidManaged", managed);
-		MZNSendDebugMessageA("On focus event %s - %s", tag.c_str(), managed.c_str() );
 		if (managed != "true" && strcasecmp (tag.c_str(), "input") == 0)
 		{
 			app->sanityCheck();
@@ -63,7 +62,6 @@ void OnAnyElementFocusListener::onEvent (const char *eventName, AbstractWebAppli
 				page -> parse (app);
 			}
 		}
-		MZNSendDebugMessageA("END On focus event %s - %s", tag.c_str(), managed.c_str() );
 		MZNC_endMutex();
 	}
 
@@ -81,48 +79,81 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 		listener = wl;
 
 		std::vector<AbstractWebElement *> bodies;
-		MZNSendDebugMessage("Searching body");
 		app->getElementsByTagName("body", bodies);
 		for (std::vector<AbstractWebElement*>::iterator it = bodies.begin(); it != bodies.end (); it++)
 		{
-			MZNSendDebugMessage("Registering body.onfocus");
 			(*it)->subscribe("focus", wl);
 			parsed = true;
 		}
-		MZNSendDebugMessage("Searched body");
 		wl->release();
 	}
 
 	MZNSendDebugMessageA("* Parsing HTML document");
-	if (! rootForm->isParsed())
-		rootForm->parse(app, NULL);
-	else
-		rootForm->reparse();
-	app->getForms(forms);
-
-	int i = 0;
-	for (std::vector<AbstractWebElement*>::iterator it = forms.begin(); it != forms.end(); it++)
+	PageData *data = app->getPageData();
+	if (data != NULL)
 	{
-		AbstractWebElement *element = *it;
-		std::string action;
-		element->getAttribute("action", action);
-		MZNSendDebugMessageA("* Parsing HTML form %d: %s", i++, action.c_str());
-		bool found = false;
-		for (std::vector<SmartForm*>::iterator it2 = this->forms.begin(); it2 != this->forms.end(); it2++)
+		if (! rootForm->isParsed())
+			rootForm->parse(app, NULL, &data->inputs);
+		else
+			rootForm->reparse(&data->inputs);
+
+		for (std::vector<FormData>::iterator it = data->forms.begin(); it != data->forms.end(); it++)
 		{
-			SmartForm *form2 = *it2;
-			if (form2->getRootElement() != NULL && form2->getRootElement()->equals(element))
+			FormData &form = *it;
+			AbstractWebElement *element = app->getElementBySoffidId(form.soffidId.c_str());
+
+			bool found = false;
+			for (std::vector<SmartForm*>::iterator it2 = this->forms.begin(); it2 != this->forms.end(); it2++)
 			{
-				form2->reparse();
-				found = true;
-				break;
+				SmartForm *form2 = *it2;
+				if (form2->getRootElement() != NULL && form2->getRootElement()->equals(element))
+				{
+					form2->reparse(&form.inputs);
+					found = true;
+					break;
+				}
 			}
+			if (! found)
+			{
+				SmartForm *smartForm = new SmartForm(this);
+				this->forms.push_back(smartForm);
+				smartForm->parse ( app, element, &form.inputs);
+			}
+			element->release();
 		}
-		if (! found)
+	} else {
+		if (! rootForm->isParsed())
+			rootForm->parse(app, NULL, NULL);
+		else
+			rootForm->reparse(NULL);
+
+
+		app->getForms(forms);
+
+		int i = 0;
+		for (std::vector<AbstractWebElement*>::iterator it = forms.begin(); it != forms.end(); it++)
 		{
-			SmartForm *form = new SmartForm(this);
-			this->forms.push_back(form);
-			form->parse ( app, element);
+			AbstractWebElement *element = *it;
+			std::string action;
+			element->getAttribute("action", action);
+			bool found = false;
+			for (std::vector<SmartForm*>::iterator it2 = this->forms.begin(); it2 != this->forms.end(); it2++)
+			{
+				SmartForm *form2 = *it2;
+				if (form2->getRootElement() != NULL && form2->getRootElement()->equals(element))
+				{
+					form2->reparse(NULL);
+					found = true;
+					break;
+				}
+			}
+			if (! found)
+			{
+				SmartForm *form = new SmartForm(this);
+				this->forms.push_back(form);
+				form->parse ( app, element, NULL);
+			}
+			element->release();
 		}
 	}
 

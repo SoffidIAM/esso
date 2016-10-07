@@ -147,7 +147,7 @@ void OnHiddenElementFocusListener::onEvent (const char *eventName, AbstractWebAp
 			{
 				component->setProperty("soffidOnFocusTrigger", "false");
 				form->sanityCheck();
-				form->reparse();
+				form->reparse(NULL);
 			}
 		}
 		MZNC_endMutex();
@@ -197,20 +197,105 @@ static long getIntProperty (AbstractWebElement *element, const char* property)
 }
 
 
-void SmartForm::findInputs (AbstractWebApplication* app, AbstractWebElement *element, std::vector<AbstractWebElement*> &inputs,
+void SmartForm::findInputs (AbstractWebApplication* app, AbstractWebElement *element, std::vector<InputDescriptor*> &inputs,
 		bool first, bool visible, std::string indent)
 {
-	std::string tagname;
-	element->getTagName(tagname);
-	if (visible && element->getComputedStyle("display")  == "none")
-			visible = false;
-	if (visible && element->getComputedStyle("visibility")  == "hidden")
-			visible = false;
-	if (strcasecmp (tagname.c_str(), "input") == 0)
+	PageData *pd = NULL;
+	if (app->supportsPageData())
 	{
-		inputs.push_back(element);
-		element->lock();
-		if (!visible)
+		pd = app->getPageData();
+	}
+	if (pd != NULL)
+	{
+		for (std::vector<FormData>::iterator formIt = pd->forms.begin();
+				formIt != pd->forms.end();
+				formIt ++)
+		{
+			FormData fd = *formIt;
+			AbstractWebElement *pForm = app->getElementBySoffidId(fd.soffidId.c_str());
+			if (pForm->equals(element))
+			{
+				for (std::vector<InputData>::iterator it = fd.inputs.begin();
+						it != fd.inputs.end();
+						it ++)
+				{
+					InputDescriptor *id = new InputDescriptor();
+					id->hasInputData = true;
+					id->data = *it;
+					id->input = app->getElementBySoffidId(id->data.soffidId.c_str());
+					inputs.push_back(id);
+					if( !visible || id->getDisplay() == "none" || id->getVisibility() == "hidden")
+					{
+						std::string soft;
+						element->getProperty("soffidOnFocusTrigger", soft);
+						if (soft != "true")
+						{
+							element->subscribe("focus", onHiddenElementFocusListener);
+							element->setProperty("soffidOnFocusTrigger", "true");
+						}
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		std::string tagname;
+		element->getTagName(tagname);
+		if (visible && element->getComputedStyle("display")  == "none")
+				visible = false;
+		if (visible && element->getComputedStyle("visibility")  == "hidden")
+				visible = false;
+		if (strcasecmp (tagname.c_str(), "input") == 0)
+		{
+			InputDescriptor *id = new InputDescriptor();
+			id->input = element;
+			inputs.push_back(id);
+			element->lock();
+			if (!visible)
+			{
+				std::string soft;
+				element->getProperty("soffidOnFocusTrigger", soft);
+				if (soft != "true")
+				{
+					element->subscribe("focus", onHiddenElementFocusListener);
+					element->setProperty("soffidOnFocusTrigger", "true");
+				}
+			}
+		}
+		else if (! first && strcasecmp (tagname.c_str(), "form") == 0)
+		{
+			// Do not go inside nested forms
+		}
+		else
+		{
+			std::vector<AbstractWebElement*> children;
+			element->getChildren(children);
+			for (std::vector<AbstractWebElement*>::iterator it = children.begin(); it != children.end(); it++)
+			{
+				AbstractWebElement *child = *it;
+				std::string indent2 = indent;
+				indent2 += "   ";
+				findInputs (app, child, inputs, false, visible, indent2);
+				child->release();
+			}
+		}
+	}
+}
+
+void SmartForm::findInputs (std::vector<InputData> *inputDatae, std::vector<InputDescriptor*> &inputs)
+{
+	for (std::vector<InputData>::iterator it = inputDatae->begin();
+			it != inputDatae->end();
+			it ++)
+	{
+		InputDescriptor *id = new InputDescriptor();
+		id->hasInputData = true;
+		InputData inputData = *it;
+		id->data = inputData;
+		id->input = app->getElementBySoffidId(id->data.soffidId.c_str());
+		inputs.push_back(id);
+		if( id->getDisplay() == "none" || id->getVisibility() == "hidden")
 		{
 			std::string soft;
 			element->getProperty("soffidOnFocusTrigger", soft);
@@ -221,32 +306,13 @@ void SmartForm::findInputs (AbstractWebApplication* app, AbstractWebElement *ele
 			}
 		}
 	}
-	else if (! first && strcasecmp (tagname.c_str(), "form") == 0)
-	{
-		// Do not go inside nested forms
-	}
-	else
-	{
-		std::vector<AbstractWebElement*> children;
-		element->getChildren(children);
-		for (std::vector<AbstractWebElement*>::iterator it = children.begin(); it != children.end(); it++)
-		{
-			AbstractWebElement *child = *it;
-			std::string indent2 = indent;
-			indent2 += "   ";
-			findInputs (app, child, inputs, false, visible, indent2);
-			child->release();
-		}
-	}
 }
 
-void SmartForm::findRootInputs (AbstractWebApplication* app, std::vector<AbstractWebElement*> &inputs)
+void SmartForm::findInputs (AbstractWebApplication* app, std::vector<InputDescriptor*> &inputs)
 {
 	std::vector<AbstractWebElement*> inputs2;
 	app->sanityCheck();
-//	MZNSendDebugMessageA("APP = %s", app->toString().c_str());
 	app->getElementsByTagName("input", inputs2 );
-//	MZNSendDebugMessageA("Got %d elements", inputs2.size());
 	for (std::vector<AbstractWebElement*>::iterator it = inputs2.begin () ; it!= inputs2.end(); it++)
 	{
 		AbstractWebElement *element = *it;
@@ -275,7 +341,10 @@ void SmartForm::findRootInputs (AbstractWebApplication* app, std::vector<Abstrac
 		} while (loopElement != NULL);
 		if (!omit)
 		{
-			inputs.push_back(element);
+			InputDescriptor *id = new InputDescriptor();
+			id->hasInputData = false;
+			id->input = element;
+			inputs.push_back(id);
 			if( ! visible)
 			{
 				std::string soft;
@@ -439,10 +508,6 @@ void SmartForm::releaseElements ()
 	for (std::vector<InputDescriptor*>::iterator it = inputs.begin(); it != inputs.end(); it++)
 	{
 		InputDescriptor *i = *it;
-		if (i->img != NULL)
-			i->img->release();
-		if (i->input != NULL)
-			i->input->release();
 		delete i;
 	}
 	inputs.clear();
@@ -573,25 +638,23 @@ void SmartForm::addIcon (InputDescriptor *descriptor)
 	}
 }
 
-bool SmartForm::addNoDuplicate (AbstractWebElement* input)
+bool SmartForm::addNoDuplicate (InputDescriptor* descriptor)
 {
 	for (std::vector<InputDescriptor*>::iterator it = inputs.begin(); it != inputs.end(); it++)
 	{
 		InputDescriptor *id = *it;
-		if (id != NULL && id->input != NULL && id->input->equals(input))
+		if (id != NULL && id->input != NULL && id->input->equals(descriptor->input))
 		{
+			id -> hasInputData = descriptor -> hasInputData;
+			id -> data = descriptor -> data;
 			return false;
 		}
 	}
-	std::string type;
-	input -> getAttribute("type", type);
+
+	std::string type = descriptor->getType();
+
 	if (strcasecmp ( type.c_str(), "password") == 0)
 	{
-		input->lock();
-
-		InputDescriptor *descriptor = new InputDescriptor();
-		descriptor->img = NULL;
-		descriptor->input = input;
 		if (numPasswords == 0)
 		{
 			descriptor->type = IT_PASSWORD;
@@ -622,11 +685,12 @@ bool SmartForm::addNoDuplicate (AbstractWebElement* input)
 		}
 		descriptor->status = IS_EMPTY;
 		inputs.push_back(descriptor);
+		return true;
 	}
 	else if (strcasecmp ( type.c_str(), "submit") == 0)
 	{
-		input->lock();
-		submits.push_back(input);
+//		submits.push_back(input);
+		return false;
 	}
     // if (type == undefined || type.toLowerCase() == "text" || type.toLowerCase() == "input"  || type.toLowerCase() == "email" || type == "")
 	else if (strcasecmp ( type.c_str(), "") == 0 ||
@@ -636,46 +700,43 @@ bool SmartForm::addNoDuplicate (AbstractWebElement* input)
 			strcasecmp ( type.c_str(), "number") == 0 ||
 			strcasecmp ( type.c_str(), "tel") == 0 )
 	{
-		input->lock();
-		InputDescriptor *descriptor = new InputDescriptor();
 		descriptor->img = NULL;
-		descriptor->input = input;
 		descriptor->type = IT_GENERAL;
 		descriptor->status = IS_EMPTY;
 		inputs.push_back(descriptor);
+		return true;
 	}
-
-	return true;
+	else
+		return false;
 }
 
-bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
+bool SmartForm::checkAnyPassword (std::vector<InputDescriptor*> &elements)
 {
 	bool anyPassword = false;
 	int nonPassword = 0;
 	int password = 0;
-//	MZNSendDebugMessage("Analyzing form =============================");
-	for (std::vector<AbstractWebElement*>::iterator it = elements.begin(); it != elements.end(); it++)
+	MZNSendDebugMessage("Analyzing form =============================");
+	for (std::vector<InputDescriptor*>::iterator it = elements.begin(); it != elements.end(); it++)
 	{
-		AbstractWebElement *input = *it;
+		InputDescriptor *id = *it;
 
-		input->sanityCheck();
+		id->input->sanityCheck();
 
-		std::string type;
-		input -> getAttribute("type", type);
+		std::string type = id->getType();
 		if (strcasecmp ( type.c_str(), "password") == 0)
 		{
-			MZNSendDebugMessage("Found password element %s", input->toString().c_str());
-			if (input->isVisible())
+			MZNSendDebugMessage("Found password element %s", id->input->toString().c_str());
+			if (id->isVisible())
 			{
 				MZNSendDebugMessage("Found password element %s is visible (%s / %s)",
-						input->toString().c_str(),
-						input->getComputedStyle("display").c_str(),
-						input->getComputedStyle("visibility").c_str());
+						id->input->toString().c_str(),
+						id->getDisplay().c_str(),
+						id->getVisibility().c_str());
 				anyPassword = true;
 				password ++;
 			} else {
 				// Test for any account on this URL
-				MZNSendDebugMessage("Found password element %s is not visible", input->toString().c_str());
+				MZNSendDebugMessage("Found password element %s is not visible", id->input->toString().c_str());
 				for ( std::vector<AccountStruct>::iterator it = page->accounts.begin(); it != page->accounts.end(); it++)
 				{
 					AccountStruct as = *it;
@@ -700,7 +761,7 @@ bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
 				strcasecmp ( type.c_str(), "time") == 0 ||
 				strcasecmp ( type.c_str(), "url") == 0 ||
 				strcasecmp ( type.c_str(), "week") == 0 ) {
-			if (input->isVisible())
+			if (id->isVisible())
 			{
 //				std::string id;
 //				std::string name;
@@ -730,13 +791,10 @@ bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
 			removeIcon (*it);
 		}
 		releaseElements();
-		for (std::vector<AbstractWebElement*>::iterator it = elements.begin(); it != elements.end(); it++)
+		for (std::vector<InputDescriptor*>::iterator it = elements.begin(); it != elements.end(); it++)
 		{
-			AbstractWebElement *input = *it;
-
-			input->sanityCheck();
-
-			input->release();
+			InputDescriptor *id = *it;
+			delete id;
 		}
 		return false;
 	}
@@ -747,8 +805,12 @@ bool SmartForm::checkAnyPassword (std::vector<AbstractWebElement*> &elements)
 	}
 }
 
-void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot) {
-	std::vector<AbstractWebElement*> elements;
+void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot, std::vector<InputData> *inputDatae) {
+
+	PageData *data = NULL;
+
+	std::vector<InputDescriptor*> elements;
+
 	if (this->element != NULL)
 		this->element->release();
 	this->element = formRoot;
@@ -759,15 +821,16 @@ void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot)
 	this->app = app;
 	this->app->lock();
 
-	if (formRoot == NULL)
+	if (inputDatae != NULL)
 	{
-		MZNSendDebugMessage("Parsing formless inputs");
-		findRootInputs(app, elements);
-		MZNSendDebugMessage("Parsed formless inputs");
+		findInputs(inputDatae, elements);
+	}
+	else if (formRoot == NULL)
+	{
+		findInputs(app, elements);
 	}
 	else
 	{
-		MZNSendDebugMessage("Parsing inputs on %s", formRoot->toString().c_str());
 		findInputs(app, formRoot, elements, true, formRoot->isVisible(), std::string());
 	}
 
@@ -775,7 +838,9 @@ void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot)
 
 
 	if (! checkAnyPassword(elements))
+	{
 		return;
+	}
 
 	parsed = true;
 
@@ -785,17 +850,14 @@ void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot)
 		status = SF_STATUS_SELECT;
 
 
-	for (std::vector<AbstractWebElement*>::iterator it = elements.begin(); it != elements.end(); it++)
+	for (std::vector<InputDescriptor*>::iterator it = elements.begin(); it != elements.end(); it++)
 	{
-		AbstractWebElement *input = *it;
+		InputDescriptor *input = *it;
 
 		if (input->isVisible())
 		{
-			input->sanityCheck();
-
-			addNoDuplicate(input);
-
-			input->release();
+			if (!addNoDuplicate(input))
+				delete input;
 		}
 	}
 
@@ -819,27 +881,34 @@ void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot)
 	}
 }
 
-void SmartForm::reparse() {
-	std::vector<AbstractWebElement*> elements;
-	if (this->element == NULL)
+void SmartForm::reparse(std::vector<InputData> *data) {
+	std::vector<InputDescriptor*> elements;
+
+	if (data != NULL)
+	{
+		findInputs(data, elements);
+	}
+	else if (this->element == NULL)
 	{
 		MZNSendDebugMessageA("Reparsing root element ...");
-		findRootInputs(app, elements);
+		findInputs(app, elements);
 	}
 	else
+	{
 		findInputs(app, this->element, elements, true, true, std::string());
+	}
 	bool newItem = false;
 
 	if (! checkAnyPassword(elements))
 		return;
 
-	for (std::vector<AbstractWebElement*>::iterator it = elements.begin(); it != elements.end(); it++)
+	for (std::vector<InputDescriptor*>::iterator it = elements.begin(); it != elements.end(); it++)
 	{
-		AbstractWebElement *input = *it;
-		input->sanityCheck();
+		InputDescriptor *input = *it;
 		if (addNoDuplicate (input))
 			newItem = true;
-		input->release();
+		else
+			delete input;
 	}
 
 	if (numPasswords > 0)
@@ -1767,4 +1836,167 @@ std::string SmartForm::toString() {
 		s += "Root";
 	}
 	return s;
+}
+
+
+
+long InputDescriptor::getClientHeight()
+{
+	if (hasInputData)
+		return data.clientHeight;
+	else
+		return getIntProperty(input, "clientHeight");
+}
+
+long InputDescriptor::getClientWidth (){
+	if (hasInputData)
+		return data.clientWidth;
+	else
+		return getIntProperty(input, "clientWidth");
+}
+
+std::string InputDescriptor::getDataBind () {
+	if (hasInputData)
+		return data.data_bind;
+	else
+	{
+		std::string s;
+		input->getAttribute("data-bind", s);
+		return s;
+	}
+}
+
+std::string InputDescriptor::getDisplay () {
+	if (hasInputData)
+		return data.data_bind;
+	else
+	{
+		return input->getComputedStyle("display");
+	}
+}
+
+std::string InputDescriptor::getId () {
+	if (hasInputData)
+		return data.id;
+	else
+	{
+		std::string s;
+		input->getProperty("id", s);
+		return s;
+	}
+}
+
+std::string InputDescriptor::getName() {
+	if (hasInputData)
+		return data.name;
+	else
+	{
+		std::string s;
+		input->getProperty("name", s);
+		return s;
+	}
+}
+
+std::string InputDescriptor::getType() {
+	if (hasInputData)
+		return data.type;
+	else
+	{
+		std::string s;
+		input->getProperty("type", s);
+		return s;
+	}
+}
+
+long InputDescriptor::getOffsetHeight() {
+	if (hasInputData)
+		return data.offsetHeight;
+	else
+		return getIntProperty(input, "offsetHeight");
+}
+long InputDescriptor::getOffsetLeft() {
+	if (hasInputData)
+		return data.offsetLeft;
+	else
+		return getIntProperty(input, "offsetLeft");
+}
+
+long InputDescriptor::getOffsetTop() {
+	if (hasInputData)
+		return data.offsetTop;
+	else
+		return getIntProperty(input, "offsetTop");
+}
+
+long InputDescriptor::getOffsetWidth() {
+	if (hasInputData)
+		return data.offsetWidth;
+	else
+		return getIntProperty(input, "offsetWidth");
+}
+
+bool InputDescriptor::isRightAlign () {
+	return getTextAlign() == "right";
+}
+
+std::string InputDescriptor::getStyle () {
+	if (hasInputData)
+		return data.style;
+	else
+	{
+		std::string s;
+		input->getAttribute("style", s);
+		return s;
+	}
+}
+
+std::string InputDescriptor::getTextAlign () {
+	if (hasInputData)
+		return data.style;
+	else
+	{
+		return input->getComputedStyle("text-align");
+	}
+}
+
+std::string InputDescriptor::getValue() {
+	std::string v;
+	input->getProperty("value", v);
+	return v;
+}
+
+std::string InputDescriptor::getVisibility ()  {
+	if (hasInputData)
+		return data.style;
+	else
+	{
+		return input->getComputedStyle("visibility");
+	}
+}
+
+bool InputDescriptor::isVisible ()  {
+	if (hasInputData)
+		return data.visibility != "none" && data.display != "hidden";
+	else
+	{
+		return input->isVisible();
+	}
+}
+
+InputDescriptor::~InputDescriptor() {
+	if (input != NULL)
+		input->release();
+	input = NULL;
+	if (img != NULL)
+		img->release();
+	img = NULL;
+}
+
+InputDescriptor::InputDescriptor() {
+	input = NULL;
+	img = NULL;
+	type = IT_GENERAL;
+	status = IS_EMPTY;
+	hasInputData = false;
+
 }

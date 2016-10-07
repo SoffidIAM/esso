@@ -5,8 +5,8 @@
  *      Author: bubu
  */
 
-#include "JsonValue.h"
-#include "Encoder.h"
+#include <json/JsonValue.h>
+#include <json/Encoder.h>
 #include <stdio.h>
 #include <SeyconServer.h>
 

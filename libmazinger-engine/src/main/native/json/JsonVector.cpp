@@ -5,7 +5,7 @@
  *      Author: bubu
  */
 
-#include "JsonVector.h"
+#include <json/JsonVector.h>
 #include <stdio.h>
 #include <SeyconServer.h>
 

@@ -5,9 +5,9 @@
  *      Author: bubu
  */
 
-#include "JsonMap.h"
-#include "JsonTaggedObject.h"
-#include "JsonValue.h"
+#include <json/JsonMap.h>
+#include <json/JsonTaggedObject.h>
+#include <json/JsonValue.h>
 
 #include <stdio.h>
 #include <SeyconServer.h>

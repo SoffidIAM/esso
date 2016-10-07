@@ -5,7 +5,7 @@
  *      Author: bubu
  */
 
-#include "JsonTaggedObject.h"
+#include <json/JsonTaggedObject.h>
 #include <stdio.h>
 #include <SeyconServer.h>
 

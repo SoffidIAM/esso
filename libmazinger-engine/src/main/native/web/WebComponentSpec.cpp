@@ -9,6 +9,7 @@
 #include <string>
 #include "WebComponentSpec.h"
 #include <AbstractWebElement.h>
+#include <AbstractWebApplication.h>
 #include <MazingerInternal.h>
 
 WebComponentSpec::WebComponentSpec() {
@@ -47,10 +48,7 @@ bool WebComponentSpec::matchAttribute (regex_t *expr, AbstractWebElement *elemen
 		std::string value;
 		element->getAttribute(attributeName, value);
 //		MZNSendTraceMessageA("Checking for attributes %s value =[%s]", attributeName, value.c_str());
-		if (regexec (expr, value.c_str(), (size_t) 0, NULL, 0 ) != 0 )
-		{
-			return false;
-		}
+		return matchValue(expr, value.c_str());
 	}
 	return true;
 }
@@ -70,3 +68,47 @@ void WebComponentSpec::clearMatches()
 	m_pElement = NULL;
 }
 
+bool WebComponentSpec::matches(AbstractWebApplication *app, FormData& form) {
+	if ( ! matchValue (reId, form.id.c_str()) ||
+			! matchValue (reName, form.name.c_str()) )
+	{
+		clearMatches();
+		return false;
+	}
+	else
+	{
+		AbstractWebElement *pElement = app->getElementBySoffidId(form.soffidId.c_str());
+		setMatched(pElement);
+		pElement->release();
+		return true;
+	}
+}
+
+bool WebComponentSpec::matches(AbstractWebApplication *app, InputData& input) {
+	if ( ! matchValue (reId, input.id.c_str()) ||
+			! matchValue (reName, input.name.c_str()) )
+	{
+		clearMatches();
+		return false;
+	}
+	else
+	{
+		AbstractWebElement *pElement = app->getElementBySoffidId(input.soffidId.c_str());
+		setMatched(pElement);
+		pElement->release();
+		return true;
+	}
+}
+
+bool WebComponentSpec::matchValue(regex_t* expr, const char* value) {
+	if (expr == NULL)
+		return true;
+	else if (regexec (expr, value, (size_t) 0, NULL, 0 ) != 0 )
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
