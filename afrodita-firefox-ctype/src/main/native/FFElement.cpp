@@ -9,16 +9,21 @@
 
 #include "AfroditaF.h"
 #include "FFElement.h"
+#include "FFWebApplication.h"
 #include <stdio.h>
 #include "EventHandler.h"
+#include <PageData.h>
 
-FFElement::FFElement(long docId, long elementId)
+FFElement::FFElement(FFWebApplication *app, long elementId)
 {
-	this->docId = docId;
+	this->app = app;
+	this->docId = app->getDocId();
 	this->elementId = elementId;
+	this->app->lock();
 }
 
 FFElement::~FFElement() {
+	this->app->release();
 }
 
 
@@ -29,7 +34,7 @@ void FFElement::getChildren(std::vector<AbstractWebElement*> &children)
 	if (AfroditaHandler::handler.getChildrenHandler != NULL) {
 		const long* id = AfroditaHandler::handler.getChildrenHandler (docId, elementId);
 		for (int i = 0; id != NULL && id[i] != 0; i++) {
-			FFElement *element = new FFElement(docId, id[i]);
+			FFElement *element = new FFElement(app, id[i]);
 			children.push_back(element);
 		}
 	}
@@ -83,7 +88,7 @@ AbstractWebElement *FFElement::getParent()
 	{
 		long id = AfroditaHandler::handler.getParentHandler(docId, elementId);
 		if (id != 0)
-			return new FFElement (docId, id);
+			return new FFElement (app, id);
 	}
 	return NULL;
 }
@@ -94,7 +99,7 @@ AbstractWebElement *FFElement::getOffsetParent()
 	{
 		long id = AfroditaHandler::handler.getOffsetParentHandler(docId, elementId);
 		if (id != 0)
-			return new FFElement (docId, id);
+			return new FFElement (app, id);
 	}
 	return NULL;
 }
@@ -106,6 +111,18 @@ void FFElement::setAttribute(const char *attribute, const char*value)
 	if ( AfroditaHandler::handler.setAttributeHandler != NULL)
 	{
 		AfroditaHandler::handler.setAttributeHandler(docId, elementId, attribute, value);
+	}
+	InputData *d = findInputData();
+	if (d != NULL)
+	{
+		if (strcmp (attribute, "value") == 0)
+			d->value = value;
+		if (strcmp (attribute, "name") == 0)
+			d->name = value;
+		if (strcmp (attribute, "id") == 0)
+			d->id = value;
+		if (strcmp (attribute, "type") == 0)
+			d->type = value;
 	}
 }
 
@@ -136,7 +153,7 @@ void FFElement::getTagName(std::string & value)
 
 AbstractWebElement *FFElement::clone()
 {
-	return new FFElement(docId, elementId);
+	return new FFElement(app, elementId);
 }
 
 
@@ -193,7 +210,7 @@ AbstractWebElement* FFElement::getPreviousSibling() {
 	{
 		long id = AfroditaHandler::handler.getPreviousSiblingHandler(docId, elementId);
 		if (id != 0)
-			return new FFElement (docId, id);
+			return new FFElement (app, id);
 	}
 	return NULL;
 }
@@ -203,13 +220,14 @@ AbstractWebElement* FFElement::getNextSibling() {
 	{
 		long id = AfroditaHandler::handler.getNextSiblingHandler(docId, elementId);
 		if (id != 0)
-			return new FFElement (docId, id);
+			return new FFElement (app, id);
 	}
 	return NULL;
 }
 
 AbstractWebApplication* FFElement::getApplication() {
-	return new FFWebApplication (docId);
+	app->lock();
+	return app;
 }
 
 bool FFElement::equals(AbstractWebElement* other) {
@@ -221,6 +239,18 @@ void FFElement::setProperty(const char* property, const char* value) {
 	if ( AfroditaHandler::handler.setPropertyHandler != NULL)
 	{
 		AfroditaHandler::handler.setPropertyHandler(docId, elementId, property, value);
+	}
+	InputData *d = findInputData();
+	if (d != NULL)
+	{
+		if (strcmp (property, "value")  == 0)
+			d->value = value;
+		if (strcmp (property, "name")  == 0)
+			d->name = value;
+		if (strcmp (property, "id")  == 0)
+			d->id = value;
+		if (strcmp (property, "type") == 0)
+			d->type = value;
 	}
 }
 
@@ -260,4 +290,34 @@ std::string FFElement::toString() {
 	getTagName(tag);
 	result += tag;
 	return result;
+}
+
+InputData* FFElement::findInputData() {
+	if (app->pageData == NULL)
+		return NULL;
+	char ach[100];
+	sprintf (ach, "%d", elementId);
+	for (std::vector<InputData>::iterator it = app->pageData->inputs.begin();
+			it != app->pageData->inputs.end();
+			it++)
+	{
+		InputData &d = *it;
+		if (d.soffidId == ach)
+			return &d;
+	}
+	for (std::vector<FormData>::iterator it2 = app->pageData->forms.begin();
+			it2 != app->pageData->forms.end();
+			it2++)
+	{
+		FormData &f = *it2;
+		for (std::vector<InputData>::iterator it = f.inputs.begin();
+				it != f.inputs.end();
+				it++)
+		{
+			InputData &d = *it;
+			if (d.soffidId == ach)
+				return &d;
+		}
+	}
+	return NULL;
 }

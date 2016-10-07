@@ -1,5 +1,100 @@
 var EXPORTED_SYMBOLS = ["AfroditaExtension"];  
 
+function parsePageData (docid, document ) {
+	var pageData = {};
+	pageData.url = document.URL;
+	pageData.title = document.tile;
+	pageData.forms = [];
+	pageData.inputs = [];
+	
+	// Parse formsc
+	for (var i = 0; i < document.forms.length; i++)
+	{
+		var form = document.forms[i];
+		var formData = {};
+		formData.action = form.action;
+		formData.id = form.id;
+		formData.soffidId = AfroditaExtension.registerElement(docid, form);
+		formData.method = form.method;
+		formData.inputs = [];
+		pageData.forms.push (formData);
+	}
+	
+	// Parse inputs
+	var inputs = document.getElementsByTagName("input");
+	for (var i = 0; i < inputs.length; i++)
+	{
+		var input = inputs[i];
+		var inputData = {};
+		var cs= {};
+		try {
+			cs = window.getComputesStyle(input)
+		} catch (e) {
+		}
+		inputData.clientHeight = input.clientHeight;
+		inputData.clientWitdh  = input.clientWidth;
+		inputData.data_bind    = input.getAttribute("data-bind");
+		inputData.display      = cs["display"];
+		inputData.id           = input.id;
+		inputData.name         = input.name;
+		inputData.offsetHeight = input.offsetHeight;
+		inputData.offsetLeft   = input.offsetLeft;
+		inputData.offsetTop    = input.offsetTop;
+		inputData.offsetWidth  = input.offsetWidth;
+		inputData.style        = input.getAttribute("style");
+		inputData.soffidId     = AfroditaExtension.registerElement(docid, input);
+		inputData.textAlign    = cs["text-align"] ;
+		inputData.type         = input.type;
+		// Check parent visibilityd
+		var parent = input.parentElement;
+		try {
+			while (parent != null)
+			{
+				if (window.getComputedStyle("visibility") == "hidden")
+					inputData.visibility = "hidden";
+				if (window.getComputedStyle("display") == "none")
+					inputData.display = "none";
+				parent = parent.parentElement;
+			}
+		} catch (e) {
+			// Ignore failure to get computed style for htmldocument
+		}
+		// Add to form
+		var form = input.form;
+		var found = false;
+		if ( form ) {
+			var soffidId = AfroditaExtension.registerElement(form);
+			for (f in pageData.forms)
+			{
+				var formData = pageData.forms[f];
+				if (formData.soffidId == soffidId)
+				{
+					found = true;
+					formData.inputs.push (inputData);
+					break;
+				}
+			}
+			if (! found)
+			{
+				formData = {inputs:[]};
+				formData.action = form.getAttribute("action");
+				formData.method = form.getAttribute ("method");
+				formData.id = form.getAttribute("id");
+				formData.name = form.getAttribute("name");
+				formData.soffidId = soffidId;
+				formData.inputs.push (inputData);
+				pageData.forms.push (formData);
+			}
+		}
+		else {
+			pageData.inputs.push (inputData);
+		}
+	}
+	
+	return pageData;
+}
+
+
 var AfroditaExtension = {
   docids: new Array(),
   documents: new Array(),
@@ -76,7 +171,17 @@ var AfroditaExtension = {
          counter: 1,
          window: window
        };
-       AfroditaExtension.AfrEvaluate (docid);
+       if (AfroditaExtension.AfrEvaluate2)
+       {
+           var data = JSON.stringify (parsePageData (docid, doc));
+       	   console.log ("Using new interface "+data);
+	       AfroditaExtension.AfrEvaluate2 (docid, data);
+	   }
+       else
+       {
+       	   console.log ("Using old interface "+data);
+	       AfroditaExtension.AfrEvaluate (docid);
+	   }
 
        // add event listener for page unload 
        aEvent.originalTarget.defaultView.addEventListener("unload", 
@@ -129,10 +234,8 @@ var AfroditaExtension = {
      return JSON.parse (v.readString());
   },
   searchAccounts: function(text) {
-     console.log("Searching for "+text);
      var result = AfroditaExtension.AfrSearch (text);
      var str = result.readString (); 
-     console.log("Result = "+str);
      return JSON.parse (str);
   },
   checkInit: function () { 
@@ -149,13 +252,11 @@ var AfroditaExtension = {
 		e = c.QueryInterface(Components.interfaces.nsIEnvironment);
 		// Calcular mazinger dir
 		Components.utils.import("resource://gre/modules/devtools/Console.jsm");
-		console.log("OS = ["+os+"]");
 		if (os == "Linux") {
 		    var path = "/usr/lib/libafroditafc.so"
 		} else {
  	   	    var path = e.get ("ProgramW6432");
 	   	    var arch = e.get ("PROCESSOR_ARCHITECTURE");
-			console.log("arch = ["+arch+"]");
 	   	    if (arch == "AMD64") // Firefox 64 n Windows 64
 		        path = e.get ("ProgramFiles") + "\\SoffidESSO\\AfroditaFC.dll";
 	   	    else if (path == null || path == "") // Windows 32
@@ -172,6 +273,11 @@ var AfroditaExtension = {
 		// Crear funcions
 		AfroditaExtension.AfrSetHandler_ = AfroditaExtension.lib . declare ("AFRsetHandler", ctypes.default_abi, ctypes.void_t, ctypes.char.ptr, ctypes.void_t.ptr);
 		AfroditaExtension.AfrEvaluate = AfroditaExtension.lib . declare ("AFRevaluate", ctypes.default_abi, ctypes.void_t, ctypes.long);
+		try {
+   		    AfroditaExtension.AfrEvaluate2 = AfroditaExtension.lib . declare ("AFRevaluate2", ctypes.default_abi, ctypes.void_t, ctypes.long, ctypes.char.ptr);
+		} catch (e) {
+		    console.log ("Error loading AfrEvaluate2 extension: "+e);
+		}
 		AfroditaExtension.AfrEvent = AfroditaExtension.lib . declare ("AFRevent", ctypes.default_abi, ctypes.void_t, ctypes.long);
 		AfroditaExtension.AfrGetVersion = AfroditaExtension.lib . declare ("AFRgetVersion", ctypes.default_abi, ctypes.char.ptr);
 		AfroditaExtension.AfrSearch = AfroditaExtension.lib . declare ("AFRsearch", ctypes.default_abi, ctypes.char.ptr, ctypes.char.ptr);

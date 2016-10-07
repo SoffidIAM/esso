@@ -13,6 +13,13 @@
 #include <stdio.h>
 
 FFWebApplication::~FFWebApplication() {
+	if (pageData != NULL)
+		delete pageData;
+	pageData = NULL;
+
+	if (page != NULL)
+		delete page;
+	page = NULL;
 }
 
 
@@ -50,13 +57,15 @@ void FFWebApplication::getContent(std::string & value)
 FFWebApplication::FFWebApplication(long docId)
 {
 	this->docId = docId;
+	this->pageData = NULL;
+	this->page = NULL;
 }
 
 AbstractWebElement *FFWebApplication::getDocumentElement()
 {
 	if (AfroditaHandler::handler.getDocumentElementHandler != NULL) {
 		long id = AfroditaHandler::handler.getDocumentElementHandler (docId);
-		return new FFElement (docId, id);
+		return new FFElement (this, id);
 	} else {
 		return NULL;
 	}
@@ -70,7 +79,7 @@ void FFWebApplication::getElementsByTagName(const char*tag, std::vector<Abstract
 	if (AfroditaHandler::handler.getElementsByTagNameHandler != NULL) {
 		long* id = AfroditaHandler::handler.getElementsByTagNameHandler (docId, tag);
 		for (int i = 0; id != NULL && id[i] != 0; i++) {
-			FFElement *element = new FFElement(docId, id[i]);
+			FFElement *element = new FFElement(this, id[i]);
 			elements.push_back(element);
 		}
 	}
@@ -84,7 +93,7 @@ void FFWebApplication::getImages(std::vector<AbstractWebElement*> & elements)
 	if (AfroditaHandler::handler.getImagesHandler != NULL) {
 		long* id = AfroditaHandler::handler.getImagesHandler (docId);
 		for (int i = 0; id != NULL && id[i] != 0; i++) {
-			FFElement *element = new FFElement(docId, id[i]);
+			FFElement *element = new FFElement(this, id[i]);
 			elements.push_back(element);
 		}
 	}
@@ -99,7 +108,7 @@ void FFWebApplication::getLinks(std::vector<AbstractWebElement*> & elements)
 	if (AfroditaHandler::handler.getLinksHandler != NULL) {
 		long* id = AfroditaHandler::handler.getLinksHandler (docId);
 		for (int i = 0; id != NULL && id[i] != 0; i++) {
-			FFElement *element = new FFElement(docId, id[i]);
+			FFElement *element = new FFElement(this, id[i]);
 			elements.push_back(element);
 		}
 	}
@@ -126,7 +135,7 @@ void FFWebApplication::getAnchors(std::vector<AbstractWebElement*> & elements)
 	if (AfroditaHandler::handler.getAnchorsHandler != NULL) {
 		long* id = AfroditaHandler::handler.getAnchorsHandler (docId);
 		for (int i = 0; id != NULL && id[i] != 0; i++) {
-			FFElement *element = new FFElement(docId, id[i]);
+			FFElement *element = new FFElement(this, id[i]);
 			elements.push_back(element);
 		}
 	}
@@ -154,7 +163,7 @@ AbstractWebElement *FFWebApplication::getElementById(const char *id)
 		if (internalId == 0)
 			return NULL;
 		else
-			return new FFElement(docId, internalId);
+			return new FFElement(this, internalId);
 	}
 	else
 		return NULL;
@@ -168,7 +177,7 @@ void FFWebApplication::getForms(std::vector<AbstractWebElement*> & elements)
 	if (AfroditaHandler::handler.getFormsHandler != NULL) {
 		long* id = AfroditaHandler::handler.getFormsHandler (docId);
 		for (int i = 0; id != NULL && id[i] != 0; i++) {
-			FFElement *element = new FFElement(docId, id[i]);
+			FFElement *element = new FFElement(this, id[i]);
 			elements.push_back(element);
 		}
 	}
@@ -196,7 +205,7 @@ AbstractWebElement* FFWebApplication::createElement(const char* tagName) {
 		if (internalId == 0)
 			return NULL;
 		else
-			return new FFElement(docId, internalId);
+			return new FFElement(this, internalId);
 	}
 	else
 		return NULL;
@@ -225,4 +234,18 @@ std::string FFWebApplication::toString() {
 	sprintf (ach, "FFWebApplication %d", docId);
 	return std::string(ach);
 
+}
+
+bool FFWebApplication::supportsPageData() {
+	return true;
+}
+
+PageData* FFWebApplication::getPageData() {
+	return pageData;
+}
+
+AbstractWebElement* FFWebApplication::getElementBySoffidId(const char* id) {
+	long elementId = 0;
+	sscanf (id, " %ld", &elementId);
+	return new FFElement (this, elementId);
 }

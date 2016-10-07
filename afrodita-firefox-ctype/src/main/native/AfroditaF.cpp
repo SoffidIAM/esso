@@ -138,6 +138,33 @@ extern "C" void AFRevaluate (long  id) {
 	//MZNC_endMutex();
 }
 
+extern "C" void AFRevaluate2 (long  id, const char *data) {
+
+	//MZNC_waitMutex();
+
+	MZNSendDebugMessage("Evaluating page %ld with data", id);
+
+	FFWebApplication *app = new FFWebApplication(id);
+
+	app->pageData = new PageData();
+	app->pageData->loadJson(data);
+
+	std::map<long,SmartWebPage*>::iterator it = status.find(id);
+	if (it == status.end())
+	{
+		SmartWebPage * page = new SmartWebPage();
+		app->setPage(page);
+		status[id] = page;
+	} else {
+		app->setPage(it->second);
+	}
+
+	MZNWebMatch(app);
+
+	app->release();
+	//MZNC_endMutex();
+}
+
 extern "C" void AFRdismiss (long  id) {
 	MZNSendDebugMessageA("<<<<<<<<<<<<<<<<<<<< Cleaning page %ld >>>>>>>>>>>>>>>>>>>>>>>>", id);
 	std::map<long,SmartWebPage*>::iterator it = status.find(id);

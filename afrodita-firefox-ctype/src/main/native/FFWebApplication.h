@@ -17,6 +17,9 @@ public:
 protected:
 	virtual ~FFWebApplication();
 public:
+	virtual bool supportsPageData ();
+	virtual PageData* getPageData();
+	virtual AbstractWebElement * getElementBySoffidId (const char*id) ;
 	virtual void getUrl (std::string &value) ;
 	virtual void getTitle (std::string &value) ;
 	virtual void getContent (std::string &value) ;
@@ -44,6 +47,7 @@ public:
 		this->page = page;
 	}
 
+    PageData *pageData;
 private:
 	SmartWebPage *page;
     long docId;
