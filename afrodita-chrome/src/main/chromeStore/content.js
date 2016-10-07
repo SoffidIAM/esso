@@ -27,6 +27,101 @@ function soffidHasInputInside (node) {
 	return false;
 }
 
+function parsePageData () {
+	var pageData = {};
+	pageData.url = document.URL;
+	pageData.title = document.tile;
+	pageData.forms = [];
+	pageData.inputs = [];
+	
+	// Parse forms
+	for (var i = 0; i < document.forms.length; i++)
+	{
+		var form = document.forms[i];
+		var formData = {};
+		formData.action = form.action;
+		formData.id = form.id;
+		formData.soffidId = soffidRegisterElement(form);
+		formData.method = form.method;
+		formData.inputs = [];
+		pageData.forms.push (formData);
+	}
+	
+	// Parse inputs
+	var inputs = document.getElementsByTagName("input");
+	for (var i = 0; i < inputs.length; i++)
+	{
+		var input = inputs[i];
+		var inputData = {};
+		var cs= {};
+		try {
+			cs = window.getComputesStyle(input)
+		} catch (e) {
+		}
+		inputData.clientHeight = input.clientHeight;
+		inputData.clientWitdh  = input.clientWidth;
+		inputData.data_bind    = input.getAttribute("data-bind");
+		inputData.display      = cs["display"];
+		inputData.id           = input.id;
+		inputData.name         = input.name;
+		inputData.offsetHeight = input.offsetHeight;
+		inputData.offsetLeft   = input.offsetLeft;
+		inputData.offsetTop    = input.offsetTop;
+		inputData.offsetWidth  = input.offsetWidth;
+		inputData.style        = input.getAttribute("style");
+		inputData.soffidId     = soffidRegisterElement(input);
+		inputData.textAlign    = cs["text-align"] ;
+		inputData.type         = input.type;
+		// Check parent visibilityd
+		var parent = input.parentElement;
+		try {
+			while (parent != null)
+			{
+				if (window.getComputedStyle("visibility") == "hidden")
+					inputData.visibility = "hidden";
+				if (window.getComputedStyle("display") == "none")
+					inputData.display = "none";
+				parent = parent.parentElement;
+			}
+		} catch (e) {
+			// Ignore failure to get computed style for htmldocument
+		}
+		// Add to form
+		var form = input.form;
+		var found = false;
+		if ( form ) {
+			var soffidId = soffidRegisterElement(form);
+			for (f in pageData.forms)
+			{
+				var formData = pageData.forms[f];
+				if (formData.soffidId == soffidId)
+				{
+					found = true;
+					formData.inputs.push (inputData);
+					break;
+				}
+			}
+			if (! found)
+			{
+				formData = {inputs:[]};
+				formData.action = form.getAttribute("action");
+				formData.method = form.getAttribute ("method");
+				formData.id = form.getAttribute("id");
+				formData.name = form.getAttribute("name");
+				formData.soffidId = soffidId;
+				formData.inputs.push (inputData);
+				pageData.forms.push (formData);
+			}
+		}
+		else {
+			pageData.inputs.push (inputData);
+		}
+	}
+	
+	return pageData;
+}
+
+
 function soffidLoadProcedure () {
     var port = chrome.runtime.connect ();
     port.onMessage.addListener (function (request) {
@@ -45,7 +140,8 @@ function soffidLoadProcedure () {
 						port.postMessage ({message: "onUnload", pageId: soffidPageId});
 						port.disconnect();
 					});
-				    port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: pageId});
+				    port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: pageId,
+				    	pageData: parsePageData()});
  				    var observer = new MutationObserver ( function (mutations) {
 					   mutations.forEach (function (mutation) {
 						  if (mutation.type == 'childList' && mutation.addedNodes.length > 0 )
@@ -76,7 +172,7 @@ function soffidLoadProcedure () {
 									  soffidTimerTime = newTime;
 									  soffidTimer = window.setTimeout(1000, function () {
 //										console.log("TIMEOUT FINISHED");
-										port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: pageId});});
+										port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: pageId, pageData: parsePageData()});});
 //									  console.log("Created timer "+soffidTimer);
 									  return;
 								  }
@@ -129,7 +225,7 @@ function soffidLoadProcedure () {
 			    	var response = []; 
 			    	for (var i = 0; i < elements.length; i++)
 			    	{
-			    		e = elements[i];
+			    		var e = elements[i];
 				    	response[i] = soffidRegisterElement(e);
 			    	}
 				    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
@@ -140,7 +236,7 @@ function soffidLoadProcedure () {
 			    	var response = []; 
 			    	for (var i = 0; i < elements.length; i++)
 			    	{
-			    		e = elements[i];
+			    		var e = elements[i];
 				    	response[i] = soffidRegisterElement(e);
 			    	}
 				    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
@@ -151,7 +247,7 @@ function soffidLoadProcedure () {
 			    	var response = []; 
 			    	for (var i = 0; i < elements.length; i++)
 			    	{
-			    		e = elements[i];
+			    		var e = elements[i];
 				    	response[i] = soffidRegisterElement(e);
 			    	}
 				    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
@@ -162,7 +258,7 @@ function soffidLoadProcedure () {
 			    	var response = []; 
 			    	for (var i = 0; i < elements.length; i++)
 			    	{
-			    		e = elements[i];
+			    		var e = elements[i];
 				    	response[i] = soffidRegisterElement(e);
 			    	}
 				    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
@@ -173,7 +269,7 @@ function soffidLoadProcedure () {
 			    	var response = []; 
 			    	for (var i = 0; i < elements.length; i++)
 			    	{
-			    		e = elements[i];
+			    		var e = elements[i];
 				    	response[i] = soffidRegisterElement(e);
 			    	}
 				    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
@@ -492,7 +588,7 @@ function soffidLoadProcedure () {
 				    	var response = []; 
 				    	for (var i = 0; i < elements.length; i++)
 				    	{
-				    		e = elements[i];
+				    		var e = elements[i];
 							response[i]  = soffidRegisterElement(e); 
 				    	}
 					    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
