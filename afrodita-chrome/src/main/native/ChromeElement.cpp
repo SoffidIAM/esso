@@ -24,12 +24,12 @@ ChromeElement::ChromeElement(ChromeWebApplication *app, const char *externalId)
 {
 	this -> app = app;
 	this -> externalId = externalId;
-	app->lock();
+//	app->lock();
 
 }
 
 ChromeElement::~ChromeElement() {
-	app->release();
+//	app->release();
 }
 
 

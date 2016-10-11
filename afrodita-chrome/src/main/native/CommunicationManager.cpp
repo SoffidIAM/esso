@@ -193,8 +193,8 @@ JsonAbstractObject* CommunicationManager::call(bool &error, const char*messages[
 	}
 
 
-	std::string s;
-	jsonMsg->write(s, 3);
+//	std::string s;
+//	jsonMsg->write(s, 3);
 //	MZNSendDebugMessage("Message      %s", msg.c_str());
 //	MZNSendDebugMessage("Got response %s", s.c_str());
 	JsonMap  *map = dynamic_cast<JsonMap*> (jsonMsg);
@@ -215,8 +215,6 @@ JsonAbstractObject* CommunicationManager::call(bool &error, const char*messages[
 			if (ex != NULL)
 			{
 				MZNSendDebugMessage("Error got from Chrome port: %s", ex->value.c_str());
-				map->remove("exception");
-				delete ex;
 			}
 			delete jsonMsg;
 			return NULL;
@@ -386,6 +384,9 @@ void CommunicationManager::mainLoop() {
 			if (ts != NULL && ! ts->end)
 			{
 				ts->refresh = true;
+				if (ts->pageData != NULL)
+					delete ts->pageData;
+				ts->pageData = parsePageData(ts,jsonPageData);
 				ts->notifyEventMessage();
 			}
 			else
@@ -409,7 +410,9 @@ void CommunicationManager::mainLoop() {
 				}
 			}
 		}
-		else if (messageName != NULL && messageName->value == "onUnload" && pageId != NULL)
+		else if (messageName != NULL &&
+				(messageName->value == "onUnload" || messageName->value == "onUnload2") &&
+				pageId != NULL)
 		{
 			if (pageId != NULL)
 			{
@@ -496,7 +499,7 @@ void CommunicationManager::mainLoop() {
 			}
 		}
 		if (deleteMap)
-			delete jsonMap;
+			delete message;
 	} while (true);
 }
 
@@ -520,12 +523,16 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 				listener->listener->onEvent(listener->event.c_str(), listener->app, listener->element);
 			}
 			delete event;
-			// Do not delete as it will be reused for another event instance
-			// delete event;
 		}
 		if (threadStatus->refresh)
 		{
 			threadStatus->refresh = false;
+			cwa->setPageData(threadStatus->pageData);
+			if (threadStatus->pageData != NULL)
+			{
+				delete threadStatus -> pageData;
+				threadStatus -> pageData = NULL;
+			}
 			MZNWebMatch(cwa);
 		}
 	}
