@@ -119,6 +119,7 @@ static void* _s_handleConnection (void * lpv)
 #endif
 }
 
+
 void SsoDaemon::handleConnection (SOCKET s)
 {
 
@@ -135,6 +136,7 @@ void SsoDaemon::handleConnection (SOCKET s)
 	}
 	else if (strncmp(achBuffer, "KEY", 3) == 0)
 	{
+		newSessionKey = &achBuffer[3];
 		if (session != NULL)
 			session->renewSecrets(&achBuffer[3]);
 	}
@@ -282,6 +284,7 @@ void SsoDaemon::runKeepAlive ()
 		keepalive = atoi(kastring.c_str());
 	}
 
+	SeyconCommon::debug("Setting keep alive interval to %ld seconds", keepalive);
 	int delay = keepalive;
 	while (keepalive > 0 && !stop)
 	{
@@ -346,6 +349,7 @@ void SsoDaemon::stopDaemon ()
 }
 
 
+
 bool SsoDaemon::doKeepAlive() {
 	bool ok = false;
 	SeyconService service;
@@ -357,7 +361,17 @@ bool SsoDaemon::doKeepAlive() {
 	{
 		std::string status = response->getToken(0);
 		if (status == "OK")
+		{
+			std::string newKeyResponse = response->getToken(1);
+			if (! newKeyResponse.empty() &&
+					newKeyResponse != newSessionKey &&
+					session != NULL)
+			{
+				newSessionKey = newKeyResponse;
+				session->renewSecrets(newSessionKey.c_str());
+			}
 			ok = true;
+		}
 		else if (status == "EXPIRED")
 		{
 			MZNStop(MZNC_getUserName());

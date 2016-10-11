@@ -405,7 +405,6 @@ int SeyconSession::passwordSessionStartup ( const char* lpszUser, const wchar_t*
 {
 	m_kerberosLogin = false;
 	m_passwordLogin = true;
-	json::JsonAbstractObject::ConfigureChromePreferences();
 
 	updateConfiguration();
 
