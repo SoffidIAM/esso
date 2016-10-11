@@ -12,7 +12,7 @@
 #include <map>
 #include <SmartWebPage.h>
 #include "WebAddonHelper.h"
-#include "Encoder.h"
+#include <json/Encoder.h>
 #include "SeyconServer.h"
 
 #ifdef WIN32
