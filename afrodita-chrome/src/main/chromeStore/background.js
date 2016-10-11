@@ -13,7 +13,7 @@ var mazingerBridge = {
 			port.onMessage.addListener (mazingerBridge.pageEventReceived);
  			port.postMessage({action: "getInfo", pageId: pageId});
 			port.onDisconnect.addListener ( function (port) {
-			mazingerBridge.ports[pageId] = null;
+				mazingerBridge.ports[pageId] = null;
 
 			});
 		  } catch (e) { 
@@ -31,6 +31,12 @@ var mazingerBridge = {
 			{
 				mazingerBridge.ports[pageId] = null;
 				p.disconnect ();
+				try {
+					mazingerBridge.port.postMessage({message: "onUnload2", pageId:pageId});
+				} catch (e ) {
+					mazingerBridge.port.disconnect();
+					mazingerBridge.onDisconnect();
+				}
 			}
 		}
 		else
@@ -40,7 +46,6 @@ var mazingerBridge = {
 			try {
 				mazingerBridge.port.postMessage(msg);
 			} catch (e ) {
-				alert("Error "+e);
 				mazingerBridge.port.disconnect();
 				mazingerBridge.onDisconnect();
 			}
