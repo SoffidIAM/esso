@@ -243,7 +243,9 @@ static void* linuxThreadProc (void *arg)
 #endif
 {
 	ThreadStatus *ts = (ThreadStatus*) arg;
+//	MZNSendDebugMessage("Created THREAD [%s] %s", ts->pageId.c_str(), ts->url.c_str());
 	CommunicationManager::getInstance()->threadLoop(ts);
+//	MZNSendDebugMessage("Remvoed THREAD [%s] %s", ts->pageId.c_str(), ts->url.c_str());
 	return NULL;
 }
 
@@ -375,6 +377,8 @@ void CommunicationManager::mainLoop() {
 
 		std::string t;
 		jsonMap->write(t, 3);
+//		MZNSendDebugMessage("RECEIVED MSG**********************");
+//		MZNSendDebugMessage("Received %s", t.c_str());
 		if (messageName != NULL && messageName->value == "onLoad" && pageId != NULL)
 		{
 			JsonValue* title = dynamic_cast<JsonValue*>(jsonMap->getObject("title"));
@@ -414,11 +418,13 @@ void CommunicationManager::mainLoop() {
 				(messageName->value == "onUnload" || messageName->value == "onUnload2") &&
 				pageId != NULL)
 		{
+//			MZNSendDebugMessageA("THREAD TO END");
 			if (pageId != NULL)
 			{
 				ThreadStatus *ts = threads[pageId->value];
 				if (ts != NULL)
 				{
+//					MZNSendDebugMessageA("THREAD TO END %s", ts->url.c_str());
 					ts->end = true;
 					ts->notifyEventMessage();
 				}
@@ -453,7 +459,7 @@ void CommunicationManager::mainLoop() {
 		if (messageName != NULL && messageName->value == "search" && pageId != NULL)
 		{
 			JsonValue* text = dynamic_cast<JsonValue*>(jsonMap->getObject("text"));
-			MZNSendDebugMessage("Received event %s : %s", messageName->value.c_str(), text->value.c_str());
+//			MZNSendDebugMessage("Received event %s : %s", messageName->value.c_str(), text->value.c_str());
 			WebAddonHelper h;
 			std::vector<UrlStruct> result;
 			h.searchUrls (MZNC_utf8towstr(text->value.c_str()), result);
@@ -471,7 +477,7 @@ void CommunicationManager::mainLoop() {
 				response += "}";
 			}
 			response += "]}";
-			MZNSendDebugMessage("Response %s", response.c_str());
+//			MZNSendDebugMessage("Response %s", response.c_str());
 			writeMessage(response);
 		}
 		else if (messageName != NULL && messageName->value == "info" && pageId != NULL)
