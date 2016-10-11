@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include "EventHandler.h"
 #include <PageData.h>
+#include <string.h>
 
 FFElement::FFElement(FFWebApplication *app, long elementId)
 {
@@ -284,7 +285,7 @@ std::string FFElement::getComputedStyle(const char* style)
 
 std::string FFElement::toString() {
 	char ach[100];
-	sprintf (ach, "FFElement %d/%d ", docId, elementId);
+	sprintf (ach, "FFElement %ld/%ld ", docId, elementId);
 	std::string result = ach;
 	std::string tag;
 	getTagName(tag);
@@ -296,7 +297,7 @@ InputData* FFElement::findInputData() {
 	if (app->pageData == NULL)
 		return NULL;
 	char ach[100];
-	sprintf (ach, "%d", elementId);
+	sprintf (ach, "%ld", elementId);
 	for (std::vector<InputData>::iterator it = app->pageData->inputs.begin();
 			it != app->pageData->inputs.end();
 			it++)
