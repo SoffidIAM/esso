@@ -5,10 +5,10 @@
  *      Author: bubu
  */
 
-#include "JsonAbstractObject.h"
-#include "JsonMap.h"
-#include "JsonVector.h"
-#include "JsonValue.h"
+#include <json/JsonAbstractObject.h>
+#include <json/JsonMap.h>
+#include <json/JsonVector.h>
+#include <json/JsonValue.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <MazingerInternal.h>

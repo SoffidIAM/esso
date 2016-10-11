@@ -170,6 +170,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="src/main/include"/>
 						<entry excluding="web/LocableObject.cpp" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="src/main/native"/>
 					</sourceEntries>
 				</configuration>

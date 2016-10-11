@@ -20,6 +20,7 @@ ThreadStatus::ThreadStatus() {
 	sem_init(&semaphore, false, 0);
 	sem_init(&eventSemaphore, false, 0);
 #endif
+	pageData = NULL;
 	end = false;
 
 }

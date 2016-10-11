@@ -447,12 +447,12 @@ KerberosIterator::~KerberosIterator ()
 {
 }
 
+
 //////////////////////////////////////////////////////////
 int SeyconSession::kerberosSessionStartup ()
 {
 	m_kerberosLogin = true;
 	m_passwordLogin = false;
-	json::JsonAbstractObject::ConfigureChromePreferences();
 
 	updateConfiguration();
 

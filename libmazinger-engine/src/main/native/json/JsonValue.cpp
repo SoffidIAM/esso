@@ -5,7 +5,8 @@
  *      Author: bubu
  */
 
-#include "JsonValue.h"
+#include <json/JsonValue.h>
+#include <json/Encoder.h>
 #include <stdio.h>
 #include <SeyconServer.h>
 
@@ -40,18 +41,20 @@ const char* JsonValue::read(const char* str) {
 	}
 	else
 	{
-		while (*str > ' ' && *str != ',')
+		while (*str > ' ' && *str != ',' && *str != ']' && *str != '}' && *str != ':')
 		{
 			value.append (str, 1);
 			str ++;
 		}
 	}
 
+	value = Encoder::decode(value.c_str());
+
 	return str;
 }
 
 void JsonValue::write(std::string& str, int indent) {
-	str.append (value);
+	str.append (Encoder::encode(value.c_str()).c_str());
 }
 
 

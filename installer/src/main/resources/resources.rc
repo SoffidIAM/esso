@@ -2,6 +2,8 @@
 //
 #include "resource.h"
 
+1 RT_MANIFEST "installer.exe.manifest" 
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Ejectuables 32 bits
 Mazinger.exe 			IDT_FILE "com.soffid.iam.esso.w32.Mazinger.exe.bzip"

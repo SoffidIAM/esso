@@ -35,6 +35,7 @@ class SsoDaemon
 		int getErrorNumber ();
 		void createInputSocket ();
 		bool doKeepAlive ();
+		std::string newSessionKey;
 };
 
 #endif

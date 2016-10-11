@@ -10,9 +10,11 @@
 #include <stdio.h>
 #include "json/JsonMap.h"
 #include "json/JsonValue.h"
+#include "json/JsonVector.h"
 #include <stdlib.h>
 #include <string.h>
 #include "ChromeWebApplication.h"
+#include "ChromeElement.h"
 #include "json/Encoder.h"
 #include <exception>
 #include "WebAddonHelper.h"
@@ -191,8 +193,8 @@ JsonAbstractObject* CommunicationManager::call(bool &error, const char*messages[
 	}
 
 
-	std::string s;
-	jsonMsg->write(s, 3);
+//	std::string s;
+//	jsonMsg->write(s, 3);
 //	MZNSendDebugMessage("Message      %s", msg.c_str());
 //	MZNSendDebugMessage("Got response %s", s.c_str());
 	JsonMap  *map = dynamic_cast<JsonMap*> (jsonMsg);
@@ -213,8 +215,6 @@ JsonAbstractObject* CommunicationManager::call(bool &error, const char*messages[
 			if (ex != NULL)
 			{
 				MZNSendDebugMessage("Error got from Chrome port: %s", ex->value.c_str());
-				map->remove("exception");
-				delete ex;
 			}
 			delete jsonMsg;
 			return NULL;
@@ -243,8 +243,120 @@ static void* linuxThreadProc (void *arg)
 #endif
 {
 	ThreadStatus *ts = (ThreadStatus*) arg;
+//	MZNSendDebugMessage("Created THREAD [%s] %s", ts->pageId.c_str(), ts->url.c_str());
 	CommunicationManager::getInstance()->threadLoop(ts);
+//	MZNSendDebugMessage("Remvoed THREAD [%s] %s", ts->pageId.c_str(), ts->url.c_str());
 	return NULL;
+}
+
+static long parseInt (JsonMap *map, const char *tag)
+{
+	JsonValue *v = dynamic_cast<JsonValue*>(map->getObject(tag));
+	if (v == NULL)
+		return 0;
+	else
+	{
+		long result;
+		sscanf (" %d", v->value.c_str(), &result);
+		return result;
+	}
+}
+
+static std::string parseString (JsonMap *map, const char *tag)
+{
+	JsonValue *v = dynamic_cast<JsonValue*>(map->getObject(tag));
+	if (v == NULL)
+		return std::string("");
+	else
+	{
+		return v->value;
+	}
+}
+
+static InputData parseInput (JsonMap* value)
+{
+	InputData d;
+	d.clientHeight = parseInt (value, "clientHeight");
+	d.clientWidth = parseInt (value, "clientWidth");
+	d.data_bind = parseString (value, "data_bind");
+	d.display = parseString (value, "display");
+	d.id = parseString (value, "id");
+	d.name = parseString(value, "name");
+	d.offsetHeight = parseInt (value, "offsetHeight");
+	d.offsetLeft = parseInt (value, "offsetLeft");
+	d.offsetTop = parseInt (value, "offsetTop");
+	d.offsetWidth = parseInt (value, "offsetWidth");
+	d.soffidId = parseString(value,"soffidId");
+	d.style = parseString (value, "style");
+	d.text_align = parseString(value, "text_align");
+	d.type = parseString(value,"type");
+	d.rightAlign = d.text_align == "right";
+
+	return d;
+}
+
+static FormData parseForm (JsonMap* value)
+{
+	FormData d;
+	d.action = parseString(value, "action");
+	d.id = parseString(value, "id");
+	d.method = parseString(value, "method");
+	d.name = parseString(value, "name");
+	d.soffidId = parseString(value,"soffidId");
+	JsonVector *v = dynamic_cast<JsonVector*> (value->getObject("inputs"));
+	if (v != NULL)
+	{
+		std::vector<JsonAbstractObject*> values = v->objects;
+		for (std::vector<JsonAbstractObject*>::iterator it = values.begin();
+				it != values.end(); it++)
+		{
+			JsonMap *input =  dynamic_cast<JsonMap*>(*it);
+			if (input != NULL)
+				d.inputs.push_back( parseInput(input));
+		}
+	}
+	return d;
+}
+
+static PageData * parsePageData (ThreadStatus *status, JsonMap* map)
+{
+	if (map == NULL)
+		return NULL;
+	PageData *pd = new PageData();
+
+	pd->title = status->title;
+	pd->url = status->url;
+	JsonVector *v = dynamic_cast <JsonVector*> (map->getObject("inputs"));
+	if (v != NULL)
+	{
+		std::vector<JsonAbstractObject*> values = v->objects;
+		for (std::vector<JsonAbstractObject*>::iterator it = values.begin ();
+				it != values.end();
+				it ++)
+		{
+			JsonMap *i = dynamic_cast<JsonMap*> (*it);
+			if (i != NULL)
+			{
+				pd->inputs.push_back(parseInput (i));
+			}
+		}
+	}
+	v = dynamic_cast <JsonVector*> (map->getObject("forms"));
+	if (v != NULL)
+	{
+		std::vector<JsonAbstractObject*> values = v->objects;
+		for (std::vector<JsonAbstractObject*>::iterator it = values.begin ();
+				it != values.end();
+				it ++)
+		{
+			JsonMap *i = dynamic_cast<JsonMap*> (*it);
+			if (i != NULL)
+			{
+				pd->forms.push_back(parseForm (i));
+			}
+		}
+	}
+	return pd;
 }
 
 void CommunicationManager::mainLoop() {
@@ -261,9 +373,12 @@ void CommunicationManager::mainLoop() {
 		JsonMap *jsonMap = dynamic_cast<JsonMap*>(message);
 		JsonValue* messageName = dynamic_cast<JsonValue*>(jsonMap->getObject("message"));
 		JsonValue* pageId = dynamic_cast<JsonValue*>(jsonMap->getObject("pageId"));
+		JsonMap *jsonPageData = dynamic_cast<JsonMap*>(jsonMap->getObject("pageData"));
 
 		std::string t;
 		jsonMap->write(t, 3);
+//		MZNSendDebugMessage("RECEIVED MSG**********************");
+//		MZNSendDebugMessage("Received %s", t.c_str());
 		if (messageName != NULL && messageName->value == "onLoad" && pageId != NULL)
 		{
 			JsonValue* title = dynamic_cast<JsonValue*>(jsonMap->getObject("title"));
@@ -273,6 +388,9 @@ void CommunicationManager::mainLoop() {
 			if (ts != NULL && ! ts->end)
 			{
 				ts->refresh = true;
+				if (ts->pageData != NULL)
+					delete ts->pageData;
+				ts->pageData = parsePageData(ts,jsonPageData);
 				ts->notifyEventMessage();
 			}
 			else
@@ -285,6 +403,7 @@ void CommunicationManager::mainLoop() {
 						ts->title = title->value;
 					if (url != NULL)
 						ts->url = url->value;
+					ts->pageData = parsePageData ( ts, jsonPageData );
 					threads[ts->pageId] = ts;
 #ifdef WIN32
 					CreateThread (NULL,  0, win32ThreadProc, ts,0, NULL);
@@ -295,13 +414,17 @@ void CommunicationManager::mainLoop() {
 				}
 			}
 		}
-		else if (messageName != NULL && messageName->value == "onUnload" && pageId != NULL)
+		else if (messageName != NULL &&
+				(messageName->value == "onUnload" || messageName->value == "onUnload2") &&
+				pageId != NULL)
 		{
+//			MZNSendDebugMessageA("THREAD TO END");
 			if (pageId != NULL)
 			{
 				ThreadStatus *ts = threads[pageId->value];
 				if (ts != NULL)
 				{
+//					MZNSendDebugMessageA("THREAD TO END %s", ts->url.c_str());
 					ts->end = true;
 					ts->notifyEventMessage();
 				}
@@ -336,7 +459,7 @@ void CommunicationManager::mainLoop() {
 		if (messageName != NULL && messageName->value == "search" && pageId != NULL)
 		{
 			JsonValue* text = dynamic_cast<JsonValue*>(jsonMap->getObject("text"));
-			MZNSendDebugMessage("Received event %s : %s", messageName->value.c_str(), text->value.c_str());
+//			MZNSendDebugMessage("Received event %s : %s", messageName->value.c_str(), text->value.c_str());
 			WebAddonHelper h;
 			std::vector<UrlStruct> result;
 			h.searchUrls (MZNC_utf8towstr(text->value.c_str()), result);
@@ -354,7 +477,7 @@ void CommunicationManager::mainLoop() {
 				response += "}";
 			}
 			response += "]}";
-			MZNSendDebugMessage("Response %s", response.c_str());
+//			MZNSendDebugMessage("Response %s", response.c_str());
 			writeMessage(response);
 		}
 		else if (messageName != NULL && messageName->value == "info" && pageId != NULL)
@@ -382,12 +505,13 @@ void CommunicationManager::mainLoop() {
 			}
 		}
 		if (deleteMap)
-			delete jsonMap;
+			delete message;
 	} while (true);
 }
 
 void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 	ChromeWebApplication *cwa = new ChromeWebApplication (threadStatus);
+	cwa->setPageData(threadStatus->pageData);
 	threadStatus->refresh = false;
 	MZNWebMatch(cwa);
 	while (! threadStatus->end)
@@ -405,12 +529,16 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 				listener->listener->onEvent(listener->event.c_str(), listener->app, listener->element);
 			}
 			delete event;
-			// Do not delete as it will be reused for another event instance
-			// delete event;
 		}
 		if (threadStatus->refresh)
 		{
 			threadStatus->refresh = false;
+			cwa->setPageData(threadStatus->pageData);
+			if (threadStatus->pageData != NULL)
+			{
+				delete threadStatus -> pageData;
+				threadStatus -> pageData = NULL;
+			}
 			MZNWebMatch(cwa);
 		}
 	}
@@ -429,6 +557,8 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 		else
 			it ++;
 	}
+	if (threadStatus->pageData != NULL)
+		delete threadStatus->pageData;
 	cwa->release();
 	delete threadStatus;
 }

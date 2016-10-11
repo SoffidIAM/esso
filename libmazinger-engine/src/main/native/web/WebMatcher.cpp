@@ -35,6 +35,9 @@ int WebMatcher::isFound() {
 
 
 int WebMatcher::search (ConfigReader &reader, AbstractWebApplication& focus) {
+	PageData *data = NULL;
+	if (focus.supportsPageData())
+		data = focus.getPageData();
 
 	m_pWebApp = &focus;
 	m_apps.clear();
@@ -43,7 +46,7 @@ int WebMatcher::search (ConfigReader &reader, AbstractWebApplication& focus) {
 			it ++)
 	{
 		WebApplicationSpec* pSpec = *it;
-		if (pSpec->matches(focus))
+		if (pSpec->matches(focus, data))
 		{
 			m_apps.push_back(pSpec);
 			m_bMatched = true;

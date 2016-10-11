@@ -9,12 +9,11 @@ var mazingerBridge = {
 		  try {
 			var console = chrome.extension.getBackgroundPage().console;
 			var pageId = mazingerBridge.pageId ++;
-			console.log("Got new connection from "+pageId);
 			mazingerBridge.ports[pageId] = port;
 			port.onMessage.addListener (mazingerBridge.pageEventReceived);
  			port.postMessage({action: "getInfo", pageId: pageId});
 			port.onDisconnect.addListener ( function (port) {
-			mazingerBridge.ports[pageId] = null;
+				mazingerBridge.ports[pageId] = null;
 
 			});
 		  } catch (e) { 
@@ -24,7 +23,7 @@ var mazingerBridge = {
 	pageEventReceived: function (msg, port) {
 		var console = chrome.extension.getBackgroundPage().console;
 		var pageId = msg.pageId;
-//		console.log("Got message "+msg.requestId+" from "+pageId);
+//		console.log("Got message from "+pageId+": "+JSON.stringify(msg));
 		if (msg.message == "onUnload")
 		{
 			var p = mazingerBridge.port[pageId];
@@ -32,6 +31,12 @@ var mazingerBridge = {
 			{
 				mazingerBridge.ports[pageId] = null;
 				p.disconnect ();
+				try {
+					mazingerBridge.port.postMessage({message: "onUnload2", pageId:pageId});
+				} catch (e ) {
+					mazingerBridge.port.disconnect();
+					mazingerBridge.onDisconnect();
+				}
 			}
 		}
 		else
@@ -41,7 +46,6 @@ var mazingerBridge = {
 			try {
 				mazingerBridge.port.postMessage(msg);
 			} catch (e ) {
-				alert("Error "+e);
 				mazingerBridge.port.disconnect();
 				mazingerBridge.onDisconnect();
 			}
@@ -52,13 +56,13 @@ var mazingerBridge = {
 			var console = chrome.extension.getBackgroundPage().console;
 			var result = "";
 			var pageId = parseInt(request.pageId);
-//			console.log("Got message "+request.requestId+" for "+pageId+"/"+request.pageId);
+//			console.log("Got message  for "+pageId+"/"+request.pageId+":"+JSON.stringify(request));
 			var port = mazingerBridge.ports[pageId];
 			if (port == null) {
-				console.log("Port is closed for "+pageId);
+//				console.log("Port is closed for "+pageId);
 					if ( request.requestId != null )
 					{
-						console.log("Sending error for "+request.requestId);
+//						console.log("Sending error for "+request.requestId);
 						mazingerBridge.port.postMessage({
 							"response": "error",
 							"requestId": request.requestId,
@@ -67,14 +71,14 @@ var mazingerBridge = {
 							error: true,
 							"exception": "Page already unloaded"
 						});
-						console.log("Sent error for "+request.requestId);
+//						console.log("Sent error for "+request.requestId);
 					}
 			} else {
 				port.postMessage(request);
 //				console.log("Forwarded message "+request.requestId+" to "+pageId);
 			}
  		} catch (error) {
-			console.log("Error generating message: "+error.message);
+//			console.log("Error generating message: "+error.message);
 			mazingerBridge.port.postMessage({
 				"requestId": request.requestId,
 				"pageId": request.pageId,

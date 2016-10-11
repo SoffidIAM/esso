@@ -11,6 +11,7 @@
 
 #include <pcreposix.h>
 #include <vector>
+#include <PageData.h>
 
 class Action;
 class AbstractWebApplication;
@@ -20,7 +21,7 @@ class WebApplicationSpec{
 public:
 	WebApplicationSpec();
 	virtual ~WebApplicationSpec();
-	bool matches(AbstractWebApplication &app);
+	bool matches(AbstractWebApplication &app, PageData *data);
 	regex_t *reUrl;
 	regex_t *reTitle;
 	regex_t *reContent;

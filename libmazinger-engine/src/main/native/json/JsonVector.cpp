@@ -5,7 +5,7 @@
  *      Author: bubu
  */
 
-#include "JsonVector.h"
+#include <json/JsonVector.h>
 #include <stdio.h>
 #include <SeyconServer.h>
 
@@ -17,7 +17,14 @@ JsonVector::JsonVector() {
 }
 
 JsonVector::~JsonVector() {
-	// TODO Auto-generated destructor stub
+	for (std::vector<JsonAbstractObject*>::iterator it = objects.begin();
+			it != objects.end();
+			it ++)
+	{
+		JsonAbstractObject *tag = *it;
+		if (tag != NULL)
+			delete tag;
+	}
 }
 
 const char* JsonVector::read(const char* str) {
@@ -71,3 +78,4 @@ void JsonVector::write(std::string& str, int indent) {
 }
 
 } /* namespace json */
+

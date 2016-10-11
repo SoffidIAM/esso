@@ -5,7 +5,7 @@
  *      Author: gbuades
  */
 
-#include "Encoder.h"
+#include <json/Encoder.h>
 #include <string.h>
 
 namespace json {

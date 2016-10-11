@@ -20,6 +20,7 @@
 #include <WebListener.h>
 #include "ChromeWebApplication.h"
 #include "ChromeElement.h"
+#include "PageData.h"
 #include <list>
 
 namespace mazinger_chrome {
@@ -82,6 +83,7 @@ public:
 	std::string pageId;
 	std::string title;
 	std::string url;
+	PageData *pageData;
 	bool end;
 	bool refresh;
 	PendingEventList pendingEvents;

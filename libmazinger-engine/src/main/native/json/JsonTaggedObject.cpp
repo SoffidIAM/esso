@@ -5,7 +5,7 @@
  *      Author: bubu
  */
 
-#include "JsonTaggedObject.h"
+#include <json/JsonTaggedObject.h>
 #include <stdio.h>
 #include <SeyconServer.h>
 
@@ -16,6 +16,8 @@ JsonTaggedObject::JsonTaggedObject() {
 }
 
 JsonTaggedObject::~JsonTaggedObject() {
+	if (left != NULL) delete left;
+	if (right != NULL) delete right;
 }
 
 const char* JsonTaggedObject::read(const char* str) {

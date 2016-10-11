@@ -105,7 +105,7 @@ MazingerEnv* MazingerEnv::getEnv(const char *user, const char*desktop) {
 		}
 	}
 	MazingerEnv *env = new MazingerEnv;
-	env->user.assign (user);
+	env->user = user;
 	env->desktop = desktop;
 	environments.push_back(env);
 	return env;
