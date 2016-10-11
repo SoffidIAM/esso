@@ -55,6 +55,8 @@ SecretStore::SecretStore(const char *user, const char *desktop) {
 }
 
 SecretStore::~SecretStore() {
+	if (m_expkey != NULL)
+		free (m_expkey);
 }
 
 void SecretStore::dump ()

@@ -120,7 +120,8 @@ void JsonMap::remove(const char *tagName) {
 		{
 			if (v->value == tagName)
 			{
-				delete tag->left;
+				tag->right = NULL;
+				delete tag;
 				taggedObjects.erase(it);
 				break;
 			}
