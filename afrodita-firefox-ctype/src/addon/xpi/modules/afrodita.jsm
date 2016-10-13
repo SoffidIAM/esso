@@ -220,7 +220,17 @@ var AfroditaExtension = {
 	   }
 	   AfroditaExtension.documents[docid].timeout =
 			AfroditaExtension.getWindow(docid).setTimeout (
-				function(){ AfroditaExtension.AfrEvaluate (docid)}, 1000);
+				function(){ 
+				       if (AfroditaExtension.AfrEvaluate2)
+					       {
+					           var data = JSON.stringify (parsePageData (docid, doc));
+						       AfroditaExtension.AfrEvaluate2 (docid, data);
+						   }
+					       else
+					       {
+						       AfroditaExtension.AfrEvaluate (docid);
+						   }
+				}, 1000);
 //       AfroditaExtension.AfrEvaluate (docid);
        return;
      });
@@ -273,8 +283,10 @@ var AfroditaExtension = {
 		// Crear funcions
 		AfroditaExtension.AfrSetHandler_ = AfroditaExtension.lib . declare ("AFRsetHandler", ctypes.default_abi, ctypes.void_t, ctypes.char.ptr, ctypes.void_t.ptr);
 		AfroditaExtension.AfrEvaluate = AfroditaExtension.lib . declare ("AFRevaluate", ctypes.default_abi, ctypes.void_t, ctypes.long);
+		AfroditaExtension.AfrEvaluate2 = false;
 		try {
    		    AfroditaExtension.AfrEvaluate2 = AfroditaExtension.lib . declare ("AFRevaluate2", ctypes.default_abi, ctypes.void_t, ctypes.long, ctypes.char.ptr);
+		    console.log ("GOT AFREvaluate2");
 		} catch (e) {
 		    console.log ("Error loading AfrEvaluate2 extension: "+e);
 		}

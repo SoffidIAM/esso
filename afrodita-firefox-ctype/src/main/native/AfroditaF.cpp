@@ -118,8 +118,6 @@ extern "C" void AFRevaluate (long  id) {
 
 	//MZNC_waitMutex();
 
-	MZNSendDebugMessage("Evaluating page %ld", id);
-
 	FFWebApplication *app = new FFWebApplication(id);
 
 	std::map<long,SmartWebPage*>::iterator it = status.find(id);
@@ -143,8 +141,6 @@ extern "C" void AFRevaluate2 (long  id, const char *data) {
 
 	//MZNC_waitMutex();
 
-	MZNSendDebugMessage("Evaluating page %ld with data", id);
-
 	FFWebApplication *app = new FFWebApplication(id);
 
 	app->pageData = new PageData();
@@ -155,11 +151,14 @@ extern "C" void AFRevaluate2 (long  id, const char *data) {
 	{
 		SmartWebPage * page = new SmartWebPage();
 		app->setPage(page);
+		page->lock();
 		status[id] = page;
 	} else {
-		it->second->lock();
-		app->setPage(it->second);
+		SmartWebPage *page = it->second;
+		page->lock();
+		app->setPage(page);
 	}
+
 
 	MZNWebMatch(app);
 
@@ -168,7 +167,7 @@ extern "C" void AFRevaluate2 (long  id, const char *data) {
 }
 
 extern "C" void AFRdismiss (long  id) {
-	MZNSendDebugMessageA("<<<<<<<<<<<<<<<<<<<< Cleaning page %ld >>>>>>>>>>>>>>>>>>>>>>>>", id);
+//	MZNSendDebugMessageA("<<<<<<<<<<<<<<<<<<<< Cleaning page %ld >>>>>>>>>>>>>>>>>>>>>>>>", id);
 	FFWebApplication *app = new FFWebApplication(id);
 	EventHandler::getInstance()->unregisterAllEvents(app);
 	app->release();

@@ -11,6 +11,8 @@
 #include <MazingerInternal.h>
 #include <stdlib.h>
 
+#define MEMORY_TEST
+
 LockableObject::LockableObject ()
 {
 	locks = 1;
@@ -23,6 +25,13 @@ LockableObject::LockableObject ()
 }
 
 void LockableObject::lock() {
+#ifdef MEMORY_TEST
+	if (locks == 0)
+	{
+		MZNSendDebugMessage("Locking already release object (%p).", this);
+		exit (1);
+	}
+#endif
 	locks ++;
 	str = toString();
 #ifdef MEMORY_TEST
@@ -66,6 +75,8 @@ LockableObject::~LockableObject() {
 void LockableObject::sanityCheck () {
 	if (locks <= 0) {
 		MZNSendDebugMessage("WARNING: Using already released object: %s (%p)",  toString().c_str(), this);
+		if (debug)
+			exit(1);
 	} else
 		str = toString();
 }
