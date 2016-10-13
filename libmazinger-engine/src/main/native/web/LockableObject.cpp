@@ -59,7 +59,7 @@ void LockableObject::release() {
 LockableObject::~LockableObject() {
 	if (locks != 0)
 	{
-		MZNSendDebugMessage("WARNING: Deleting not released object (%lx) (%ld locks) %s", (long) this, locks, str.c_str());
+		MZNSendDebugMessage("WARNING: Deleting not released object (%p) (%ld locks) %s",  this, locks, str.c_str());
 #ifdef MEMORY_TEST
 		exit(1);
 #endif
@@ -67,7 +67,7 @@ LockableObject::~LockableObject() {
 	else
 	{
 #ifdef MEMORY_TEST
-		MZNSendDebugMessage("Deleting released object (%lx) (%ld locks) %s", (long) this, locks, str.c_str());
+		MZNSendDebugMessage("Deleting released object (%p) (%ld locks) %s", this, locks, str.c_str());
 #endif
 	}
 }
