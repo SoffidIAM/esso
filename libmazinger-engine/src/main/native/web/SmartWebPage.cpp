@@ -29,7 +29,8 @@ SmartWebPage::SmartWebPage() {
 }
 
 SmartWebPage::~SmartWebPage() {
-	rootForm->release();
+	if (rootForm !=NULL)
+		rootForm->release();
 	for (std::vector<SmartForm*>::iterator it = forms.begin(); it != forms.end(); it++)
 	{
 		SmartForm *sf = *it;
@@ -92,6 +93,7 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 	PageData *data = app->getPageData();
 	if (data != NULL)
 	{
+		MZNSendDebugMessageA("* Got data");
 		if (! rootForm->isParsed())
 			rootForm->parse(app, NULL, &data->inputs);
 		else
@@ -122,10 +124,12 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 			element->release();
 		}
 	} else {
+		MZNSendDebugMessageA("* Not got data");
 		if (! rootForm->isParsed())
 			rootForm->parse(app, NULL, NULL);
 		else
 			rootForm->reparse(NULL);
+		MZNSendDebugMessageA("* Parsed form");
 
 
 		app->getForms(forms);

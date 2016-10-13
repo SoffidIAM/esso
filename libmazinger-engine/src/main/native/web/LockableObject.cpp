@@ -5,7 +5,6 @@
  *      Author: gbuades
  */
 
-
 // #define MEMORY_TEST
 
 #include <LockableObject.h>
@@ -15,11 +14,17 @@
 LockableObject::LockableObject ()
 {
 	locks = 1;
+#ifdef MEMORY_TEST
+	debug = true;
+	MZNSendDebugMessage("Allocating object (%p). Locks = %d", this, locks);
+#else
 	debug = false;
+#endif
 }
 
 void LockableObject::lock() {
 	locks ++;
+	str = toString();
 #ifdef MEMORY_TEST
 	if (debug)
 		MZNSendDebugMessage("Locked object %s (%p). Locks = %d", toString().c_str(), this, locks);
@@ -28,6 +33,7 @@ void LockableObject::lock() {
 
 void LockableObject::release() {
 	locks --;
+	str = toString();
 #ifdef MEMORY_TEST
 	if (debug)
 		MZNSendDebugMessage("Release object %s (%p). Locks = %d", toString().c_str(), this, locks);
@@ -35,19 +41,31 @@ void LockableObject::release() {
 		MZNSendDebugMessage("Releasing already released object %s", toString().c_str());
 		exit(1);
 	}
-#else
+#endif
 	if ( locks == 0)
 		delete this;
-#endif
 
 }
 
 LockableObject::~LockableObject() {
+	if (locks != 0)
+	{
+		MZNSendDebugMessage("WARNING: Deleting not released object (%lx) (%ld locks) %s", (long) this, locks, str.c_str());
+#ifdef MEMORY_TEST
+		exit(1);
+#endif
+	}
+	else
+	{
+#ifdef MEMORY_TEST
+		MZNSendDebugMessage("Deleting released object (%lx) (%ld locks) %s", (long) this, locks, str.c_str());
+#endif
+	}
 }
 
 void LockableObject::sanityCheck () {
 	if (locks <= 0) {
-		MZNSendDebugMessage("Using already released object: %s (%p)",  toString().c_str(), this);
-		exit(1);
-	}
+		MZNSendDebugMessage("WARNING: Using already released object: %s (%p)",  toString().c_str(), this);
+	} else
+		str = toString();
 }

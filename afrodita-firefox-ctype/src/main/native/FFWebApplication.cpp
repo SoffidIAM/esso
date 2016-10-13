@@ -9,6 +9,7 @@
 #include "FFWebApplication.h"
 #include "FFElement.h"
 #include "EventHandler.h"
+#include <SmartWebPage.h>
 
 #include <stdio.h>
 
@@ -18,7 +19,7 @@ FFWebApplication::~FFWebApplication() {
 	pageData = NULL;
 
 	if (page != NULL)
-		delete page;
+		page->release();
 	page = NULL;
 }
 

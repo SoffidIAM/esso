@@ -129,6 +129,7 @@ extern "C" void AFRevaluate (long  id) {
 		app->setPage(page);
 		status[id] = page;
 	} else {
+		it->second->lock();
 		app->setPage(it->second);
 	}
 
@@ -156,6 +157,7 @@ extern "C" void AFRevaluate2 (long  id, const char *data) {
 		app->setPage(page);
 		status[id] = page;
 	} else {
+		it->second->lock();
 		app->setPage(it->second);
 	}
 
@@ -167,15 +169,15 @@ extern "C" void AFRevaluate2 (long  id, const char *data) {
 
 extern "C" void AFRdismiss (long  id) {
 	MZNSendDebugMessageA("<<<<<<<<<<<<<<<<<<<< Cleaning page %ld >>>>>>>>>>>>>>>>>>>>>>>>", id);
+	FFWebApplication *app = new FFWebApplication(id);
+	EventHandler::getInstance()->unregisterAllEvents(app);
+	app->release();
 	std::map<long,SmartWebPage*>::iterator it = status.find(id);
 	if (it != status.end())
 	{
 		it->second->release();
 		status.erase(it);
 	}
-	FFWebApplication *app = new FFWebApplication(id);
-	EventHandler::getInstance()->unregisterAllEvents(app);
-	app->release();
 }
 
 

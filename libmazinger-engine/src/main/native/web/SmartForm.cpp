@@ -715,7 +715,6 @@ bool SmartForm::checkAnyPassword (std::vector<InputDescriptor*> &elements)
 	bool anyPassword = false;
 	int nonPassword = 0;
 	int password = 0;
-	MZNSendDebugMessage("Analyzing form =============================");
 	for (std::vector<InputDescriptor*>::iterator it = elements.begin(); it != elements.end(); it++)
 	{
 		InputDescriptor *id = *it;
@@ -725,7 +724,6 @@ bool SmartForm::checkAnyPassword (std::vector<InputDescriptor*> &elements)
 		std::string type = id->getType();
 		if (strcasecmp ( type.c_str(), "password") == 0)
 		{
-			MZNSendDebugMessage("Found password element %s", id->input->toString().c_str());
 			if (id->isVisible())
 			{
 				MZNSendDebugMessage("Found password element %s is visible (%s / %s)",
@@ -806,7 +804,6 @@ bool SmartForm::checkAnyPassword (std::vector<InputDescriptor*> &elements)
 }
 
 void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot, std::vector<InputData> *inputDatae) {
-
 	PageData *data = NULL;
 
 	std::vector<InputDescriptor*> elements;
@@ -890,7 +887,6 @@ void SmartForm::reparse(std::vector<InputData> *data) {
 	}
 	else if (this->element == NULL)
 	{
-		MZNSendDebugMessageA("Reparsing root element ...");
 		findInputs(app, elements);
 	}
 	else
@@ -928,7 +924,6 @@ void SmartForm::reparse(std::vector<InputData> *data) {
 		changeStatus(SF_STATUS_SELECT);
 	} else if (newItem && status == SF_STATUS_LOCKED)
 	{
-		MZNSendDebugMessageA("New item added on locked form");
 		fetchAttributes(currentAccount, NULL);
 	}
 }
@@ -1577,16 +1572,12 @@ AbstractWebElement* SmartForm::createModalDialog (AbstractWebElement *input)
 
 	// Adjust to visible space
 	int x = left+width-200+2;
-	MZNSendDebugMessage("x=%d dwidth=%d", x, dwidth);
 	if (x+200 > dwidth) x = dwidth - 200;
 	if (x < 0) x = 0;
-	MZNSendDebugMessage("x=%d dwidth=%d", x, dwidth);
 
 	int y = top+height;
-	MZNSendDebugMessage("y=%d dheight=%d", y, dheight);
 	if (y > dheight - 10) y = dheight - 10;
 	if (y < 0) y = 0;
-	MZNSendDebugMessage("y=%d dheight=%d", y, dheight);
 
 	sprintf (ach, STYLE_MASTER, x, y);
 
