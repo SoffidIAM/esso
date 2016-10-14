@@ -11,7 +11,7 @@
 #include <MazingerInternal.h>
 #include <stdlib.h>
 
-#define MEMORY_TEST
+//#define MEMORY_TEST
 
 LockableObject::LockableObject ()
 {
