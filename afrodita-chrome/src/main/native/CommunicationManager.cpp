@@ -511,7 +511,8 @@ void CommunicationManager::mainLoop() {
 
 void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 	ChromeWebApplication *cwa = new ChromeWebApplication (threadStatus);
-	cwa->setPageData(threadStatus->pageData);
+	cwa->setPageData(new PageData());
+	(* cwa->getPageData()) = * threadStatus->pageData;
 	threadStatus->refresh = false;
 	MZNWebMatch(cwa);
 	while (! threadStatus->end)
@@ -533,12 +534,7 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 		if (threadStatus->refresh)
 		{
 			threadStatus->refresh = false;
-			cwa->setPageData(threadStatus->pageData);
-			if (threadStatus->pageData != NULL)
-			{
-				delete threadStatus -> pageData;
-				threadStatus -> pageData = NULL;
-			}
+			(* cwa->getPageData()) = * threadStatus->pageData;
 			MZNWebMatch(cwa);
 		}
 	}
@@ -557,9 +553,9 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 		else
 			it ++;
 	}
-	if (threadStatus->pageData != NULL)
-		delete threadStatus->pageData;
 	cwa->release();
+	if (threadStatus -> pageData != NULL)
+		delete threadStatus->pageData;
 	delete threadStatus;
 }
 
