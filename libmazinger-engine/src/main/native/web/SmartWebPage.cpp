@@ -93,7 +93,7 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 	PageData *data = app->getPageData();
 	if (data != NULL)
 	{
-		MZNSendDebugMessageA("* Got data");
+		MZNSendDebugMessageA("* Parsing formless inputs");
 		if (! rootForm->isParsed())
 			rootForm->parse(app, NULL, &data->inputs);
 		else
@@ -102,6 +102,7 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 		for (std::vector<FormData>::iterator it = data->forms.begin(); it != data->forms.end(); it++)
 		{
 			FormData &form = *it;
+			MZNSendDebugMessageA("* Parsing Form %s", form.soffidId.c_str());
 			AbstractWebElement *element = app->getElementBySoffidId(form.soffidId.c_str());
 
 			bool found = false;
@@ -124,7 +125,6 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 			element->release();
 		}
 	} else {
-		MZNSendDebugMessageA("* Not got data");
 		if (! rootForm->isParsed())
 			rootForm->parse(app, NULL, NULL);
 		else

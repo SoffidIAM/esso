@@ -99,7 +99,11 @@ void MZNWebMatch (AbstractWebApplication *app) {
 				}
 				std::string url;
 				app->getUrl(url);
-				MZNSendDebugMessageA("PAGE  %s", url.c_str());
+				PageData *data = app->getPageData();
+				if (data != NULL)
+					data->dump();
+				else
+					MZNSendDebugMessageA("PAGE  %s", url.c_str());
 				MZNSendDebugMessageA("      ================================================================");
 				m.search(*c, *app);
 				MZNSendDebugMessageA("      ================================================================");
@@ -137,6 +141,9 @@ void MZNWebMatchRefresh (AbstractWebApplication *app) {
 				SmartWebPage *page = app->getWebPage();
 				if (page != NULL)
 				{
+					PageData *data = app->getPageData();
+					if (data != NULL)
+						data->dump();
 					page->fetchAccounts(app, NULL);
 					page->parse(app);
 				}

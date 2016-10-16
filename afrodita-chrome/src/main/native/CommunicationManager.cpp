@@ -249,113 +249,14 @@ static void* linuxThreadProc (void *arg)
 	return NULL;
 }
 
-static long parseInt (JsonMap *map, const char *tag)
-{
-	JsonValue *v = dynamic_cast<JsonValue*>(map->getObject(tag));
-	if (v == NULL)
-		return 0;
-	else
-	{
-		long result;
-		sscanf (" %d", v->value.c_str(), &result);
-		return result;
-	}
-}
-
-static std::string parseString (JsonMap *map, const char *tag)
-{
-	JsonValue *v = dynamic_cast<JsonValue*>(map->getObject(tag));
-	if (v == NULL)
-		return std::string("");
-	else
-	{
-		return v->value;
-	}
-}
-
-static InputData parseInput (JsonMap* value)
-{
-	InputData d;
-	d.clientHeight = parseInt (value, "clientHeight");
-	d.clientWidth = parseInt (value, "clientWidth");
-	d.data_bind = parseString (value, "data_bind");
-	d.display = parseString (value, "display");
-	d.id = parseString (value, "id");
-	d.name = parseString(value, "name");
-	d.offsetHeight = parseInt (value, "offsetHeight");
-	d.offsetLeft = parseInt (value, "offsetLeft");
-	d.offsetTop = parseInt (value, "offsetTop");
-	d.offsetWidth = parseInt (value, "offsetWidth");
-	d.soffidId = parseString(value,"soffidId");
-	d.style = parseString (value, "style");
-	d.text_align = parseString(value, "text_align");
-	d.type = parseString(value,"type");
-	d.rightAlign = d.text_align == "right";
-
-	return d;
-}
-
-static FormData parseForm (JsonMap* value)
-{
-	FormData d;
-	d.action = parseString(value, "action");
-	d.id = parseString(value, "id");
-	d.method = parseString(value, "method");
-	d.name = parseString(value, "name");
-	d.soffidId = parseString(value,"soffidId");
-	JsonVector *v = dynamic_cast<JsonVector*> (value->getObject("inputs"));
-	if (v != NULL)
-	{
-		std::vector<JsonAbstractObject*> values = v->objects;
-		for (std::vector<JsonAbstractObject*>::iterator it = values.begin();
-				it != values.end(); it++)
-		{
-			JsonMap *input =  dynamic_cast<JsonMap*>(*it);
-			if (input != NULL)
-				d.inputs.push_back( parseInput(input));
-		}
-	}
-	return d;
-}
-
 static PageData * parsePageData (ThreadStatus *status, JsonMap* map)
 {
 	if (map == NULL)
 		return NULL;
 	PageData *pd = new PageData();
 
-	pd->title = status->title;
-	pd->url = status->url;
-	JsonVector *v = dynamic_cast <JsonVector*> (map->getObject("inputs"));
-	if (v != NULL)
-	{
-		std::vector<JsonAbstractObject*> values = v->objects;
-		for (std::vector<JsonAbstractObject*>::iterator it = values.begin ();
-				it != values.end();
-				it ++)
-		{
-			JsonMap *i = dynamic_cast<JsonMap*> (*it);
-			if (i != NULL)
-			{
-				pd->inputs.push_back(parseInput (i));
-			}
-		}
-	}
-	v = dynamic_cast <JsonVector*> (map->getObject("forms"));
-	if (v != NULL)
-	{
-		std::vector<JsonAbstractObject*> values = v->objects;
-		for (std::vector<JsonAbstractObject*>::iterator it = values.begin ();
-				it != values.end();
-				it ++)
-		{
-			JsonMap *i = dynamic_cast<JsonMap*> (*it);
-			if (i != NULL)
-			{
-				pd->forms.push_back(parseForm (i));
-			}
-		}
-	}
+	pd->loadJson(map);
+
 	return pd;
 }
 
@@ -511,8 +412,8 @@ void CommunicationManager::mainLoop() {
 
 void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 	ChromeWebApplication *cwa = new ChromeWebApplication (threadStatus);
-	cwa->setPageData(new PageData());
-	(* cwa->getPageData()) = * threadStatus->pageData;
+	cwa->setPageData( threadStatus->pageData );
+	threadStatus->pageData = NULL;
 	threadStatus->refresh = false;
 	MZNWebMatch(cwa);
 	while (! threadStatus->end)
@@ -533,8 +434,11 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 		}
 		if (threadStatus->refresh)
 		{
+			if (cwa->getPageData() != NULL)
+				delete cwa->getPageData();
 			threadStatus->refresh = false;
-			(* cwa->getPageData()) = * threadStatus->pageData;
+			cwa->setPageData(threadStatus->pageData);
+			threadStatus->pageData = NULL;
 			MZNWebMatch(cwa);
 		}
 	}

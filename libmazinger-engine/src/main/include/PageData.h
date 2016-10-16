@@ -36,6 +36,7 @@ public:
 	long clientWidth;
 	long clientHeight;
 	bool rightAlign;
+	void dump();
 };
 
 struct FormData
@@ -51,6 +52,7 @@ struct FormData
 	std::string method;
 	std::string id;
 	std::string name;
+	void dump();
 };
 
 struct PageData
@@ -62,7 +64,7 @@ struct PageData
 
 	void loadJson (const char *json);
 	void loadJson (json::JsonMap *jsonMap);
-
+	void dump ();
 
 	std::string url;
 	std::string title;

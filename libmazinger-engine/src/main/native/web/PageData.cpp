@@ -21,8 +21,8 @@ static long parseInt (JsonMap *map, const char *tag)
 		return 0;
 	else
 	{
-		long result;
-		sscanf (" %d", v->value.c_str(), &result);
+		long result = 0;
+		sscanf (v->value.c_str(), " %ld", &result);
 		return result;
 	}
 }
@@ -43,6 +43,8 @@ static InputData parseInput (JsonMap* value)
 	InputData d;
 	d.clientHeight = parseInt (value, "clientHeight");
 	d.clientWidth = parseInt (value, "clientWidth");
+	if (d.clientWidth == 0)
+		d.clientWidth = parseInt (value, "clientWitdh");
 	d.data_bind = parseString (value, "data_bind");
 	d.display = parseString (value, "display");
 	d.id = parseString (value, "id");
@@ -248,4 +250,32 @@ void PageData::loadJson (const char *jsontext) {
 
 void PageData::loadJson (JsonMap *map) {
 	parsePageData(map, this);
+}
+
+void InputData::dump() {
+	MZNSendDebugMessageA("    INPUT  id:     %s", this->id.c_str());
+	MZNSendDebugMessageA("           name:   %s", this->name.c_str());
+	MZNSendDebugMessageA("           type:   %s", this->type.c_str());
+	MZNSendDebugMessageA("           value:  %s", this->value.c_str());
+	MZNSendDebugMessageA("           pos:    (%ld, %ld, %ld, %ld) (%ld, %ld)",
+			offsetTop, offsetLeft, offsetHeight, offsetWidth,
+			clientHeight, clientWidth);
+}
+
+void FormData::dump() {
+	MZNSendDebugMessageA("  FORM action: %s", this->action.c_str());
+	MZNSendDebugMessageA("       id:     %s", this->id.c_str());
+	MZNSendDebugMessageA("       name:   %s", this->name.c_str());
+	MZNSendDebugMessageA("       method: %s", this->method.c_str());
+	for (std::vector<InputData>::iterator it = inputs.begin(); it != inputs.end(); it++)
+		it->dump();
+}
+
+void PageData::dump() {
+	MZNSendDebugMessageA("PAGE : %s", this->url.c_str());
+	MZNSendDebugMessageA("Title: %s", this->title.c_str());
+	for (std::vector<InputData>::iterator it = inputs.begin(); it != inputs.end(); it++)
+		it->dump();
+	for (std::vector<FormData>::iterator it = forms.begin(); it != forms.end(); it++)
+		it->dump();
 }
