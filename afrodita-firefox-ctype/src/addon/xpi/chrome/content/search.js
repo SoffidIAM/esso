@@ -18,6 +18,10 @@ window.addEventListener("load", function () {
 	window.moveTo (window.screenX - rect.width * domWindowUtils.screenPixelsPerCSSPixel, window.screenY);
 });
 
+function onBlur ()
+{
+	window.setTimeout (window.close, 500);
+}
 function onChangeText ()
 {
 	var t = document.getElementById("searchBox").value;

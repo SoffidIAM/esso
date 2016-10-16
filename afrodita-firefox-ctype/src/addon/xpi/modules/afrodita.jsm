@@ -63,7 +63,8 @@ function parsePageData (docid, document ) {
 		var form = input.form;
 		var found = false;
 		if ( form ) {
-			var soffidId = AfroditaExtension.registerElement(form);
+			var soffidId = AfroditaExtension.registerElement(docid, form);
+			console.log ("  form $id="+soffidId);
 			for (f in pageData.forms)
 			{
 				var formData = pageData.forms[f];
@@ -76,14 +77,6 @@ function parsePageData (docid, document ) {
 			}
 			if (! found)
 			{
-				formData = {inputs:[]};
-				formData.action = form.getAttribute("action");
-				formData.method = form.getAttribute ("method");
-				formData.id = form.getAttribute("id");
-				formData.name = form.getAttribute("name");
-				formData.soffidId = soffidId;
-				formData.inputs.push (inputData);
-				pageData.forms.push (formData);
 			}
 		}
 		else {
@@ -171,17 +164,18 @@ var AfroditaExtension = {
          counter: 1,
          window: window
        };
-       if (AfroditaExtension.AfrEvaluate2)
-       {
-           var data = JSON.stringify (parsePageData (docid, doc));
-       	   console.log ("Using new interface "+data);
-	       AfroditaExtension.AfrEvaluate2 (docid, data);
-	   }
-       else
-       {
-       	   console.log ("Using old interface "+data);
-	       AfroditaExtension.AfrEvaluate (docid);
-	   }
+		window.setTimeout (
+			function(){ 
+			       if (AfroditaExtension.AfrEvaluate2)
+				       {
+				           var data = JSON.stringify (parsePageData (docid, doc));
+					       AfroditaExtension.AfrEvaluate2 (docid, data);
+					   }
+				       else
+				       {
+					       AfroditaExtension.AfrEvaluate (docid);
+					   }
+			}, 200);
 
        // add event listener for page unload 
        aEvent.originalTarget.defaultView.addEventListener("unload", 
@@ -286,7 +280,6 @@ var AfroditaExtension = {
 		AfroditaExtension.AfrEvaluate2 = false;
 		try {
    		    AfroditaExtension.AfrEvaluate2 = AfroditaExtension.lib . declare ("AFRevaluate2", ctypes.default_abi, ctypes.void_t, ctypes.long, ctypes.char.ptr);
-		    console.log ("GOT AFREvaluate2");
 		} catch (e) {
 		    console.log ("Error loading AfrEvaluate2 extension: "+e);
 		}

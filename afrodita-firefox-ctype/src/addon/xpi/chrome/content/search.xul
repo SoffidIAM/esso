@@ -10,7 +10,7 @@
     <vbox id="vbox">
 	    <label value="Soffid ESSO extension for Firefox"/>
     	<hbox id="labelSuccess"  >
-    		Search account: <textbox id="searchBox" focused="true" oninput="onChangeText()"/>
+    		Search account: <textbox id="searchBox" focused="true" oninput="onChangeText()" onblur="onBlur();"/>
     	</hbox>
     	<vbox id="searchResults"/>
     	<hbox>

@@ -200,85 +200,45 @@ static long getIntProperty (AbstractWebElement *element, const char* property)
 void SmartForm::findInputs (AbstractWebApplication* app, AbstractWebElement *element, std::vector<InputDescriptor*> &inputs,
 		bool first, bool visible, std::string indent)
 {
-	PageData *pd = NULL;
-	if (app->supportsPageData())
+	std::string tagname;
+	element->getTagName(tagname);
+	if (visible && element->getComputedStyle("display")  == "none")
+			visible = false;
+	if (visible && element->getComputedStyle("visibility")  == "hidden")
+			visible = false;
+	if (strcasecmp (tagname.c_str(), "input") == 0)
 	{
-		pd = app->getPageData();
-	}
-	if (pd != NULL)
-	{
-		for (std::vector<FormData>::iterator formIt = pd->forms.begin();
-				formIt != pd->forms.end();
-				formIt ++)
+		InputDescriptor *id = new InputDescriptor();
+		id->input = element;
+		id->hasInputData = false;
+		inputs.push_back(id);
+		element->lock();
+		if (!visible || id->getClientHeight() < 8)
 		{
-			FormData fd = *formIt;
-			AbstractWebElement *pForm = app->getElementBySoffidId(fd.soffidId.c_str());
-			if (pForm->equals(element))
+			std::string soft;
+			element->getProperty("soffidOnFocusTrigger", soft);
+			if (soft != "true")
 			{
-				for (std::vector<InputData>::iterator it = fd.inputs.begin();
-						it != fd.inputs.end();
-						it ++)
-				{
-					InputDescriptor *id = new InputDescriptor();
-					id->hasInputData = true;
-					id->data = *it;
-					id->input = app->getElementBySoffidId(id->data.soffidId.c_str());
-					inputs.push_back(id);
-					if( !visible || id->getDisplay() == "none" || id->getVisibility() == "hidden")
-					{
-						std::string soft;
-						element->getProperty("soffidOnFocusTrigger", soft);
-						if (soft != "true")
-						{
-							element->subscribe("focus", onHiddenElementFocusListener);
-							element->setProperty("soffidOnFocusTrigger", "true");
-						}
-					}
-				}
+				element->subscribe("focus", onHiddenElementFocusListener);
+				element->setProperty("soffidOnFocusTrigger", "true");
 			}
 		}
+	}
+	else if (! first && strcasecmp (tagname.c_str(), "form") == 0)
+	{
+		// Do not go inside nested forms
 	}
 	else
 	{
-		std::string tagname;
-		element->getTagName(tagname);
-		if (visible && element->getComputedStyle("display")  == "none")
-				visible = false;
-		if (visible && element->getComputedStyle("visibility")  == "hidden")
-				visible = false;
-		if (strcasecmp (tagname.c_str(), "input") == 0)
+		std::vector<AbstractWebElement*> children;
+		element->getChildren(children);
+		for (std::vector<AbstractWebElement*>::iterator it = children.begin(); it != children.end(); it++)
 		{
-			InputDescriptor *id = new InputDescriptor();
-			id->input = element;
-			inputs.push_back(id);
-			element->lock();
-			if (!visible)
-			{
-				std::string soft;
-				element->getProperty("soffidOnFocusTrigger", soft);
-				if (soft != "true")
-				{
-					element->subscribe("focus", onHiddenElementFocusListener);
-					element->setProperty("soffidOnFocusTrigger", "true");
-				}
-			}
-		}
-		else if (! first && strcasecmp (tagname.c_str(), "form") == 0)
-		{
-			// Do not go inside nested forms
-		}
-		else
-		{
-			std::vector<AbstractWebElement*> children;
-			element->getChildren(children);
-			for (std::vector<AbstractWebElement*>::iterator it = children.begin(); it != children.end(); it++)
-			{
-				AbstractWebElement *child = *it;
-				std::string indent2 = indent;
-				indent2 += "   ";
-				findInputs (app, child, inputs, false, visible, indent2);
-				child->release();
-			}
+			AbstractWebElement *child = *it;
+			std::string indent2 = indent;
+			indent2 += "   ";
+			findInputs (app, child, inputs, false, visible, indent2);
+			child->release();
 		}
 	}
 }
@@ -295,14 +255,14 @@ void SmartForm::findInputs (std::vector<InputData> *inputDatae, std::vector<Inpu
 		id->data = inputData;
 		id->input = app->getElementBySoffidId(id->data.soffidId.c_str());
 		inputs.push_back(id);
-		if( id->getDisplay() == "none" || id->getVisibility() == "hidden")
+		if( id->getDisplay() == "none" || id->getVisibility() == "hidden" || id->getClientHeight() < 8)
 		{
 			std::string soft;
-			element->getProperty("soffidOnFocusTrigger", soft);
+			id->input->getProperty("soffidOnFocusTrigger", soft);
 			if (soft != "true")
 			{
-				element->subscribe("focus", onHiddenElementFocusListener);
-				element->setProperty("soffidOnFocusTrigger", "true");
+				id->input->subscribe("focus", onHiddenElementFocusListener);
+				id->input->setProperty("soffidOnFocusTrigger", "true");
 			}
 		}
 	}
@@ -345,7 +305,7 @@ void SmartForm::findInputs (AbstractWebApplication* app, std::vector<InputDescri
 			id->hasInputData = false;
 			id->input = element;
 			inputs.push_back(id);
-			if( ! visible)
+			if( ! visible || id->getClientHeight() < 8)
 			{
 				std::string soft;
 				element->getProperty("soffidOnFocusTrigger", soft);
@@ -364,7 +324,6 @@ static void setDisplayStyle (AbstractWebElement *element, const char* display)
 {
 	std::string style;
 	element->getAttribute("style", style);
-//	MZNSendDebugMessageA("Style was: %s", style.c_str());
 	size_t i = style.find ("; display:");
 	if (i != style.npos)
 	{
@@ -378,7 +337,6 @@ static void setDisplayStyle (AbstractWebElement *element, const char* display)
 	}
 	style += "; display: ";
 	style += display;
-//	MZNSendDebugMessageA("Style is: %s", style.c_str());
 	element->setAttribute("style", style.c_str());
 
 }
@@ -546,94 +504,130 @@ static void getPosition (AbstractWebElement *input, long &left, long &top, long 
 
 }
 
+static void getPosition (InputDescriptor *descriptor, long &left, long &top, long &width, long &height,
+		long &width2, long &height2, bool &rightAlign, bool global)
+{
+	height = descriptor->getOffsetHeight();
+	width = descriptor->getOffsetWidth();
+	left = descriptor->getOffsetLeft();
+	top = descriptor->getOffsetTop();
+
+	height2 = descriptor->getClientHeight();
+	width2 = descriptor->getClientWidth();
+
+	AbstractWebElement *parentOffset = descriptor->input->getOffsetParent();
+	std::string align = descriptor->getTextAlign();
+	rightAlign = align == "right";
+	while (parentOffset != NULL)
+	{
+		AbstractWebElement *pp = NULL;
+		std::string tag;
+		parentOffset->getTagName(tag);
+		std::string position = parentOffset->getComputedStyle("position");
+		if (position == "static" || global)
+		{
+			left += getIntProperty(parentOffset, "offsetLeft");
+			top += getIntProperty (parentOffset, "offsetTop");
+			pp = parentOffset->getOffsetParent();
+		}
+		parentOffset->release();
+		parentOffset = pp;
+	}
+
+}
+
 
 void SmartForm::addIcon (InputDescriptor *descriptor)
 {
 	AbstractWebElement *input = descriptor->input;
 	if ( descriptor->img == NULL)
 	{
+
+		AbstractWebElement *img = app->createElement("img");
+		descriptor->img = img;
+		if (onClickListener == NULL)
+		{
+			onClickListener = new OnClickListener();
+			onClickListener->form = this;
+		}
+		img->subscribe("click", onClickListener);
+		if (onChangeListener == NULL)
+		{
+			onChangeListener = new OnChangeListener();
+			onChangeListener->form = this;
+		}
+		input->subscribe("input", onChangeListener);
+		AbstractWebElement *parent = input->getParent();
+		if (parent != NULL)
+		{
+			parent->insertBefore(img, input);
+			parent->release();
+		}
+	}
+	if (descriptor -> img != NULL)
+	{
 		// Calculate position & size
 		std::string type;
 		bool isNumber;
 
 		long left, top, width, height, width2, height2;
-		getPosition (input, left, top, width, height, width2, height2, isNumber, false);
+		getPosition (descriptor, left, top, width, height, width2, height2, isNumber, false);
 		input->getAttribute("type", type);
 
 		int borderH = (height - height2)/2;
 		int borderW = (width - width2)/2;
 		if (height <= 0) height = 20L;
 
-
-		if (width > height * 3 || true)
+		AbstractWebElement *img = descriptor->img;
+		char achStyle[200];
+		int zIndex = 10;
+		std::string zIndexStr = input->getComputedStyle("zIndex");
+		if (zIndexStr != "")
 		{
-			AbstractWebElement *img = app->createElement("img");
-			if (img != NULL)
+			sscanf (zIndexStr.c_str(), "%d", &zIndex);
+			zIndex ++;
+		} else {
+			std::string zIndexStr = input->getComputedStyle("z-index");
+			if (zIndexStr != "")
 			{
-				descriptor->img = img;
-				char achStyle[200];
-				int zIndex = 10;
-				std::string zIndexStr = input->getComputedStyle("zIndex");
-				if (zIndexStr != "")
-				{
-					sscanf (zIndexStr.c_str(), "%d", &zIndex);
-					zIndex ++;
-				} else {
-					std::string zIndexStr = input->getComputedStyle("z-index");
-					if (zIndexStr != "")
-					{
-						sscanf (zIndexStr.c_str(), "%d", &zIndex);
-						zIndex ++;
-					}
-				}
-				if (input->getComputedStyle("position") == "static" && input->getComputedStyle("float").size() == 0)
-				{
-					sprintf (achStyle, "margin-left: %ldpx; margin-top: %ldpx; "
-							"position: absolute; height: %ldpx; width:%ldpx; "
-							"z-index:%d",
-							(long) (width <= height * 3 ? width + 4L:
-									isNumber ? 4L + borderW: width-height2-4L-borderW),
-								1L + borderH, (long) height2 - 2L, (long) height2 - 2L,
-							zIndex);
-				}
-				else
-				{
-					sprintf (achStyle, "left:%ldpx; top:%ldpx; margin-left: %ldpx; margin-top: %ldpx; "
-							"position: absolute; height: %ldpx; width:%ldpx; "
-							"z-index:%d",
-							(long) left, (long) top,
-							(long) (width <= height * 3 ? width + 4L :
-									isNumber ? 4L + borderW : width-height2-4L-borderW), 1L + borderH, (long) height2 - 2L, (long) height2 - 2L,
-							zIndex);
-				}
-				img->setAttribute("style", achStyle);
-				char ach[50];
-				sprintf (ach, "%ldpx", height);
-				img->setProperty("width", ach);
-				img->setProperty("height", ach);
-				img->setAttribute("_soffid_handler", "true");
-				img->setAttribute("_soffid_element", "true");
-				std::string v;
-				input->getProperty("value", v);
-				AbstractWebElement *parent = input->getParent();
-				if (parent != NULL)
-				{
-					parent->insertBefore(img, input);
-					if (onChangeListener == NULL)
-					{
-						onChangeListener = new OnChangeListener();
-						onChangeListener->form = this;
-					}
-					input->subscribe("input", onChangeListener);
-					if (onClickListener == NULL)
-					{
-						onClickListener = new OnClickListener();
-						onClickListener->form = this;
-					}
-					img->subscribe("click", onClickListener);
-					parent->release();
-				}
+				sscanf (zIndexStr.c_str(), "%d", &zIndex);
+				zIndex ++;
 			}
+		}
+		if (input->getComputedStyle("position") == "static" && input->getComputedStyle("float").size() == 0)
+		{
+			sprintf (achStyle, "margin-left: %ldpx; margin-top: %ldpx; "
+					"position: absolute; height: %ldpx; width:%ldpx; "
+					"z-index:%d",
+					(long) (width <= height * 3 ? width + 4L:
+							isNumber ? 4L + borderW: width-height2-4L-borderW),
+						1L + borderH, (long) height2 - 2L, (long) height2 - 2L,
+					zIndex);
+		}
+		else
+		{
+			sprintf (achStyle, "left:%ldpx; top:%ldpx; margin-left: %ldpx; margin-top: %ldpx; "
+					"position: absolute; height: %ldpx; width:%ldpx; "
+					"z-index:%d",
+					(long) left, (long) top,
+					(long) (width <= height * 3 ? width + 4L :
+							isNumber ? 4L + borderW : width-height2-4L-borderW), 1L + borderH, (long) height2 - 2L, (long) height2 - 2L,
+					zIndex);
+		}
+		std::string currentStyle;
+		img->getAttribute("style", currentStyle);
+		std::string s;
+		descriptor->input->getProperty("clientWidth", s);
+				currentStyle.c_str(), achStyle);
+		if (currentStyle != achStyle)
+		{
+			img->setAttribute("style", achStyle);
+			char ach[50];
+			sprintf (ach, "%ldpx", height);
+			img->setProperty("width", ach);
+			img->setProperty("height", ach);
+			img->setAttribute("_soffid_handler", "true");
+			img->setAttribute("_soffid_element", "true");
 		}
 	}
 }
@@ -1266,16 +1260,20 @@ void SmartForm::onClickAccount(AbstractWebElement* element) {
 
 void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedElement)
 {
+	MZNSendDebugMessageA("//////////////////////////////////////////////////////////////////");
 	currentAccount = as;
 	std::map<std::string,std::string> attributes;
 
 	page->fetchAttributes(app, as, attributes);
 
+
+	MZNSendDebugMessageA("Setting attributes");
 	bool first = true;
 	int unnamed = 1;
 	for (std::vector<InputDescriptor*>::iterator it = inputs.begin(); it != inputs.end(); it++)
 	{
 		InputDescriptor *descr = *it;
+		MZNSendDebugMessageA("Setting attributes for %s", descr->getName().c_str());
 		AbstractWebElement *e = descr->input;
 		e->sanityCheck();
 		if (descr->type == IT_GENERAL && e->isVisible())
@@ -1302,7 +1300,6 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 				{
 					e->focus();
 					e->setProperty("value", v2.c_str());
-//					MZNSendDebugMessageA("Setting value of %s=%s", name.c_str(), v2.c_str());
 				}
 			}
 			else if (first && (selectedElement == NULL || selectedElement->equals(e)))
@@ -1317,7 +1314,6 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 					{
 						e->focus();
 						e->setProperty("value", value.c_str());
-//						MZNSendDebugMessageA("Setting value of %s=%s", name.c_str(), value.c_str());
 					}
 				}
 				else
@@ -1332,13 +1328,12 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 							{
 								e->focus();
 								e->setProperty("value", value.c_str());
-//								MZNSendDebugMessageA("Setting value of %s=%s", name.c_str(), value.c_str());
 							}
 						}
 					}
 				}
 			} else {
-//				MZNSendDebugMessageA("Cannot find value for %s", name.c_str());
+				MZNSendDebugMessageA("Cannot find value for %s", name.c_str());
 			}
 		}
 		else if (e->isVisible() &&
@@ -1356,6 +1351,7 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 				e->focus();
 				e->setProperty("value", MZNC_wstrtoutf8(pass).c_str());
 				s.freeSecret(pass);
+				MZNSendDebugMessageA("Setting password value");
 			}
 			wchar_t *sessionKey = s.getSecret(L"sessionKey");
 			wchar_t *user = s.getSecret(L"user");
@@ -1991,3 +1987,4 @@ InputDescriptor::InputDescriptor() {
 	hasInputData = false;
 
 }
+
