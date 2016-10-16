@@ -616,9 +616,6 @@ void SmartForm::addIcon (InputDescriptor *descriptor)
 		}
 		std::string currentStyle;
 		img->getAttribute("style", currentStyle);
-		std::string s;
-		descriptor->input->getProperty("clientWidth", s);
-				currentStyle.c_str(), achStyle);
 		if (currentStyle != achStyle)
 		{
 			img->setAttribute("style", achStyle);
