@@ -412,15 +412,19 @@ void CommunicationManager::mainLoop() {
 
 void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 	ChromeWebApplication *cwa = new ChromeWebApplication (threadStatus);
+	std::string url;
+	cwa->getUrl(url);
 	cwa->setPageData( threadStatus->pageData );
 	threadStatus->pageData = NULL;
 	threadStatus->refresh = false;
 	MZNWebMatch(cwa);
+	int last = 0;
 	while (! threadStatus->end)
 	{
 		Event *event = threadStatus->waitForEvent();
 		if (event != NULL)
 		{
+			last = 0;
 			ActiveListenerInfo *listener = event->listener;
 			if (! event->target.empty())
 			{
@@ -431,6 +435,22 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 				listener->listener->onEvent(listener->event.c_str(), listener->app, listener->element);
 			}
 			delete event;
+		}
+		else
+		{
+			// Check if page has died
+			last ++;
+			if (last > 6)
+			{
+				last = 0;
+				AbstractWebElement *body = cwa->getDocumentElement();
+				if (body != NULL)
+					body->release();
+				else
+				{
+					threadStatus->end = true;
+				}
+			}
 		}
 		if (threadStatus->refresh)
 		{

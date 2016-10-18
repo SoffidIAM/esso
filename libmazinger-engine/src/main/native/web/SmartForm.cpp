@@ -1042,7 +1042,7 @@ void SmartForm::save ()
 	MZNSendDebugMessageA("Sending password and attributes to server");
 	std::map<std::string,std::string> attributes;
 	std::string msg;
-	std::string description;
+	std::string description = page->accountDomain;
 	int unnamed = 1;
 	for (std::vector<InputDescriptor*>::iterator it = inputs.begin(); it != inputs.end(); it++)
 	{
@@ -1072,7 +1072,7 @@ void SmartForm::save ()
 				if (attributes.find(name) != attributes.end() ||
 						!value.empty())
 					attributes[name] = value;
-				description.append (value).append(" ");
+				description.append (" ").append(value);
 			}
 		}
 	}

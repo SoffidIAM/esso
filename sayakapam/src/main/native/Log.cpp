@@ -25,7 +25,7 @@ void Log::init(PamHandler *handler) {
 	name.assign("PamHandler ");
 	char ach[15];
 
-	sprintf (ach, "%lx", (long) handler->getPamHandler());
+	sprintf (ach, "%p", handler->getPamHandler());
 	name.append (ach);
 	if (logFile == NULL)
 	{

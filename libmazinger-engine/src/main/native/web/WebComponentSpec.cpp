@@ -19,6 +19,7 @@ WebComponentSpec::WebComponentSpec() {
 	szName = NULL;
 	szRefAs = NULL;
 	m_pElement = NULL;
+	m_bOptional = false;
 }
 
 WebComponentSpec::~WebComponentSpec() {

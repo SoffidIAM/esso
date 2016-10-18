@@ -219,14 +219,6 @@ ChromeWebApplication::ChromeWebApplication(ThreadStatus *threadStatus) {
 	title = threadStatus->title;
 	url = threadStatus->url;
 	pageData = threadStatus -> pageData;
-	MZNSendDebugMessage("*************** NEW CHROME WEB APP");
-	if (pageData != NULL)
-	{
-		MZNSendDebugMessage("FORMS = %d", pageData->forms.size());
-		MZNSendDebugMessage("INPUTS = %d", pageData->inputs.size());
-	} else {
-		MZNSendDebugMessage("NULL PAGE DATA");
-	}
 	this->webPage = new SmartWebPage;
 }
 
