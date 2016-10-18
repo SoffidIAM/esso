@@ -104,14 +104,14 @@ json::JsonAbstractObject* ThreadStatus::waitForMessage() {
 
 		bool acquired = false;
 	#ifdef WIN32
-		DWORD dwResult = WaitForSingleObject (hMutex, 5000); // 5 seconds wait
+		DWORD dwResult = WaitForSingleObject (hMutex, 10000); // 10 seconds wait
 		acquired = (dwResult == WAIT_OBJECT_0);
 //		MZNSendDebugMessage ("RESULT = %x", dwResult);
 	#else
 		struct timespec timeout;
 		time (&timeout.tv_sec);
 		timeout.tv_nsec = 0;
-		timeout.tv_sec += 5;
+		timeout.tv_sec += 10;
 		acquired = ( sem_timedwait (&semaphore, &timeout) == 0);
 	#endif
 		if (acquired)
