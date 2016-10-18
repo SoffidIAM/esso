@@ -412,6 +412,8 @@ void CommunicationManager::mainLoop() {
 
 void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 	ChromeWebApplication *cwa = new ChromeWebApplication (threadStatus);
+	std::string url;
+	cwa->getUrl(url);
 	cwa->setPageData( threadStatus->pageData );
 	threadStatus->pageData = NULL;
 	threadStatus->refresh = false;
@@ -422,6 +424,7 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 		Event *event = threadStatus->waitForEvent();
 		if (event != NULL)
 		{
+			last = 0;
 			ActiveListenerInfo *listener = event->listener;
 			if (! event->target.empty())
 			{
@@ -437,14 +440,16 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 		{
 			// Check if page has died
 			last ++;
-			if (last > 20)
+			if (last > 6)
 			{
 				last = 0;
 				AbstractWebElement *body = cwa->getDocumentElement();
-				if (cwa != NULL)
+				if (body != NULL)
 					body->release();
 				else
+				{
 					threadStatus->end = true;
+				}
 			}
 		}
 		if (threadStatus->refresh)
