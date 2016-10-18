@@ -416,6 +416,7 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 	threadStatus->pageData = NULL;
 	threadStatus->refresh = false;
 	MZNWebMatch(cwa);
+	int last = 0;
 	while (! threadStatus->end)
 	{
 		Event *event = threadStatus->waitForEvent();
@@ -431,6 +432,20 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 				listener->listener->onEvent(listener->event.c_str(), listener->app, listener->element);
 			}
 			delete event;
+		}
+		else
+		{
+			// Check if page has died
+			last ++;
+			if (last > 20)
+			{
+				last = 0;
+				AbstractWebElement *body = cwa->getDocumentElement();
+				if (cwa != NULL)
+					body->release();
+				else
+					threadStatus->end = true;
+			}
 		}
 		if (threadStatus->refresh)
 		{

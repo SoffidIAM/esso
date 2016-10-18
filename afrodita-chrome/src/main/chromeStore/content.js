@@ -33,7 +33,7 @@ function parsePageData () {
 	pageData.title = document.tile;
 	pageData.forms = [];
 	pageData.inputs = [];
-	
+//	console.log("FORMS="+JSON.stringify(document.forms));
 	// Parse forms
 	for (var i = 0; i < document.forms.length; i++)
 	{
@@ -49,6 +49,7 @@ function parsePageData () {
 	
 	// Parse inputs
 	var inputs = document.getElementsByTagName("input");
+//	console.log("INPUTS="+JSON.stringify(inputs));
 	for (var i = 0; i < inputs.length; i++)
 	{
 		var input = inputs[i];
@@ -150,14 +151,18 @@ function soffidLoadProcedure () {
 				    port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: pageId,
 				    	pageData: parsePageData()});
  				    var observer = new MutationObserver ( function (mutations) {
+// 					   console.log("MUTATION");
+ 				       var launched = false;
 					   mutations.forEach (function (mutation) {
-						  if (mutation.type == 'childList' && mutation.addedNodes.length > 0 )
+						  if (mutation.type == 'childList' && mutation.addedNodes.length > 0 && ! launched )
 						  {
-							  for (var i = 0; i < mutation.addedNodes.length; i++)
+							  for (var i = 0; !launched && i < mutation.addedNodes.length; i++)
 							  {
+//			 					   console.log("MUTATION "+i);
 								  var node = mutation.addedNodes.item(i);
 								  if (soffidHasInputInside(node))
 								  {
+//				 					   console.log("MUTATION with input");
 									  var doc =  mutation.target.ownerDocument;
 									  var newTime;
 //									  console.log("timer="+soffidTimer);
@@ -177,10 +182,11 @@ function soffidLoadProcedure () {
 									  }
 //									  console.log("Creating timer");
 									  soffidTimerTime = newTime;
-									  soffidTimer = window.setTimeout(1000, function () {
-//										console.log("TIMEOUT FINISHED");
-										port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: pageId, pageData: parsePageData()});});
+									  soffidTimer = window.setTimeout(function () {
+										port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: pageId, pageData: parsePageData()});},
+										1000);
 //									  console.log("Created timer "+soffidTimer);
+									  launched = true;
 									  return;
 								  }
 							  }
