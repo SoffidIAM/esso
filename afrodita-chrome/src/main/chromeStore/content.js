@@ -139,7 +139,7 @@ function soffidLoadProcedure () {
 					try {
 						window.addEventListener("unload", function () {
 							try {
-							port.postMessage ({message: "onUnload", pageId: soffidPageId});
+								port.postMessage ({message: "onUnload", pageId: soffidPageId});
 							} catch (e) {
 								console.log ("ERRR :"+e);
 							}
@@ -513,6 +513,8 @@ function soffidLoadProcedure () {
 			    	if (typeof element != 'undefined')
 			    	{
 			    		element.addEventListener (event, function (ev) {
+			    			if (event == "click")
+			    				ev.stopPropagation();
 				    		port.postMessage({message: "event", eventId: listener, target: soffidRegisterElement(ev.target), pageId: request.pageId});
 			    		}, true);
 						port.postMessage({response: "OK", requestId: request.requestId, pageId: request.pageId});
