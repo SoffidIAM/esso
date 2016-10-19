@@ -251,6 +251,7 @@ void SsoDaemon::runSessionServer ()
 		len = sizeof addr;
 		s = accept(socket_in, &addr, &len);
 
+		MZNC_setUserName(session->getUser());
 		if (stop || s == (SOCKET) -1)
 		{
 #ifdef WIN32
@@ -292,6 +293,7 @@ void SsoDaemon::runKeepAlive ()
 		Sleep(delay*1000);
 #else
 		sleep(delay);
+		MZNC_setUserName(session->getUser());
 #endif
 		if (! stop)
 		{
@@ -312,6 +314,7 @@ int SsoDaemon::startDaemon ()
 	WSADATA wsaData;
 	WSAStartup(MAKEWORD(1, 1), &wsaData);
 #endif
+
 
 	createInputSocket();
 
@@ -384,7 +387,6 @@ bool SsoDaemon::doKeepAlive() {
 		}
 		delete response;
 	}
-
 	return ok;
 }
 

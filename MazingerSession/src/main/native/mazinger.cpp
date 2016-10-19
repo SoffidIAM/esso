@@ -22,6 +22,7 @@
 #include <MazingerInternal.h>
 #include <ScriptDialog.h>
 #include <MazingerEnv.h>
+#include <SeyconServer.h>
 
 void SeyconSession::parseAndStoreSecrets (SeyconResponse *resp)
 {
@@ -53,6 +54,7 @@ void SeyconSession::parseAndStoreSecrets (SeyconResponse *resp)
 	memset(wchComposedSecrets, sizeof wchComposedSecrets, 0);
 	free (wchComposedSecrets);
 }
+
 
 void SeyconSession::startMazinger (SeyconResponse *resp, const char* configFile)
 {
@@ -173,12 +175,13 @@ void SeyconSession::downloadMazingerConfig (std::string &configFile)
 		}
 		mkdir (configFile.c_str(), 0777);
 		if (pwd != NULL)
-		chown(configFile.c_str(), pwd->pw_uid, pwd->pw_gid);
+			chown(configFile.c_str(), pwd->pw_uid, pwd->pw_gid);
 		configFile.append ("/config.");
 		configFile.append (user.c_str());
 		if (pwd != NULL)
-		chown(configFile.c_str(), pwd->pw_uid, pwd->pw_gid);
+			chown(configFile.c_str(), pwd->pw_uid, pwd->pw_gid);
 #endif
+		SeyconCommon::debug("Creating file %s", configFile.c_str());
 		MZNSendDebugMessageA("Creating file %s", configFile.c_str());
 		FILE *f = fopen(configFile.c_str(), "wb");
 		if (f == NULL)
@@ -193,7 +196,6 @@ void SeyconSession::downloadMazingerConfig (std::string &configFile)
 		}
 		delete resp;
 	} else {
-		SeyconCommon::warn("Cannot get mazinger config from server");
 	}
 }
 
