@@ -85,6 +85,7 @@ public:
 	void onClickSave (AbstractWebElement *element);
 	void onClickAccount (AbstractWebElement *element);
 	void onClickModal (AbstractWebElement *element);
+	void onFocus (AbstractWebElement *element);
 	void createModal(AbstractWebElement *img);
 	void createGenerateModal(AbstractWebElement *img);
 	void createSaveModal(AbstractWebElement *img);
