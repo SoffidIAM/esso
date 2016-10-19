@@ -38,14 +38,16 @@ static void sendMessage(HANDLE hMailSlot, LPCWSTR lpszMessage) {
 		time_t t;
 		DWORD dwWritten = 0;
 
-		wchar_t achMessage[5021];
-		snwprintf(achMessage,  sizeof achMessage / sizeof (wchar_t), L"[%lx:%lx] %s",
-				(long) GetCurrentProcessId(),
-				(long) GetCurrentThreadId(), lpszMessage);
-		achMessage [5020] = L'\0';
+//		wchar_t achMessage[5021];
+//		snwprintf(achMessage,  sizeof achMessage / sizeof (wchar_t), L"[%lx:%lx] %s",
+//				(long) GetCurrentProcessId(),
+//				(long) GetCurrentThreadId(), lpszMessage);
+//		achMessage [5020] = L'\0';
 
-		WriteFile(hMailSlot, achMessage,  sizeof (wchar_t) * wcslen(achMessage), &dwWritten,
-				NULL);
+//		WriteFile(hMailSlot, achMessage,  sizeof (wchar_t) * wcslen(achMessage), &dwWritten,
+//				NULL);
+		WriteFile(hMailSlot, lpszMessage,  sizeof (wchar_t) * wcslen(lpszMessage), &dwWritten,
+						NULL);
 	}
 }
 
