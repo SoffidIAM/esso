@@ -41,8 +41,8 @@ bool Action::canExecute ()
 	time_t now;
 	time(&now);
 	if (!m_executed ||
-		(m_canRepeat && m_delay < 0 ) ||
-		(m_canRepeat && (now - m_lastExecution) > m_delay) )
+		(m_canRepeat && m_delay <= 0 ) ||
+		(m_canRepeat && (now - m_lastExecution) >= m_delay) )
 	{
 		m_lastExecution = now;
 		m_executed = true;
