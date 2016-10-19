@@ -60,12 +60,14 @@ int WebMatcher::search (ConfigReader &reader, AbstractWebApplication& focus) {
 void WebMatcher::triggerLoadEvent () {
 	if (m_bMatched)
 	{
+//		MZNSendTraceMessageA("Searching on matched apps");
 		for (std::vector<WebApplicationSpec*>::iterator it1 = m_apps.begin();
 				it1 != m_apps.end();
 				it1++)
 		{
 			WebApplicationSpec* pApp = *it1;
 			m_pMatchedSpec = pApp;
+			std::string url;
 			for (std::vector<Action*>::iterator it = pApp->m_actions.begin();
 					it != pApp->m_actions.end();
 					it ++)
@@ -77,52 +79,73 @@ void WebMatcher::triggerLoadEvent () {
 	}
 }
 
+#ifdef WIN32
+static DWORD dwTlsIndex = TLS_OUT_OF_INDEXES;
+#endif
 
 void MZNWebMatch (AbstractWebApplication *app) {
 
 	static ConfigReader *c = NULL;
 	static bool recursive = false;
+//	MZNSendTraceMessageA("Waiting for mutex");
 	if (MZNC_waitMutex())
 	{
-		if (! recursive)
+#ifdef WIN32
+		if (dwTlsIndex == dwTlsIndex)
 		{
-			recursive = true;
-			PMAZINGER_DATA pMazinger = MazingerEnv::getDefaulEnv()->getData();
-			if (pMazinger != NULL && pMazinger->started)
-			{
-				WebMatcher m;
-				if (c == NULL)
-				{
-					c = new ConfigReader(pMazinger);
-					c->parseWeb();
-
-				}
-				std::string url;
-				app->getUrl(url);
-				PageData *data = app->getPageData();
-				if (data != NULL)
-					data->dump();
-				else
-					MZNSendDebugMessageA("PAGE  %s", url.c_str());
-				MZNSendDebugMessageA("      ================================================================");
-				m.search(*c, *app);
-				MZNSendDebugMessageA("      ================================================================");
-				if (m.isFound())
-					m.triggerLoadEvent();
-				else
-				{
-					SmartWebPage *page = app->getWebPage();
-					if (page != NULL)
-					{
-						page->fetchAccounts(app, NULL);
-						page->parse(app);
-					}
-				}
-				MZNSendDebugMessageA("DONE  ================================================================");
-			}
-			recursive = false;
+			if ((dwTlsIndex = TlsAlloc()) == TLS_OUT_OF_INDEXES)
+				return;
 		}
-		MZNC_endMutex();
+		if (TlsGetValue (dwTlsIndex) != NULL)
+		{
+			MZNC_endMutex();
+			return;
+		}
+		TlsSetValue (dwTlsIndex, (LPVOID) 1);
+#endif
+		PMAZINGER_DATA pMazinger = MazingerEnv::getDefaulEnv()->getData();
+		if (pMazinger != NULL && pMazinger->started)
+		{
+			WebMatcher m;
+			if (c == NULL)
+			{
+				c = new ConfigReader(pMazinger);
+				c->parseWeb();
+
+			}
+			std::string url;
+			app->getUrl(url);
+			PageData *data = app->getPageData();
+			if (data != NULL)
+				data->dump();
+			else
+				MZNSendDebugMessageA("PAGE  %s", url.c_str());
+			MZNSendDebugMessageA("      ================================================================");
+			m.search(*c, *app);
+			MZNSendDebugMessageA("      ================================================================");
+			MZNC_endMutex();
+			if (m.isFound())
+			{
+//					MZNSendTraceMessageA("Executing matched triggers");
+				m.triggerLoadEvent();
+			}
+			else
+			{
+//					MZNSendTraceMessageA("Executing auto login mechanism");
+				SmartWebPage *page = app->getWebPage();
+				if (page != NULL)
+				{
+					page->fetchAccounts(app, NULL);
+					page->parse(app);
+				}
+			}
+			MZNSendDebugMessageA("DONE  ================================================================");
+		} else {
+			MZNC_endMutex();
+		}
+#ifdef WIN32
+		TlsSetValue (dwTlsIndex, NULL);
+#endif
 	}
 }
 
