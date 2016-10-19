@@ -5,13 +5,13 @@
   <artifactId>javahook</artifactId>
   <packaging>jar</packaging>
   <name>javahook</name>
-  <version>1.7.1-enterprise-SNAPSTHO</version>
+  <version>1.7.1-enterprise-SNAPSHOT</version>
   <description>Conexió java amb Mazinger</description>
   <url>http://maven.apache.org</url>
   <parent>
         <groupId>com.soffid.iam.esso.pom</groupId>
         <artifactId>root</artifactId>
-	<version>1.7.1-enterprise-SNAPSTHO</version>
+	<version>1.7.1-enterprise-SNAPSHOT</version>
   </parent>
   <issueManagement>
   	<system>RTIR</system>

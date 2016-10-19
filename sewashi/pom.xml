@@ -4,11 +4,11 @@
 	<artifactId>sewashi</artifactId>
 	<packaging>${architecture.exe}</packaging>
 	<name>Executable per a injecció d'Usuaris i Passwords</name>
-	<version>1.7.1-enterprise-SNAPSTHO</version>
+	<version>1.7.1-enterprise-SNAPSHOT</version>
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.7.1-enterprise-SNAPSTHO</version>
+		<version>1.7.1-enterprise-SNAPSHOT</version>
 	</parent>
 	<scm>
 		<connection>scm:cvs:ext:@cvs.gforge.caib.es:/cvsroot/seycon:mazinger/MazingerTester</connection>

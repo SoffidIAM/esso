@@ -7,7 +7,7 @@
 	<parent>
 		<artifactId>libmazinger-session</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.7.1-enterprise-SNAPSTHO</version>
+		<version>1.7.1-enterprise-SNAPSHOT</version>
 	</parent>
 	<dependencies>
 	  	<dependency>
