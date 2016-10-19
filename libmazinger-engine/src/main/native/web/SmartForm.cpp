@@ -149,6 +149,10 @@ void OnHiddenElementFocusListener::onEvent (const char *eventName, AbstractWebAp
 				form->sanityCheck();
 				form->reparse(NULL);
 			}
+			else
+			{
+				form->onFocus (component);
+			}
 		}
 		MZNC_endMutex();
 	}
@@ -976,6 +980,19 @@ void SmartForm::onChange(AbstractWebElement* element) {
 			updateIcon(input);
 		}
 	}
+}
+
+void SmartForm::onFocus(AbstractWebElement* element) {
+	InputDescriptor *input = findInputDescriptor(element);
+	std::string value;
+
+	if (input == NULL)
+		return;
+
+	page->sanityCheck();
+	element->sanityCheck();
+
+	updateIcon(input);
 }
 
 static std::string toLowerCase (const char* src)

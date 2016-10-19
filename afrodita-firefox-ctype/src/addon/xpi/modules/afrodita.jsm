@@ -504,7 +504,8 @@ var AfroditaExtension = {
    					     	AfroditaExtension.AfrEvent2 (eventId, v);
 					    }
 					    else 
-					     	AfroditaExtension.AfrEvent (eventId); 
+					     	AfroditaExtension.AfrEvent (eventId);
+					    if (eventName == "click") event.stopPropagation(); 
 				     };
 				     var en = eventName.readString();
 				     if (elementid == 0)

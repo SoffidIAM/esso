@@ -134,7 +134,6 @@ json::JsonAbstractObject* ThreadStatus::waitForMessage() {
 		}
 		else
 		{
-			MZNSendDebugMessage ("Cannot get semaphore");
 			return NULL;
 		}
 	}
