@@ -169,6 +169,9 @@ JsonAbstractObject* CommunicationManager::call(bool &error, const char*messages[
 		msg += Encoder::encode(messages[i]);
 	}
 	msg += "}";
+
+//	MZNSendDebugMessageA("Calling %s", msg.c_str());
+
 	writeMessage(msg);
 
 
@@ -414,6 +417,7 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 	ChromeWebApplication *cwa = new ChromeWebApplication (threadStatus);
 	std::string url;
 	cwa->getUrl(url);
+//	MZNSendDebugMessageA("Started thread for %s", url.c_str());
 	cwa->setPageData( threadStatus->pageData );
 	threadStatus->pageData = NULL;
 	threadStatus->refresh = false;
@@ -462,6 +466,7 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 			MZNWebMatch(cwa);
 		}
 	}
+//	MZNSendDebugMessageA("Finishing thread for %s", url.c_str());
 	threads.erase(threadStatus->pageId);
 	for (std::map<std::string,ActiveListenerInfo*>::iterator it = activeListeners.begin(); it != activeListeners.end();)
 	{
