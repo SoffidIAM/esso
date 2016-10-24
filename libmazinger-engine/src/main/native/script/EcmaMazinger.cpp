@@ -735,6 +735,12 @@ static void MZNECMA_getAccount(struct SEE_interpreter *interp,
 		}
 		else
 		{
+			/* Saves interpreter state for concurrent access */
+
+			struct SEE_interpreter_state *state = SEE_interpreter_save_state( interp );
+			/* Restores interpreter state; destroys state */
+			MZNC_endMutex2();
+
 			std::vector<std::wstring> accountDescriptions;
 			std::wstring prefix = L"accdesc.";
 			prefix += SEE_StringToWChars(interp, message);
@@ -749,6 +755,17 @@ static void MZNECMA_getAccount(struct SEE_interpreter *interp,
 				accountDescriptions.push_back(description);
 			}
 			std::wstring account = sd->selectAccount(accounts, accountDescriptions);
+
+			while (! MZNC_waitMutex2())
+			{
+	#ifdef WIN32
+				Sleep(1000);
+	#else
+				usleep (1000 * 1000);
+	#endif
+			}
+			SEE_interpreter_restore_state(interp, state);
+
 			if (account.empty())
 				SEE_error_throw(interp, interp->EvalError, "No account selected");
 			else

@@ -167,7 +167,6 @@ extern "C" void AFRevaluate2 (long  id, const char *data) {
 }
 
 extern "C" void AFRdismiss (long  id) {
-//	MZNSendDebugMessageA("<<<<<<<<<<<<<<<<<<<< Cleaning page %ld >>>>>>>>>>>>>>>>>>>>>>>>", id);
 	FFWebApplication *app = new FFWebApplication(id);
 	EventHandler::getInstance()->unregisterAllEvents(app);
 	app->release();

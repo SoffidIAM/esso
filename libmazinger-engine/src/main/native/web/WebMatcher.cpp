@@ -81,17 +81,17 @@ void WebMatcher::triggerLoadEvent () {
 
 #ifdef WIN32
 static DWORD dwTlsIndex = TLS_OUT_OF_INDEXES;
+#else
+static __thread bool recursive;
 #endif
 
 void MZNWebMatch (AbstractWebApplication *app) {
-
 	static ConfigReader *c = NULL;
-	static bool recursive = false;
 //	MZNSendTraceMessageA("Waiting for mutex");
 	if (MZNC_waitMutex())
 	{
 #ifdef WIN32
-		if (dwTlsIndex == dwTlsIndex)
+		if (dwTlsIndex == TLS_OUT_OF_INDEXES)
 		{
 			if ((dwTlsIndex = TlsAlloc()) == TLS_OUT_OF_INDEXES)
 				return;
@@ -102,6 +102,10 @@ void MZNWebMatch (AbstractWebApplication *app) {
 			return;
 		}
 		TlsSetValue (dwTlsIndex, (LPVOID) 1);
+#else
+		if (recursive)
+			return;
+		recursive = true;
 #endif
 		PMAZINGER_DATA pMazinger = MazingerEnv::getDefaulEnv()->getData();
 		if (pMazinger != NULL && pMazinger->started)
@@ -145,6 +149,8 @@ void MZNWebMatch (AbstractWebApplication *app) {
 		}
 #ifdef WIN32
 		TlsSetValue (dwTlsIndex, NULL);
+#else
+		recursive = false;
 #endif
 	}
 }

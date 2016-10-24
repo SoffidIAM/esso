@@ -50,6 +50,46 @@ void MZNC_destroyMutex () {
 	}
 }
 
+HANDLE hMutex2 = NULL;
+static HANDLE getMutex2() {
+	if (hMutex2 == NULL)
+	{
+		hMutex2 = CreateMutexA(NULL, FALSE, NULL);
+
+	}
+	return hMutex2;
+}
+
+
+bool MZNC_waitMutex2 () {
+	HANDLE hMutex = getMutex2();
+	if (hMutex != NULL)
+	{
+		DWORD dwResult = WaitForSingleObject (hMutex, INFINITE);
+		if (dwResult == WAIT_OBJECT_0)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void MZNC_endMutex2 () {
+	HANDLE hMutex = getMutex2();
+	if (hMutex != NULL)
+	{
+		ReleaseMutex (hMutex);
+	}
+}
+
+void MZNC_destroyMutex2 () {
+	HANDLE hMutex = getMutex2();
+	if (hMutex != NULL)
+	{
+		CloseHandle (hMutex);
+	}
+}
+
 const char *MZNC_getCommandLine() {
 	return GetCommandLineA ();
 }
@@ -425,6 +465,33 @@ void MZNC_destroyMutex () {
 	sem_destroy(s);
 }
 
+static sem_t semaphore2;
+static bool initialized2 = false;
+sem_t* getSemaphore2 () {
+	if (! initialized2)
+		sem_init ( &semaphore2, true, 1);
+
+	return &semaphore2;
+}
+
+bool MZNC_waitMutex2 () {
+	sem_t* s = getSemaphore2();
+	if (s != NULL && sem_wait(s) >= 0)
+			return true;
+	return false;
+}
+
+void MZNC_endMutex2 () {
+	sem_t* s = getSemaphore2();
+	if (s != NULL)
+		sem_post(s);
+}
+
+
+void MZNC_destroyMutex2 () {
+	sem_t* s = getSemaphore2();
+	sem_destroy(s);
+}
 
 #endif
 
