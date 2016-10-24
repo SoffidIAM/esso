@@ -365,7 +365,6 @@ std::wstring DefaultScriptDialog::selectAccount(
 	s_accountDescriptions = &accountDescriptions;
 	int result = DialogBox (hMazingerInstance, MAKEINTRESOURCE (IDD_SELACCOUNT),
 			NULL,  selectAccountDialogProc);
-	MZNSendDebugMessage("Result = %d", result);
 	if (result == 0)
 	{
 		return accounts[iSelectedIndex];
