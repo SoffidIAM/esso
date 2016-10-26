@@ -44,6 +44,7 @@ DWORD CALLBACK DumpData (
     HANDLE hDumpFile;
     SYSTEMTIME stLocalTime;
     MINIDUMP_EXCEPTION_INFORMATION ExpParam;
+    static int i = 0;
 
     GetLocalTime( &stLocalTime );
     GetTempPathW( dwBufferSize, szPath );
@@ -52,11 +53,11 @@ DWORD CALLBACK DumpData (
     StringCchPrintfW( szFileName, MAX_PATH, L"%s\\Soffid Dump", szPath );
     CreateDirectoryW( szFileName, NULL );
 
-    StringCchPrintfW( szFileName, MAX_PATH, L"%s\\Soffid Dump\\Afrodita-Chrome-%04d%02d%02d-%02d%02d%02d-%ld.dmp",
+    StringCchPrintfW( szFileName, MAX_PATH, L"%s\\Soffid Dump\\Afrodita-Chrome-%04d%02d%02d-%02d%02d%02d-%ld-%d.dmp",
                szPath,
                stLocalTime.wYear, stLocalTime.wMonth, stLocalTime.wDay,
                stLocalTime.wHour, stLocalTime.wMinute, stLocalTime.wSecond,
-               GetCurrentProcessId());
+               GetCurrentProcessId(), ++i);
 
     hDumpFile = CreateFileW(szFileName, GENERIC_READ|GENERIC_WRITE,
                 FILE_SHARE_WRITE|FILE_SHARE_READ, 0, CREATE_ALWAYS, 0, 0);
@@ -78,22 +79,17 @@ DWORD CALLBACK DumpData (
     SeyconCommon::warn ("Generated dump file %ls", szFileName);
 
 	MessageBox(NULL, "Genrated dump file", "Soffid Chrome extension", MB_OK);
-	ExitProcess(1);
 	return 0;
 }
 
-LONG CALLBACK VectoredHandler (
+extern "C" LONG CALLBACK VectoredHandler (
    PEXCEPTION_POINTERS ExceptionInfo
 )
 {
-	if ( ExceptionInfo->ExceptionRecord->ExceptionFlags == EXCEPTION_NONCONTINUABLE )
-	{
-		threadId = GetCurrentThreadId();
-		HANDLE hThread = CreateThread (NULL, 0, (LPTHREAD_START_ROUTINE) DumpData, ExceptionInfo, 0, NULL);
-	//	DumpData (ExceptionInfo);
-		WaitForSingleObject( hThread, INFINITE );
-	}
-	return 0;
+	threadId = GetCurrentThreadId();
+	HANDLE hThread = CreateThread (NULL, 0, (LPTHREAD_START_ROUTINE) DumpData, ExceptionInfo, 0, NULL);
+	WaitForSingleObject( hThread, INFINITE );
+	return EXCEPTION_CONTINUE_SEARCH;
 }
 
 #else
