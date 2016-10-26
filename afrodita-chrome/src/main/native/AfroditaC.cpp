@@ -86,10 +86,14 @@ LONG CALLBACK VectoredHandler (
    PEXCEPTION_POINTERS ExceptionInfo
 )
 {
-	threadId = GetCurrentThreadId();
-	HANDLE hThread = CreateThread (NULL, 0, (LPTHREAD_START_ROUTINE) DumpData, ExceptionInfo, 0, NULL);
-//	DumpData (ExceptionInfo);
-	WaitForSingleObject( hThread, INFINITE );
+	if ( ExceptionInfo->ExceptionRecord->ExceptionFlags == EXCEPTION_NONCONTINUABLE )
+	{
+		threadId = GetCurrentThreadId();
+		HANDLE hThread = CreateThread (NULL, 0, (LPTHREAD_START_ROUTINE) DumpData, ExceptionInfo, 0, NULL);
+	//	DumpData (ExceptionInfo);
+		WaitForSingleObject( hThread, INFINITE );
+	}
+	return 0;
 }
 
 #else
