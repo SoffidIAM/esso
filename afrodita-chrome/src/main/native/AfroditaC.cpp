@@ -46,6 +46,9 @@ DWORD CALLBACK DumpData (
     MINIDUMP_EXCEPTION_INFORMATION ExpParam;
     static int i = 0;
 
+    if (i++ == 0)
+    	return 0;
+
     GetLocalTime( &stLocalTime );
     GetTempPathW( dwBufferSize, szPath );
 
@@ -57,7 +60,7 @@ DWORD CALLBACK DumpData (
                szPath,
                stLocalTime.wYear, stLocalTime.wMonth, stLocalTime.wDay,
                stLocalTime.wHour, stLocalTime.wMinute, stLocalTime.wSecond,
-               GetCurrentProcessId(), ++i);
+               GetCurrentProcessId(), i);
 
     hDumpFile = CreateFileW(szFileName, GENERIC_READ|GENERIC_WRITE,
                 FILE_SHARE_WRITE|FILE_SHARE_READ, 0, CREATE_ALWAYS, 0, 0);
