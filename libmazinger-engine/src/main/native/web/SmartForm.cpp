@@ -554,7 +554,8 @@ void SmartForm::addIcon (InputDescriptor *descriptor)
 			onClickListener = new OnClickListener();
 			onClickListener->form = this;
 		}
-		img->subscribe("click", onClickListener);
+		if (img != NULL)
+			img->subscribe("click", onClickListener);
 		if (onChangeListener == NULL)
 		{
 			onChangeListener = new OnChangeListener();
