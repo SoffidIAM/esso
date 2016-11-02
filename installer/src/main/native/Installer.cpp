@@ -2567,5 +2567,6 @@ extern "C" int main(int argc, char **argv)
 		}
 	}
 
+	ExitProcess ( result );
 	return result;
 }
