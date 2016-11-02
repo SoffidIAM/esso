@@ -107,7 +107,10 @@ extern "C" int main (int argc, char **argv)
 #ifdef WIN32
 	setmode(fileno(stdout), O_BINARY);
 	setmode(fileno(stdin), O_BINARY);
-	AddVectoredExceptionHandler(0, VectoredHandler);
+	std::string vh;
+	SeyconCommon::readProperty ("crashDump", vh);
+	if (! vh.empty())
+		AddVectoredExceptionHandler(0, VectoredHandler);
 #endif
 	SeyconCommon::setDebugLevel(0);
 	DEBUG ("Started AfroditaC");
