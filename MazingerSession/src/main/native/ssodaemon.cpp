@@ -251,7 +251,9 @@ void SsoDaemon::runSessionServer ()
 		len = sizeof addr;
 		s = accept(socket_in, &addr, &len);
 
+#ifndef WIN32
 		MZNC_setUserName(session->getUser());
+#endif
 		if (stop || s == (SOCKET) -1)
 		{
 #ifdef WIN32
