@@ -76,10 +76,13 @@
 						<linkerMiddleOption>-lwsock32</linkerMiddleOption>
 						<linkerMiddleOption>-lsee</linkerMiddleOption>
 						<linkerMiddleOption>-lmpr</linkerMiddleOption>
+						<linkerMiddleOption>-ldbghelp</linkerMiddleOption>
 						<linkerMiddleOption>-lgdi32</linkerMiddleOption>
 						<linkerMiddleOption>-lcrypt32</linkerMiddleOption>
 						<linkerMiddleOption>-lwinhttp</linkerMiddleOption>
 						<linkerEndOption>-static</linkerEndOption>
+						<linkerEndOption>-Xlinker</linkerEndOption>
+						<linkerEndOption>-Map=target/${pom.artifactId}-${pom.version}.mapfile.txt</linkerEndOption>
 					</linkerEndOptions>
 					<sources>
 						<source>
