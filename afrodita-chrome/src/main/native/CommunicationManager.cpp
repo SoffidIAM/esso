@@ -44,7 +44,7 @@ static HANDLE getMutex() {
 }
 
 
-bool waitMutex () {
+static bool waitMutex () {
 	HANDLE hMutex = getMutex();
 	if (hMutex != NULL)
 	{
@@ -57,7 +57,7 @@ bool waitMutex () {
 	return false;
 }
 
-void endMutex () {
+static void endMutex () {
 	HANDLE hMutex = getMutex();
 	if (hMutex != NULL)
 	{
@@ -70,14 +70,14 @@ static sem_t semaphore;
 static bool sem_initialized= false;
 sem_t* getSemaphore () {
 	if (! sem_initialized)
-		sem_init ( &semaphore, true, 1);
+		sem_init ( &semaphore, 0, 1);
 
 	return &semaphore;
 }
 
 static bool waitMutex () {
 	sem_t* s = getSemaphore();
-	if (s != NULL && sem_wait(s) >= 0)
+	if (s != NULL && sem_wait(s) == 0)
 			return true;
 	return false;
 }
@@ -601,7 +601,11 @@ std::string CommunicationManager::registerListener(ChromeElement* element,
 	al->element->lock();
 	al->listener->lock();
 	std::string id = ach;
-	activeListeners[ach] = al;
+	if (waitMutex())
+	{
+		activeListeners[ach] = al;
+		endMutex();
+	}
 //	MZNSendDebugMessageA("Registering listener %s [ %s ]",event, ach);
 	return id;
 }
@@ -619,6 +623,7 @@ std::string CommunicationManager::unregisterListener(ChromeElement* element,
 				al->element->release();
 				al->listener->release();
 				activeListeners.erase(id);
+				endMutex();
 				return  id;
 			}
 		}
