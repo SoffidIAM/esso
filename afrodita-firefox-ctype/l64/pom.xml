@@ -50,6 +50,7 @@
 						<linkerEndOption>-lsoup-2.4</linkerEndOption>
 						<linkerEndOption>-lglib-2.0</linkerEndOption>
 						<linkerEndOption>-lpthread</linkerEndOption>
+                        <linkerEndOption>-Wl,-Map=target/${pom.artifactId}-${pom.version}.mapfile.txt</linkerEndOption>
 					</linkerEndOptions>
 					<sources>
 						<source>

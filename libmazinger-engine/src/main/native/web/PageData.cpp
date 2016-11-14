@@ -47,6 +47,7 @@ static InputData parseInput (JsonMap* value)
 		d.clientWidth = parseInt (value, "clientWitdh");
 	d.data_bind = parseString (value, "data_bind");
 	d.display = parseString (value, "display");
+	d.visibility = parseString (value, "visibility");
 	d.id = parseString (value, "id");
 	d.name = parseString(value, "name");
 	d.offsetHeight = parseInt (value, "offsetHeight");
@@ -260,6 +261,9 @@ void InputData::dump() {
 	MZNSendDebugMessageA("           pos:    (%ld, %ld, %ld, %ld) (%ld, %ld)",
 			offsetTop, offsetLeft, offsetHeight, offsetWidth,
 			clientHeight, clientWidth);
+	MZNSendDebugMessageA("           style:  display: %s; visibility: %s",
+			display.c_str(), visibility.c_str());
+
 }
 
 void FormData::dump() {
@@ -272,6 +276,7 @@ void FormData::dump() {
 }
 
 void PageData::dump() {
+	MZNSendDebugMessageA("+++++++++++++++++++++ PAGE : %s", this->url.c_str());
 	MZNSendDebugMessageA("PAGE : %s", this->url.c_str());
 	MZNSendDebugMessageA("Title: %s", this->title.c_str());
 	for (std::vector<InputData>::iterator it = inputs.begin(); it != inputs.end(); it++)

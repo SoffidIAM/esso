@@ -1978,7 +1978,7 @@ std::string InputDescriptor::getVisibility ()  {
 
 bool InputDescriptor::isVisible ()  {
 	if (hasInputData)
-		return data.visibility != "none" && data.display != "hidden";
+		return data.display != "none" && data.visibility != "hidden";
 	else
 	{
 		return input->isVisible();

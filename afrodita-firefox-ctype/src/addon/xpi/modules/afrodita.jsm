@@ -28,13 +28,14 @@ function parsePageData (docid, document ) {
 		var inputData = {};
 		var cs= {};
 		try {
-			cs = window.getComputesStyle(input)
+			cs = window.getComputesStyle(input);
 		} catch (e) {
 		}
 		inputData.clientHeight = input.clientHeight;
 		inputData.clientWitdh  = input.clientWidth;
 		inputData.data_bind    = input.getAttribute("data-bind");
 		inputData.display      = cs["display"];
+		inputData.visibility   = cs["visibility"];
 		inputData.id           = input.id;
 		inputData.name         = input.name;
 		inputData.offsetHeight = input.offsetHeight;
@@ -50,9 +51,10 @@ function parsePageData (docid, document ) {
 		try {
 			while (parent != null)
 			{
-				if (window.getComputedStyle("visibility") == "hidden")
+				var cs = window.getComputesStyle(parent);
+				if (cs["visibility"] == "hidden")
 					inputData.visibility = "hidden";
-				if (window.getComputedStyle("display") == "none")
+				if (cs["display"] == "none")
 					inputData.display = "none";
 				parent = parent.parentElement;
 			}

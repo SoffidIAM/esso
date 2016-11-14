@@ -28,6 +28,7 @@
 #include <MazingerHook.h>
 #include <ssoclient.h>
 #include <time.h>
+#include <SecretStore.h>
 
 extern bool MZNEvaluateJS(const char *script, std::string &msg);
 
@@ -593,6 +594,18 @@ extern "C" int main(int argc, char**argv) {
 	{
 		parseArgs(argc, argv);
 		doStart ();
+	}
+	else if (stricmp("setSecret", argv[1]) == 0)
+	{
+		if (argc >= 4)
+		{
+			SecretStore ss(MZNC_getUserName());
+			ss.setSecret (MZNC_strtowstr(argv[2]).c_str(),
+					MZNC_strtowstr(argv[3]).c_str());
+			printf ("Updated secret\n");
+		} else {
+			printf ("Missing arguments\n");
+		}
 	}
 	else if (stricmp("spy", argv[1]) == 0)
 	{
