@@ -7,7 +7,7 @@
 	<parent>
 		<artifactId>afrodita-firefox-ctype</artifactId>
 		<groupId>com.soffid.iam.esso</groupId>
-		<version>1.7.2-enterprise</version>
+		<version>1.7.3-enterprise-SNAPSHOT</version>
 	</parent>
 	<build>
 		<plugins>
