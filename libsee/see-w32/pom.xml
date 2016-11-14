@@ -8,7 +8,7 @@
 	<parent>
 		<artifactId>libsee</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.7.2-enterprise-SNAPSHOT</version>
+		<version>1.7.2-enterprise</version>
 	</parent>
 	<build>
 		<plugins>
