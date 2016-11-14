@@ -29,7 +29,7 @@ PendingEventList::PendingEventList() {
 #ifdef WIN32
 	hMutex = CreateMutex (NULL, FALSE, NULL);
 #else
-	sem_init(&semaphore, true, 1);
+	sem_init(&semaphore, false, 1);
 #endif
 }
 
@@ -182,7 +182,7 @@ Event* ThreadStatus::waitForEvent() {
 	time (&timeout.tv_sec);
 	timeout.tv_nsec = 0;
 	timeout.tv_sec += 10;
-	acquired = ( sem_timedwait (&semaphore, &timeout) == 0);
+	acquired = ( sem_timedwait (&eventSemaphore, &timeout) == 0);
 #endif
 	if (acquired)
 	{

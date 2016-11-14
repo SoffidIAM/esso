@@ -73,14 +73,16 @@ function parsePageData () {
 		inputData.soffidId     = soffidRegisterElement(input);
 		inputData.textAlign    = cs["text-align"] ;
 		inputData.type         = input.type;
-		// Check parent visibilityd
+		inputData.visibility   = cs["visibility"];
+		// Check parent visibility
 		var parent = input.parentElement;
 		try {
 			while (parent != null)
 			{
-				if (window.getComputedStyle("visibility") == "hidden")
+				var cs = window.getComputedStyle(parent);
+				if (cs.visibility == "hidden")
 					inputData.visibility = "hidden";
-				if (window.getComputedStyle("display") == "none")
+				if (cs.display == "none")
 					inputData.display = "none";
 				parent = parent.parentElement;
 			}
