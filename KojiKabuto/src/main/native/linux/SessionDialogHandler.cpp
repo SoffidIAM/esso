@@ -120,11 +120,11 @@ void DialogHandler::processLogout()
 	gtk_dialog_add_button(GTK_DIALOG(timeoutDialog), "Cancel",
 			GTK_RESPONSE_CANCEL);
 	ticks = 30;
-	guint tout = gtk_timeout_add( 1000, DialogHandler::timeoutFunction, this );
+	guint tout = g_timeout_add( 1000, DialogHandler::timeoutFunction, this );
 
 	gint result = gtk_dialog_run(GTK_DIALOG(timeoutDialog));
 
-	gtk_timeout_remove(tout);
+	g_source_remove(tout);
 
 	gtk_widget_destroy(timeoutDialog);
 	gdk_threads_leave();

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/login">
+    <file preprocess="xml-stripblanks">login.glade</file>
+    <file preprocess="xml-stripblanks">progress.glade</file>
+  </gresource>
+</gresources>
