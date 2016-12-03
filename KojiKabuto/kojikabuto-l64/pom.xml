@@ -49,6 +49,30 @@
 	<build>
 		<plugins>
 			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>compile</id>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<inherited>false</inherited>
+						<configuration>
+							<tasks>
+								<mkdir dir="target/src" />
+								<exec executable="glib-compile-resources">
+									<arg value="--target=target/src/resources.c" />
+									<arg value="--generate-source" />
+									<arg value="--sourcedir=../src/main/glade" />
+									<arg value="../src/main/glade/resources.xml" />
+								</exec>
+							</tasks>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>native-maven-plugin</artifactId>
 				<version>1.0-alpha-7</version>
@@ -70,8 +94,8 @@
 						<compilerMiddleOption>-I/usr/include/cairo</compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/include/glib-2.0</compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/include/pango-1.0</compilerMiddleOption>
-						<compilerMiddleOption>-I/usr/lib/gtk-2.0/include</compilerMiddleOption>
-						<compilerMiddleOption>-I/usr/include/gtk-2.0</compilerMiddleOption>
+						<compilerMiddleOption>-I/usr/lib/gtk-3.0/include</compilerMiddleOption>
+						<compilerMiddleOption>-I/usr/include/gtk-3.0</compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/include/atk-1.0 </compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/include/gdk-pixbuf-2.0</compilerMiddleOption>
 						
@@ -84,8 +108,8 @@
 						<linkerEndOption>-lpcreposix</linkerEndOption>
 						<linkerEndOption>-lpthread</linkerEndOption>
 						<linkerEndOption>-lsoup-2.4</linkerEndOption>
-						<linkerEndOption>-lgtk-x11-2.0</linkerEndOption>
-						<linkerEndOption>-lgdk-x11-2.0</linkerEndOption>
+						<linkerEndOption>-lgtk-3</linkerEndOption>
+						<linkerEndOption>-lgdk-3</linkerEndOption>
 						<linkerEndOption>-lglib-2.0</linkerEndOption>
 						<linkerEndOption>-lX11</linkerEndOption>
 						<linkerEndOption>-lgio-2.0</linkerEndOption>
@@ -110,6 +134,15 @@
 								<exclude>**/*.h</exclude>
 							</excludes>
 
+							<deployable>false</deployable>
+							<dependencyAnalysisParticipation>false</dependencyAnalysisParticipation>
+						</source>
+						<source>
+							<!-- relative to your project directory -->
+							<directory>target/src</directory>
+							<includes>
+								<include>*.c</include>
+							</includes>
 							<deployable>false</deployable>
 							<dependencyAnalysisParticipation>false</dependencyAnalysisParticipation>
 						</source>
