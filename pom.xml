@@ -5,7 +5,7 @@
   <artifactId>root</artifactId>
   <packaging>pom</packaging>
   <name>Single sign on module grandfather</name>
-  <version>1.6.1-SNAPSHOT</version>
+  <version>1.7.0</version>
   <url>http://esso.forge.dev.lab</url>
         <scm>
                 <connection>scm:git:ssh://git@github.com:/SoffidIAM/esso.git</connection>

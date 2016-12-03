@@ -8,7 +8,7 @@
 	<parent>
 		<artifactId>KojiKabuto</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.6.1-SNAPSHOT</version>
+		<version>1.7.0</version>
 	</parent>
 	<issueManagement>
 		<system>RTIR</system>
@@ -94,8 +94,8 @@
 						<compilerMiddleOption>-I/usr/include/cairo</compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/include/glib-2.0</compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/include/pango-1.0</compilerMiddleOption>
-						<compilerMiddleOption>-I/usr/lib/gtk-2.0/include</compilerMiddleOption>
-						<compilerMiddleOption>-I/usr/include/gtk-2.0</compilerMiddleOption>
+						<compilerMiddleOption>-I/usr/lib/gtk-3.0/include</compilerMiddleOption>
+						<compilerMiddleOption>-I/usr/include/gtk-3.0</compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/include/atk-1.0 </compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/include/gdk-pixbuf-2.0</compilerMiddleOption>
 					</compilerMiddleOptions>
@@ -107,8 +107,8 @@
 						<linkerEndOption>-lpcreposix</linkerEndOption>
 						<linkerEndOption>-lpthread</linkerEndOption>
 						<linkerEndOption>-lsoup-2.4</linkerEndOption>
-						<linkerEndOption>-lgtk-x11-2.0</linkerEndOption>
-						<linkerEndOption>-lgdk-x11-2.0</linkerEndOption>
+						<linkerEndOption>-lgtk-3</linkerEndOption>
+						<linkerEndOption>-lgdk-3</linkerEndOption>
 						<linkerEndOption>-lglib-2.0</linkerEndOption>
 						<linkerEndOption>-ldl</linkerEndOption>
 						<linkerEndOption>-lX11</linkerEndOption>
