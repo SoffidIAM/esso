@@ -71,7 +71,8 @@ static bool tryLogin (const std::string &user, const std::string &pass)
 	TRACE;
 
 	GdkCursor *c = gdk_cursor_new(GDK_WATCH);
-	GtkBuilder *builder2 = gtk_builder_new_from_resource("/login/progress.glade");
+	GtkBuilder *builder2 = gtk_builder_new();
+	gtk_builder_add_from_resource(builder2, "/login/progress.glade");
 	GObject *pw = gtk_builder_get_object(builder2, "progressWindow");
 
 	gtk_widget_show_now(GTK_WIDGET(pw));
@@ -148,7 +149,8 @@ gboolean window_login_doClose(GtkWidget *button, gpointer userdata) {
 }
 
 gboolean view_popup_menu_onLogin(GtkWidget *menuitem, gpointer userdata) {
-	GtkBuilder *builder = gtk_builder_new_from_resource("/login/login.glade");
+	GtkBuilder *builder = gtk_builder_new();
+    gtk_builder_add_from_resource(builder, "/login/login.glade");
 
 	TRACE;
 
