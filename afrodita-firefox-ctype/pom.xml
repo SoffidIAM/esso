@@ -13,7 +13,7 @@
 	<modules>
 		<module>w32</module>
 		<module>l32</module>
-<!-- 	<module>w64</module> -->
+	 	<module>w64</module>
 		<module>l64</module>
 	</modules>
 	<issueManagement>

@@ -36,7 +36,7 @@ void NativeComponent::dump () {
 	dumpAttribute ("dlgId");
 }
 
-void NativeComponent::dumpXML (int depth) {
+void NativeComponent::dumpXML (int depth, NativeComponent *focus) {
 	std::string className;
 	std::string name;
 	std::string title;
@@ -57,7 +57,8 @@ void NativeComponent::dumpXML (int depth) {
 	std::vector<NativeComponent*> children;
 	getChildren(children);
 	const char *terminator;
-	if (children.size() == 0)
+	bool isFocused = focus != NULL && (this == focus || this->equals(*focus));
+	if (children.size() == 0 && ! isFocused)
 		terminator = "/>";
 	else
 		terminator = ">";
@@ -91,11 +92,17 @@ void NativeComponent::dumpXML (int depth) {
 					terminator);
 	}
 
-	if (children.size() > 0)
+	if (isFocused)
+	{
+		MZNSendSpyMessage ("%s<!--Action type='script' event='onLoad' -->",
+				prefix.c_str());
+
+	}
+	if (children.size() > 0 || isFocused)
 	{
 		for (unsigned int i = 0 ; i < children.size(); i++)
 		{
-			children[i]->dumpXML(depth + 2);
+			children[i]->dumpXML(depth + 2, focus);
 			delete children[i];
 		}
 		MZNSendSpyMessage ("%s</Component>", prefix.c_str());

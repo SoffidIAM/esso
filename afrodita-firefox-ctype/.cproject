@@ -85,10 +85,12 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/AfroditaF"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/AfroditaF4"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/AfroditaF5"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/AfroditaF-ctype"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/MazingerHook/Debug"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/AfroditaF/Debug"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/AfroditaF4/Debug"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/AfroditaF5/Debug"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/AfroditaF-ctype/Debug"/>
 						<entry flags="RESOLVED" kind="libraryFile" name="AfroditaFF" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 					<externalSetting languages="cdt.managedbuild.tool.gnu.c.compiler.input.1646605337"/>
@@ -113,24 +115,24 @@
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.430497904" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
 							<builder buildPath="${workspace_loc:/AfroditaF-ctype}/Debug" id="cdt.managedbuild.builder.gnu.cross.1139477670" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" stopOnErr="false" superClass="cdt.managedbuild.builder.gnu.cross"/>
 							<tool command="i686-w64-mingw32-gcc" id="cdt.managedbuild.tool.gnu.cross.c.compiler.1213314760" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
-								<option id="gnu.c.compiler.option.include.paths.952896450" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+								<option id="gnu.c.compiler.option.include.paths.952896450" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/AfroditaF-ctype/w32/target/native/include}&quot;"/>
 								</option>
-								<option id="gnu.c.compiler.option.preprocessor.def.symbols.929137546" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
+								<option id="gnu.c.compiler.option.preprocessor.def.symbols.929137546" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="XPCOM_GLUE_AVOID_NSPR=1"/>
 								</option>
-								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.39285165" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" valueType="enumerated"/>
-								<option id="gnu.c.compiler.option.debugging.level.1984517202" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
+								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.39285165" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.debugging.level.1984517202" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.63059135" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool command="i686-w64-mingw32-g++" id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1905703042" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
-								<option id="gnu.cpp.compiler.option.include.paths.1181549987" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+								<option id="gnu.cpp.compiler.option.include.paths.1181549987" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/include/nspr"/>
 									<listOptionValue builtIn="false" value="/usr/include/xulrunner-1.9.0.19/stable/"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/AfroditaF-ctype/w32/target/native/include}&quot;"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.optimization.level.2066598042" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
-								<option id="gnu.cpp.compiler.option.debugging.level.1775396770" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.option.optimization.level.2066598042" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.option.debugging.level.1775396770" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.863594595" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.1650432344" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker">
@@ -178,11 +180,13 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/AfroditaF"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/AfroditaF4"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/AfroditaF5"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/AfroditaF-ctype"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/MazingerHook/Debug"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/AfroditaF/Windows-fF5"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/AfroditaF/Debug"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/AfroditaF4/Windows-fF5"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/AfroditaF5/Windows-fF5"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/AfroditaF-ctype/Windows-fF5"/>
 						<entry flags="RESOLVED" kind="libraryFile" name="AfroditaFF" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 					<externalSetting languages="cdt.managedbuild.tool.gnu.c.compiler.input.1646605337"/>
@@ -239,7 +243,7 @@
 									<listOptionValue builtIn="false" value="see"/>
 									<listOptionValue builtIn="false" value="pcreposix"/>
 								</option>
-								<option id="gnu.cpp.link.option.paths.1428131851" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths"/>
+								<option id="gnu.cpp.link.option.paths.1428131851" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths"/>
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.1266272380" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.flags.1278403146" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="" valueType="string"/>
 								<option id="gnu.cpp.link.option.other.1896276096" name="Other options (-Xlinker [option])" superClass="gnu.cpp.link.option.other" valueType="stringList">
@@ -1081,4 +1085,5 @@
 			</profile>
 		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cproject>

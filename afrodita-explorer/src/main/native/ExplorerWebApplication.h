@@ -26,6 +26,8 @@ public:
 	ExplorerWebApplication(IWebBrowser2* pBrowser, IDispatch *pDocument, const char *url);
 	virtual ~ExplorerWebApplication();
 
+	virtual bool supportsPageData () ;
+	virtual PageData* getPageData() ;
 	virtual void getUrl (std::string &value) ;
 	virtual void getTitle (std::string &value) ;
 	virtual void getContent (std::string &value) ;
@@ -33,6 +35,7 @@ public:
 	virtual void getCookie (std::string &value) ;
 	virtual AbstractWebElement* getDocumentElement ();
 	virtual AbstractWebElement * getElementById (const char*id) ;
+	virtual AbstractWebElement * getElementBySoffidId (const char*id) ;
 	virtual void getElementsByTagName (const char*tag, std::vector<AbstractWebElement*> &elements) ;
 	virtual void getAnchors (std::vector<AbstractWebElement*> &elements) ;
 	virtual void getForms (std::vector<AbstractWebElement*> &elements);

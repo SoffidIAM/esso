@@ -45,3 +45,20 @@ void WebInputSpec::dump() {
 			szId == NULL? "": szId,
 			szRefAs == NULL? "": szRefAs);
 }
+
+bool WebInputSpec::matches(AbstractWebApplication *app, FormData& form) {
+	return false;
+}
+
+bool WebInputSpec::matches(AbstractWebApplication *app, InputData& input) {
+
+	if ( ! matchValue (reType, input.type.c_str()) ||
+			! matchValue (reValue, input.value.c_str()) )
+	{
+		return false;
+	}
+	else
+	{
+		return WebComponentSpec::matches(app, input);
+	}
+}

@@ -290,7 +290,7 @@ bool SeyconCommon::readProperty(const char* property, std::string &value) {
 		configFile->load ("/etc/mazinger/config");
 	}
 	const char *data = configFile->getValue(property);
-	if (data == NULL) {
+	if (data == NULL || data[0] == '\0') {
 		value.clear ();
 		return false;
 	}

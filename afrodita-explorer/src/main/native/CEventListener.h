@@ -11,7 +11,7 @@
 
 
 class CEventListener :
-        public IDispatch
+        public IDispatchEx
 {
     public:
 
@@ -28,6 +28,47 @@ class CEventListener :
 	STDMETHOD(GetIDsOfNames)(THIS_ REFIID,LPOLESTR*,UINT,LCID,DISPID*);
 	STDMETHOD(Invoke)(THIS_ DISPID,REFIID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*,UINT*);
 
+	// IDispatchEx interface
+    virtual HRESULT STDMETHODCALLTYPE GetDispID(
+        /* [in] */  BSTR bstrName,
+        /* [in] */ DWORD grfdex,
+        /* [out] */  DISPID *pid) ;
+
+    virtual /* [local] */ HRESULT STDMETHODCALLTYPE InvokeEx(
+          DISPID id,
+          LCID lcid,
+          WORD wFlags,
+          DISPPARAMS *pdp,
+          VARIANT *pvarRes,
+          EXCEPINFO *pei,
+          IServiceProvider *pspCaller);
+
+    virtual HRESULT STDMETHODCALLTYPE DeleteMemberByName(
+        /* [in] */  BSTR bstrName,
+        /* [in] */ DWORD grfdex) ;
+
+    virtual HRESULT STDMETHODCALLTYPE DeleteMemberByDispID(
+        /* [in] */ DISPID id) ;
+
+    virtual HRESULT STDMETHODCALLTYPE GetMemberProperties(
+        /* [in] */ DISPID id,
+        /* [in] */ DWORD grfdexFetch,
+        /* [out] */  DWORD *pgrfdex) ;
+
+    virtual HRESULT STDMETHODCALLTYPE GetMemberName(
+        /* [in] */ DISPID id,
+        /* [out] */  BSTR *pbstrName);
+
+    virtual HRESULT STDMETHODCALLTYPE GetNextDispID(
+        /* [in] */ DWORD grfdex,
+        /* [in] */ DISPID id,
+        /* [out] */  DISPID *pid);
+
+    virtual HRESULT STDMETHODCALLTYPE GetNameSpaceParent(
+        /* [out] */  IUnknown **ppunk);
+
+    //
+    void execute (DISPPARAMS *params);
 
 	CEventListener ();
 	virtual ~CEventListener ();
@@ -40,6 +81,7 @@ class CEventListener :
 private:
 	ExplorerElement * m_pElement;
 	ExplorerWebApplication *m_pApplication;
+	bool isAddEventListener;
 
 	DWORD m_dwCookie;
 	LONG m_nRefCount;   //for managing the reference count

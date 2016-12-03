@@ -15,6 +15,7 @@
 #include "json/JsonVector.h"
 #include "CommunicationManager.h"
 #include <MazingerInternal.h>
+#include <PageData.h>
 
 namespace mazinger_chrome
 {
@@ -23,12 +24,12 @@ ChromeElement::ChromeElement(ChromeWebApplication *app, const char *externalId)
 {
 	this -> app = app;
 	this -> externalId = externalId;
-	app->lock();
+//	app->lock();
 
 }
 
 ChromeElement::~ChromeElement() {
-	app->release();
+//	app->release();
 }
 
 
@@ -155,6 +156,19 @@ void ChromeElement::setAttribute(const char *attribute, const char*value)
 	if (response != NULL && ! error)
 	{
 		delete response;
+	}
+
+	InputData *d = findInputData();
+	if (d != NULL)
+	{
+		if (strcmp (attribute, "value") == 0)
+			d->value = value;
+		if (strcmp (attribute, "name") == 0)
+			d->name = value;
+		if (strcmp (attribute, "id") == 0)
+			d->id = value;
+		if (strcmp (attribute, "type") == 0)
+			d->type = value;
 	}
 
 }
@@ -367,6 +381,18 @@ void ChromeElement::setProperty(const char* property, const char* value) {
 	{
 		delete response;
 	}
+	InputData *d = findInputData();
+	if (d != NULL)
+	{
+		if (strcmp (property, "value")  == 0)
+			d->value = value;
+		if (strcmp (property, "name")  == 0)
+			d->name = value;
+		if (strcmp (property, "id")  == 0)
+			d->id = value;
+		if (strcmp (property, "type") == 0)
+			d->type = value;
+	}
 }
 
 std::string ChromeElement::getComputedStyle(const char* style) {
@@ -392,5 +418,33 @@ std::string ChromeElement::getComputedStyle(const char* style) {
 	return value;
 }
 
+InputData* ChromeElement::findInputData() {
+	PageData* pageData = app->getPageData();
+	if (pageData == NULL)
+		return NULL;
+	for (std::vector<InputData>::iterator it = pageData->inputs.begin();
+			it != pageData->inputs.end();
+			it++)
+	{
+		InputData &d = *it;
+		if (d.soffidId == externalId)
+			return &d;
+	}
+	for (std::vector<FormData>::iterator it2 = pageData->forms.begin();
+			it2 != pageData->forms.end();
+			it2++)
+	{
+		FormData &f = *it2;
+		for (std::vector<InputData>::iterator it = f.inputs.begin();
+				it != f.inputs.end();
+				it++)
+		{
+			InputData &d = *it;
+			if (d.soffidId == externalId)
+				return &d;
+		}
+	}
+	return NULL;
+}
 }
 

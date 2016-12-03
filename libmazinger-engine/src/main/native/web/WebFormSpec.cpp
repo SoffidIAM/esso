@@ -127,3 +127,58 @@ void WebFormSpec::dump() {
 			szId == NULL? "": szId,
 			szRefAs == NULL? "": szRefAs);
 }
+
+bool WebFormSpec::matches(AbstractWebApplication *app, FormData& form) {
+	if ( ! matchValue(reAction, form.action.c_str()) ||
+			! matchValue (reMethod, form.method.c_str()) )
+	{
+		return false;
+	}
+	if (!WebComponentSpec::matches(app, form))
+	{
+		return false;
+	}
+	if (m_children.size() == 0)
+	{
+		return true;
+	}
+
+
+	bool ok = true;
+	for (std::vector<WebComponentSpec*>::iterator it = m_children.begin();
+			it != m_children.end();
+			it++)
+	{
+		(*it)->clearMatches();
+		for (std::vector<InputData>::iterator it2 = form.inputs.begin (); it2 != form.inputs.end(); it2++)
+		{
+			if ((*it)->matches(app, *it2)) break;
+		}
+		if ((*it)->getMatched() == NULL && ! (*it)->m_bOptional)
+		{
+			MZNSendDebugMessageA("Form %s: missing element: ",
+					form.name.c_str());
+			(*it)->dump();
+			ok = false;
+		}
+	}
+
+	if (!ok)
+	{
+		for (std::vector<WebComponentSpec*>::iterator it = m_children.begin();
+				it != m_children.end();
+				it++)
+		{
+			(*it)->clearMatches();
+		}
+		clearMatches();
+		return false;
+	}
+	else
+		return true;
+
+}
+
+bool WebFormSpec::matches(AbstractWebApplication *app, InputData& input) {
+	return false;
+}

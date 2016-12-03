@@ -13,6 +13,7 @@
 class LockableObject {
 private:
 	int locks;
+	std::string str;
 
 public:
 	LockableObject();

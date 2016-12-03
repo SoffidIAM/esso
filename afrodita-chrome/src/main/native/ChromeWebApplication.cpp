@@ -23,6 +23,8 @@ namespace mazinger_chrome
 
 
 ChromeWebApplication::~ChromeWebApplication() {
+	if (pageData != NULL)
+		delete pageData;
 	this->webPage->release();
 }
 
@@ -113,6 +115,10 @@ void ChromeWebApplication::getDomain(std::string & value)
 
 std::string ChromeWebApplication::toString() {
 	return std::string("ChromeWebApplication ")+threadStatus->pageId;
+}
+
+AbstractWebElement* ChromeWebApplication::getElementBySoffidId(const char* id) {
+	return new ChromeElement (this, id);
 }
 
 void ChromeWebApplication::generateCollection(const char* msg[],
@@ -212,6 +218,7 @@ ChromeWebApplication::ChromeWebApplication(ThreadStatus *threadStatus) {
 	this->threadStatus = threadStatus;
 	title = threadStatus->title;
 	url = threadStatus->url;
+	pageData = threadStatus -> pageData;
 	this->webPage = new SmartWebPage;
 }
 
@@ -248,5 +255,13 @@ void ChromeWebApplication::unSubscribe(const char* eventName,
 		WebListener* listener) {
 }
 
+
+bool ChromeWebApplication::supportsPageData() {
+	return true;
 }
 
+PageData* ChromeWebApplication::getPageData() {
+	return pageData;
+}
+
+}

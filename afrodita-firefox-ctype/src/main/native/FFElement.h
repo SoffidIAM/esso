@@ -12,10 +12,13 @@
 
 #include <WebListener.h>
 
+class InputData;
+class FFWebApplication;
+
 
 class FFElement: public AbstractWebElement {
 public:
-	FFElement(long docId, long elementId);
+	FFElement(FFWebApplication *app, long elementId);
 	virtual void getChildren (std::vector<AbstractWebElement*> &children);
 	virtual AbstractWebElement* getOffsetParent();
 	virtual AbstractWebElement* getParent();
@@ -46,6 +49,8 @@ public:
 private:
 	long docId;
 	long elementId;
+	FFWebApplication *app;
+	InputData *findInputData ();
 protected:
 	virtual ~FFElement();
 };

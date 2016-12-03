@@ -33,6 +33,7 @@
 						<compilerMiddleOption>-Wall</compilerMiddleOption>
 						<compilerMiddleOption>-g3</compilerMiddleOption>
 						<compilerMiddleOption>-O0</compilerMiddleOption>
+						<compilerMiddleOption>-DVERSION="${pom.version}"</compilerMiddleOption>
 					</compilerMiddleOptions>
 					<linkerMiddleOptions>
 						<linkerMiddleOption>-m64</linkerMiddleOption>
@@ -49,6 +50,7 @@
 						<linkerEndOption>-lsoup-2.4</linkerEndOption>
 						<linkerEndOption>-lglib-2.0</linkerEndOption>
 						<linkerEndOption>-lpthread</linkerEndOption>
+                        <linkerEndOption>-Wl,-Map=target/${pom.artifactId}-${pom.version}.mapfile.txt</linkerEndOption>
 					</linkerEndOptions>
 					<sources>
 						<source>

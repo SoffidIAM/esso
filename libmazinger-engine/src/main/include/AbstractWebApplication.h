@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 #include <LockableObject.h>
+#include "PageData.h"
+
 class AbstractWebElement;
 class SmartWebPage;
 class WebListener;
@@ -24,6 +26,8 @@ protected:
 	virtual ~AbstractWebApplication() {
 	}
 public:
+	virtual bool supportsPageData () = 0;
+	virtual PageData* getPageData() = 0;
 	virtual void getUrl (std::string &value) = 0;
 	virtual void getTitle (std::string &value) = 0;
 	virtual void getContent (std::string &value) = 0;
@@ -31,6 +35,7 @@ public:
 	virtual void getCookie (std::string &value) = 0;
 	virtual AbstractWebElement* getDocumentElement () = 0;
 	virtual AbstractWebElement * getElementById (const char*id) = 0;
+	virtual AbstractWebElement * getElementBySoffidId (const char*id) = 0;
 	virtual AbstractWebElement * createElement(const char *tagName) = 0;
 	virtual void getElementsByTagName (const char* tag, std::vector<AbstractWebElement*> &elements) = 0;
 	virtual void getAnchors (std::vector<AbstractWebElement*> &elements) = 0;

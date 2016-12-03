@@ -11,6 +11,9 @@
 #include "EventHandler.h"
 #include <map>
 #include <SmartWebPage.h>
+#include "WebAddonHelper.h"
+#include <json/Encoder.h>
+#include "SeyconServer.h"
 
 #ifdef WIN32
 #include <windows.h>
@@ -115,8 +118,6 @@ extern "C" void AFRevaluate (long  id) {
 
 	//MZNC_waitMutex();
 
-	MZNSendDebugMessage("Evaluating page %ld", id);
-
 	FFWebApplication *app = new FFWebApplication(id);
 
 	std::map<long,SmartWebPage*>::iterator it = status.find(id);
@@ -126,6 +127,7 @@ extern "C" void AFRevaluate (long  id) {
 		app->setPage(page);
 		status[id] = page;
 	} else {
+		it->second->lock();
 		app->setPage(it->second);
 	}
 
@@ -135,23 +137,91 @@ extern "C" void AFRevaluate (long  id) {
 	//MZNC_endMutex();
 }
 
+extern "C" void AFRevaluate2 (long  id, const char *data) {
+
+	//MZNC_waitMutex();
+
+	FFWebApplication *app = new FFWebApplication(id);
+
+	app->pageData = new PageData();
+	app->pageData->loadJson(data);
+
+	std::map<long,SmartWebPage*>::iterator it = status.find(id);
+	if (it == status.end())
+	{
+		SmartWebPage * page = new SmartWebPage();
+		app->setPage(page);
+		page->lock();
+		status[id] = page;
+	} else {
+		SmartWebPage *page = it->second;
+		page->lock();
+		app->setPage(page);
+	}
+
+
+	MZNWebMatch(app);
+
+	app->release();
+	//MZNC_endMutex();
+}
+
 extern "C" void AFRdismiss (long  id) {
-	MZNSendDebugMessageA("<<<<<<<<<<<<<<<<<<<< Cleaning page %ld >>>>>>>>>>>>>>>>>>>>>>>>", id);
+	FFWebApplication *app = new FFWebApplication(id);
+	EventHandler::getInstance()->unregisterAllEvents(app);
+	app->release();
 	std::map<long,SmartWebPage*>::iterator it = status.find(id);
 	if (it != status.end())
 	{
 		it->second->release();
 		status.erase(it);
 	}
-	FFWebApplication *app = new FFWebApplication(id);
-	EventHandler::getInstance()->unregisterAllEvents(app);
-	app->release();
 }
 
 
 
 extern "C" void AFRevent (long  eventId) {
 	EventHandler::getInstance()->process (eventId);
+}
+
+extern "C" void AFRevent2 (long  eventId, long elementId) {
+	EventHandler::getInstance()->process (eventId, elementId);
+}
+
+
+#define QUOTE(name) #name
+#define STR(macro) QUOTE(macro)
+extern "C" char * AFRgetVersion () {
+	std::string link;
+	SeyconCommon::readProperty("AutoSSOURL", link);
+
+	std::string response = "{\"action\": \"version\", \"version\":\"" STR(VERSION) "\", \"url\":";
+	response += json::Encoder::encode(link.c_str());
+	response += "}";
+
+	return strdup(response.c_str());
+}
+
+extern "C" char * AFRsearch (const char *text) {
+	WebAddonHelper h;
+	std::vector<UrlStruct> result;
+	h.searchUrls (MZNC_utf8towstr(text), result);
+	std::string response = " [";
+	bool first = true;
+	for ( std::vector<UrlStruct>::iterator it = result.begin(); it != result.end (); it++)
+	{
+		UrlStruct s = *it;
+		if (first) first = false;
+		else response += ",";
+		response += "{\"url\":";
+		response += json::Encoder::encode (MZNC_wstrtoutf8(s.url.c_str()).c_str());
+		response += ",\"name\":";
+		response += json::Encoder::encode (MZNC_wstrtoutf8(s.description.c_str()).c_str());
+		response += "}";
+	}
+	response += "]";
+
+	return strdup (response.c_str());
 }
 
 extern "C" void Test (const char *id) {

@@ -69,6 +69,7 @@
 						<linkerMiddleOption>-lpcreposix</linkerMiddleOption>
 						<linkerMiddleOption>-lwsock32</linkerMiddleOption>
 						<linkerMiddleOption>-lsee</linkerMiddleOption>
+						<linkerMiddleOption>-ldbghelp</linkerMiddleOption>
 						<linkerMiddleOption>-lmpr</linkerMiddleOption>
 						<linkerMiddleOption>-lgdi32</linkerMiddleOption>
 						<linkerMiddleOption>-lcrypt32</linkerMiddleOption>

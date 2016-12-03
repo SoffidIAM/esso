@@ -10,11 +10,14 @@
 #include <stdio.h>
 #include "json/JsonMap.h"
 #include "json/JsonValue.h"
+#include "json/JsonVector.h"
 #include <stdlib.h>
 #include <string.h>
 #include "ChromeWebApplication.h"
+#include "ChromeElement.h"
 #include "json/Encoder.h"
 #include <exception>
+#include "WebAddonHelper.h"
 
 #ifndef WIN32
 #include <pthread.h>
@@ -25,6 +28,68 @@
 using namespace json;
 
 namespace mazinger_chrome {
+
+/**
+ * Semaphore control
+ */
+#ifdef WIN32
+HANDLE hMutex = NULL;
+static HANDLE getMutex() {
+	if (hMutex == NULL)
+	{
+		hMutex = CreateMutexA(NULL, FALSE, NULL);
+
+	}
+	return hMutex;
+}
+
+
+static bool waitMutex () {
+	HANDLE hMutex = getMutex();
+	if (hMutex != NULL)
+	{
+		DWORD dwResult = WaitForSingleObject (hMutex, INFINITE);
+		if (dwResult == WAIT_OBJECT_0)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+static void endMutex () {
+	HANDLE hMutex = getMutex();
+	if (hMutex != NULL)
+	{
+		ReleaseMutex (hMutex);
+	}
+}
+
+#else
+static sem_t semaphore;
+static bool sem_initialized= false;
+sem_t* getSemaphore () {
+	if (! sem_initialized)
+		sem_init ( &semaphore, 0, 1);
+
+	return &semaphore;
+}
+
+static bool waitMutex () {
+	sem_t* s = getSemaphore();
+	if (s != NULL && sem_wait(s) == 0)
+			return true;
+	return false;
+}
+
+static void endMutex () {
+	sem_t* s = getSemaphore();
+	if (s != NULL)
+		sem_post(s);
+}
+
+
+#endif
 
 CommunicationManager *CommunicationManager::instance = NULL;
 
@@ -166,20 +231,30 @@ JsonAbstractObject* CommunicationManager::call(bool &error, const char*messages[
 		msg += Encoder::encode(messages[i]);
 	}
 	msg += "}";
+
+//	MZNSendDebugMessageA("Calling %s", msg.c_str());
+
 	writeMessage(msg);
 
 
 
-	std::map<std::string,ThreadStatus*>::iterator it = threads.find(pageId);
-	if (it == threads.end())
+	ThreadStatus *ts = NULL;
+
+	if (waitMutex())
 	{
-		error = true;
-		MZNSendDebugMessage("ERROR :Thread not found for %s", pageId.c_str());
+		std::map<std::string,ThreadStatus*>::iterator it = threads.find(pageId);
+		if (it == threads.end())
+		{
+			error = true;
+			endMutex();
+			return NULL;
+		} else {
+			ts = it->second;
+			endMutex();
+		}
+	} else {
 		return NULL;
 	}
-
-
-	ThreadStatus *ts = it->second;
 
 	JsonAbstractObject *jsonMsg = ts->waitForMessage();
 	if (jsonMsg == NULL)
@@ -190,8 +265,8 @@ JsonAbstractObject* CommunicationManager::call(bool &error, const char*messages[
 	}
 
 
-	std::string s;
-	jsonMsg->write(s, 3);
+//	std::string s;
+//	jsonMsg->write(s, 3);
 //	MZNSendDebugMessage("Message      %s", msg.c_str());
 //	MZNSendDebugMessage("Got response %s", s.c_str());
 	JsonMap  *map = dynamic_cast<JsonMap*> (jsonMsg);
@@ -212,8 +287,6 @@ JsonAbstractObject* CommunicationManager::call(bool &error, const char*messages[
 			if (ex != NULL)
 			{
 				MZNSendDebugMessage("Error got from Chrome port: %s", ex->value.c_str());
-				map->remove("exception");
-				delete ex;
 			}
 			delete jsonMsg;
 			return NULL;
@@ -242,8 +315,21 @@ static void* linuxThreadProc (void *arg)
 #endif
 {
 	ThreadStatus *ts = (ThreadStatus*) arg;
+//	MZNSendDebugMessage("Created THREAD [%s] %s", ts->pageId.c_str(), ts->url.c_str());
 	CommunicationManager::getInstance()->threadLoop(ts);
+//	MZNSendDebugMessage("Remvoed THREAD [%s] %s", ts->pageId.c_str(), ts->url.c_str());
 	return NULL;
+}
+
+static PageData * parsePageData (ThreadStatus *status, JsonMap* map)
+{
+	if (map == NULL)
+		return NULL;
+	PageData *pd = new PageData();
+
+	pd->loadJson(map);
+
+	return pd;
 }
 
 void CommunicationManager::mainLoop() {
@@ -260,18 +346,30 @@ void CommunicationManager::mainLoop() {
 		JsonMap *jsonMap = dynamic_cast<JsonMap*>(message);
 		JsonValue* messageName = dynamic_cast<JsonValue*>(jsonMap->getObject("message"));
 		JsonValue* pageId = dynamic_cast<JsonValue*>(jsonMap->getObject("pageId"));
+		JsonMap *jsonPageData = dynamic_cast<JsonMap*>(jsonMap->getObject("pageData"));
 
 		std::string t;
 		jsonMap->write(t, 3);
+//		MZNSendDebugMessage("RECEIVED MSG**********************");
+//		MZNSendDebugMessage("Received %s", t.c_str());
 		if (messageName != NULL && messageName->value == "onLoad" && pageId != NULL)
 		{
 			JsonValue* title = dynamic_cast<JsonValue*>(jsonMap->getObject("title"));
 			JsonValue* url = dynamic_cast<JsonValue*>(jsonMap->getObject("url"));
 
-			ThreadStatus *ts = threads[pageId->value];
+			ThreadStatus *ts = NULL;
+			if (waitMutex())
+			{
+				ts = threads[pageId->value];
+				endMutex();
+			}
+
 			if (ts != NULL && ! ts->end)
 			{
 				ts->refresh = true;
+				if (ts->pageData != NULL)
+					delete ts->pageData;
+				ts->pageData = parsePageData(ts,jsonPageData);
 				ts->notifyEventMessage();
 			}
 			else
@@ -284,23 +382,37 @@ void CommunicationManager::mainLoop() {
 						ts->title = title->value;
 					if (url != NULL)
 						ts->url = url->value;
-					threads[ts->pageId] = ts;
+					ts->pageData = parsePageData ( ts, jsonPageData );
+					if (waitMutex())
+					{
+						threads[ts->pageId] = ts;
+						endMutex();
 #ifdef WIN32
-					CreateThread (NULL,  0, win32ThreadProc, ts,0, NULL);
+						CreateThread (NULL,  0, win32ThreadProc, ts,0, NULL);
 #else
-					pthread_t threadId;
-					pthread_create(&threadId, NULL, linuxThreadProc, ts);
+						pthread_t threadId;
+						pthread_create(&threadId, NULL, linuxThreadProc, ts);
 #endif
+					}
 				}
 			}
 		}
-		else if (messageName != NULL && messageName->value == "onUnload" && pageId != NULL)
+		else if (messageName != NULL &&
+				(messageName->value == "onUnload" || messageName->value == "onUnload2") &&
+				pageId != NULL)
 		{
+//			MZNSendDebugMessageA("THREAD TO END");
 			if (pageId != NULL)
 			{
-				ThreadStatus *ts = threads[pageId->value];
+				ThreadStatus *ts = NULL;
+				if (waitMutex())
+				{
+					ts = threads[pageId->value];
+					endMutex();
+				}
 				if (ts != NULL)
 				{
+//					MZNSendDebugMessageA("THREAD TO END %s", ts->url.c_str());
 					ts->end = true;
 					ts->notifyEventMessage();
 				}
@@ -309,81 +421,167 @@ void CommunicationManager::mainLoop() {
 		else if (messageName != NULL && messageName->value == "event" && pageId != NULL)
 		{
 			JsonValue* eventId = dynamic_cast<JsonValue*>(jsonMap->getObject("eventId"));
+			JsonValue* target = dynamic_cast<JsonValue*>(jsonMap->getObject("target"));
 
 			if (pageId != NULL && eventId != NULL)
 			{
-				ThreadStatus *ts = threads[pageId->value];
-				if (ts != NULL)
+				if (waitMutex ())
 				{
-					std::map<std::string,ActiveListenerInfo*>::iterator it = activeListeners.find(eventId->value);
-					if (it != activeListeners.end())
+					ThreadStatus *ts = threads[pageId->value];
+					if (ts != NULL)
 					{
-						ActiveListenerInfo *ali = it->second;
-						ts->pendingEvents.push_front(ali);
-						ts->notifyEventMessage();
-					}
+						std::map<std::string,ActiveListenerInfo*>::iterator it = activeListeners.find(eventId->value);
+						if (it != activeListeners.end())
+						{
+							ActiveListenerInfo *ali = it->second;
+
+							endMutex();
+
+							Event *ev = new Event();
+							ev->target = (target == NULL ? "" : target->value.c_str());
+							ev->listener = ali;
+							ts->pendingEvents.push(ev);
+							ts->notifyEventMessage();
+						}
+						else
+							endMutex();
+					} else
+						endMutex();
 				}
 			}
 		}
+		if (messageName != NULL && messageName->value == "search" && pageId != NULL)
+		{
+			JsonValue* text = dynamic_cast<JsonValue*>(jsonMap->getObject("text"));
+//			MZNSendDebugMessage("Received event %s : %s", messageName->value.c_str(), text->value.c_str());
+			WebAddonHelper h;
+			std::vector<UrlStruct> result;
+			h.searchUrls (MZNC_utf8towstr(text->value.c_str()), result);
+			std::string response = " {\"action\":\"searchResult\", \"pageId\":\""+pageId->value +"\",\"result\": [";
+			bool first = true;
+			for ( std::vector<UrlStruct>::iterator it = result.begin(); it != result.end (); it++)
+			{
+				UrlStruct s = *it;
+				if (first) first = false;
+				else response += ",";
+				response += "{\"url\":";
+				response += Encoder::encode (MZNC_wstrtoutf8(s.url.c_str()).c_str());
+				response += ",\"name\":";
+				response += Encoder::encode (MZNC_wstrtoutf8(s.description.c_str()).c_str());
+				response += "}";
+			}
+			response += "]}";
+//			MZNSendDebugMessage("Response %s", response.c_str());
+			writeMessage(response);
+		}
 		else if (messageName != NULL && messageName->value == "info" && pageId != NULL)
 		{
+			std::string link;
+			SeyconCommon::readProperty("AutoSSOURL", link);
+
 #define QUOTE(name) #name
 #define STR(macro) QUOTE(macro)
-			std::string response = "{\"action\": \"version\", \"version\":\"" STR(VERSION) "\", \"pageId\":\""+pageId->value +"\"}";
+			std::string response = "{\"action\": \"version\", \"version\":\"" STR(VERSION) "\", \"url\":";
+			response += Encoder::encode(link.c_str());
+			response += ",\"pageId\":\""+pageId->value +"\"}";
 			writeMessage(response);
 		}
 		else if ( messageName != NULL && messageName->value == "response")
 		{
 			if ( pageId != NULL)
 			{
-				std::map<std::string,ThreadStatus*>::iterator it = threads.find(pageId->value);
-				if (it != threads.end() && ! it->second->end)
+				if (waitMutex())
 				{
-					it->second->notifyMessage(jsonMap);
-					deleteMap = false;
+					std::map<std::string,ThreadStatus*>::iterator it = threads.find(pageId->value);
+					if (it != threads.end() && ! it->second->end)
+					{
+						it->second->notifyMessage(jsonMap);
+						deleteMap = false;
+					}
+					endMutex();
 				}
 			}
 		}
 		if (deleteMap)
-			delete jsonMap;
+			delete message;
 	} while (true);
 }
 
 void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 	ChromeWebApplication *cwa = new ChromeWebApplication (threadStatus);
+	std::string url;
+	cwa->getUrl(url);
+//	MZNSendDebugMessageA("Started thread for %s", url.c_str());
+	cwa->setPageData( threadStatus->pageData );
+	threadStatus->pageData = NULL;
 	threadStatus->refresh = false;
 	MZNWebMatch(cwa);
+	int last = 0;
 	while (! threadStatus->end)
 	{
-		ActiveListenerInfo *event = threadStatus->waitForEvent();
+		Event *event = threadStatus->waitForEvent();
 		if (event != NULL)
 		{
-			event->listener->onEvent(event->event.c_str(), event->app, event->element);
-			// Do not delete as it will be reused for another event instance
-			// delete event;
+			last = 0;
+			ActiveListenerInfo *listener = event->listener;
+			if (! event->target.empty())
+			{
+				AbstractWebElement *element = new ChromeElement(listener->app, event->target.c_str());
+				listener->listener->onEvent(listener->event.c_str(), listener->app, element);
+				element->release();
+			} else {
+				listener->listener->onEvent(listener->event.c_str(), listener->app, listener->element);
+			}
+			delete event;
+		}
+		else
+		{
+			// Check if page has died
+			last ++;
+			if (last > 6)
+			{
+				last = 0;
+				AbstractWebElement *body = cwa->getDocumentElement();
+				if (body != NULL)
+					body->release();
+				else
+				{
+					threadStatus->end = true;
+				}
+			}
 		}
 		if (threadStatus->refresh)
 		{
+			if (cwa->getPageData() != NULL)
+				delete cwa->getPageData();
 			threadStatus->refresh = false;
+			cwa->setPageData(threadStatus->pageData);
+			threadStatus->pageData = NULL;
 			MZNWebMatch(cwa);
 		}
 	}
-	threads.erase(threadStatus->pageId);
-	for (std::map<std::string,ActiveListenerInfo*>::iterator it = activeListeners.begin(); it != activeListeners.end();)
+	if (waitMutex())
 	{
-		if (it->second->app == cwa)
+		threads.erase(threadStatus->pageId);
+		for (std::map<std::string,ActiveListenerInfo*>::iterator it = activeListeners.begin(); it != activeListeners.end();)
 		{
-			ActiveListenerInfo *ali = it->second;
-			std::map<std::string,ActiveListenerInfo*>::iterator it2 = it ++;
-			activeListeners.erase(it2);
-			ali->element->release();
-			ali->listener->release();
-			delete ali;
+			if (it->second->app == cwa)
+			{
+				ActiveListenerInfo *ali = it->second;
+				std::map<std::string,ActiveListenerInfo*>::iterator it2 = it ++;
+				activeListeners.erase(it2);
+				ali->element->release();
+				ali->listener->release();
+				delete ali;
+			}
+			else
+				it ++;
 		}
-		else
-			it ++;
+		endMutex();
 	}
 	cwa->release();
+	if (threadStatus -> pageData != NULL)
+		delete threadStatus->pageData;
 	delete threadStatus;
 }
 
@@ -403,23 +601,33 @@ std::string CommunicationManager::registerListener(ChromeElement* element,
 	al->element->lock();
 	al->listener->lock();
 	std::string id = ach;
-	activeListeners[ach] = al;
+	if (waitMutex())
+	{
+		activeListeners[ach] = al;
+		endMutex();
+	}
+//	MZNSendDebugMessageA("Registering listener %s [ %s ]",event, ach);
 	return id;
 }
 
 std::string CommunicationManager::unregisterListener(ChromeElement* element,
 		const char* event, WebListener* listener) {
-	for (std::map<std::string,ActiveListenerInfo*>::iterator it = activeListeners.begin(); it != activeListeners.end(); it++)
+	if (waitMutex())
 	{
-		ActiveListenerInfo *al = it->second;
-		if (al->element->equals (element) && al->event == event && al->listener == listener)
+		for (std::map<std::string,ActiveListenerInfo*>::iterator it = activeListeners.begin(); it != activeListeners.end(); it++)
 		{
-			std::string id = it->first;
-			al->element->release();
-			al->listener->release();
-			activeListeners.erase(id);
-			return  id;
+			ActiveListenerInfo *al = it->second;
+			if (al->element->equals (element) && al->event == event && al->listener == listener)
+			{
+				std::string id = it->first;
+				al->element->release();
+				al->listener->release();
+				activeListeners.erase(id);
+				endMutex();
+				return  id;
+			}
 		}
+		endMutex();
 	}
 	return std::string ("");
 

@@ -105,7 +105,7 @@ MazingerEnv* MazingerEnv::getEnv(const char *user, const char*desktop) {
 		}
 	}
 	MazingerEnv *env = new MazingerEnv;
-	env->user.assign (user);
+	env->user = user;
 	env->desktop = desktop;
 	environments.push_back(env);
 	return env;
@@ -327,8 +327,8 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 	if (pMazingerData != NULL && ( readOnly || ! openReadOnly))
 		return pMazingerData;
 
-	if (shm < 0 || ( readOnly && ! openReadOnly)) {
-		if (shm < 0)
+	if (shm < 0 || ( ! readOnly && openReadOnly)) {
+		if (shm >= 0)
 			::close (shm);
 		if (shmName.size() == 0) {
 			shmName.assign ("/MazingerData-");
@@ -338,10 +338,12 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 		SeyconCommon::debug ("Opening %s\n", shmName.c_str());
 		shm = shm_open (shmName.c_str(), readOnly ? O_RDONLY : O_RDWR, 0600);
 		if (shm < 0) {
+			SeyconCommon::debug ("CANNOT OPEN SHM");
 			if (readOnly) return NULL;
 
 			shm = shm_open (shmName.c_str(), O_RDWR|O_CREAT, 0600);
 			if (shm < 0) {
+				SeyconCommon::debug ("CANNOT CREATE SHM");
 				if (! readOnly) {
 					fprintf (stderr, "Unable to create shared memory %s", shmName.c_str());
 					perror ("Error: ");

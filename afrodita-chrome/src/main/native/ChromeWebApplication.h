@@ -13,6 +13,7 @@
 
 #include <AbstractWebApplication.h>
 #include <SmartWebPage.h>
+class PageData;
 
 namespace mazinger_chrome
 {
@@ -24,12 +25,15 @@ public:
     ChromeWebApplication(ThreadStatus *thread);
 	virtual ~ChromeWebApplication();
 
+	virtual bool supportsPageData () ;
+	virtual PageData* getPageData() ;
 	virtual void getUrl (std::string &value) ;
 	virtual void getTitle (std::string &value) ;
 	virtual void getContent (std::string &value) ;
 	virtual void getDomain (std::string &value) ;
 	virtual void getCookie (std::string &value) ;
 	virtual AbstractWebElement* getDocumentElement ();
+	virtual AbstractWebElement * getElementBySoffidId (const char*id) ;
 	virtual AbstractWebElement * getElementById (const char*id) ;
 	virtual void getElementsByTagName (const char*tag, std::vector<AbstractWebElement*> &elements) ;
 	virtual void getAnchors (std::vector<AbstractWebElement*> &elements) ;
@@ -46,11 +50,12 @@ public:
 
 	ThreadStatus *threadStatus;
 	virtual SmartWebPage* getWebPage () { return webPage;}
-
+	void setPageData (PageData *pd) { this->pageData = pd;}
 private:
     std::string url;
     std::string title;
     SmartWebPage *webPage;
+    PageData* pageData;
 
 	void generateCollection(const char* msg[],
 			std::vector<AbstractWebElement*>& elements);

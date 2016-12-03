@@ -473,3 +473,16 @@ void ExplorerWebApplication::installIntervalListener() {
 		pIntervalListener->connectRefresh(this);
 	}
 }
+
+bool ExplorerWebApplication::supportsPageData() {
+	return false;
+}
+
+PageData* ExplorerWebApplication::getPageData() {
+	return NULL;
+}
+
+AbstractWebElement* ExplorerWebApplication::getElementBySoffidId(
+		const char* id) {
+	return NULL;
+}

@@ -122,7 +122,25 @@ void EventHandler::process(long eventId) {
 		EventDispatcher *d = *it;
 		if (d->eventId == eventId) {
 			FFWebApplication *app = new FFWebApplication(d->docId);
-			FFElement *element = d->elementId == 0 ? NULL: new FFElement(d->docId, d->elementId);
+			FFElement *element = d->elementId == 0 ? NULL: new FFElement(app, d->elementId);
+			d->listener->onEvent(d->eventName.c_str(), app, element);
+			if (element != NULL)
+				element->release();
+			if (app != NULL)
+				app->release();
+			break;
+		} else
+			it++;
+	}
+}
+
+void EventHandler::process(long eventId, long elementId) {
+	std::list<EventDispatcher*>::iterator it = dispatchers.begin();
+	while (it != dispatchers.end()) {
+		EventDispatcher *d = *it;
+		if (d->eventId == eventId) {
+			FFWebApplication *app = new FFWebApplication(d->docId);
+			FFElement *element = new FFElement(app, elementId);
 			d->listener->onEvent(d->eventName.c_str(), app, element);
 			if (element != NULL)
 				element->release();

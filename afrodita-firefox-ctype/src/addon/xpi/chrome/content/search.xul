@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window id="donothing" title="Soffid"
+  hidechrome="false"
+  resizable="true"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    
+  <script src="search.js"/>
+    <vbox id="vbox">
+	    <label value="Soffid ESSO extension for Firefox"/>
+    	<hbox id="labelSuccess"  >
+    		Search account: <textbox id="searchBox" focused="true" oninput="onChangeText()" onblur="onBlur();"/>
+    	</hbox>
+    	<vbox id="searchResults"/>
+    	<hbox>
+	    	Desktop ESSO version: <label id="labelVersion"/>
+    	</hbox>
+    	<hbox>
+	    	<label id="selfServiceLink" href="http://www.soffid.com" class="text-link" value="Self service portal"/>
+   		 	<label href="http://www.soffid.com" class="text-link" value="www.soffid.com"/>
+    	</hbox>
+  </vbox>
+</window>  

@@ -199,6 +199,7 @@ void ConfigReader::readBooleanMember (const char *attributeName, bool &attribute
 		if (s != NULL)
 		{
 			attribute = (strcmp("true", s) == 0);
+			free (s);
 		}
 	}
 }
@@ -211,6 +212,7 @@ void ConfigReader::readIntegerMember (const char *attributeName, int &attribute,
 		if (s != NULL)
 		{
 			sscanf ( s, " %d", &attribute);
+			free (s);
 		}
 	}
 }

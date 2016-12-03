@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Soffid Extension's Popup</title>
+    <style>
+      body {
+        min-width: 357px;
+        overflow-x: hidden;
+      }
+
+    </style>
+    <script type="text/javascript" src="popup.js">
+    </script>
+
+  </head>
+  <body>
+    <p id="label">
+	Soffid ESSO extension for Firefox
+    </p>
+    <p id="labelError" style="color: red;" >
+		Desktop ESSO not installed: 
+		<a target="_new" href="http://www.soffid.com/downloads">Download</a>
+    </p>
+    <div id="labelSuccess" style="display: none" >
+    	<p>Search account: <input id="searchBox" autofocus></p>
+    	<div id="searchResults"/>
+    	<p>Desktop ESSO version: <span id="labelVersion"/></p>
+    </div>
+    <p >
+    	<a target="_blank" id="selfServiceLink" href="http://www.soffid.com">Self service portal</a>
+    	<a target="_blank" href="http://www.soffid.com">www.soffid.com</a>
+    </p>
+  </body>
+
+
+</html>
+

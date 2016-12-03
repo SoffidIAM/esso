@@ -267,7 +267,7 @@ void unregisterFFHook ()
 
 	HKEY hKey;
 	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-			"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", 0,
+			"Software\\Mozilla\\Firefox\\Extensions", 0,
 			KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
 	{
 		RegDeleteValueA(hKey, "{df382936-f24b-11df-96e1-9bf54f13e327}");
@@ -279,6 +279,32 @@ void unregisterFFHook ()
 	{
 		log("Cannot unregister firefox extension");
 	}
+}
+
+void unregisterChromeHook ()
+{
+	char szBuff[4096];
+	//
+	//write the default value
+	//
+
+	HKEY hKey;
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+			"Software\\Policies\\Google\\Chrome\\ExtensionInstallForcelist", 0,
+			KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
+	{
+		RegDeleteValueA(hKey, "1");
+		RegCloseKey(hKey);
+		log("Unregistered firefox extension");
+	}
+
+	else
+	{
+		log("Cannot unregister chrome extension");
+	}
+
+	RegDeleteKey(HKEY_CLASSES_ROOT, "Software\\Google\\Chrome\\Extensions\\gacgphonbajokjblndebfhakgcpbemdl");
+	RegDelete64bitsKey(HKEY_CLASSES_ROOT, "Software\\Google\\Chrome\\Extensions\\gacgphonbajokjblndebfhakgcpbemdl");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -543,6 +569,7 @@ void unregisterMazinger ()
 
 	unregisterIEHook();
 	unregisterFFHook();
+	unregisterChromeHook();
 	unregisterShiroKabuto();
 
 	if (IsWindowsXP())

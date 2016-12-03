@@ -2,6 +2,8 @@
 //
 #include "resource.h"
 
+1 RT_MANIFEST "installer.exe.manifest" 
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Ejectuables 32 bits
 Mazinger.exe 			IDT_FILE "com.soffid.iam.esso.w32.Mazinger.exe.bzip"
@@ -10,7 +12,8 @@ KojiHook.dll				IDT_FILE "com.soffid.iam.esso.w32.KojiHook.dll.bzip"
 KojiKabuto.exe 		IDT_FILE "com.soffid.iam.esso.w32.KojiKabuto.exe.bzip"
 uninstall.exe 			IDT_FILE "com.soffid.iam.esso.w32.MazingerUnInstaller.exe.bzip"
 AfroditaE.dll 			IDT_FILE "com.soffid.iam.esso.w32.afrodita-explorer.dll.bzip"
-AfroditaFC.dll 			IDT_FILE "com.soffid.iam.esso.w32.afrodita-firefox-ctype.dll.bzip"
+AfroditaFC32.dll 			IDT_FILE "com.soffid.iam.esso.w32.afrodita-firefox-ctype.dll.bzip"
+AfroditaFC64.dll 			IDT_FILE "com.soffid.iam.esso.w64.afrodita-firefox-ctype.dll.bzip"
 AfroditaC.exe 			IDT_FILE "com.soffid.iam.esso.w32.afrodita-chrome.exe.bzip"
 JetScrander.exe 		IDT_FILE "com.soffid.iam.esso.w32.JetScrander.exe.bzip"
 SayakaGina.dll 		IDT_FILE "com.soffid.iam.esso.w32.SayakaGina.dll.bzip"
@@ -25,17 +28,7 @@ sewbr.dll 				IDT_FILE "com.soffid.iam.esso.w32.Sewbr.dll.bzip"
 profyumi.jar 			IDT_FILE "com.soffid.iam.esso.java.javahook.jar.bzip"
 logon.tcl 					IDT_FILE "logon.tcl.bzip"
 seycon.cer				IDT_FILE "seycon.cer.bzip"
-about.xul 				IDT_FILE "about.xul.bzip"
-ff-overlay.xul 			IDT_FILE "ff-overlay.xul.bzip"
-overlay.properties	IDT_FILE "overlay.properties.bzip"
-overlay.js  				IDT_FILE "overlay.js.bzip"
-afrodita.jsm  			IDT_FILE "afrodita.jsm.bzip"
-Preferences.jsm  			IDT_FILE "Preferences.jsm.bzip"
-about.dtd					IDT_FILE "about.dtd.bzip"
-overlay.properites 	IDT_FILE "overlay.properties.bzip"
-prefs.js 					IDT_FILE "prefs.js.bzip"
-chrome.manifest 	IDT_FILE "chrome.manifest.bzip"
-install.rdf 				IDT_FILE "install.rdf.bzip"
+afroditaFf.xpi 				IDT_FILE "afroditaFf.xpi.bzip"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Ejectuables 64 bits

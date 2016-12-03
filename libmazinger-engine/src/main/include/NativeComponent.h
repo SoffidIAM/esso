@@ -28,7 +28,8 @@ public:
 	virtual void freeze ();
 	virtual void unfreeze ();
 	void dump ();
-	void dumpXML (int depth);
+	void dumpXML (int depth, NativeComponent *focus);
+	void dumpXML (int depth) {dumpXML (depth, NULL);}
 
 protected:
 	NativeComponent ();

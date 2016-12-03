@@ -24,11 +24,13 @@
 
 SmartWebPage::SmartWebPage() {
 	parsed = false;
+	listener = NULL;
 	rootForm = new SmartForm(this);
 }
 
 SmartWebPage::~SmartWebPage() {
-	rootForm->release();
+	if (rootForm !=NULL)
+		rootForm->release();
 	for (std::vector<SmartForm*>::iterator it = forms.begin(); it != forms.end(); it++)
 	{
 		SmartForm *sf = *it;
@@ -36,46 +38,127 @@ SmartWebPage::~SmartWebPage() {
 	}
 }
 
+class OnAnyElementFocusListener: public WebListener
+{
+public:
+	virtual std::string toString () { return std::string("OnAnyElementFocusListener");}
+	SmartWebPage *page;
+	virtual void onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component);
+};
 
-void SmartWebPage::parse(AbstractWebApplication* app) {
-	std::vector<AbstractWebElement*> inputs2;
-	std::vector<AbstractWebElement*> forms;
-
-	MZNSendDebugMessageA("* Searching inputs");
-	app->getElementsByTagName("input", inputs2 );
-	MZNSendDebugMessageA("* Found %d inputs", inputs2.size());
-
-
-	MZNSendDebugMessageA("* Parsing HTML document");
-	if (! rootForm->isParsed())
-		rootForm->parse(app, NULL);
-	else
-		rootForm->reparse();
-	app->getForms(forms);
-
-	int i = 0;
-	for (std::vector<AbstractWebElement*>::iterator it = forms.begin(); it != forms.end(); it++)
+void OnAnyElementFocusListener::onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component) {
+	if (MZNC_waitMutex())
 	{
-		AbstractWebElement *element = *it;
-		std::string action;
-		element->getAttribute("action", action);
-		MZNSendDebugMessageA("* Parsing HTML form %d: %s", i++, action.c_str());
-		bool found = false;
-		for (std::vector<SmartForm*>::iterator it2 = this->forms.begin(); it2 != this->forms.end(); it2++)
+		component->sanityCheck();
+		std::string managed = "";
+		std::string tag = "";
+		component->getTagName(tag);
+		component->getProperty("soffidManaged", managed);
+		if (managed != "true" && strcasecmp (tag.c_str(), "input") == 0)
 		{
-			SmartForm *form2 = *it2;
-			if (form2->getRootElement() != NULL && form2->getRootElement()->equals(element))
+			app->sanityCheck();
+			if (page != NULL)
 			{
-				form2->reparse();
-				found = true;
-				break;
+				page->sanityCheck();
+				page -> parse (app);
 			}
 		}
-		if (! found)
+		MZNC_endMutex();
+	}
+
+}
+
+void SmartWebPage::parse(AbstractWebApplication* app) {
+	std::vector<AbstractWebElement*> forms;
+
+	if (! parsed)
+	{
+		OnAnyElementFocusListener* wl;
+		wl = new OnAnyElementFocusListener ();
+		wl->page = this;
+
+		listener = wl;
+
+		std::vector<AbstractWebElement *> bodies;
+		app->getElementsByTagName("body", bodies);
+		for (std::vector<AbstractWebElement*>::iterator it = bodies.begin(); it != bodies.end (); it++)
 		{
-			SmartForm *form = new SmartForm(this);
-			this->forms.push_back(form);
-			form->parse ( app, element);
+			(*it)->subscribe("focus", wl);
+			parsed = true;
+		}
+		wl->release();
+	}
+
+	MZNSendDebugMessageA("* Parsing HTML document");
+	PageData *data = app->getPageData();
+	if (data != NULL)
+	{
+		data->dump();
+		MZNSendDebugMessageA("* Parsing formless inputs");
+		if (! rootForm->isParsed())
+			rootForm->parse(app, NULL, &data->inputs);
+		else
+			rootForm->reparse(&data->inputs);
+
+		for (std::vector<FormData>::iterator it = data->forms.begin(); it != data->forms.end(); it++)
+		{
+			FormData &form = *it;
+			MZNSendDebugMessageA("* Parsing Form %s", form.soffidId.c_str());
+			AbstractWebElement *element = app->getElementBySoffidId(form.soffidId.c_str());
+
+			bool found = false;
+			for (std::vector<SmartForm*>::iterator it2 = this->forms.begin(); it2 != this->forms.end(); it2++)
+			{
+				SmartForm *form2 = *it2;
+				if (form2->getRootElement() != NULL && form2->getRootElement()->equals(element))
+				{
+					form2->reparse(&form.inputs);
+					found = true;
+					break;
+				}
+			}
+			if (! found)
+			{
+				SmartForm *smartForm = new SmartForm(this);
+				this->forms.push_back(smartForm);
+				smartForm->parse ( app, element, &form.inputs);
+			}
+			element->release();
+		}
+	} else {
+		if (! rootForm->isParsed())
+			rootForm->parse(app, NULL, NULL);
+		else
+			rootForm->reparse(NULL);
+		MZNSendDebugMessageA("* Parsed form");
+
+
+		app->getForms(forms);
+
+		int i = 0;
+		for (std::vector<AbstractWebElement*>::iterator it = forms.begin(); it != forms.end(); it++)
+		{
+			AbstractWebElement *element = *it;
+			std::string action;
+			element->getAttribute("action", action);
+			bool found = false;
+			for (std::vector<SmartForm*>::iterator it2 = this->forms.begin(); it2 != this->forms.end(); it2++)
+			{
+				SmartForm *form2 = *it2;
+				if (form2->getRootElement() != NULL && form2->getRootElement()->equals(element))
+				{
+					form2->reparse(NULL);
+					found = true;
+					break;
+				}
+			}
+			if (! found)
+			{
+				SmartForm *form = new SmartForm(this);
+				this->forms.push_back(form);
+				form->parse ( app, element, NULL);
+			}
+			element->release();
 		}
 	}
 
@@ -83,6 +166,21 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 }
 
 
+static std::wstring searchInVector (std::vector<std::pair<std::wstring, std::wstring> > &vector, const std::wstring &key)
+{
+	std::wstring result;
+	for (std::vector<std::pair<std::wstring, std::wstring> >::iterator it = vector.begin();
+			it != vector.end();
+			it++)
+	{
+		if (it->first == key)
+		{
+			result = it->second;
+			break;
+		}
+	}
+	return result;
+}
 
 bool SmartWebPage::getAccounts(const char *system, const char *prefix) {
 	MZNSendDebugMessageA("** Fetching accounts for [%s]", system);
@@ -96,20 +194,24 @@ bool SmartWebPage::getAccounts(const char *system, const char *prefix) {
 	secret += MZNC_strtowstr(system);
 
 	std::vector<std::wstring> accountNames = s.getSecrets(secret.c_str());
-
 	if (accountNames.empty())
 	{
 		return false;
 	}
+
+	std::vector<std::pair<std::wstring, std::wstring> > descriptions =
+			s.getSecretsByPrefix2((std::wstring(L"accdesc.")+MZNC_strtowstr(system)+L".").c_str());
+	std::vector<std::pair<std::wstring, std::wstring> > servers;
+	if (prefix != NULL)
+		servers = s.getSecretsByPrefix2((std::wstring(L"sso.")+MZNC_strtowstr(defaultSoffidSystem.c_str())+L".").c_str());
 
 	int prefixLength = strlen (prefix);
 	for (std::vector<std::wstring>::iterator it = accountNames.begin(); it != accountNames.end(); it++)
 	{
 		std::wstring account = *it;
 		std::wstring secret2 = std::wstring(L"sso.")+MZNC_strtowstr(defaultSoffidSystem.c_str())+L"."+account+L".Server";
-		wchar_t* server = s.getSecret(secret2.c_str());
-		if (server != NULL && wcscmp (server, wPrefix.c_str()) == 0 ||
-				prefix == NULL)
+		std::wstring server = searchInVector(servers, secret2);
+		if (prefix == NULL || server == wPrefix )
 		{
 			char id[10];
 			sprintf (id, "%d", accounts.size()+1);
@@ -117,17 +219,27 @@ bool SmartWebPage::getAccounts(const char *system, const char *prefix) {
 			as.id = id;
 			as.account = account;
 			as.system = MZNC_strtowstr(system);
-			std::wstring prefix = L"accdesc.";
-			wchar_t* fn =  s.getSecret( (prefix + as.system + L"."+ account).c_str());;
-			if (fn == NULL || fn[0] == '\0')
+			std::wstring descEntry = L"accdesc.";
+			descEntry += as.system + L"."+ account;
+
+			std::wstring description;
+			for (std::vector<std::pair<std::wstring, std::wstring> >::iterator it = descriptions.begin();
+					it != descriptions.end();
+					it++)
+			{
+				if (it->first == descEntry)
+				{
+					description = it->second;
+					break;
+				}
+			}
+			if (description.empty())
 				as.friendlyName = account;
 			else
-				as.friendlyName = fn;
-			s.freeSecret(fn);
+				as.friendlyName = description;
 			accounts.push_back(as);
 			MZNSendDebugMessageA("*** Found account %ls", account.c_str());
 		}
-		if (server != NULL) s.freeSecret(server);
 	}
 	return true;
 }

@@ -32,15 +32,22 @@
 // Missing at sddl.h
 wchar_t achMailSlotName[4096] = L"";
 static FILE *logFile = NULL;
-void sendMessage(HANDLE hMailSlot, LPCWSTR lpszMessage) {
+static void sendMessage(HANDLE hMailSlot, LPCWSTR lpszMessage) {
 
 	if (hMailSlot != NULL) {
 		time_t t;
 		DWORD dwWritten = 0;
-		wchar_t ach[10];
 
-		WriteFile(hMailSlot, lpszMessage, 2 * wcslen(lpszMessage), &dwWritten,
-				NULL);
+//		wchar_t achMessage[5021];
+//		snwprintf(achMessage,  sizeof achMessage / sizeof (wchar_t), L"[%lx:%lx] %s",
+//				(long) GetCurrentProcessId(),
+//				(long) GetCurrentThreadId(), lpszMessage);
+//		achMessage [5020] = L'\0';
+
+//		WriteFile(hMailSlot, achMessage,  sizeof (wchar_t) * wcslen(achMessage), &dwWritten,
+//				NULL);
+		WriteFile(hMailSlot, lpszMessage,  sizeof (wchar_t) * wcslen(lpszMessage), &dwWritten,
+						NULL);
 	}
 }
 
@@ -121,7 +128,7 @@ void MZNSendDebugMessageW(LPCWSTR lpszMessage, ...) {
 
 		va_start(v, lpszMessage);
 		WCHAR achMessage[5001];
-		_vsnwprintf(achMessage, sizeof achMessage, lpszMessage, v);
+		_vsnwprintf(achMessage, sizeof achMessage / sizeof (wchar_t), lpszMessage, v);
 		va_end(v);
 		achMessage[5000] = L'\0';
 		sendDebugMessage(achMessage);
@@ -154,7 +161,7 @@ void MZNSendTraceMessageW(LPCWSTR lpszMessage,
 
 		va_start(v, lpszMessage);
 		WCHAR achMessage[5001];
-		_vsnwprintf(achMessage, sizeof achMessage, lpszMessage, v);
+		_vsnwprintf(achMessage, sizeof achMessage / sizeof (wchar_t), lpszMessage, v);
 		va_end(v);
 		achMessage[5000] = L'\0';
 		sendDebugMessage(achMessage);
@@ -186,7 +193,7 @@ void MZNSendSpyMessageW(LPCWSTR lpszMessage, ...) {
 
 		va_start(v, lpszMessage);
 		WCHAR achMessage[5001];
-		_vsnwprintf(achMessage, sizeof achMessage, lpszMessage, v);
+		_vsnwprintf(achMessage, sizeof achMessage / sizeof (wchar_t), lpszMessage, v);
 		va_end(v);
 		achMessage[5000] = L'\0';
 		sendSpyMessage(achMessage);
@@ -309,7 +316,7 @@ void MZNSendDebugMessageW(const wchar_t* lpszMessage, ...) {
 
 		va_start(v, lpszMessage);
 		wchar_t achMessage[5001];
-		vswprintf(achMessage, sizeof achMessage, lpszMessage, v);
+		vswprintf(achMessage, sizeof achMessage / sizeof (wchar_t), lpszMessage, v);
 		va_end(v);
 		achMessage[5000] = L'\0';
 		std::string sz = MZNC_wstrtostr(achMessage);
@@ -340,7 +347,7 @@ void MZNSendTraceMessageW(const wchar_t* lpszMessage,
 
 		va_start(v, lpszMessage);
 		wchar_t achMessage[5001];
-		vswprintf(achMessage, sizeof achMessage, lpszMessage, v);
+		vswprintf(achMessage, sizeof achMessage / sizeof (wchar_t), lpszMessage, v);
 		va_end(v);
 		achMessage[5000] = L'\0';
 		std::string sz = MZNC_wstrtostr(achMessage);
@@ -370,7 +377,7 @@ void MZNSendSpyMessageW(const wchar_t* lpszMessage, ...) {
 
 		va_start(v, lpszMessage);
 		wchar_t achMessage[5001];
-		vswprintf(achMessage, sizeof achMessage, lpszMessage, v);
+		vswprintf(achMessage, sizeof achMessage / sizeof (wchar_t), lpszMessage, v);
 		va_end(v);
 		achMessage[5000] = L'\0';
 		std::string sz = MZNC_wstrtostr(achMessage);

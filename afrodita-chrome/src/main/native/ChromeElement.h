@@ -12,7 +12,7 @@
 #include "AfroditaC.h"
 #include "ChromeWebApplication.h"
 #include <WebListener.h>
-
+#include <PageData.h>
 
 namespace mazinger_chrome
 {
@@ -52,6 +52,7 @@ public:
 private:
 	ChromeWebApplication *app;
 	std::string externalId;
+	InputData* findInputData();
 };
 
 }
