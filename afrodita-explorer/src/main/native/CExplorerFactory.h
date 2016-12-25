@@ -12,6 +12,7 @@
 
 class CExplorerFactory: public IClassFactory {
 public:
+	CExplorerFactory ();
 	//interface IUnknown methods
 	HRESULT __stdcall QueryInterface(
 								REFIID riid ,

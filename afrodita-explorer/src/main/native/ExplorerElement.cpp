@@ -421,6 +421,7 @@ static std::map<WebListener *, CEventListener*> activeListeners;
 
 void ExplorerElement::subscribe(const char* eventName, WebListener* listener) {
 	CEventListener *el = new CEventListener();
+	el->AddRef();
 	el->connect(this, eventName, listener);
 	activeListeners[listener] = el;
 }

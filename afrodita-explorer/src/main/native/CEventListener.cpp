@@ -12,6 +12,8 @@
 #include <string.h>
 
 
+int CEventListener::eventCounter = 0;
+
 CEventListener::CEventListener ()
 {
 	m_pElement = NULL;
@@ -19,12 +21,17 @@ CEventListener::CEventListener ()
 	m_pApplication = NULL;
 	preventLoop = false;
 	isAddEventListener = true;
+	m_eventID = ++eventCounter;
+	m_nRefCount = 0;
+//	MZNSendDebugMessage("Created EventListener %d", m_eventID);
 }
 
 CEventListener::~CEventListener() {
+//	MZNSendDebugMessage("Deleting EventListener %d", m_eventID);
 	if (m_listener != NULL)
 	{
 		m_listener->release();
+		m_listener = NULL;
 
 		IHTMLElement2 *e = NULL;
 		HRESULT hr = m_pElement->getIDispatch()->QueryInterface(IID_IHTMLElement2, reinterpret_cast<void**>(&e));
@@ -32,7 +39,9 @@ CEventListener::~CEventListener() {
 		{
 			VARIANT_BOOL b;
 			BSTR bstr = Utils::str2bstr(m_event.c_str());
+//			MZNSendDebugMessage("Detaching EventListener %d", m_eventID);
 			hr = e->detachEvent(bstr, dynamic_cast<IDispatch*>(this));
+//			MZNSendDebugMessage("Detached EventListener %d", m_eventID);
 			e->Release();
 		}
 	}
@@ -40,6 +49,7 @@ CEventListener::~CEventListener() {
 		m_pElement -> release();
 	if (m_pApplication != NULL)
 		m_pApplication -> release();
+//	MZNSendDebugMessage("Deleted EventListener %d", m_eventID);
 }
 
 void CEventListener::connect (ExplorerElement *pElement,const char *event, WebListener *listener)
@@ -50,6 +60,8 @@ void CEventListener::connect (ExplorerElement *pElement,const char *event, WebLi
 	this -> m_event = event;
 	this -> m_listener = listener;
 	listener->lock();
+
+	//MZNSendDebugMessageA("Connecting eventListener %d", m_eventID);
 
 	std::string tagName;
 	pElement->getTagName(tagName);
@@ -172,7 +184,9 @@ HRESULT __stdcall CEventListener::QueryInterface(REFIID riid, void **ppObj) {
 
 ULONG __stdcall CEventListener::AddRef()
 {
-	return InterlockedIncrement(&m_nRefCount) ;
+	long nRef = InterlockedIncrement(&m_nRefCount);
+//	MZNSendDebugMessageA("CEventListener.addref %d: %ld", m_eventID, nRef);
+	return  nRef;
 }
 
 
@@ -180,6 +194,7 @@ ULONG __stdcall CEventListener::Release()
 {
 	long nRefCount=0;
 	nRefCount=InterlockedDecrement(&m_nRefCount) ;
+//	MZNSendDebugMessageA("CEventListener.release %d: %ld", m_eventID, nRefCount);
 	if (nRefCount == 0) delete this;
 	return nRefCount;
 }
@@ -187,14 +202,14 @@ ULONG __stdcall CEventListener::Release()
 
 // Implementacion de IDispatch
 HRESULT __stdcall CEventListener::GetTypeInfoCount (UINT*n) {
-	MZNSendDebugMessage("GetTypeInfoCount");
+//	MZNSendDebugMessage("GetTypeInfoCount");
 	*n = 0;
 	return S_OK ;
 }
 
 HRESULT __stdcall CEventListener::GetTypeInfo(UINT num, LCID id,LPTYPEINFO* info)
 {
-	MZNSendDebugMessage("GetTypeInfo %d", (int) num);
+//	MZNSendDebugMessage("GetTypeInfo %d", (int) num);
 	return E_NOTIMPL;
 }
 
@@ -206,16 +221,28 @@ HRESULT __stdcall CEventListener::Invoke(DISPID dispIdMember,REFIID riid,LCID lc
 
 	if(!IsEqualIID(riid,IID_NULL)) return DISP_E_UNKNOWNINTERFACE; // riid should always be IID_NULL
 
+	AddRef();
+
+//	MZNSendDebugMessage("Invoked CEventListener Invoke");
 	execute (pDispParams);
+//	MZNSendDebugMessage("End CEventListener Invoke");
+
+	Release();
 	return S_OK;
 }
 
 HRESULT CEventListener::InvokeEx(DISPID id, LCID lcid, WORD wFlags,
 		DISPPARAMS* pDispParams, VARIANT* pvarRes, EXCEPINFO* pei,
 		IServiceProvider* pspCaller) {
-	MZNSendDebugMessage("Invoked CEventListener InvokeEx");
+
+	AddRef();
+//	MZNSendDebugMessage("Invoked CEventListener InvokeEx");
 
 	execute (pDispParams);
+
+//	MZNSendDebugMessage("End CEventListener InvokeEx");
+
+	Release();
 
 	return S_OK;
 }
@@ -246,6 +273,7 @@ HRESULT CEventListener::GetNameSpaceParent(IUnknown** ppunk) {
 }
 
 void CEventListener::execute(DISPPARAMS* pDispParams) {
+//	MZNSendDebugMessageA("Executind eventListener %d", m_eventID);
 	if (m_pElement != NULL && m_listener != NULL)
 	{
 		AbstractWebElement *pElement = m_pElement;
@@ -315,7 +343,7 @@ void CEventListener::execute(DISPPARAMS* pDispParams) {
 			preventLoop = false;
 		}
 	}
-//	MZNSendDebugMessage("End listener::execute");
+//	MZNSendDebugMessage("End listener::execute %d", m_eventID);
 }
 
 HRESULT CEventListener::GetDispID(BSTR bstrName, DWORD grfdex, DISPID* pid) {
@@ -331,7 +359,7 @@ void CEventListener::connectRefresh (ExplorerWebApplication *app)
 	va.vt = VT_DISPATCH;
 	va.pdispVal  = this;
 
-//	MZNSendDebugMessageA("Installing listener");
+//	MZNSendDebugMessageA("Installing refresh listener %d", m_eventID);
 
 	IHTMLWindow2 *w = NULL;
 	IHTMLDocument2* pDoc = app->getHTMLDocument2();

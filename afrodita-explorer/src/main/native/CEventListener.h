@@ -15,6 +15,9 @@ class CEventListener :
 {
     public:
 
+	static int eventCounter;
+
+	int m_eventID;
     //IUnknown interface
     HRESULT __stdcall QueryInterface(
                                 REFIID riid ,
