@@ -11,6 +11,7 @@
 CExplorerEventHandler::CExplorerEventHandler ()
 {
 	m_app = NULL;
+	m_nRefCount = 0;
 }
 
 
