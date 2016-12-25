@@ -7,7 +7,7 @@
 	<parent>
 		<artifactId>KojiHook</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.7.3-enterprise</version>
+		<version>1.7.4-enterprise-SNAPSHOT</version>
 	</parent>
 	<build>
 		<plugins>
