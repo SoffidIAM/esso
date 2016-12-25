@@ -10,6 +10,11 @@
 #include "CExplorerFactory.h"
 #include "CExplorerObj.h"
 
+CExplorerFactory::CExplorerFactory ()
+{
+	m_nRefCount = 0;
+}
+
 HRESULT __stdcall CExplorerFactory::CreateInstance(IUnknown* pUnknownOuter,
                                            const IID& iid,
                                            void** ppv)

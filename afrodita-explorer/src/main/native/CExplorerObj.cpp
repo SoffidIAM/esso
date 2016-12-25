@@ -2,10 +2,11 @@
 #include <stdio.h>
 
 #include "CExplorerObj.h"
-
+#include <MazingerInternal.h>
 
 CExplorerObj::CExplorerObj ()
 {
+	m_nRefCount = 0;
 }
 
 
@@ -65,7 +66,11 @@ ULONG __stdcall CExplorerObj::Release()
 {
 	long nRefCount=0;
 	nRefCount=InterlockedDecrement(&m_nRefCount) ;
-	if (nRefCount == 0) delete this;
+	if (nRefCount == 0) {
+//		MZNSendDebugMessageA("Releasing Explorer object");
+		delete this;
+//		MZNSendDebugMessageA("Released Explorer object");
+	}
 	return nRefCount;
 }
 
