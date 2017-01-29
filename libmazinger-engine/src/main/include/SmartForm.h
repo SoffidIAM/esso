@@ -42,7 +42,9 @@ enum InputStatus {
 	IS_SELECT,
 	IS_LOCKED,
 	IS_MODIFIED,
+	IS_IGNORED
 };
+
 
 class InputDescriptor {
 public:
@@ -55,6 +57,7 @@ public:
 	InputStatus status;
 	bool hasInputData;
 	InputData data;
+	bool existingData;
 
 	long getClientHeight();
 	long getClientWidth ();
@@ -129,6 +132,7 @@ protected:
 	std::string stylePrefix;
 
 	int currentModalInput;
+	bool lockedOnce;
 
 public:
 	unsigned int numPasswords;
