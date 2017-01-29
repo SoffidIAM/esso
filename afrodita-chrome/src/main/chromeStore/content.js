@@ -544,6 +544,9 @@ function soffidLoadProcedure () {
 							var evt  = document.createEvent ("HTMLEvents");
 							evt.initEvent ("change", true, true);
 							element.dispatchEvent(evt);
+							evt  = document.createEvent ("HTMLEvents");
+							evt.initEvent ("input", true, true);
+							element.dispatchEvent(evt);
 						}
 			    	}
 			    	else

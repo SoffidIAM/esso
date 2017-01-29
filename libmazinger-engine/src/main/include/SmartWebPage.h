@@ -60,6 +60,7 @@ public:
 	void getAccountStruct (const char* id, AccountStruct &as);
 	virtual std::string toString () ;
 	std::string getAccountURL (AccountStruct &account);
+	bool isAnyAttributeNamed (const char *attName);
 
 private:
 	bool sendSecret (AccountStruct &account, const char* sso, std::string &value, std::string &errorMsg);
@@ -70,6 +71,7 @@ public:
 	std::string accountDomain;
 	std::string url;
 	std::vector<AccountStruct> accounts;
+	std::vector<std::string> accountAttributes;
 	bool getAccounts(const char *system, const char *prefix);
 
 };

@@ -143,6 +143,7 @@ extern "C" void AFRevaluate2 (long  id, const char *data) {
 
 	FFWebApplication *app = new FFWebApplication(id);
 
+	MZNSendDebugMessageA("EVALUATE : %s", data);
 	app->pageData = new PageData();
 	app->pageData->loadJson(data);
 

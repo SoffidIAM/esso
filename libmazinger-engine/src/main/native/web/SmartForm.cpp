@@ -167,6 +167,7 @@ SmartForm::SmartForm(SmartWebPage *page) {
 	this->onBeforeUnloadListener = NULL;
 	this->onHiddenElementFocusListener = new OnHiddenElementFocusListener();
 	this->onHiddenElementFocusListener->form = this;
+	this->lockedOnce = false;
 	status = SF_STATUS_NEW;
 	char ach[100];
 	sprintf (ach, "_soffid_%ld_id_", (long) (long long) this);
@@ -223,8 +224,18 @@ void SmartForm::findInputs (AbstractWebApplication* app, AbstractWebElement *ele
 			element->getProperty("soffidOnFocusTrigger", soft);
 			if (soft != "true")
 			{
-				element->subscribe("focus", onHiddenElementFocusListener);
+				if (soft != "false")
+					element->subscribe("focus", onHiddenElementFocusListener);
 				element->setProperty("soffidOnFocusTrigger", "true");
+			}
+		}
+		else
+		{
+			std::string soft;
+			element->getProperty("soffidOnFocusTrigger", soft);
+			if (soft == "true")
+			{
+				element->setProperty("soffidOnFocusTrigger", "false");
 			}
 		}
 	}
@@ -253,20 +264,35 @@ void SmartForm::findInputs (std::vector<InputData> *inputDatae, std::vector<Inpu
 			it != inputDatae->end();
 			it ++)
 	{
-		InputDescriptor *id = new InputDescriptor();
-		id->hasInputData = true;
 		InputData inputData = *it;
+
+		InputDescriptor *id = new InputDescriptor();
+
+		id->hasInputData = true;
 		id->data = inputData;
 		id->input = app->getElementBySoffidId(id->data.soffidId.c_str());
-		inputs.push_back(id);
-		if( id->getDisplay() == "none" || id->getVisibility() == "hidden" || id->getClientHeight() < 8)
+		if (id->input != NULL)
 		{
-			std::string soft;
-			id->input->getProperty("soffidOnFocusTrigger", soft);
-			if (soft != "true")
+			inputs.push_back(id);
+			if( id->getDisplay() == "none" || id->getVisibility() == "hidden" || id->getClientHeight() < 8)
 			{
-				id->input->subscribe("focus", onHiddenElementFocusListener);
-				id->input->setProperty("soffidOnFocusTrigger", "true");
+				std::string soft;
+				id->input->getProperty("soffidOnFocusTrigger", soft);
+				if (soft != "true")
+				{
+					if (soft != "false")
+						id->input->subscribe("focus", onHiddenElementFocusListener);
+					id->input->setProperty("soffidOnFocusTrigger", "true");
+				}
+			}
+			else
+			{
+				std::string soft;
+				id->input->getProperty("soffidOnFocusTrigger", soft);
+				if (soft == "true")
+				{
+					id->input->setProperty("soffidOnFocusTrigger", "false");
+				}
 			}
 		}
 	}
@@ -303,6 +329,7 @@ void SmartForm::findInputs (AbstractWebApplication* app, std::vector<InputDescri
 			loopElement->release();
 			loopElement = parent;
 		} while (loopElement != NULL);
+
 		if (!omit)
 		{
 			InputDescriptor *id = new InputDescriptor();
@@ -315,8 +342,18 @@ void SmartForm::findInputs (AbstractWebApplication* app, std::vector<InputDescri
 				element->getProperty("soffidOnFocusTrigger", soft);
 				if (soft != "true")
 				{
-					element->subscribe("focus", onHiddenElementFocusListener);
+					if (soft != "false")
+						element->subscribe("focus", onHiddenElementFocusListener);
 					element->setProperty("soffidOnFocusTrigger", "true");
+				}
+			}
+			else
+			{
+				std::string soft;
+				element->getProperty("soffidOnFocusTrigger", soft);
+				if (soft == "true")
+				{
+					element->setProperty("soffidOnFocusTrigger", "false");
 				}
 			}
 		}
@@ -350,6 +387,15 @@ void SmartForm::updateIcon (InputDescriptor *input)
 {
 	std::string value;
 	input->input->getProperty("value", value);
+
+	if (input->status == IS_IGNORED)
+	{
+		if (input->img != NULL)
+		{
+			input->img->setAttribute("display", "none");
+		}
+		return;
+	}
 
 	if (status == SF_STATUS_LOCKED)
 	{
@@ -435,6 +481,10 @@ void SmartForm::updateIcon (InputDescriptor *input)
 		else if (input->type == IT_NEW_PASSWORD)
 		{
 			input->img->setAttribute("src", _img_resource_generate);
+		}
+		else if (page->accounts.empty())
+		{
+			setDisplayStyle(input->img, "none");
 		}
 		else
 		{
@@ -556,12 +606,6 @@ void SmartForm::addIcon (InputDescriptor *descriptor)
 		}
 		if (img != NULL)
 			img->subscribe("click", onClickListener);
-		if (onChangeListener == NULL)
-		{
-			onChangeListener = new OnChangeListener();
-			onChangeListener->form = this;
-		}
-		input->subscribe("input", onChangeListener);
 		AbstractWebElement *parent = input->getParent();
 		if (parent != NULL)
 		{
@@ -590,13 +634,13 @@ void SmartForm::addIcon (InputDescriptor *descriptor)
 		if (zIndexStr != "")
 		{
 			sscanf (zIndexStr.c_str(), "%d", &zIndex);
-			zIndex ++;
+			zIndex +=10;
 		} else {
 			std::string zIndexStr = input->getComputedStyle("z-index");
 			if (zIndexStr != "")
 			{
 				sscanf (zIndexStr.c_str(), "%d", &zIndex);
-				zIndex ++;
+				zIndex +=10;
 			}
 		}
 		if (input->getComputedStyle("position") == "static" && input->getComputedStyle("float").size() == 0)
@@ -680,6 +724,16 @@ bool SmartForm::addNoDuplicate (InputDescriptor* descriptor)
 			descriptor->type = IT_GENERAL;
 		}
 		descriptor->status = IS_EMPTY;
+
+		descriptor->existingData = true;
+
+		if (onChangeListener == NULL)
+		{
+			onChangeListener = new OnChangeListener();
+			onChangeListener->form = this;
+		}
+		descriptor->input->subscribe("input", onChangeListener);
+
 		inputs.push_back(descriptor);
 		return true;
 	}
@@ -698,7 +752,24 @@ bool SmartForm::addNoDuplicate (InputDescriptor* descriptor)
 	{
 		descriptor->img = NULL;
 		descriptor->type = IT_GENERAL;
-		descriptor->status = IS_EMPTY;
+
+		std::string name;
+		name = descriptor->getName();
+		if (name.empty())
+			name = descriptor->getId();
+		if (name.empty())
+			name = descriptor->getDataBind();
+
+		descriptor->existingData = page->isAnyAttributeNamed(name.c_str());
+		descriptor->status = descriptor -> existingData ? IS_EMPTY: IS_IGNORED;
+
+		if (onChangeListener == NULL)
+		{
+			onChangeListener = new OnChangeListener();
+			onChangeListener->form = this;
+		}
+		descriptor->input->subscribe("input", onChangeListener);
+
 		inputs.push_back(descriptor);
 		return true;
 	}
@@ -867,10 +938,22 @@ void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot,
 	}
 
 
-	if (page->accounts.size() == 1)
+	if (page->accounts.size() == 1 && ! lockedOnce)
 	{
 		AccountStruct as = page->accounts[0];
-		fetchAttributes(as, NULL);
+
+		SecretStore s (MZNC_getUserName());
+		std::wstring secret = L"sso.";
+		secret += as.system;
+		secret += L".";
+		secret += as.account;
+		secret += L".URL";
+		std::string originalURL = MZNC_wstrtostr(s.getSecret(secret.c_str()));
+		if (originalURL == page->url)
+		{
+			fetchAttributes(as, NULL);
+			lockedOnce = true;
+		}
 	}
 }
 
@@ -911,14 +994,28 @@ void SmartForm::reparse(std::vector<InputData> *data) {
 		}
 	}
 
-	if (page->accounts.size() == 1 && status == SF_STATUS_NEW)
+	if (page->accounts.size() == 1 && status == SF_STATUS_NEW && ! lockedOnce)
 	{
 		AccountStruct as = page->accounts[0];
-		fetchAttributes(as, NULL);
-	} else if (page->accounts.size() > 1  && status == SF_STATUS_NEW)
+
+		SecretStore s (MZNC_getUserName());
+		std::wstring secret = L"sso.";
+		secret += as.system;
+		secret += L".";
+		secret += as.account;
+		secret += L".URL";
+		std::string originalURL = MZNC_wstrtostr(s.getSecret(secret.c_str()));
+		if (originalURL == page->url)
+		{
+			fetchAttributes(as, NULL);
+			lockedOnce = true;
+		}
+	}
+	else if (status == SF_STATUS_NEW)
 	{
 		changeStatus(SF_STATUS_SELECT);
-	} else if (newItem && status == SF_STATUS_LOCKED)
+	}
+	else if (newItem && status == SF_STATUS_LOCKED)
 	{
 		fetchAttributes(currentAccount, NULL);
 	}
@@ -947,6 +1044,11 @@ void SmartForm::onChange(AbstractWebElement* element) {
 	page->sanityCheck();
 	element->sanityCheck();
 	element->getProperty("value", value);
+	if (input->status == IS_IGNORED && !value.empty())
+	{
+		input->status = IS_MODIFIED;
+	}
+
 	if (this->status == SF_STATUS_NEW)
 	{
 		if (!value.empty())
@@ -1119,6 +1221,7 @@ void SmartForm::save ()
 				return;
 			}
 		}
+		input->existingData = true;
 	}
 
 	if (this->page->updateAttributes (currentAccount, attributes, msg))
@@ -1275,7 +1378,6 @@ void SmartForm::onClickAccount(AbstractWebElement* element) {
 
 void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedElement)
 {
-	MZNSendDebugMessageA("//////////////////////////////////////////////////////////////////");
 	currentAccount = as;
 	std::map<std::string,std::string> attributes;
 
@@ -1288,7 +1390,6 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 	for (std::vector<InputDescriptor*>::iterator it = inputs.begin(); it != inputs.end(); it++)
 	{
 		InputDescriptor *descr = *it;
-		MZNSendDebugMessageA("Setting attributes for %s", descr->getName().c_str());
 		AbstractWebElement *e = descr->input;
 		e->sanityCheck();
 		if (descr->type == IT_GENERAL && e->isVisible())
@@ -1348,7 +1449,7 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 					}
 				}
 			} else {
-				MZNSendDebugMessageA("Cannot find value for %s", name.c_str());
+				//MZNSendDebugMessageA("Cannot find value for %s", name.c_str());
 			}
 		}
 		else if (e->isVisible() &&
@@ -1594,6 +1695,11 @@ AbstractWebElement* SmartForm::createModalDialog (AbstractWebElement *input)
 
 	masterDiv->setAttribute("style", ach);
 	masterDiv->setAttribute("id", id.c_str());
+	AbstractWebElement *parent = input->getParent();
+	if (parent == NULL)
+		return NULL;
+
+//	parent->insertBefore(masterDiv, input);
 	body->appendChild(masterDiv);
 
 	createStyle();
@@ -1608,10 +1714,12 @@ AbstractWebElement* SmartForm::createModalDialog (AbstractWebElement *input)
 		modal->setAttribute("_soffid_modal", "true");
 		masterDiv->appendChild(modal);
 		modal->subscribe("click", onClickListener);
+//		parent->insertBefore(modal, input);
 		body->appendChild(modal);
 		modal->release();
 	}
 
+	parent->release();
 	body->release();
 
 	currentModalInput = 0;
@@ -1660,7 +1768,7 @@ void SmartForm::createModal(AbstractWebElement *img)
 			AccountStruct as = *it;
 			std::string friendlyName = MZNC_wstrtoutf8(as.friendlyName.c_str());
 			AbstractWebElement *user = app->createElement("div");
-			if (user == NULL) return;
+			if (user == NULL) break;
 			user->setAttribute("class", (stylePrefix+ "_selector").c_str());
 			user->setAttribute("_soffid_account", as.id.c_str());
 			user->setTextContent(friendlyName.c_str());
@@ -1695,6 +1803,10 @@ void SmartForm::createModal(AbstractWebElement *img)
 
 void SmartForm::createGenerateModal(AbstractWebElement *img)
 {
+	std::string link;
+
+	SeyconCommon::readProperty("AutoSSOURL", link);
+
 	AbstractWebApplication *app = img->getApplication();
 	AbstractWebElement *parent = img->getParent();
 	if (parent != NULL)
@@ -1740,6 +1852,47 @@ void SmartForm::createGenerateModal(AbstractWebElement *img)
 			masterDiv->appendChild(user);
 			user->subscribe("click", onClickListener);
 			user->release();
+		}
+		else if (! page->accounts.empty())
+		{
+			AbstractWebElement *user = app->createElement("div");
+			if (user == NULL)
+				return;
+			user->setTextContent("Select account");
+			user->setAttribute("class", (stylePrefix+ "_header").c_str());
+			masterDiv->appendChild(user);
+			user->release();
+			for (std::vector<AccountStruct>::iterator it = page->accounts.begin(); it != page->accounts.end(); it++)
+			{
+				AccountStruct as = *it;
+				std::string friendlyName = MZNC_wstrtoutf8(as.friendlyName.c_str());
+				AbstractWebElement *user = app->createElement("div");
+				if (user == NULL) break;
+				user->setAttribute("class", (stylePrefix+ "_selector").c_str());
+				user->setAttribute("_soffid_account", as.id.c_str());
+				user->setTextContent(friendlyName.c_str());
+				masterDiv->appendChild(user);
+				if (! link.empty())
+				{
+					AbstractWebElement *linkAnchor = app->createElement("a");
+					linkAnchor->setAttribute("target", "_blank");
+					std::string url = link;
+					url += "/selfservice/index.zul?target=sharedAccounts/sharedAccounts.zul?account=";
+					url += SeyconCommon::urlEncode(as.account.c_str());
+					url += "&system=";
+					url += SeyconCommon::urlEncode(as.system.c_str());
+					linkAnchor->setAttribute("href", url.c_str());
+					linkAnchor->setAttribute("style", "float: right;");
+					user->appendChild(linkAnchor);
+					AbstractWebElement *linkImg = app->createElement("img");
+					linkImg->setAttribute("src", _img_resource_link);
+					linkAnchor->appendChild(linkImg);
+					linkImg->release();
+					linkAnchor->release();
+				}
+				user->subscribe("click", onClickListener);
+				user->release();
+			}
 		}
 
 		masterDiv->release();

@@ -565,13 +565,14 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 		threads.erase(threadStatus->pageId);
 		for (std::map<std::string,ActiveListenerInfo*>::iterator it = activeListeners.begin(); it != activeListeners.end();)
 		{
-			if (it->second->app == cwa)
+			if (it->second != NULL && it->second->app != NULL && it->second->app == cwa)
 			{
 				ActiveListenerInfo *ali = it->second;
 				std::map<std::string,ActiveListenerInfo*>::iterator it2 = it ++;
 				activeListeners.erase(it2);
 				ali->element->release();
 				ali->listener->release();
+				ali->app->release();
 				delete ali;
 			}
 			else
@@ -593,10 +594,9 @@ std::string CommunicationManager::registerListener(ChromeElement* element,
 	al->event = event;
 	al->element = element;
 	ChromeWebApplication * app = dynamic_cast<ChromeWebApplication*>(element->getApplication());
+	al->app = app;
 	if (app != NULL)
-	{
-		al->app = app;
-	}
+		al->app->lock();
 	al->listener = listener;
 	al->element->lock();
 	al->listener->lock();
