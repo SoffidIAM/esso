@@ -1,11 +1,15 @@
 var EXPORTED_SYMBOLS = ["AfroditaExtension"];  
 
 function parsePageData (docid, document ) {
+
+	var w = AfroditaExtension.getWindow (docid);
+	
 	var pageData = {};
 	pageData.url = document.URL;
 	pageData.title = document.tile;
 	pageData.forms = [];
 	pageData.inputs = [];
+	
 	
 	// Parse formsc
 	for (var i = 0; i < document.forms.length; i++)
@@ -28,8 +32,9 @@ function parsePageData (docid, document ) {
 		var inputData = {};
 		var cs= {};
 		try {
-			cs = window.getComputesStyle(input);
+			cs = w.getComputedStyle(input);
 		} catch (e) {
+			console.log ("  Error getting computed style"+e);
 		}
 		inputData.clientHeight = input.clientHeight;
 		inputData.clientWitdh  = input.clientWidth;
@@ -51,7 +56,7 @@ function parsePageData (docid, document ) {
 		try {
 			while (parent != null)
 			{
-				var cs = window.getComputesStyle(parent);
+				var cs = w.getComputedStyle(parent);
 				if (cs["visibility"] == "hidden")
 					inputData.visibility = "hidden";
 				if (cs["display"] == "none")
@@ -66,7 +71,6 @@ function parsePageData (docid, document ) {
 		var found = false;
 		if ( form ) {
 			var soffidId = AfroditaExtension.registerElement(docid, form);
-			console.log ("  form $id="+soffidId);
 			for (f in pageData.forms)
 			{
 				var formData = pageData.forms[f];
@@ -446,6 +450,9 @@ var AfroditaExtension = {
 			     if (atr == "value") {
 					var doc = AfroditaExtension.getDocument(docid);    
 					var evt  = doc.createEvent ("HTMLEvents");
+					evt.initEvent ("input", true, true);
+					el.dispatchEvent(evt);
+					doc.createEvent ("HTMLEvents");
 					evt.initEvent ("change", true, true);
 					el.dispatchEvent(evt);
 			     }
