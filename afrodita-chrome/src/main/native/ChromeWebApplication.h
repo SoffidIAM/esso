@@ -50,7 +50,14 @@ public:
 
 	ThreadStatus *threadStatus;
 	virtual SmartWebPage* getWebPage () { return webPage;}
-	void setPageData (PageData *pd) { this->pageData = pd;}
+	void setPageData (PageData *pd) {
+		this->pageData = pd;
+		if (pd != NULL)
+		{
+			this->url = pd->url;
+			this->title = pd->title;
+		}
+	}
 private:
     std::string url;
     std::string title;
