@@ -248,6 +248,12 @@ var AfroditaExtension = {
      var str = result.readString (); 
      return JSON.parse (str);
   },
+  searchAccountsForServer: function(text) {
+     var result = AfroditaExtension.AfrSearchLocal (text);
+     var str = result.readString (); 
+     console.log("Search "+text+"=>"+str);
+     return JSON.parse (str);
+  },
   checkInit: function () { 
        if ( AfroditaExtension.initialized )
           return;
@@ -292,6 +298,7 @@ var AfroditaExtension = {
 		AfroditaExtension.AfrEvent = AfroditaExtension.lib . declare ("AFRevent", ctypes.default_abi, ctypes.void_t, ctypes.long);
 		AfroditaExtension.AfrGetVersion = AfroditaExtension.lib . declare ("AFRgetVersion", ctypes.default_abi, ctypes.char.ptr);
 		AfroditaExtension.AfrSearch = AfroditaExtension.lib . declare ("AFRsearch", ctypes.default_abi, ctypes.char.ptr, ctypes.char.ptr);
+		AfroditaExtension.AfrSearchLocal = AfroditaExtension.lib . declare ("AFRsearchLocal", ctypes.default_abi, ctypes.char.ptr, ctypes.char.ptr);
 		AfroditaExtension.AfrEvent2 = false;
 		try {
 			AfroditaExtension.AfrEvent2 = AfroditaExtension.lib . declare ("AFRevent2", ctypes.default_abi, ctypes.void_t, ctypes.long, ctypes.long);

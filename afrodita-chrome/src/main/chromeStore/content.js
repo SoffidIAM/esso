@@ -615,6 +615,35 @@ function soffidLoadProcedure () {
 			    	}
 			    	else
 			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId});
+			    }
+			    else if (request.action == "selectAction1")
+			    {
+			    	console.log("en selectAction1");
+			    	var elementId = request.request.element;
+			    	var element = soffidCachedElements[elementId];
+			    	
+			    	var windowRect = { left: window.screenLeft, top: window.screenTop,
+			    			innerHeight: window.innerHeight,
+			    			outerHeight: window.outerHeight,
+			    			innerWidth: window.innerWidth,
+			    			outerWidth: window.outerWidth
+			    			};
+			    	if (typeof element != 'undefined')
+			    	{
+			    		console.log("element:"+element);
+			    		var rect = element.getBoundingClientRect();
+					    port.postMessage({message: "selectAction2", request: request.request, 
+					    	rect: {left: rect.left, 
+					    		top: rect.top,
+					    		right: rect.right,
+					    		bottom: rect.bottom,
+					    		width: rect.width,
+					    		height: rect.height},
+					    	window: windowRect});
+			    	}
+			    	else
+					    port.postMessage({message: "selectAction2", request: request.request,
+					    	window: windowRect});
 			    } else {
 					var result = "";
 					for (var key in request) {

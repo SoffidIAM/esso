@@ -225,6 +225,32 @@ extern "C" char * AFRsearch (const char *text) {
 	return strdup (response.c_str());
 }
 
+extern "C" char * AFRsearchLocal (const char *url) {
+	WebAddonHelper h;
+	std::vector<UrlStruct> result;
+	h.searchUrlsForServer (MZNC_utf8towstr(url), result);
+	std::string response = " [";
+	bool first = true;
+	for ( std::vector<UrlStruct>::iterator it = result.begin(); it != result.end (); it++)
+	{
+		UrlStruct s = *it;
+		if (first) first = false;
+		else response += ",";
+		response += "{\"url\":";
+		response += json::Encoder::encode (MZNC_wstrtoutf8(s.url.c_str()).c_str());
+		response += ",\"name\":";
+		response += json::Encoder::encode (MZNC_wstrtoutf8(s.description.c_str()).c_str());
+		response += ",\"account\":";
+		response += json::Encoder::encode (MZNC_wstrtoutf8(s.name.c_str()).c_str());
+		response += ",\"system\":";
+		response += json::Encoder::encode (MZNC_wstrtoutf8(s.server.c_str()).c_str());
+		response += "}";
+	}
+	response += "]";
+
+	return strdup (response.c_str());
+}
+
 extern "C" void Test (const char *id) {
 //	MessageBox (NULL, id, "Test", MB_OK);
 }

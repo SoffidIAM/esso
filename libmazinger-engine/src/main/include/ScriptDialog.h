@@ -22,6 +22,8 @@ public:
 	static void setScriptDialog (ScriptDialog *d);
 	static ScriptDialog* getScriptDialog();
 	static bool isScriptDialogSet();
+	virtual std::wstring askPassword (std::wstring label) = 0;
+	virtual std::wstring askText (std::wstring label) = 0;
 };
 
 

@@ -9,11 +9,11 @@
 #include <MazingerInternal.h>
 #include <SecretStore.h>
 #include <SeyconServer.h>
+#include <SmartWebPage.h>
 
 #ifndef WIN32
 #include <wctype.h>
 #endif
-
 
 WebAddonHelper::WebAddonHelper() {
 
@@ -69,6 +69,30 @@ void WebAddonHelper::searchUrls(const std::wstring& filter,
 		}
 	}
 
+}
+
+
+void WebAddonHelper::searchUrlsForServer (const std::wstring &filter,
+		std::vector<UrlStruct> &result)
+{
+	result.clear();
+	SmartWebPage* page = new SmartWebPage;
+	page->setURL(MZNC_wstrtostr(filter.c_str()).c_str());
+	page->fetchAccounts(NULL);
+	for ( std::vector<AccountStruct>::iterator it = page->accounts.begin();
+			it != page->accounts.end();
+			it ++)
+	{
+		AccountStruct as = *it;
+		UrlStruct st;
+		st.url = as.url;
+		st.description = as.friendlyName;
+		st.name = as.account;
+		st.server = as.system;
+		result.push_back(st);
+		MZNSendDebugMessageA("Got account %ls", st.description.c_str());
+	}
+	page -> release();
 }
 
 
