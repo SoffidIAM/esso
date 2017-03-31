@@ -191,46 +191,32 @@ static jstring JNU_NewStringNative(JNIEnv *env, const char *str)
 }
 
 void JavaNativeComponent::setAttribute(const char*attributeName, const char* value) {
-	MZNSendDebugMessageA("AT %s:%d", __FILE__, __LINE__);
 	JNIEnv *pEnv = JavaVirtualMachine::getCurrent();
-	MZNSendDebugMessageA("AT %s:%d", __FILE__, __LINE__);
 
 	if (strlen (value) <= 1000)
 	{
 		jstring jstr = JNU_NewStringNative(pEnv, value);
 
-		MZNSendDebugMessageA("AT %s:%d", __FILE__, __LINE__);
-
 		char achMethodName[1024] = "set";
-
-		MZNSendDebugMessageA("AT %s:%d", __FILE__, __LINE__);
 
 		strcat(achMethodName, attributeName);
 
-		MZNSendDebugMessageA("AT %s:%d", __FILE__, __LINE__);
-
 		achMethodName[3] = toupper(achMethodName[3]);
 
-		MZNSendDebugMessageA("AT %s:%d", __FILE__, __LINE__);
 		jclass cl = pEnv->GetObjectClass(object);
 		if (cl != NULL)
 		{
-			MZNSendDebugMessageA("AT %s:%d", __FILE__, __LINE__);
 			jmethodID m = pEnv->GetMethodID(cl, achMethodName, "(Ljava/lang/String;)V");
-			MZNSendDebugMessageA("AT %s:%d", __FILE__, __LINE__);
 			if (m != NULL)
 			{
 				pEnv->CallObjectMethod(object, m, jstr, NULL);
-				MZNSendDebugMessageA("AT %s:%d", __FILE__, __LINE__);
 			}
 			else
 			{
 				pEnv->ExceptionClear();
-				MZNSendDebugMessageA("Warning: Component does not have %s method", achMethodName);
 			}
 		}
 	}
-	MZNSendDebugMessageA("AT %s:%d", __FILE__, __LINE__);
 }
 
 void JavaNativeComponent::setFocus() {
