@@ -325,7 +325,7 @@ void CEventListener::execute(DISPPARAMS* pDispParams) {
 		pElement->sanityCheck();
 
 //		MZNSendDebugMessage("Processing listener");
-		m_listener->onEvent(m_event.c_str(), m_pElement->getApplication(), pElement);
+		m_listener->onEvent(m_event.c_str(), m_pElement->getApplication(), pElement, NULL);
 		if (releaseElement)
 			pElement->release();
 //		MZNSendDebugMessage("Processed listener");

@@ -45,10 +45,10 @@ class OnAnyElementFocusListener: public WebListener
 public:
 	virtual std::string toString () { return std::string("OnAnyElementFocusListener");}
 	SmartWebPage *page;
-	virtual void onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component);
+	virtual void onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component, const char * data);
 };
 
-void OnAnyElementFocusListener::onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component) {
+void OnAnyElementFocusListener::onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component, const char *data) {
 	if (MZNC_waitMutex())
 	{
 		component->sanityCheck();
@@ -251,34 +251,40 @@ bool SmartWebPage::getAccounts(const char *system, const char *targetSystem) {
 				as.friendlyName = description;
 
 
-			accounts.push_back(as);
-		}
-		// Fetch attributes
-		int attPrefix2Len = attPrefix2.length();
-		for (std::vector<std::pair<std::wstring, std::wstring> >::iterator it = serverAttributes.begin() ;
-				it != serverAttributes.end () ; it ++)
-		{
-			if (it->first.length() > attPrefix2Len &&
-					it -> first.substr(0, attPrefix2Len) == attPrefix2 )
+			// Fetch attributes
+			int attPrefix2Len = attPrefix2.length();
+			for (std::vector<std::pair<std::wstring, std::wstring> >::iterator it = serverAttributes.begin() ;
+					it != serverAttributes.end () ; it ++)
 			{
-				std::wstring attName = it->first.substr(attPrefix2Len, std::string::npos).c_str();
-				if (attName != L"Server" && attName != L"URL");
+				if (it->first.length() > attPrefix2Len &&
+						it -> first.substr(0, attPrefix2Len) == attPrefix2 )
 				{
-					std::wstring value = it->second;
-					size_t i = value.find('=');
-					if ( i != std::string::npos)
+					std::wstring attName = it->first.substr(attPrefix2Len, std::string::npos).c_str();
+					MZNSendDebugMessage("attname=%ls", attName.c_str());
+					if (attName == L"URL")
 					{
-						std::string split1 = MZNC_wstrtostr(SeyconCommon::urlDecode(MZNC_wstrtoutf8(value.substr(0, i).c_str()).c_str()).c_str());
-						std::string split2 = MZNC_wstrtostr(SeyconCommon::urlDecode(MZNC_wstrtoutf8(value.substr(i+1).c_str()).c_str()).c_str());
-						if ( ! isAnyAttributeNamed (split1.c_str()))
+						as.url = it->second;
+					}
+					else if (attName != L"Server" && attName != L"URL");
+					{
+						std::wstring value = it->second;
+						size_t i = value.find('=');
+						if ( i != std::string::npos)
 						{
-							MZNSendDebugMessageA("Registering attribute %s", split1.c_str());
-							accountAttributes.push_back(split1);
+							std::string split1 = MZNC_wstrtostr(SeyconCommon::urlDecode(MZNC_wstrtoutf8(value.substr(0, i).c_str()).c_str()).c_str());
+							std::string split2 = MZNC_wstrtostr(SeyconCommon::urlDecode(MZNC_wstrtoutf8(value.substr(i+1).c_str()).c_str()).c_str());
+							if ( ! isAnyAttributeNamed (split1.c_str()))
+							{
+								MZNSendDebugMessageA("Registering attribute %s", split1.c_str());
+								accountAttributes.push_back(split1);
+							}
 						}
 					}
-				}
 
+				}
 			}
+			// Now, add to accounts list
+			accounts.push_back(as);
 		}
 	}
 
@@ -287,9 +293,13 @@ bool SmartWebPage::getAccounts(const char *system, const char *targetSystem) {
 
 
 void SmartWebPage::fetchAccounts(AbstractWebApplication *app, const char *systemName) {
+	app->getUrl(url);
+	fetchAccounts(systemName);
+}
+
+void SmartWebPage::fetchAccounts(const char *systemName) {
 	MZNSendDebugMessageA("* Fetching accounts for %s", systemName);
 	accounts.clear();
-	app->getUrl(url);
 	size_t i = url.find("://");
 	if ( i != std::string::npos)
 	{

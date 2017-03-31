@@ -47,6 +47,11 @@ public:
 	virtual void alert (const char *str) = 0;
 	virtual void subscribe ( const char *eventName, WebListener *listener) = 0;
 	virtual void unSubscribe ( const char *eventName, WebListener *listener) = 0;
+	virtual void selectAction (const char * title,
+			std::vector<std::string> &optionId,
+			std::vector<std::string> &names,
+			AbstractWebElement *element,
+			WebListener *listener);
 
 	virtual SmartWebPage* getWebPage () = 0;
 };

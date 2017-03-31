@@ -20,7 +20,7 @@ public:
 protected:
 	virtual ~WebListener() {} ;
 public:
-	virtual void onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component) = 0;
+	virtual void onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component, const char *data) = 0;
 };
 
 #endif /* WEBLISTENER_H_ */

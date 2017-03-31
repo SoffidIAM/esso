@@ -21,6 +21,8 @@ public:
 	virtual void cancelProgressMessage ();
 	virtual std::wstring selectAccount(std::vector<std::wstring>accounts,
 			std::vector<std::wstring>accountDescriptions);
+	virtual std::wstring askPassword (std::wstring label) ;
+	virtual std::wstring askText (std::wstring label) ;
 };
 
 #endif /* PAMSCRIPTDIALOG_H_ */

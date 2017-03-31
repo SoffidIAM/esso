@@ -30,7 +30,7 @@ class OnChangeListener: public WebListener
 public:
 	virtual std::string toString () { return std::string("OnChangeListener");}
 	SmartForm *form;
-	virtual void onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component);
+	virtual void onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component, const char *data);
 
 };
 
@@ -39,7 +39,7 @@ class OnClickListener: public WebListener
 public:
 	virtual std::string toString () { return std::string("OnClickListener");}
 	SmartForm *form;
-	virtual void onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component);
+	virtual void onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component, const char *data);
 
 };
 
@@ -48,7 +48,7 @@ class OnBeforeUnloadListener: public WebListener
 public:
 	virtual std::string toString () { return std::string("OnBeforeUnloadListener");}
 	SmartForm *form;
-	virtual void onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component);
+	virtual void onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component, const char *data);
 
 };
 
@@ -57,12 +57,12 @@ class OnHiddenElementFocusListener: public WebListener
 public:
 	virtual std::string toString () { return std::string("OnHiddenElementFocusListener");}
 	SmartForm *form;
-	virtual void onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component);
+	virtual void onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component, const char *data);
 
 };
 
 
-void OnChangeListener::onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component) {
+void OnChangeListener::onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component, const char *data) {
 	if (MZNC_waitMutex())
 	{
 		component->sanityCheck();
@@ -77,46 +77,37 @@ void OnChangeListener::onEvent (const char *eventName, AbstractWebApplication *a
 
 }
 
-void OnClickListener::onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component) {
+void OnClickListener::onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component, const char *data) {
 	if (MZNC_waitMutex())
 	{
 		std::string managed = "";
 		std::string tag = "";
-		component->getTagName(tag);
-//		MZNSendDebugMessageA("On click event %s - %s", tag.c_str(), managed.c_str() );
+		if (component != NULL)
+		{
+			component->getTagName(tag);
+			component->sanityCheck();
+			//		MZNSendDebugMessageA("On click event %s - %s", tag.c_str(), managed.c_str() );
 
-		component->sanityCheck();
+		}
 		app->sanityCheck();
 		if (form != NULL)
 		{
 			form->sanityCheck();
 			std::string id;
-			component->getAttribute("_soffid_handler", id);
-			if (id == "true")
-				form -> onClickImage(component);
+			if (data != NULL && data[0] != '\0')
+			{
+				if (data [0] == 'a')
+					form -> onClickAccount(component, &data[1]);
+				else if (data [0] == 'l')
+					form -> onClickLevel(component, &data[1]);
+				else
+					form -> onClickSave(component, &data[1]);
+			}
 			else
 			{
-				component->getAttribute("_soffid_account", id);
-				if (!id.empty())
-					form -> onClickAccount(component);
-				else
-				{
-					component->getAttribute("_soffid_modal", id);
-					if (id == "true")
-						form -> onClickModal(component);
-					else
-					{
-						component->getAttribute("_soffid_level", id);
-						if (! id.empty())
-							form -> onClickLevel(component);
-						else
-						{
-							component->getAttribute("_soffid_save", id);
-							if (! id.empty())
-								form -> onClickSave(component);
-						}
-					}
-				}
+				component->getAttribute("_soffid_handler", id);
+				if (id == "true")
+					form -> onClickImage(component);
 			}
 		}
 //		MZNSendDebugMessageA("END On click event %s - %s", tag.c_str(), managed.c_str() );
@@ -124,7 +115,7 @@ void OnClickListener::onEvent (const char *eventName, AbstractWebApplication *ap
 	}
 }
 
-void OnBeforeUnloadListener::onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component) {
+void OnBeforeUnloadListener::onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component, const char *data) {
 	if (MZNC_waitMutex())
 	{
 		app->sanityCheck();
@@ -134,7 +125,7 @@ void OnBeforeUnloadListener::onEvent (const char *eventName, AbstractWebApplicat
 	}
 }
 
-void OnHiddenElementFocusListener::onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component) {
+void OnHiddenElementFocusListener::onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component, const char *data) {
 	if (MZNC_waitMutex())
 	{
 		component->sanityCheck();
@@ -1208,20 +1199,25 @@ void SmartForm::save ()
 			return;
 		}
 	}
+	std::string passwordValue;
 	for (std::vector<InputDescriptor*>::iterator it = inputs.begin (); it != inputs.end(); it++)
 	{
 		InputDescriptor *input = *it;
-		if (input->type == IT_PASSWORD)
+		if (input->type == IT_PASSWORD ||
+				input->type == IT_NEW_PASSWORD)
 		{
 			std::string value;
 			input->input->getProperty("value", value);
-			if (!value.empty () && !this->page->updatePassword (currentAccount, value, msg))
-			{
-				this->app->alert(MZNC_strtoutf8(msg.c_str()).c_str());
-				return;
-			}
+			if (!value.empty ())
+				passwordValue = value;
 		}
 		input->existingData = true;
+	}
+
+	if (!passwordValue.empty () && !this->page->updatePassword (currentAccount, passwordValue, msg))
+	{
+		this->app->alert(MZNC_strtoutf8(msg.c_str()).c_str());
+		return;
 	}
 
 	if (this->page->updateAttributes (currentAccount, attributes, msg))
@@ -1232,6 +1228,7 @@ void SmartForm::save ()
 }
 
 
+#if 0
 void SmartForm::onClickModal(AbstractWebElement* element) {
 	page->sanityCheck();
 	std::string id = stylePrefix+"_id";
@@ -1259,107 +1256,98 @@ void SmartForm::onClickModal(AbstractWebElement* element) {
 		modal->release();
 	}
 }
+#endif
 
-void SmartForm::onClickLevel(AbstractWebElement* element) {
-	std::string level;
-	element->getAttribute("_soffid_level", level);
-	if (! level.empty())
+void SmartForm::onClickLevel(AbstractWebElement* element, const char *level) {
+	if (level != NULL && level[0] != '\0')
 	{
 		std::string type, value, tag;
 		std::string id = stylePrefix+"_id";
-		AbstractWebElement *masterDiv = app->getElementById(id.c_str());
-		if (masterDiv != NULL)
-		{
-			InputDescriptor *descriptor = inputs[currentModalInput];
-			if (descriptor != NULL)
-			{
 
-				int length;
-				bool mays = false;
-				bool mins = false;
-				bool numbers = false;
-				bool simbols = false;
-				if (level == "high")
+		InputDescriptor *descriptor = inputs[currentModalInput];
+		if (descriptor != NULL)
+		{
+
+			int length;
+			bool mays = false;
+			bool mins = false;
+			bool numbers = false;
+			bool simbols = false;
+			if (strcmp(level,"high")==0)
+			{
+				length = 24;
+				mays = mins = numbers = simbols = true;
+			}
+			else if (strcmp(level, "medium") == 0)
+			{
+				length = 16;
+				mays = mins = numbers = true;
+			}
+			else
+			{
+				length = 8;
+				mins = numbers = true;
+			}
+			std::string newPass;
+			static bool initialized = false;
+			if ( ! initialized)
+			{
+				time_t t;
+				time(&t);
+				srand (t);
+				initialized = true;
+			}
+			while (newPass.length() != length)
+			{
+				int ch = rand() % (26 + 26 + 10 + 15);
+				if (ch < 15 && simbols)
+					newPass.push_back( '!' + ch  ) ;
+				if (ch >= 15 && ch < 25 && numbers)
+					newPass.push_back( '0' - 15 + ch  ) ;
+				if (ch >= 25 && ch < 51 && mays)
+					newPass.push_back( 'A' - 25 + ch  ) ;
+				if (ch >= 51 && ch < 77 && mins)
+					newPass.push_back( 'a' - 51 + ch  ) ;
+			}
+			bool found = false;
+			for ( std::vector<InputDescriptor*>::iterator it = inputs.begin(); it != inputs.end(); it++)
+			{
+				InputDescriptor *id = *it;
+				if (id -> type == descriptor -> type)
 				{
-					length = 24;
-					mays = mins = numbers = simbols = true;
-				}
-				else if (level == "medium")
-				{
-					length = 16;
-					mays = mins = numbers = true;
-				}
-				else
-				{
-					length = 8;
-					mins = numbers = true;
-				}
-				std::string newPass;
-				static bool initialized = false;
-				if ( ! initialized)
-				{
-					time_t t;
-					time(&t);
-					srand (t);
-					initialized = true;
-				}
-				while (newPass.length() != length)
-				{
-					int ch = rand() % (26 + 26 + 10 + 15);
-					if (ch < 15 && simbols)
-						newPass.push_back( '!' + ch  ) ;
-					if (ch >= 15 && ch < 25 && numbers)
-						newPass.push_back( '0' - 15 + ch  ) ;
-					if (ch >= 25 && ch < 51 && mays)
-						newPass.push_back( 'A' - 25 + ch  ) ;
-					if (ch >= 51 && ch < 77 && mins)
-						newPass.push_back( 'a' - 51 + ch  ) ;
-				}
-				bool found = false;
-				for ( std::vector<InputDescriptor*>::iterator it = inputs.begin(); it != inputs.end(); it++)
-				{
-					InputDescriptor *id = *it;
-					if (id -> type == descriptor -> type)
-					{
-						id -> input -> focus();
-						id -> input -> setProperty("value", newPass.c_str());
-					}
+					id -> input -> focus();
+					id -> input -> setProperty("value", newPass.c_str());
 				}
 			}
 		}
-		onClickModal(NULL);
 		changeStatus(SF_STATUS_MODIFYING);
 	}
 }
 
-void SmartForm::onClickSave(AbstractWebElement* element) {
-	std::string action;
-	element->getAttribute("_soffid_save", action);
+void SmartForm::onClickSave(AbstractWebElement* element, const char *action) {
 	currentAccount.id = "";
 	currentAccount.friendlyName = L"";
 	currentAccount.system = L"";
 	currentAccount.account = L"";
 	for (std::vector<AccountStruct>::iterator it = page->accounts.begin(); it != page->accounts.end(); it++)
 	{
-		if (action == it->id)
+		if (it->id == action)
 		{
 			currentAccount = *it;
 		}
 	}
 
-	onClickModal(element);
 	save ();
 
 }
 
 
-void SmartForm::onClickAccount(AbstractWebElement* element) {
+void SmartForm::onClickAccount(AbstractWebElement* element, const char *account) {
 	AbstractWebElement *input = NULL;
 	std::string id;
 	AccountStruct as;
 
 	page->sanityCheck();
-	element->sanityCheck();
 
 	if (currentModalInput >= 0 && currentModalInput < inputs.size())
 	{
@@ -1368,12 +1356,40 @@ void SmartForm::onClickAccount(AbstractWebElement* element) {
 			input = descriptor->input;
 	}
 
-	element->getAttribute("_soffid_account", id);
-	page->getAccountStruct(id.c_str(), as);
+	page->getAccountStruct(account, as);
 
-	onClickModal (element);
+//	onClickModal (element);
 
 	fetchAttributes (as, input);
+}
+
+class AuditInfo
+{
+public:
+	std::wstring user;
+	std::wstring key;
+	std::wstring system;
+	std::wstring account;
+};
+
+#ifdef WIN32
+static DWORD WINAPI sendAuditInfo(
+  LPVOID arg
+)
+#else
+static void* sendAuditInfo (void *arg)
+#endif
+{
+	AuditInfo* ai = (AuditInfo*) arg;
+	SeyconService ss;
+	SeyconResponse *response = ss.sendUrlMessage(L"/auditPassword?user=%ls&key=%ls&system=%ls&account=%ls&application=%ls",
+			ai->user.c_str(), ai->key.c_str(), ai->system.c_str(), ai->account.c_str(),
+			ss.escapeString(MZNC_getCommandLine()).c_str());
+	if (response != NULL)
+		delete response;
+	delete ai;
+
+	return 0;
 }
 
 void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedElement)
@@ -1471,12 +1487,19 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 			}
 			wchar_t *sessionKey = s.getSecret(L"sessionKey");
 			wchar_t *user = s.getSecret(L"user");
-			SeyconService ss;
-			SeyconResponse *response = ss.sendUrlMessage(L"/auditPassword?user=%ls&key=%ls&system=%ls&account=%ls&application=%ls",
-					user, sessionKey, as.system.c_str(), as.account.c_str(),
-					ss.escapeString(MZNC_getCommandLine()).c_str());
-			if (response != NULL)
-				delete response;
+
+			AuditInfo *ai = new AuditInfo;
+			ai->user = user;
+			ai->key = sessionKey;
+			ai->system = as.system;
+			ai->account = as.account;
+
+#ifdef WIN32
+			CreateThread (NULL,  0, sendAuditInfo, ai,0, NULL) ;
+#else
+			pthread_t threadId;
+			pthread_create(&threadId, NULL, sendAuditInfo, ai);
+#endif
 			if (descr->type == IT_NEW_PASSWORD)
 			{
 				descr->type = IT_PASSWORD;
@@ -1576,22 +1599,6 @@ static const char *STYLE_HEADER= "_header {"
 	   	"padding-top:3px; "
 	   	"padding-bottom: 3px;}\n";
 
-static AbstractWebElement* getBody (AbstractWebApplication *app) {
-	AbstractWebElement *body = NULL;
-	std::vector<AbstractWebElement *> bodies;
-	app->getElementsByTagName("body", bodies);
-	for (std::vector<AbstractWebElement*>::iterator it = bodies.begin(); it != bodies.end (); it++)
-	{
-		if (body == NULL)
-			body = *it;
-		else
-			(*it)->release();
-	}
-	if (body == NULL)
-		body = app->getDocumentElement();
-	return body;
-}
-
 void SmartForm::createStyle () {
 
 	if( app == NULL)
@@ -1650,78 +1657,6 @@ void SmartForm::createStyle () {
 
 AbstractWebElement* SmartForm::createModalDialog (AbstractWebElement *input)
 {
-	std::string id = stylePrefix+"_id";
-	onClickModal(input);
-
-	AbstractWebElement *masterDiv = app->createElement("div");
-	if (masterDiv == NULL)
-	{
-		MZNSendDebugMessageA("Cannot create master div");
-		return NULL;
-	}
-
-	masterDiv->setAttribute("_soffid_element", "true");
-
-	masterDiv->setAttribute("_soffid_modal", "true");
-	char ach[1000];
-
-	bool isNumber;
-	long left = 0, top = 0, width = 0, height = 0, width2 = 0, height2 = 0;
-	getPosition (input, left, top, width, height, width2, height2, isNumber, true);
-
-	AbstractWebElement *html = app->getDocumentElement();
-	left -= getIntProperty(html, "scrollLeft");
-	top -= getIntProperty(html, "scrollTop");
-
-	int dheight = getIntProperty (html, "clientHeight"); // Without border
-	int dwidth = getIntProperty (html, "clientWidth"); // Without border
-
-	html->release();
-
-	AbstractWebElement *body = getBody(app);
-	left -= getIntProperty(body, "scrollLeft");
-	top -= getIntProperty(body, "scrollTop");
-
-	// Adjust to visible space
-	int x = left+width-200+2;
-	if (x+200 > dwidth) x = dwidth - 200;
-	if (x < 0) x = 0;
-
-	int y = top+height;
-	if (y > dheight - 10) y = dheight - 10;
-	if (y < 0) y = 0;
-
-	sprintf (ach, STYLE_MASTER, x, y);
-
-	masterDiv->setAttribute("style", ach);
-	masterDiv->setAttribute("id", id.c_str());
-	AbstractWebElement *parent = input->getParent();
-	if (parent == NULL)
-		return NULL;
-
-//	parent->insertBefore(masterDiv, input);
-	body->appendChild(masterDiv);
-
-	createStyle();
-
-	AbstractWebElement *modal = app->createElement("div");
-	if (modal != NULL)
-	{
-		std::string id = stylePrefix+"_modal";
-		modal->setAttribute("_soffid_element", "true");
-		modal->setAttribute("style", STYLE_MODAL);
-		modal->setAttribute("id", id.c_str());
-		modal->setAttribute("_soffid_modal", "true");
-		masterDiv->appendChild(modal);
-		modal->subscribe("click", onClickListener);
-//		parent->insertBefore(modal, input);
-		body->appendChild(modal);
-		modal->release();
-	}
-
-	parent->release();
-	body->release();
-
 	currentModalInput = 0;
 	for (unsigned int i = 0; i < inputs.size(); i++)
 	{
@@ -1732,253 +1667,96 @@ AbstractWebElement* SmartForm::createModalDialog (AbstractWebElement *input)
 		}
 	}
 
-	return masterDiv;
+	return NULL;
 
 }
 
 void SmartForm::createModal(AbstractWebElement *img)
 {
-	std::string link;
+	std::vector<std::string> ids;
+	std::vector<std::string> names;
 
-	SeyconCommon::readProperty("AutoSSOURL", link);
 
-	AbstractWebApplication *app = img->getApplication();
-	AbstractWebElement *parent = img->getParent();
-	if (parent != NULL)
+	createModalDialog(img);
+
+	for (std::vector<AccountStruct>::iterator it = page->accounts.begin(); it != page->accounts.end(); it++)
 	{
-		AbstractWebElement *input = img->getNextSibling();
-		if ( input == NULL)
-		{
-			MZNSendDebugMessageA("Cannot find input element");
-			return;
-		}
+		AccountStruct as = *it;
+		std::string friendlyName = MZNC_wstrtoutf8(as.friendlyName.c_str());
 
-		AbstractWebElement *masterDiv = createModalDialog(input);
-		if (masterDiv == NULL)
-			return;
-		AbstractWebElement *user = app->createElement("div");
-		if (user == NULL)
-			return;
-		user->setTextContent("Select account");
-		user->setAttribute("class", (stylePrefix+ "_header").c_str());
-		masterDiv->appendChild(user);
-		user->release();
-		for (std::vector<AccountStruct>::iterator it = page->accounts.begin(); it != page->accounts.end(); it++)
-		{
-			AccountStruct as = *it;
-			std::string friendlyName = MZNC_wstrtoutf8(as.friendlyName.c_str());
-			AbstractWebElement *user = app->createElement("div");
-			if (user == NULL) break;
-			user->setAttribute("class", (stylePrefix+ "_selector").c_str());
-			user->setAttribute("_soffid_account", as.id.c_str());
-			user->setTextContent(friendlyName.c_str());
-			masterDiv->appendChild(user);
-			if (! link.empty())
-			{
-				AbstractWebElement *linkAnchor = app->createElement("a");
-				linkAnchor->setAttribute("target", "_blank");
-				std::string url = link;
-				url += "/selfservice/index.zul?target=sharedAccounts/sharedAccounts.zul?account=";
-				url += SeyconCommon::urlEncode(as.account.c_str());
-				url += "&system=";
-				url += SeyconCommon::urlEncode(as.system.c_str());
-				linkAnchor->setAttribute("href", url.c_str());
-				linkAnchor->setAttribute("style", "float: right;");
-				user->appendChild(linkAnchor);
-				AbstractWebElement *linkImg = app->createElement("img");
-				linkImg->setAttribute("src", _img_resource_link);
-				linkAnchor->appendChild(linkImg);
-				linkImg->release();
-				linkAnchor->release();
-			}
-			user->subscribe("click", onClickListener);
-			user->release();
-		}
-
-		masterDiv->release();
-		input->release();
-		parent->release();
+		ids.push_back(std::string("a") + as.id);
+		names.push_back( friendlyName );
 	}
+	app->selectAction("Select account", ids, names, img, onClickListener);
 }
 
 void SmartForm::createGenerateModal(AbstractWebElement *img)
 {
-	std::string link;
+	std::vector<std::string> ids;
+	std::vector<std::string> names;
 
-	SeyconCommon::readProperty("AutoSSOURL", link);
+	createModalDialog(img);
 
-	AbstractWebApplication *app = img->getApplication();
-	AbstractWebElement *parent = img->getParent();
-	if (parent != NULL)
+	static const char *levels[] = {"high", "medium", "low"} ;
+	static const char *levelDescription[] = {"High security", "Medium security", "Low security"} ;
+	for (int i= 0; i < 3; i++)
 	{
-		std::string id = stylePrefix+"_id";
-		AbstractWebElement *input = img->getNextSibling();
-		if (input == NULL)
-			return;
-
-		AbstractWebElement *masterDiv = createModalDialog(input);
-		if (masterDiv == NULL)
-			return;
-
-		AbstractWebElement *user = app->createElement("div");
-		if (user == NULL) return;
-
-		user->setAttribute("class", (stylePrefix+ "_header").c_str());
-		user->setTextContent("Generate new password");
-		masterDiv->appendChild(user);
-		user->release();
-		static const char *levels[] = {"high", "medium", "low"} ;
-		static const char *levelDescription[] = {"High security", "Medium security", "Low security"} ;
-		for (int i= 0; i < 3; i++)
-		{
-			AbstractWebElement *user = app->createElement("div");
-			if (user == NULL) return;
-			user->setAttribute("class", (stylePrefix+ "_selector").c_str());
-			user->setAttribute("_soffid_level", levels[i]);
-			user->setTextContent(levelDescription[i]);
-			masterDiv->appendChild(user);
-			user->subscribe("click", onClickListener);
-			user->release();
-		}
-
-		// ---------------- Save current account
-		if (!currentAccount.id.empty())
-		{
-			user = app->createElement("div");
-			if (user == NULL) return;
-			user->setAttribute("class", (stylePrefix+ "_selector").c_str());
-			user->setAttribute("_soffid_account", currentAccount.id.c_str());
-			user->setTextContent(MZNC_wstrtoutf8( (std::wstring(L"Get password for ")+currentAccount.friendlyName).c_str() ).c_str());
-			masterDiv->appendChild(user);
-			user->subscribe("click", onClickListener);
-			user->release();
-		}
-		else if (! page->accounts.empty())
-		{
-			AbstractWebElement *user = app->createElement("div");
-			if (user == NULL)
-				return;
-			user->setTextContent("Select account");
-			user->setAttribute("class", (stylePrefix+ "_header").c_str());
-			masterDiv->appendChild(user);
-			user->release();
-			for (std::vector<AccountStruct>::iterator it = page->accounts.begin(); it != page->accounts.end(); it++)
-			{
-				AccountStruct as = *it;
-				std::string friendlyName = MZNC_wstrtoutf8(as.friendlyName.c_str());
-				AbstractWebElement *user = app->createElement("div");
-				if (user == NULL) break;
-				user->setAttribute("class", (stylePrefix+ "_selector").c_str());
-				user->setAttribute("_soffid_account", as.id.c_str());
-				user->setTextContent(friendlyName.c_str());
-				masterDiv->appendChild(user);
-				if (! link.empty())
-				{
-					AbstractWebElement *linkAnchor = app->createElement("a");
-					linkAnchor->setAttribute("target", "_blank");
-					std::string url = link;
-					url += "/selfservice/index.zul?target=sharedAccounts/sharedAccounts.zul?account=";
-					url += SeyconCommon::urlEncode(as.account.c_str());
-					url += "&system=";
-					url += SeyconCommon::urlEncode(as.system.c_str());
-					linkAnchor->setAttribute("href", url.c_str());
-					linkAnchor->setAttribute("style", "float: right;");
-					user->appendChild(linkAnchor);
-					AbstractWebElement *linkImg = app->createElement("img");
-					linkImg->setAttribute("src", _img_resource_link);
-					linkAnchor->appendChild(linkImg);
-					linkImg->release();
-					linkAnchor->release();
-				}
-				user->subscribe("click", onClickListener);
-				user->release();
-			}
-		}
-
-		masterDiv->release();
-		parent->release();
-		input->release();
+		ids.push_back( std::string ("l") + levels[i]);
+		names.push_back( std::string(levelDescription[i]));
 	}
+
+	// ---------------- Save current account
+	if (!currentAccount.id.empty())
+	{
+		ids.push_back(std::string("a") + currentAccount.id);
+		names.push_back( MZNC_wstrtoutf8( (std::wstring(L"Get password for ")+currentAccount.friendlyName).c_str() ));
+	}
+	else if (! page->accounts.empty())
+	{
+		for (std::vector<AccountStruct>::iterator it = page->accounts.begin(); it != page->accounts.end(); it++)
+		{
+			AccountStruct as = *it;
+			std::string friendlyName = MZNC_wstrtoutf8(as.friendlyName.c_str());
+
+			ids.push_back(std::string("a") + as.id);
+			names.push_back( friendlyName );
+		}
+	}
+	app->selectAction("Generate password", ids, names, img, onClickListener);
 }
 
 
 
 void SmartForm::createSaveModal(AbstractWebElement *img)
 {
-	MZNSendDebugMessageA("Creating save modal");
-	AbstractWebApplication *app = img->getApplication();
-	AbstractWebElement *parent = img->getParent();
-	if (parent != NULL)
+	std::vector<std::string> ids;
+	std::vector<std::string> names;
+
+	createModalDialog(img);
+
+	// ---------------- Save current account
+	if (!currentAccount.id.empty())
 	{
-		std::string id = stylePrefix+"_id";
-		AbstractWebElement *input = img->getNextSibling();
-		if (input == NULL)
-		{
-			MZNSendDebugMessageA("Unable to find input element");
-			return;
-		}
-
-		AbstractWebElement *masterDiv = createModalDialog(input);
-		if (masterDiv == NULL)
-		{
-			MZNSendDebugMessageA("ERROR: No Master div created");
-			return;
-		}
-
-		AbstractWebElement *user = app->createElement("div");
-		if (user == NULL) {
-			MZNSendDebugMessageA("Unable to create user element");
-			return;
-		}
-		user->setAttribute("class", (stylePrefix+ "_header").c_str());
-		user->setTextContent("Save identity");
-		masterDiv->appendChild(user);
-		user->release();
-
-		// ---------------- Save current account
-		if (!currentAccount.id.empty())
-		{
-			user = app->createElement("div");
-			if (user == NULL) return;
-			user->setAttribute("class", (stylePrefix+ "_selector").c_str());
-			user->setAttribute("_soffid_save", currentAccount.id.c_str());
-			user->setTextContent(MZNC_wstrtoutf8( (std::wstring(L"Update identity ")+currentAccount.friendlyName).c_str() ).c_str());
-			masterDiv->appendChild(user);
-			user->subscribe("click", onClickListener);
-			user->release();
-		}
-
-		// ---------------- Create new account
-		user = app->createElement("div");
-		if (user == NULL) return;
-		user->setAttribute("class", (stylePrefix+ "_selector").c_str());
-		user->setAttribute("_soffid_save", "-");
-		user->setTextContent("As new identity");
-		masterDiv->appendChild(user);
-		user->subscribe("click", onClickListener);
-		user->release();
-
-		if (currentAccount.id.empty())
-		{
-			for (std::vector<AccountStruct>::iterator it = page->accounts.begin(); it != page->accounts.end(); it++)
-			{
-				AccountStruct s = *it;
-				user = app->createElement("div");
-				if (user == NULL) return;
-				user->setAttribute("class", (stylePrefix+ "_selector").c_str());
-				user->setAttribute("_soffid_save", s.id.c_str());
-				user->setTextContent(MZNC_wstrtoutf8( (std::wstring(L"Update identity ")+s.friendlyName).c_str() ).c_str());
-				masterDiv->appendChild(user);
-				user->subscribe("click", onClickListener);
-				user->release();
-			}
-		}
-
-
-		masterDiv->release();
-		parent->release();
-		input->release();
+		ids.push_back( std::string("s")+currentAccount.id);
+		names.push_back ( MZNC_wstrtoutf8( (std::wstring(L"Update identity ")+currentAccount.friendlyName).c_str()) );
 	}
+
+	// ---------------- Create new account
+	ids.push_back( std::string("s-"));
+	names.push_back ( std::string("As new identity"));
+
+	// ---------------- Save as existing accounts
+	if (currentAccount.id.empty())
+	{
+		for (std::vector<AccountStruct>::iterator it = page->accounts.begin(); it != page->accounts.end(); it++)
+		{
+			AccountStruct s = *it;
+			ids.push_back( std::string("s")+s.id);
+			names.push_back (  MZNC_wstrtoutf8( ( std::wstring(L"Update identity ")+s.friendlyName).c_str()));
+
+		}
+	}
+	app->selectAction("Save identity", ids, names, img, onClickListener);
 }
 
 std::string SmartForm::toString() {

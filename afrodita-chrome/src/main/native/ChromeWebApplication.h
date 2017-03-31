@@ -47,6 +47,11 @@ public:
 	virtual void subscribe ( const char *eventName, WebListener *listener) ;
 	virtual void unSubscribe ( const char *eventName, WebListener *listener) ;
 	virtual std::string toString ();
+	virtual void selectAction (const char * title,
+			std::vector<std::string> &optionId,
+			std::vector<std::string> &names,
+			AbstractWebElement *element,
+			WebListener *listener) ;
 
 	ThreadStatus *threadStatus;
 	virtual SmartWebPage* getWebPage () { return webPage;}
@@ -58,6 +63,7 @@ public:
 			this->title = pd->title;
 		}
 	}
+	bool equals(ChromeWebApplication *app);
 private:
     std::string url;
     std::string title;

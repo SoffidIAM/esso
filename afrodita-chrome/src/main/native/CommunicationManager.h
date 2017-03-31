@@ -32,11 +32,17 @@ public:
 	std::string nextRequestId ();
 	json::JsonAbstractObject* getEventMessage ();
 	json::JsonAbstractObject* call (bool &error, const char *messages[]);
+	json::JsonAbstractObject* call (bool &error, const std::string&  pageId, const std::string& msgId, const std::string message);
+	json::JsonAbstractObject* call (bool &error, json::JsonMap *message);
+	void sendEvent (const char* eventId, const char *pageId, const char *target, const char* data);
 
 	void mainLoop ();
 	void threadLoop (ThreadStatus *threadStatus);
 	std::string registerListener (ChromeElement *element, const char *event, WebListener *listener);
 	std::string unregisterListener (ChromeElement *element, const char *event, WebListener *listener);
+	std::string registerListener (ChromeWebApplication *app, const char *event, WebListener *listener);
+	std::string unregisterListener (ChromeWebApplication *app, const char *event, WebListener *listener);
+	std::string unregisterListener (ChromeWebApplication *app, const char *eventId);
 
 private:
 	std::map<std::string, ThreadStatus*> threads;

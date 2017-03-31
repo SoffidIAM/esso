@@ -17,5 +17,17 @@
 //#define DEBUG(x) printf("%s\n", x)
 #endif
 
+#include <string>
+#include <vector>
 
+#ifndef WIN32
+#ifndef USE_QT
+
+#include <gtk/gtk.h>
+
+extern GtkWidget *signalWindow;
+gboolean menuPopupHandler(gpointer userdata) ;
+
+#endif
+#endif
 #endif /* MAZINGERFF_H_ */
