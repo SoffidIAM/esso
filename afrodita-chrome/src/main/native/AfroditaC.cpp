@@ -81,7 +81,7 @@ DWORD CALLBACK DumpData (
 
     SeyconCommon::warn ("Generated dump file %ls", szFileName);
 
-	MessageBox(NULL, "Genrated dump file", "Soffid Chrome extension", MB_OK);
+	MessageBox(NULL, "Generated dump file", "Soffid Chrome extension", MB_OK);
 	return 0;
 }
 
@@ -92,15 +92,54 @@ extern "C" LONG CALLBACK VectoredHandler (
 	threadId = GetCurrentThreadId();
 	HANDLE hThread = CreateThread (NULL, 0, (LPTHREAD_START_ROUTINE) DumpData, ExceptionInfo, 0, NULL);
 	WaitForSingleObject( hThread, INFINITE );
+	ExitProcess(0);
 	return EXCEPTION_CONTINUE_SEARCH;
 }
 
+static DWORD WINAPI mainThreadProc(
+  LPVOID arg
+)
+{
+	CommunicationManager* manager = CommunicationManager::getInstance();
+
+	manager->mainLoop();
+
+	ExitProcess(0);
+
+}
+
+
+
 #else
+
+#ifdef USEQT
+
+#include <QApplication>
+#include "ChromeWidget.h"
+
+#else
+
+
+GtkWidget *signalWindow = NULL;
+
+#endif
+
 extern "C" void __attribute__((constructor)) startup() {
 	setbuf(stdin, NULL);
 	setbuf(stdout, NULL );
 }
+
+static void* qtThreadProc (void *app)
+{
+	SeyconCommon::setDebugLevel(0);
+	DEBUG ("Started AfroditaC");
+	CommunicationManager* manager = CommunicationManager::getInstance();
+
+	manager->mainLoop();
+}
+
 #endif
+
 
 extern "C" int main (int argc, char **argv)
 {
@@ -111,17 +150,53 @@ extern "C" int main (int argc, char **argv)
 	SeyconCommon::readProperty ("crashDump", vh);
 	if (! vh.empty())
 		AddVectoredExceptionHandler(0, VectoredHandler);
-#endif
+
 	SeyconCommon::setDebugLevel(0);
-	DEBUG ("Started AfroditaC");
-	CommunicationManager* manager = CommunicationManager::getInstance();
+	if ( CreateThread (NULL,  0, mainThreadProc, NULL, 0, NULL) == NULL)
+		ExitProcess(1);
 
-	manager->mainLoop();
+	MSG msg;
+	while (GetMessageA(&msg, (HWND) NULL, 0, 0)) {
+		TranslateMessage(&msg);
+		DispatchMessageA(&msg);
+	}
 
-#ifdef WIN32
-	ExitProcess(0);
 #else
+#ifdef USEQT
+ 	QApplication *app = new QApplication (argc, argv);
+
+	pthread_t threadId;
+	if (pthread_create(&threadId, NULL, qtThreadProc, app) != 0)
+		exit(1);
+
+	app->exec();
+
 	exit(0);
+#else
+	gdk_threads_init();
+	gtk_init(&argc, &argv);
+
+
+	fprintf(stderr, "A1\n");
+	fprintf(stderr, "A2\n");
+
+	signalWindow = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+
+	fprintf(stderr, "A3\n");
+
+//	g_signal_connect_object(signalWindow, "popup-menu",
+//				G_CALLBACK(menuPopupHandler), NULL, (GConnectFlags)0);
+	fprintf(stderr, "A4\n");
+
+	pthread_t threadId;
+	if (pthread_create(&threadId, NULL, qtThreadProc, NULL) != 0)
+		exit(1);
+
+	gtk_main();
+
+
+#endif
 #endif
 
+	return 0;
 }

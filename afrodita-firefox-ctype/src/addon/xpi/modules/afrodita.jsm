@@ -1,11 +1,15 @@
 var EXPORTED_SYMBOLS = ["AfroditaExtension"];  
 
 function parsePageData (docid, document ) {
+
+	var w = AfroditaExtension.getWindow (docid);
+	
 	var pageData = {};
 	pageData.url = document.URL;
 	pageData.title = document.tile;
 	pageData.forms = [];
 	pageData.inputs = [];
+	
 	
 	// Parse formsc
 	for (var i = 0; i < document.forms.length; i++)
@@ -28,8 +32,9 @@ function parsePageData (docid, document ) {
 		var inputData = {};
 		var cs= {};
 		try {
-			cs = window.getComputesStyle(input);
+			cs = w.getComputedStyle(input);
 		} catch (e) {
+			console.log ("  Error getting computed style"+e);
 		}
 		inputData.clientHeight = input.clientHeight;
 		inputData.clientWitdh  = input.clientWidth;
@@ -51,7 +56,7 @@ function parsePageData (docid, document ) {
 		try {
 			while (parent != null)
 			{
-				var cs = window.getComputesStyle(parent);
+				var cs = w.getComputedStyle(parent);
 				if (cs["visibility"] == "hidden")
 					inputData.visibility = "hidden";
 				if (cs["display"] == "none")
@@ -66,7 +71,6 @@ function parsePageData (docid, document ) {
 		var found = false;
 		if ( form ) {
 			var soffidId = AfroditaExtension.registerElement(docid, form);
-			console.log ("  form $id="+soffidId);
 			for (f in pageData.forms)
 			{
 				var formData = pageData.forms[f];
@@ -244,6 +248,12 @@ var AfroditaExtension = {
      var str = result.readString (); 
      return JSON.parse (str);
   },
+  searchAccountsForServer: function(text) {
+     var result = AfroditaExtension.AfrSearchLocal (text);
+     var str = result.readString (); 
+     console.log("Search "+text+"=>"+str);
+     return JSON.parse (str);
+  },
   checkInit: function () { 
        if ( AfroditaExtension.initialized )
           return;
@@ -288,6 +298,7 @@ var AfroditaExtension = {
 		AfroditaExtension.AfrEvent = AfroditaExtension.lib . declare ("AFRevent", ctypes.default_abi, ctypes.void_t, ctypes.long);
 		AfroditaExtension.AfrGetVersion = AfroditaExtension.lib . declare ("AFRgetVersion", ctypes.default_abi, ctypes.char.ptr);
 		AfroditaExtension.AfrSearch = AfroditaExtension.lib . declare ("AFRsearch", ctypes.default_abi, ctypes.char.ptr, ctypes.char.ptr);
+		AfroditaExtension.AfrSearchLocal = AfroditaExtension.lib . declare ("AFRsearchLocal", ctypes.default_abi, ctypes.char.ptr, ctypes.char.ptr);
 		AfroditaExtension.AfrEvent2 = false;
 		try {
 			AfroditaExtension.AfrEvent2 = AfroditaExtension.lib . declare ("AFRevent2", ctypes.default_abi, ctypes.void_t, ctypes.long, ctypes.long);
@@ -446,6 +457,9 @@ var AfroditaExtension = {
 			     if (atr == "value") {
 					var doc = AfroditaExtension.getDocument(docid);    
 					var evt  = doc.createEvent ("HTMLEvents");
+					evt.initEvent ("input", true, true);
+					el.dispatchEvent(evt);
+					doc.createEvent ("HTMLEvents");
 					evt.initEvent ("change", true, true);
 					el.dispatchEvent(evt);
 			     }

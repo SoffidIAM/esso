@@ -13,6 +13,7 @@
 #include <string>
 #include <stdlib.h>
 #include <stdio.h>
+#include <strings.h>
 
 ComponentMatcher::ComponentMatcher():
 	m_aliasedComponents(0)
@@ -58,7 +59,7 @@ void ComponentMatcher::dumpDiagnostic (NativeComponent *top, NativeComponent *fo
 	if (data != NULL && data->spy)
 	{
 		const char* szCmdLine = MZNC_getCommandLine();
-		MZNSendSpyMessage("<!----------------------------------------------------------------->");
+		MZNSendSpyMessage("<!--=============================================================-->");
 		MZNSendSpyMessage("<Application cmdLine='^%s$'>",
 				xmlEncode(szCmdLine));
 		top->dumpXML(2, focus);
@@ -143,7 +144,26 @@ void ComponentMatcher::triggerFocusEvent () {
 					it != current->m_actions.end();
 					it ++)
 			{
-				(*it)->executeAction(*this);
+				if ( (*it)->szType == NULL || stricmp((*it)->szType, "onBlur") != 0)
+					(*it)->executeAction(*this);
+			}
+			current = current->m_parent;
+		}
+	}
+}
+
+void ComponentMatcher::triggerBlurEvent () {
+	if (m_bMatched)
+	{
+		ComponentSpec *current = m_focus;
+		while (current != NULL)
+		{
+			for (std::vector<Action*>::iterator it = current->m_actions.begin();
+					it != current->m_actions.end();
+					it ++)
+			{
+				if ( (*it)->szType != NULL || stricmp((*it)->szType, "onBlur") == 0)
+					(*it)->executeAction(*this);
 			}
 			current = current->m_parent;
 		}

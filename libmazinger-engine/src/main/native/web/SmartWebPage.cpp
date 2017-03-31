@@ -17,10 +17,12 @@
 #include <img_generate.h>
 #include <img_unlock.h>
 #include <img_user.h>
-
 #include <SmartForm.h>
 
 #include <stdio.h>
+
+#include <algorithm>
+#include <vector>
 
 SmartWebPage::SmartWebPage() {
 	parsed = false;
@@ -43,10 +45,10 @@ class OnAnyElementFocusListener: public WebListener
 public:
 	virtual std::string toString () { return std::string("OnAnyElementFocusListener");}
 	SmartWebPage *page;
-	virtual void onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component);
+	virtual void onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component, const char * data);
 };
 
-void OnAnyElementFocusListener::onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component) {
+void OnAnyElementFocusListener::onEvent (const char *eventName, AbstractWebApplication *app, AbstractWebElement *component, const char *data) {
 	if (MZNC_waitMutex())
 	{
 		component->sanityCheck();
@@ -182,11 +184,17 @@ static std::wstring searchInVector (std::vector<std::pair<std::wstring, std::wst
 	return result;
 }
 
-bool SmartWebPage::getAccounts(const char *system, const char *prefix) {
+/**
+ *
+ * system => Soffid agent name. User created accounts as in sso system
+ * targetSystem => For user created accounts, contains the actual target domain name. Is empty for administrator created agents
+ *
+ */
+bool SmartWebPage::getAccounts(const char *system, const char *targetSystem) {
 	MZNSendDebugMessageA("** Fetching accounts for [%s]", system);
-	std::wstring wPrefix;
-	if (prefix != NULL)
-		wPrefix = MZNC_strtowstr(prefix);
+	std::wstring wTargetSystem;
+	if (targetSystem != NULL)
+		wTargetSystem = MZNC_strtowstr(targetSystem);
 
 	SecretStore s (MZNC_getUserName());
 
@@ -201,18 +209,22 @@ bool SmartWebPage::getAccounts(const char *system, const char *prefix) {
 
 	std::vector<std::pair<std::wstring, std::wstring> > descriptions =
 			s.getSecretsByPrefix2((std::wstring(L"accdesc.")+MZNC_strtowstr(system)+L".").c_str());
-	std::vector<std::pair<std::wstring, std::wstring> > servers;
-	if (prefix != NULL)
-		servers = s.getSecretsByPrefix2((std::wstring(L"sso.")+MZNC_strtowstr(defaultSoffidSystem.c_str())+L".").c_str());
+	std::vector<std::pair<std::wstring, std::wstring> > serverAttributes;
+	std::wstring attPrefix ;
+	attPrefix = std::wstring(L"sso.")+MZNC_strtowstr(system)+L".";
+	serverAttributes = s.getSecretsByPrefix2(attPrefix.c_str());
 
-	int prefixLength = strlen (prefix);
+
 	for (std::vector<std::wstring>::iterator it = accountNames.begin(); it != accountNames.end(); it++)
 	{
+
 		std::wstring account = *it;
-		std::wstring secret2 = std::wstring(L"sso.")+MZNC_strtowstr(defaultSoffidSystem.c_str())+L"."+account+L".Server";
-		std::wstring server = searchInVector(servers, secret2);
-		if (prefix == NULL || server == wPrefix )
+		std::wstring attPrefix2 = attPrefix+account+L".";
+		std::wstring secret2 = attPrefix2+L"Server";
+		std::wstring server = searchInVector(serverAttributes, secret2);
+		if (wTargetSystem.empty() || server == wTargetSystem )
 		{
+
 			char id[10];
 			sprintf (id, "%d", accounts.size()+1);
 			AccountStruct as;
@@ -237,18 +249,57 @@ bool SmartWebPage::getAccounts(const char *system, const char *prefix) {
 				as.friendlyName = account;
 			else
 				as.friendlyName = description;
+
+
+			// Fetch attributes
+			int attPrefix2Len = attPrefix2.length();
+			for (std::vector<std::pair<std::wstring, std::wstring> >::iterator it = serverAttributes.begin() ;
+					it != serverAttributes.end () ; it ++)
+			{
+				if (it->first.length() > attPrefix2Len &&
+						it -> first.substr(0, attPrefix2Len) == attPrefix2 )
+				{
+					std::wstring attName = it->first.substr(attPrefix2Len, std::string::npos).c_str();
+					MZNSendDebugMessage("attname=%ls", attName.c_str());
+					if (attName == L"URL")
+					{
+						as.url = it->second;
+					}
+					else if (attName != L"Server" && attName != L"URL");
+					{
+						std::wstring value = it->second;
+						size_t i = value.find('=');
+						if ( i != std::string::npos)
+						{
+							std::string split1 = MZNC_wstrtostr(SeyconCommon::urlDecode(MZNC_wstrtoutf8(value.substr(0, i).c_str()).c_str()).c_str());
+							std::string split2 = MZNC_wstrtostr(SeyconCommon::urlDecode(MZNC_wstrtoutf8(value.substr(i+1).c_str()).c_str()).c_str());
+							if ( ! isAnyAttributeNamed (split1.c_str()))
+							{
+								MZNSendDebugMessageA("Registering attribute %s", split1.c_str());
+								accountAttributes.push_back(split1);
+							}
+						}
+					}
+
+				}
+			}
+			// Now, add to accounts list
 			accounts.push_back(as);
-			MZNSendDebugMessageA("*** Found account %ls", account.c_str());
 		}
 	}
+
 	return true;
 }
 
 
 void SmartWebPage::fetchAccounts(AbstractWebApplication *app, const char *systemName) {
+	app->getUrl(url);
+	fetchAccounts(systemName);
+}
+
+void SmartWebPage::fetchAccounts(const char *systemName) {
 	MZNSendDebugMessageA("* Fetching accounts for %s", systemName);
 	accounts.clear();
-	app->getUrl(url);
 	size_t i = url.find("://");
 	if ( i != std::string::npos)
 	{
@@ -289,7 +340,6 @@ void SmartWebPage::fetchAccounts(AbstractWebApplication *app, const char *system
 }
 
 
-
 void SmartWebPage::getAccountStruct (const char* id, AccountStruct &as)
 {
 	for (std::vector<AccountStruct>::iterator it = accounts.begin(); it != accounts.end(); it++)
@@ -304,6 +354,16 @@ void SmartWebPage::getAccountStruct (const char* id, AccountStruct &as)
 	as.system = MZNC_strtowstr(defaultSoffidSystem.c_str());
 	as.friendlyName = L"New account";
 	as.account = MZNC_strtowstr(accountDomain.c_str())+L"/"+as.friendlyName;
+}
+
+
+bool SmartWebPage::isAnyAttributeNamed (const char *attName)
+{
+
+	std::vector<std::string>::iterator it = std::find ( accountAttributes.begin (), accountAttributes.end(), std::string(attName));
+
+	return it != accountAttributes.end ();
+
 }
 
 void SmartWebPage::fetchAttributes(AbstractWebApplication *app, AccountStruct &as, std::map<std::string,std::string> &attributes) {

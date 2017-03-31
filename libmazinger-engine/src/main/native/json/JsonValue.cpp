@@ -15,6 +15,10 @@ namespace json {
 JsonValue::JsonValue() {
 }
 
+JsonValue::JsonValue(const char *value) {
+	this->value = value;
+}
+
 JsonValue::~JsonValue() {
 }
 

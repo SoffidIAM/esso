@@ -40,3 +40,13 @@ std::wstring PamScriptDialog::selectAccount(std::vector<std::wstring>accounts,
 {
 	return std::wstring();
 }
+
+std::wstring PamScriptDialog::askPassword (std::wstring label)
+{
+	return std::wstring();
+}
+
+std::wstring PamScriptDialog::askText (std::wstring label)
+{
+	return std::wstring();
+}

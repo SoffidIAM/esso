@@ -1,6 +1,7 @@
 var version = "2.6.0";
 //alert ("Started 2");
 
+var currentSelectActionMessage = null;
 
 var mazingerBridge = {
 	ports: [],
@@ -46,6 +47,31 @@ var mazingerBridge = {
 				
 			}
 		}
+		else if (msg.message == "selectAction2")
+		{
+			console.log(JSON.stringify(msg));
+			var hborder = (msg.window.outerWidth-msg.window.innerWidth)/2;
+			var vborder = (msg.window.outerHeight-msg.window.innerHeight-hborder);
+			var left = Math.round(msg.rect.left +
+				msg.window.left +
+				hborder);
+			var top = Math.round(msg.rect.top +
+				msg.window.top +
+				vborder);
+		
+			chrome.windows.create({
+					url: chrome.extension.getURL("selectAction.html"),
+					type: "popup",
+					left: left,
+					top: top,
+					width: 100, 
+					height: 100
+				});
+		}
+		else if (msg.message == "selectAction3")
+		{
+			port.postMessage({action: "selectAction4", request: currentSelectActionMessage});
+		}
 		else
 		{
 			if (typeof (msg.requestId) != 'undefined')
@@ -63,26 +89,31 @@ var mazingerBridge = {
 			var console = chrome.extension.getBackgroundPage().console;
 			var result = "";
 			var pageId = parseInt(request.pageId);
-//			console.log("Got message  for "+pageId+"/"+request.pageId+":"+JSON.stringify(request));
+			console.log("Got message  for "+pageId+"/"+request.pageId+":"+JSON.stringify(request));
 			var port = mazingerBridge.ports[pageId];
 			if (port == null) {
-//				console.log("Port is closed for "+pageId);
-					if ( request.requestId != null )
-					{
-//						console.log("Sending error for "+request.requestId);
-						mazingerBridge.port.postMessage({
-							"response": "error",
-							"requestId": request.requestId,
-							"pageId": request.pageId,
-							"message": "response",
-							error: true,
-							"exception": "Page already unloaded"
-						});
-//						console.log("Sent error for "+request.requestId);
-					}
-			} else {
+				if ( request.requestId != null )
+				{
+					mazingerBridge.port.postMessage({
+						"response": "error",
+						"requestId": request.requestId,
+						"pageId": request.pageId,
+						"message": "response",
+						error: true,
+						"exception": "Page already unloaded"
+					});
+				}
+			} 
+			if (request.action == "selectAction")
+			{
+				currentSelectActionMessage = request;
+				port.postMessage({action: "selectAction1", request: request});
+				// ACK 
+				mazingerBridge.port.postMessage({response: "", requestId: request.requestId, pageId: request.pageId});
+			}
+			else
+			{
 				port.postMessage(request);
-//				console.log("Forwarded message "+request.requestId+" to "+pageId);
 			}
  		} catch (error) {
 //			console.log("Error generating message: "+error.message);

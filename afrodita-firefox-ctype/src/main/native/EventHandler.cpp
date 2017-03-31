@@ -123,7 +123,7 @@ void EventHandler::process(long eventId) {
 		if (d->eventId == eventId) {
 			FFWebApplication *app = new FFWebApplication(d->docId);
 			FFElement *element = d->elementId == 0 ? NULL: new FFElement(app, d->elementId);
-			d->listener->onEvent(d->eventName.c_str(), app, element);
+			d->listener->onEvent(d->eventName.c_str(), app, element, NULL);
 			if (element != NULL)
 				element->release();
 			if (app != NULL)
@@ -141,7 +141,7 @@ void EventHandler::process(long eventId, long elementId) {
 		if (d->eventId == eventId) {
 			FFWebApplication *app = new FFWebApplication(d->docId);
 			FFElement *element = new FFElement(app, elementId);
-			d->listener->onEvent(d->eventName.c_str(), app, element);
+			d->listener->onEvent(d->eventName.c_str(), app, element, NULL);
 			if (element != NULL)
 				element->release();
 			if (app != NULL)

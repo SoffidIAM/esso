@@ -40,6 +40,7 @@ public:
 class Event
 {
 public:
+	std::string data;
 	std::string target;
 	ActiveListenerInfo *listener;
 };
@@ -62,11 +63,13 @@ private:
 	std::list<Event*> list;
 };
 
-class ThreadStatus {
+class ThreadStatus: public LockableObject {
 public:
 	ThreadStatus();
+protected:
 	virtual ~ThreadStatus();
 
+public:
 #ifdef WIN32
 	HANDLE hMutex;
 	HANDLE hEventMutex;
@@ -88,6 +91,7 @@ public:
 	bool refresh;
 	PendingEventList pendingEvents;
 
+	virtual std::string toString () { return std::string("ThreadStatus") ;};
 private:
 
 	json::JsonAbstractObject *readObject;

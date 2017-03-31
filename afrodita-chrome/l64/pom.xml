@@ -23,6 +23,40 @@
 				</configuration>
 			</plugin>
 			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>compile</id>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<inherited>false</inherited>
+						<configuration>
+							<tasks>
+								<mkdir dir="target/qt" />
+								<exec executable="moc">
+								<!-- 
+									<arg value="-DQT_QML_DEBUG" />
+									<arg value="-DQT_DECLARATIVE_DEBUG" />
+									<arg value="-DQT_WIDGETS_LIB" />
+									<arg value="-DQT_GUI_LIB" />
+									<arg value="-DQT_CORE_LIB" />
+									<arg value="-I../src/main/native" />
+									<arg value="-I../src/main/include" />
+									<arg value="-I/usr/include/qt5/QtWidgets" />
+									<arg value="-I/usr/include/qt5/QtGui" />
+									<arg value="-I/usr/include/qt5/QtCore" /> -->
+									<arg value="../src/main/native/ChromeWidget.h" />
+									<arg value="-o" />
+									<arg value="${pom.basedir}/target/qt/moc_ChromeWidget.cpp" />
+								</exec>
+							</tasks>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>native-maven-plugin</artifactId>
 				<extensions>true</extensions>
@@ -39,6 +73,14 @@
 						<compilerMiddleOption>-O0</compilerMiddleOption>
 						<compilerMiddleOption>-fshort-wchar</compilerMiddleOption>
 						<compilerMiddleOption>-I../src/main/include-deps</compilerMiddleOption>
+						<compilerMiddleOption>-I/usr/lib/glib-2.0/include</compilerMiddleOption>
+						<compilerMiddleOption>-I/usr/include/cairo</compilerMiddleOption>
+						<compilerMiddleOption>-I/usr/include/glib-2.0</compilerMiddleOption>
+						<compilerMiddleOption>-I/usr/include/pango-1.0</compilerMiddleOption>
+						<compilerMiddleOption>-I/usr/lib/gtk-3.0/include</compilerMiddleOption>
+						<compilerMiddleOption>-I/usr/include/gtk-3.0</compilerMiddleOption>
+						<compilerMiddleOption>-I/usr/include/atk-1.0 </compilerMiddleOption>
+						<compilerMiddleOption>-I/usr/include/gdk-pixbuf-2.0</compilerMiddleOption>
 						<compilerMiddleOption>-DVERSION=${pom.version}</compilerMiddleOption>
 					</compilerMiddleOptions>
 					<linkerMiddleOptions>
@@ -53,23 +95,40 @@
 						<linkerEndOption>-lpcreposix</linkerEndOption>
 						<linkerEndOption>-ldl</linkerEndOption>
 						<linkerEndOption>-lsoup-2.4</linkerEndOption>
-						<linkerEndOption>-lglib-2.0</linkerEndOption>
 						<linkerEndOption>-lpthread</linkerEndOption>
 						<linkerEndOption>-lX11</linkerEndOption>
-                                                <linkerEndOption>-lgio-2.0</linkerEndOption>
-                                                <linkerEndOption>-lgmodule-2.0</linkerEndOption>
-                                                <linkerEndOption>-lrt</linkerEndOption>
-                                                <linkerEndOption>-lz</linkerEndOption>
-                                                <linkerEndOption>-lffi</linkerEndOption>
-                                                <linkerEndOption>-lselinux</linkerEndOption>
-                                                <linkerEndOption>-lresolv</linkerEndOption>
-                                                <linkerEndOption>-lgobject-2.0</linkerEndOption>
-
+                        <linkerEndOption>-lrt</linkerEndOption>
+                        <linkerEndOption>-lz</linkerEndOption>
+                        <linkerEndOption>-lffi</linkerEndOption>
+                        <linkerEndOption>-lselinux</linkerEndOption>
+                        <linkerEndOption>-lresolv</linkerEndOption>
+                        <linkerEndOption>-lgobject-2.0</linkerEndOption>
+						<linkerEndOption>-lgtk-3</linkerEndOption>
+						<linkerEndOption>-lgdk-3</linkerEndOption>
+						<linkerEndOption>-lglib-2.0</linkerEndOption>
+						<!-- 
+						<linkerEndOption>-lQt5Widgets</linkerEndOption>
+                        <linkerEndOption>-lQt5Gui</linkerEndOption>
+                        <linkerEndOption>-lQt5Core</linkerEndOption>
+                        -->
 					</linkerEndOptions>
 					<sources>
 						<source>
 							<!-- relative to your project directory -->
 							<directory>../src/main/native</directory>
+							<includes>
+								<include>**/*.cpp</include>
+							</includes>
+							<excludes>
+								<exclude>**/*.h</exclude>
+							</excludes>
+
+							<deployable>false</deployable>
+							<dependencyAnalysisParticipation>false</dependencyAnalysisParticipation>
+						</source>
+						<source>
+							<!-- relative to your project directory -->
+							<directory>target/qt</directory>
 							<includes>
 								<include>**/*.cpp</include>
 							</includes>

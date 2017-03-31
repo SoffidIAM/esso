@@ -39,6 +39,11 @@ public:
 	long getDocId() { return docId; }
 	virtual void subscribe ( const char *eventName, WebListener *listener) ;
 	virtual void unSubscribe ( const char *eventName, WebListener *listener) ;
+	virtual void selectAction (const char * title,
+			std::vector<std::string> &optionId,
+			std::vector<std::string> &names,
+			AbstractWebElement *element,
+			WebListener *listener);
 
 	virtual SmartWebPage* getWebPage ();
 	virtual std::string toString () ;
