@@ -42,6 +42,8 @@ public:
 	virtual void cancelProgressMessage ();
 	virtual  std::wstring selectAccount(std::vector<std::wstring>accounts,
 			std::vector<std::wstring>accountDescriptions) ;
+	virtual std::wstring askPassword (std::wstring label) ;
+	virtual std::wstring askText (std::wstring label) ;
 };
 
 
@@ -273,6 +275,8 @@ static void setProgressMessage (const char *lpszMessage) {
 static int iSelectedIndex = -1;
 static std::vector<std::wstring> *s_accounts;
 static std::vector<std::wstring> *s_accountDescriptions;
+static std::wstring s_label;
+static std::wstring s_result;
 
 #include <engine/resources/engine-resource.h>
 //////////////////////////////////////////////////////////
@@ -345,6 +349,50 @@ static INT_PTR CALLBACK selectAccountDialogProc(
 
 
 
+static INT_PTR CALLBACK askTextDialogProc(
+    HWND hwndDlg,	// handle to dialog box
+    UINT uMsg,	// message
+    WPARAM wParam,	// first message parameter
+    LPARAM lParam 	// second message parameter
+   )
+{
+	switch (uMsg)
+	{
+	case WM_COMMAND:
+	{
+		WORD wID = LOWORD(wParam);         // item, control, or accelerator identifier
+		if (wID == IDOK)
+		{
+			HWND hwndEdit = GetDlgItem (hwndDlg, IDC_EDIT1);
+			wchar_t ach[2049];
+			ach[2048]= ach[0] = '\0';
+			GetWindowTextW (hwndEdit, ach, 2048);
+			s_result = ach;
+			EndDialog (hwndDlg, 0);
+		}
+		if (wID == IDCANCEL) {
+			EndDialog (hwndDlg, 1);
+		}
+		return 0;
+	}
+	case WM_INITDIALOG:
+	{
+		HWND hwndLabel = GetDlgItem (hwndDlg, IDC_LABEL);
+
+		SetWindowTextW (hwndLabel, s_label.c_str());
+		return 0;
+	}
+	case WM_NEXTDLGCTL:
+	{
+		ShowWindow(hwndDlg, SW_SHOWNORMAL);
+		return 0;
+	}
+	default:
+		return 0;
+	}
+}
+
+
 
 void DefaultScriptDialog::alert (const char *msg) {
 	MessageBoxW(NULL, MZNC_strtowstr(msg).c_str(), L"Warning", MB_OK|MB_ICONINFORMATION);
@@ -372,6 +420,33 @@ std::wstring DefaultScriptDialog::selectAccount(
 	else
 		return std::wstring();
 }
+
+
+std::wstring DefaultScriptDialog::askText(std::wstring label) {
+	s_label = label;
+	int result = DialogBox (hMazingerInstance, MAKEINTRESOURCE (IDD_TEXTDIALOG),
+			NULL,  askTextDialogProc);
+	if (result == 0)
+	{
+		return s_result;
+	}
+	else
+		return std::wstring();
+}
+
+
+std::wstring DefaultScriptDialog::askPassword(std::wstring label) {
+	s_label = label;
+	int result = DialogBox (hMazingerInstance, MAKEINTRESOURCE (IDD_PASSWORDDIALOG),
+			NULL,  askTextDialogProc);
+	if (result == 0)
+	{
+		return s_result;
+	}
+	else
+		return std::wstring();
+}
+
 #else
 
 std::wstring DefaultScriptDialog::selectAccount(
@@ -391,6 +466,15 @@ void DefaultScriptDialog::progressMessage(const char *msg) {
 void DefaultScriptDialog::cancelProgressMessage() {
 	fprintf (stderr, "\n");
 }
+
+std::wstring DefaultScriptDialog::askText(std::wstring label) {
+	return std::wstring();
+}
+
+std::wstring DefaultScriptDialog::askPassword(std::wstring label) {
+	return std::wstring();
+}
+
 #endif
 
 
