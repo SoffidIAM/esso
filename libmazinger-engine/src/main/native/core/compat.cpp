@@ -269,7 +269,7 @@ const char *MZNC_getHostName () {
 #include <locale.h>
 
 const char *MZNC_getCommandLine() {
-	static char *cmdLine = NULL;
+	static char *cmdLine = "";
 	if (cmdLine == NULL)
 	{
 		FILE *f =fopen ("/proc/self/cmdline", "r");
@@ -334,7 +334,7 @@ static char * convert (const char *pszString, const char *fromCharset, const cha
 	}
 	char *oldLocale = NULL;
 	if (fromCharset == NULL || toCharset == NULL) {
-		oldLocale = setlocale(LC_CTYPE, "");
+//		oldLocale = setlocale(LC_CTYPE, "");
 	}
 	size_t inSize = len;
 	size_t outSize = inSize;
@@ -362,8 +362,8 @@ static char * convert (const char *pszString, const char *fromCharset, const cha
 	iconv (ict, NULL, NULL, &out, &outSize);
 	iconv_close (ict);
 
-	if (oldLocale != NULL)
-		setlocale(LC_CTYPE, oldLocale);
+//	if (oldLocale != NULL)
+//		setlocale(LC_CTYPE, oldLocale);
 	return result;
 }
 
