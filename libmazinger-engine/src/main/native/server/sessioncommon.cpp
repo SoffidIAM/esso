@@ -19,7 +19,7 @@
 
 #include <errno.h>
 #include "ConfigFile.h"
-
+#include <syslog.h>
 #endif
 
 
@@ -452,6 +452,12 @@ void SeyconCommon::info (const char *szFormat, ...) {
 	    ReportEvent(getEventLog(),
 	    		EVENTLOG_AUDIT_SUCCESS, MC_MAZINGER, MC_MAZINGER_INFO,
 	    		NULL, 1, 0, &params, NULL);
+#else
+		va_list v2;
+		va_start(v2, szFormat);
+		openlog ("soffid-session", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
+		vsyslog (LOG_INFO, szFormat, v2);
+		closelog ();
 #endif
 		time_t t;
 		time(&t);
@@ -479,6 +485,12 @@ void SeyconCommon::warn (const char *szFormat, ...) {
 	    ReportEvent(getEventLog(),
 	    		EVENTLOG_WARNING_TYPE, MC_MAZINGER, MC_MAZINGER_WARN,
 	    		NULL, 1, 0, &params, NULL);
+#else
+		va_list v2;
+		va_start(v2, szFormat);
+		openlog ("soffid-session", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
+		vsyslog (LOG_WARNING, szFormat, v2);
+		closelog ();
 #endif
 	va_list v;
 	va_start(v, szFormat);
@@ -507,6 +519,13 @@ void SeyconCommon::debug (const char *szFormat, ...) {
 	    ReportEvent(getEventLog(),
 	    		EVENTLOG_INFORMATION_TYPE, MC_MAZINGER, MC_MAZINGER_DEBUG,
 	    		NULL, 1, 0, &params, NULL);
+#else
+		va_list v2;
+		va_start(v2, szFormat);
+		setlogmask (LOG_UPTO (LOG_DEBUG));
+		openlog ("soffid-session", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
+		vsyslog (LOG_DEBUG, szFormat, v2);
+		closelog ();
 #endif
 		time_t t;
 		time(&t);
