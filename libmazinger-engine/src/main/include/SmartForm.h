@@ -84,10 +84,10 @@ public:
 	AbstractWebApplication *getApp(){return app;}
 	void onChange (AbstractWebElement *element);
 	void onClickImage (AbstractWebElement *element);
-	void onClickLevel (AbstractWebElement *element);
-	void onClickSave (AbstractWebElement *element);
-	void onClickAccount (AbstractWebElement *element);
-	void onClickModal (AbstractWebElement *element);
+	void onClickLevel (AbstractWebElement *element, const char *level);
+	void onClickSave (AbstractWebElement *element, const char *level);
+	void onClickAccount (AbstractWebElement *element, const char *account);
+	// void onClickModal (AbstractWebElement *element, const char *level);
 	void onFocus (AbstractWebElement *element);
 	void createModal(AbstractWebElement *img);
 	void createGenerateModal(AbstractWebElement *img);
