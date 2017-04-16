@@ -334,7 +334,7 @@ void ChromeWebApplication::selectAction (const char * title,
 	for (int i = 0; i < optionId.size(); i ++)
 		m->optionId.push_back(optionId[i]);
 	for (int i = 0; i < names.size() ; i++)
-		m->names.push_back(names[i]);
+		m->names.push_back(MZNC_utf8tostr(names[i].c_str()).c_str());
 
 	MZNSendDebugMessage("Sending signal");
 	currentMenu = m;

@@ -177,16 +177,7 @@ extern "C" int main (int argc, char **argv)
 	gtk_init(&argc, &argv);
 
 
-	fprintf(stderr, "A1\n");
-	fprintf(stderr, "A2\n");
-
 	signalWindow = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-
-	fprintf(stderr, "A3\n");
-
-//	g_signal_connect_object(signalWindow, "popup-menu",
-//				G_CALLBACK(menuPopupHandler), NULL, (GConnectFlags)0);
-	fprintf(stderr, "A4\n");
 
 	pthread_t threadId;
 	if (pthread_create(&threadId, NULL, qtThreadProc, NULL) != 0)
