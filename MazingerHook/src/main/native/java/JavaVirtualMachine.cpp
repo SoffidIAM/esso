@@ -176,6 +176,8 @@ static void createFile (const char *szPolicyFile, const char *szMazingerUrl) {
 		do {
 			policyLength += read;
 			ensureCapacity(pszUserPolicy, policyLength, policyAllocated);
+			if (pszUserPolicy == NULL)
+				return;
 			read = fread(&pszUserPolicy[policyLength], 1, 1024, f);
 		} while (read > 0);
 		fclose (f);
