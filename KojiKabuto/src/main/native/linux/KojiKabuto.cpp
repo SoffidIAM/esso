@@ -210,8 +210,11 @@ void view_popup_menu_onStop(GtkWidget *menuitem, gpointer userdata) {
 }
 
 void view_popup_menu_onReload(GtkWidget *menuitem, gpointer userdata) {
-	SeyconSession session;
-	session.setUser(MZNC_getUserName());
+	if ( ! session.isOpen())
+	{
+		session.setUser(MZNC_getUserName());
+		session.setSoffidUser(MZNC_getUserName());
+	}
 	session.updateMazingerConfig();
 
 	GtkWidget *dialog = gtk_dialog_new_with_buttons("Mazinger", NULL,
