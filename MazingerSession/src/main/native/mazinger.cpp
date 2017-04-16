@@ -26,9 +26,11 @@
 
 void SeyconSession::parseAndStoreSecrets (SeyconResponse *resp)
 {
-	wchar_t *wchComposedSecrets = (wchar_t*) malloc(resp->getSize() * sizeof (wchar_t));
+	// Add 128 extra padding needed by AES encrypt module
+	wchar_t *wchComposedSecrets = (wchar_t*) malloc(resp->getSize() * sizeof (wchar_t) + 128);
 	if (wchComposedSecrets == NULL)
 		return;
+	memset(wchComposedSecrets, sizeof wchComposedSecrets, 0);
 	long last = 0;
 	int secretNumber = 1;
 	std::wstring secret;
