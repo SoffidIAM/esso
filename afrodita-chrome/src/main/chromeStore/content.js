@@ -74,6 +74,8 @@ function parsePageData () {
 		inputData.textAlign    = cs["text-align"] ;
 		inputData.type         = input.type;
 		inputData.visibility   = cs["visibility"];
+		inputData.mirrorOf     = input.soffidMirrorOf;
+		inputData.inputType    = input.soffidInputType;
 		// Check parent visibility
 		var parent = input.parentElement;
 		try {
