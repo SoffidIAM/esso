@@ -16,6 +16,7 @@ namespace json {
 class JsonValue: public json::JsonAbstractObject {
 public:
 	JsonValue();
+	JsonValue(const char *value);
 	virtual ~JsonValue();
 	virtual const char* read (const char* str) ;
 	virtual void write (std::string &str, int indent) ;

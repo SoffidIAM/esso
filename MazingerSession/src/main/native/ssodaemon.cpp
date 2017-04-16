@@ -301,12 +301,16 @@ void SsoDaemon::runKeepAlive ()
 		{
 			if ( !doKeepAlive () && delay > 5)
 			{
+#ifndef WIN32
+				SeyconCommon::warn("Keep alive failed. New delay %d", delay);
+#endif
 				delay = delay / 2;
 			}
 			else
 				delay = keepalive;
 		}
 	}
+	printf ("End Keep alive thread\n");
 }
 
 //////////////////////////////////////////////////////////
@@ -356,6 +360,7 @@ void SsoDaemon::stopDaemon ()
 
 
 bool SsoDaemon::doKeepAlive() {
+	SeyconCommon::debug ("Notifying I am alive");
 	bool ok = false;
 	SeyconService service;
 	SeyconResponse *response = service.sendUrlMessage(
@@ -365,6 +370,12 @@ bool SsoDaemon::doKeepAlive() {
 	if (response != NULL)
 	{
 		std::string status = response->getToken(0);
+		std::string status2 = response->getToken(1);
+
+#ifndef WIN32
+		SeyconCommon::debug("Keep alive session %s: %s", status.c_str(), status2.c_str());
+#endif
+
 		if (status == "OK")
 		{
 			std::string newKeyResponse = response->getToken(1);
@@ -373,6 +384,9 @@ bool SsoDaemon::doKeepAlive() {
 					session != NULL)
 			{
 				newSessionKey = newKeyResponse;
+#ifndef WIN32
+				SeyconCommon::info("Renewing secrets\n");
+#endif
 				session->renewSecrets(newSessionKey.c_str());
 			}
 			ok = true;
@@ -381,7 +395,14 @@ bool SsoDaemon::doKeepAlive() {
 		{
 			MZNStop(MZNC_getUserName());
 			session->close ();
-			if (session->restartSession() != LOGIN_SUCCESS)
+#ifndef WIN32
+				SeyconCommon::warn("Restarting session");
+#endif
+			if (session->restartSession() == LOGIN_SUCCESS)
+			{
+				stop = true;
+			}
+			else
 			{
 				if (session->getDialog() != NULL)
 					session->getDialog()->notify("Soffid session has been remotely closed");
@@ -389,6 +410,12 @@ bool SsoDaemon::doKeepAlive() {
 		}
 		delete response;
 	}
+#ifndef WIN32
+	else
+	{
+		SeyconCommon::warn ("Error calling keep alive");
+	}
+#endif
 	return ok;
 }
 

@@ -39,19 +39,6 @@ var element = null;
 if (document.getElementById("PanelUI-menu-button"))
 {
     var cmButtonLocation = CustomizableUI.getPlacementOfWidget(statusIcon);    
-//    CustomizableUI.addListener(this._cm.customizableUIListener);	        
-	console.log("Firefox running Australis");
-
-/*	CustomizableUI.addListener(function(aNode, aNextNode, aContainer, aWasRemoval)
-		{
-		    if (aNode.id === statusIcon)
-	    	{
-				cookieMonsterBys1tony.cookieMonsterButton.checkButtonClick();
-	    		//console.log("onWidgetAfterDOMChange - node: " + aNode.id + ", aContainer: " + aContainer.id);    		
-	    	}		
-		}
-	);
-	*/
 	console.log("cmButtonLocation="+ cmButtonLocation);
 	if (cmButtonLocation)
 	{
@@ -78,16 +65,6 @@ else
 		element = document.getElementById(statusIcon);				
 	}
 }
-console.log("element="+element);
-if (element)
-{
-	element.addEventListener('click',
-			function(event) {alert("hola")}, false);
-
-	element.addEventListener('command',
-			function(event) {alert("hola")}, false);
-
-}
 
 
 var sdWindow = null;
@@ -96,7 +73,26 @@ function openSearchDialog (event)
 {
 	if (sdWindow)
 		sdWindow.close();
-	sdWindow = window.open("chrome://SoffidEssoExtension/content/search.xul", 
+
+	var url = ""
+	try {
+		var windowsService = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService(Components.interfaces.nsIWindowMediator);
+
+		// window object representing the most recent (active) instance of Firefox
+		var currentWindow = windowsService.getMostRecentWindow('navigator:browser');
+
+		// most recent (active) browser object - that's the document frame inside the chrome
+		var browser = currentWindow.getBrowser();
+
+		// object containing all the data about an address displayed in the browser
+		var uri = browser.currentURI;
+
+		// textual representation of the actual full URL displayed in the browser
+		url = uri.spec;
+	} catch (e) {
+		console.log("Error getting tabs: "+e)
+	}
+	sdWindow = window.open("chrome://SoffidEssoExtension/content/search.xul?"+url, 
             "doNothing", "chrome,resizable,dialog=no");
 	var element = event.target;
 	var rect = element.getBoundingClientRect();

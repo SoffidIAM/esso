@@ -65,6 +65,12 @@ static void MZNECMA_getAccount(struct SEE_interpreter *, struct SEE_object *,
 static void MZNECMA_getAccounts(struct SEE_interpreter *, struct SEE_object *,
 		struct SEE_object *, int, struct SEE_value **, struct SEE_value *);
 
+static void MZNECMA_askText(struct SEE_interpreter *, struct SEE_object *,
+		struct SEE_object *, int, struct SEE_value **, struct SEE_value *);
+
+static void MZNECMA_askPassword(struct SEE_interpreter *, struct SEE_object *,
+		struct SEE_object *, int, struct SEE_value **, struct SEE_value *);
+
 static void MZNECMA_getPassword(struct SEE_interpreter *, struct SEE_object *,
 		struct SEE_object *, int, struct SEE_value **, struct SEE_value *);
 
@@ -155,6 +161,8 @@ static struct SEE_string *STR(exec);
 static struct SEE_string *STR(execWait);
 static struct SEE_string *STR(sendText);
 static struct SEE_string *STR(sendKeys);
+static struct SEE_string *STR(askPassword);
+static struct SEE_string *STR(askText);
 
 
 // Clase d'objectes per a finestres i components
@@ -251,6 +259,8 @@ static int Mazinger_mod_init() {
 	STR(execWait) = SEE_intern_global("execWait");
 	STR(sendText) = SEE_intern_global("sendText");
 	STR(sendKeys) = SEE_intern_global("sendKeys");
+	STR(askText) = SEE_intern_global("askText");
+	STR(askPassword) = SEE_intern_global("askPassword");
 	return 0;
 }
 
@@ -312,6 +322,8 @@ static void Mazinger_init(struct SEE_interpreter *interp) {
 	PUTFUNC(interp->Global, exec, 1)
 	PUTFUNC(interp->Global, sendText, 1)
 	PUTFUNC(interp->Global, sendKeys, 1)
+	PUTFUNC(interp->Global, askText, 1)
+	PUTFUNC(interp->Global, askPassword, 1)
 
 	/** Creates SECRET STORE **/
 	struct SEE_object * secretStore =
@@ -945,6 +957,68 @@ static void MZNECMA_generatePassword(struct SEE_interpreter *interp,
 	s.freeSecret(user);
 }
 
+
+/*
+ * askPassword()
+ *
+ *
+ */
+static void MZNECMA_askPassword(struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res) {
+	if (argc != 1)
+	{
+		SEE_error_throw(interp, interp->RangeError, "missing argument");
+		return;
+	}
+	SEE_value label;
+	SEE_ToString(interp, argv[0], &label);
+
+	ScriptDialog* sd;
+	sd = ScriptDialog::getScriptDialog();
+	if (sd == NULL)
+	{
+		SEE_error_throw(interp, interp->EvalError, "missing dialog manager");
+	}
+	else
+	{
+		std::wstring labelStr = SEE_StringToWChars(interp, label.u.string);
+		std::wstring p = sd -> askPassword(labelStr);
+		SEE_string * str = SEE_WCharsToString(interp, p.c_str());
+		SEE_SET_STRING(res, str);
+	}
+}
+
+/*
+ * askText()
+ *
+ *
+ */
+static void MZNECMA_askText(struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res) {
+	if (argc != 1)
+	{
+		SEE_error_throw(interp, interp->RangeError, "missing argument");
+		return;
+	}
+	SEE_value label;
+	SEE_ToString(interp, argv[0], &label);
+
+	ScriptDialog* sd;
+	sd = ScriptDialog::getScriptDialog();
+	if (sd == NULL)
+	{
+		SEE_error_throw(interp, interp->EvalError, "missing dialog manager");
+	}
+	else
+	{
+		std::wstring labelStr = SEE_StringToWChars(interp, label.u.string);
+		std::wstring p = sd -> askText(labelStr);
+		SEE_string * str = SEE_WCharsToString(interp, p.c_str());
+		SEE_SET_STRING(res, str);
+	}
+}
 
 /*
  * Funcions de finestra

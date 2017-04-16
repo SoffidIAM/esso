@@ -179,7 +179,7 @@ static jstring JNU_NewStringNative(JNIEnv *env, const char *str)
         jmethodID constructor = env->GetMethodID(strcl, "<init>",
 				"([B)V");
         if (constructor != NULL) {
-			result = (jstring) env->NewObject(strcl, constructor, bytes);
+			result = (jstring) env->NewObject(strcl, constructor, bytes, NULL);
 			env->DeleteLocalRef(bytes);
 	        return result;
         } else {
@@ -192,20 +192,30 @@ static jstring JNU_NewStringNative(JNIEnv *env, const char *str)
 
 void JavaNativeComponent::setAttribute(const char*attributeName, const char* value) {
 	JNIEnv *pEnv = JavaVirtualMachine::getCurrent();
-	jstring jstr = JNU_NewStringNative(pEnv, value);
-	char achMethodName[1024] = "set";
-	strcat(achMethodName, attributeName);
-	achMethodName[3] = toupper(achMethodName[3]);
-	jclass cl = pEnv->GetObjectClass(object);
-	jmethodID m = pEnv->GetMethodID(cl, achMethodName, "(Ljava/lang/String;)V");
-	if (m != NULL)
+
+	if (strlen (value) <= 1000)
 	{
-		pEnv->CallObjectMethod(object, m, jstr, NULL);
-	}
-	else
-	{
-		pEnv->ExceptionClear();
-		MZNSendDebugMessageA("Warning: Component does not have %s method", achMethodName);
+		jstring jstr = JNU_NewStringNative(pEnv, value);
+
+		char achMethodName[1024] = "set";
+
+		strcat(achMethodName, attributeName);
+
+		achMethodName[3] = toupper(achMethodName[3]);
+
+		jclass cl = pEnv->GetObjectClass(object);
+		if (cl != NULL)
+		{
+			jmethodID m = pEnv->GetMethodID(cl, achMethodName, "(Ljava/lang/String;)V");
+			if (m != NULL)
+			{
+				pEnv->CallObjectMethod(object, m, jstr, NULL);
+			}
+			else
+			{
+				pEnv->ExceptionClear();
+			}
+		}
 	}
 }
 

@@ -8,5 +8,6 @@ EXPORTS
     AFRevent
 	AFRdismiss
 	AFRsearch
+    AFRsearchLocal
     AFRgetVersion
 	

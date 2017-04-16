@@ -49,6 +49,10 @@ public:
 	virtual void setProperty (const char* property, const char *value);
 	virtual std::string getComputedStyle(const char* style) ;
 
+	const std::string getExternalId() {
+		return externalId;
+	}
+
 private:
 	ChromeWebApplication *app;
 	std::string externalId;

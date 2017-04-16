@@ -35,6 +35,7 @@ ConfigReader::ConfigReader(PMAZINGER_DATA pMazingerData) {
 	m_bTesting = false;
 	m_achIndent = NULL;
 	m_pMapView = NULL;
+	m_bWeb = false;
 
 #ifdef WIN32
 	m_hMapFile = OpenFileMappingW(FILE_MAP_READ, // Read/write permission.

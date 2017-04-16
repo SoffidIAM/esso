@@ -72,7 +72,7 @@ static bool tryLogin (const std::string &user, const std::string &pass)
 
 	GdkCursor *c = gdk_cursor_new(GDK_WATCH);
 	GtkBuilder *builder2 = gtk_builder_new();
-	GError *error;
+	GError *error = NULL;
 	gtk_builder_add_from_resource(builder2, "/login/progress.glade", &error);
 	GObject *pw = gtk_builder_get_object(builder2, "progressWindow");
 
@@ -151,7 +151,7 @@ gboolean window_login_doClose(GtkWidget *button, gpointer userdata) {
 
 gboolean view_popup_menu_onLogin(GtkWidget *menuitem, gpointer userdata) {
 	GtkBuilder *builder = gtk_builder_new();
-	GError *error;
+	GError *error = NULL;
     gtk_builder_add_from_resource(builder, "/login/login.glade", &error);
 
 	TRACE;
@@ -210,8 +210,11 @@ void view_popup_menu_onStop(GtkWidget *menuitem, gpointer userdata) {
 }
 
 void view_popup_menu_onReload(GtkWidget *menuitem, gpointer userdata) {
-	SeyconSession session;
-	session.setUser(MZNC_getUserName());
+	if ( ! session.isOpen())
+	{
+		session.setUser(MZNC_getUserName());
+		session.setSoffidUser(MZNC_getUserName());
+	}
 	session.updateMazingerConfig();
 
 	GtkWidget *dialog = gtk_dialog_new_with_buttons("Mazinger", NULL,
@@ -229,6 +232,10 @@ void view_popup_menu_onReload(GtkWidget *menuitem, gpointer userdata) {
 
 gboolean tray_icon_on_menu(GtkStatusIcon *status_icon, guint button,
 		guint32 activate_time, gpointer user_data) {
+
+
+	printf ("Started tray_icon_on_menu\n");
+	fflush(stdout);
 
 	GtkWidget *menu, *menuitem;
 	bool started = MZNIsStarted(MZNC_getUserName());
@@ -290,17 +297,18 @@ gboolean tray_icon_on_menu(GtkStatusIcon *status_icon, guint button,
 	return TRUE;
 }
 
-void* updateKojiStatus(void * lpv) {
-	do {
-		gdk_threads_enter();
+gboolean updateKojiStatus(void * lpv) {
+	gdk_threads_enter();
 
-		updateIconStatus();
+	TRACE;
 
-		gdk_threads_leave();
+	updateIconStatus();
 
-		sleep(5);
-	} while (true);
-	return NULL;
+	gdk_threads_leave();
+
+	TRACE;
+
+	return true;
 
 }
 
@@ -314,8 +322,9 @@ static GtkStatusIcon *create_tray_icon() {
 	gtk_status_icon_set_from_gicon(tray_icon, iconDisabled);
 	gtk_status_icon_set_visible(tray_icon, TRUE);
 
-	pthread_t thread1;
-	pthread_create(&thread1, NULL, updateKojiStatus, (void*) tray_icon);
+	updateIconStatus();
+
+	g_timeout_add_seconds(5, updateKojiStatus , (void*) tray_icon);
 
 	return tray_icon;
 }
@@ -340,7 +349,11 @@ extern "C" int main(int argc, char **argv) {
 
 	create_tray_icon();
 
+
 	g_thread_create(DialogHandler::main, NULL, false, NULL);
+
+
+	gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
 	gtk_main();
 

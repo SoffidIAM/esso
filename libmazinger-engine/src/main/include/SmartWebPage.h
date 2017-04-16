@@ -22,12 +22,14 @@ public:
 	std::wstring account;
 	std::wstring system;
 	std::wstring friendlyName;
+	std::wstring url;
 	AccountStruct () {};
 	AccountStruct (const AccountStruct &other) {
 		this->account = other.account;
 		this->system = other.system;
 		this->friendlyName = other.friendlyName;
 		this->id = other.id;
+		this->url = other.url;
 	}
 
 	AccountStruct& operator = (const AccountStruct &other) {
@@ -35,6 +37,7 @@ public:
 		this->system = other.system;
 		this->friendlyName = other.friendlyName;
 		this->id = other.id;
+		this->url = other.url;
 		return *this;
 	}
 };
@@ -43,9 +46,9 @@ class SmartWebPage: public LockableObject {
 public:
 	SmartWebPage();
 protected:
-	virtual ~SmartWebPage();
 	bool parsed;
 	WebListener *listener;
+	virtual ~SmartWebPage();
 
 public:
 	std::vector<SmartForm*> forms;
@@ -53,6 +56,7 @@ public:
 
 	void parse (AbstractWebApplication *app);
 	void fetchAccounts (AbstractWebApplication *app, const char *systemName);
+	void fetchAccounts (const char *systemName);
 	void fetchAttributes (AbstractWebApplication *app, AccountStruct &as, std::map<std::string,std::string> &attributes);
 	bool updateAttributes (AccountStruct &account, std::map<std::string,std::string> &attributes, std::string &errorMsg);
 	bool createAccount (const char *description, std::string &msg, AccountStruct &as);
@@ -61,7 +65,9 @@ public:
 	virtual std::string toString () ;
 	std::string getAccountURL (AccountStruct &account);
 	bool isAnyAttributeNamed (const char *attName);
-
+	void setURL (const char *url) {
+		this->url = url;
+	}
 private:
 	bool sendSecret (AccountStruct &account, const char* sso, std::string &value, std::string &errorMsg);
 

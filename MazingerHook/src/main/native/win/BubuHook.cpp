@@ -11,6 +11,8 @@
 #include <MazingerEnv.h>
 #include <time.h>
 
+static HWND previousFocusWnd = NULL;
+
 DWORD CALLBACK ProcessFocus (void * param)
 {
 
@@ -32,6 +34,18 @@ DWORD CALLBACK ProcessFocus (void * param)
 		ConfigReader *config = MazingerEnv::getDefaulEnv()->getConfigReader();
 		if (config != NULL)
 		{
+			if (previousFocusWnd != NULL)
+			{
+				ComponentMatcher m;
+				std::string className;
+				WindowsNativeComponent component(previousFocusWnd);
+				component.getAttribute("class", className);
+				m.search(*config, component);
+				if (m.isFound()) {
+					m.triggerBlurEvent();
+				}
+				previousFocusWnd = hwnd;
+			}
 			ComponentMatcher m;
 			std::string className;
 			WindowsNativeComponent component(hwnd);
@@ -60,41 +74,32 @@ LRESULT CALLBACK CBTProc(int nCode, WPARAM wParam, LPARAM lParam)
     switch (nCode) 
     { 
         case HCBT_ACTIVATE:
-            strcpy(szCode, "HCBT_ACTIVATE");
             break; 
  
         case HCBT_CLICKSKIPPED:
-            strcpy(szCode, "HCBT_CLICKSKIPPED");
             break; 
  
         case HCBT_CREATEWND:
-            strcpy(szCode, "HCBT_CREATEWND");
-                     
+			installJavaPlugin(hwnd);
             break; 
  
         case HCBT_DESTROYWND:
-            strcpy(szCode, "HCBT_DESTROYWND");
             break; 
  
         case HCBT_KEYSKIPPED:
-            strcpy(szCode, "HCBT_KEYSKIPPED");
             break; 
  
         case HCBT_MINMAX:
-            strcpy(szCode, "HCBT_MINMAX");
             break; 
  
         case HCBT_MOVESIZE:
-            strcpy(szCode, "HCBT_MOVESIZE");
             break; 
  
         case HCBT_QS:
-            strcpy(szCode, "HCBT_QS");
             break; 
  
         case HCBT_SETFOCUS:
-            strcpy(szCode, "HCBT_SETFOCUS");
-    		CreateThread(NULL, // sECURITY ATTRIBUTES
+        	CreateThread(NULL, // sECURITY ATTRIBUTES
     				0, // Stack Size,
     				ProcessFocus, hwnd, // Param
     				0, // Options,
@@ -103,11 +108,9 @@ LRESULT CALLBACK CBTProc(int nCode, WPARAM wParam, LPARAM lParam)
             break;						
  
         case HCBT_SYSCOMMAND:
-            strcpy(szCode, "HCBT_SYSCOMMAND");
             break; 
  
         default:
-            strcpy(szCode, "Unknown");
             break; 
     } 
 

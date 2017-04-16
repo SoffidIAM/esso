@@ -298,6 +298,7 @@ void MZNEvaluateJSMatch(WebMatcher &matcher, const char *script) {
 
 		MZNEvaluateJS_internal(script, msg);
 
+
 		for ( std::vector<struct SEE_string*>::iterator it=nomsToDelete.begin();
 				it != nomsToDelete.end();
 				it++)

@@ -76,6 +76,7 @@ public:
 	const char *getSessionKey() { return sessionKey.c_str();}
 	const char *getSessionId() {return sessionId.c_str();}
 	const char *getSoffidUser() {return soffidUser.c_str();}
+	void setSoffidUser(const char *soffidUser) {this->soffidUser = soffidUser;}
 	bool isOpen() {return m_bOpen;}
 	SeyconDialog * getDialog() { return m_dialog;}
 	int restartSession ();
