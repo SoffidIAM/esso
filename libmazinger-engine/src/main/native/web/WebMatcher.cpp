@@ -119,11 +119,9 @@ void MZNWebMatch (AbstractWebApplication *app) {
 			}
 			std::string url;
 			app->getUrl(url);
+			MZNSendDebugMessageA("START ================================================================");
 			PageData *data = app->getPageData();
-			if (data != NULL)
-				data->dump();
-			else
-				MZNSendDebugMessageA("PAGE  %s", url.c_str());
+			MZNSendDebugMessageA("PAGE  %s", url.c_str());
 			MZNSendDebugMessageA("      ================================================================");
 			m.search(*c, *app);
 			MZNSendDebugMessageA("      ================================================================");

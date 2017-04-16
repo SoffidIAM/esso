@@ -381,6 +381,8 @@ void SmartForm::updateIcon (InputDescriptor *input)
 
 	if (input->status == IS_IGNORED)
 	{
+//		MZNSendDebugMessage("Element %s is ignored",
+//				input->input->toString().c_str());
 		if (input->img != NULL)
 		{
 			input->img->setAttribute("display", "none");
@@ -514,7 +516,6 @@ void SmartForm::releaseElements ()
 		delete i;
 	}
 	inputs.clear();
-	numPasswords = 0;
 }
 
 static void getPosition (AbstractWebElement *input, long &left, long &top, long &width, long &height,
@@ -587,7 +588,8 @@ void SmartForm::addIcon (InputDescriptor *descriptor)
 	AbstractWebElement *input = descriptor->input;
 	if ( descriptor->img == NULL)
 	{
-
+//		MZNSendDebugMessageA("Creating icon for %s",
+//				input->toString().c_str());
 		AbstractWebElement *img = app->createElement("img");
 		descriptor->img = img;
 		if (onClickListener == NULL)
@@ -678,17 +680,29 @@ bool SmartForm::addNoDuplicate (InputDescriptor* descriptor)
 		{
 			id -> hasInputData = descriptor -> hasInputData;
 			id -> data = descriptor -> data;
+			if (id -> type == IT_PASSWORD || id -> type == IT_NEW_PASSWORD)
+				numPasswords ++;
 			return false;
 		}
 	}
 
 	std::string type = descriptor->getType();
 
-	if (strcasecmp ( type.c_str(), "password") == 0)
+	std::string soffidType = descriptor->getInputType();
+//	MZNSendDebugMessageA("Adding element soffid type = %s",
+//			soffidType.c_str());
+	if ((strcasecmp ( type.c_str(), "password") == 0 && soffidType.empty()) ||
+			soffidType == "password" ||
+			soffidType == "new_password")
 	{
-		if (numPasswords == 0)
+		if (numPasswords == 0 || soffidType == "password" )
 		{
 			descriptor->type = IT_PASSWORD;
+			numPasswords ++;
+		}
+		else if (soffidType == "new_password" )
+		{
+			descriptor->type = IT_NEW_PASSWORD;
 			numPasswords ++;
 		}
 		else if (numPasswords == 1)
@@ -725,10 +739,12 @@ bool SmartForm::addNoDuplicate (InputDescriptor* descriptor)
 		}
 		descriptor->input->subscribe("input", onChangeListener);
 
+//		MZNSendDebugMessageA("   soffid type = %d", descriptor->type);
+
 		inputs.push_back(descriptor);
 		return true;
 	}
-	else if (strcasecmp ( type.c_str(), "submit") == 0)
+	else if (strcasecmp ( type.c_str(), "submit") == 0 || soffidType == "ignore")
 	{
 //		submits.push_back(input);
 		return false;
@@ -739,17 +755,14 @@ bool SmartForm::addNoDuplicate (InputDescriptor* descriptor)
 			strcasecmp ( type.c_str(), "input") == 0 ||
 			strcasecmp ( type.c_str(), "email") == 0 ||
 			strcasecmp ( type.c_str(), "number") == 0 ||
-			strcasecmp ( type.c_str(), "tel") == 0 )
+			strcasecmp ( type.c_str(), "tel") == 0 ||
+			soffidType == "general")
 	{
 		descriptor->img = NULL;
 		descriptor->type = IT_GENERAL;
 
 		std::string name;
-		name = descriptor->getName();
-		if (name.empty())
-			name = descriptor->getId();
-		if (name.empty())
-			name = descriptor->getDataBind();
+		name = descriptor->getAttributeName();
 
 		descriptor->existingData = page->isAnyAttributeNamed(name.c_str());
 		descriptor->status = descriptor -> existingData ? IS_EMPTY: IS_IGNORED;
@@ -780,19 +793,17 @@ bool SmartForm::checkAnyPassword (std::vector<InputDescriptor*> &elements)
 		id->input->sanityCheck();
 
 		std::string type = id->getType();
-		if (strcasecmp ( type.c_str(), "password") == 0)
+		std::string soffidType = id->getInputType();
+		if (strcasecmp ( type.c_str(), "password") == 0 ||
+				soffidType == "password" ||
+				soffidType == "new_password")
 		{
 			if (id->isVisible())
 			{
-				MZNSendDebugMessage("Found password element %s is visible (%s / %s)",
-						id->input->toString().c_str(),
-						id->getDisplay().c_str(),
-						id->getVisibility().c_str());
 				anyPassword = true;
 				password ++;
 			} else {
 				// Test for any account on this URL
-				MZNSendDebugMessage("Found password element %s is not visible", id->input->toString().c_str());
 				for ( std::vector<AccountStruct>::iterator it = page->accounts.begin(); it != page->accounts.end(); it++)
 				{
 					AccountStruct as = *it;
@@ -819,13 +830,6 @@ bool SmartForm::checkAnyPassword (std::vector<InputDescriptor*> &elements)
 				strcasecmp ( type.c_str(), "week") == 0 ) {
 			if (id->isVisible())
 			{
-//				std::string id;
-//				std::string name;
-//				input->getAttribute("name", name);
-//				input->getAttribute("id", id);
-//				MZNSendDebugMessage("Found input element %s (type %s) (name %s) (id %s)",
-//						input->toString().c_str(), type.c_str(),
-//						name.c_str(), id.c_str());
 				nonPassword ++;
 			}
 		}
@@ -863,6 +867,8 @@ bool SmartForm::checkAnyPassword (std::vector<InputDescriptor*> &elements)
 
 void SmartForm::parse(AbstractWebApplication *app, AbstractWebElement *formRoot, std::vector<InputData> *inputDatae) {
 	PageData *data = NULL;
+
+	numPasswords = 0;
 
 	std::vector<InputDescriptor*> elements;
 
@@ -968,6 +974,7 @@ void SmartForm::reparse(std::vector<InputData> *data) {
 	if (! checkAnyPassword(elements))
 		return;
 
+	numPasswords = 0;
 	for (std::vector<InputDescriptor*>::iterator it = elements.begin(); it != elements.end(); it++)
 	{
 		InputDescriptor *input = *it;
@@ -976,6 +983,8 @@ void SmartForm::reparse(std::vector<InputData> *data) {
 		else
 			delete input;
 	}
+
+//	MZNSendDebugMessageA("* Password inputs found: %d", numPasswords);
 
 	if (numPasswords > 0)
 	{
@@ -1026,10 +1035,12 @@ InputDescriptor* SmartForm::findInputDescriptor (AbstractWebElement *element)
 }
 
 void SmartForm::onChange(AbstractWebElement* element) {
+//	MZNSendDebugMessageA("OnChange %s", element->toString().c_str());
+
 	InputDescriptor *input = findInputDescriptor(element);
 	std::string value;
 
-	if (input == NULL)
+	if (input == NULL || input->type == IT_IGNORE)
 		return;
 
 	page->sanityCheck();
@@ -1040,8 +1051,19 @@ void SmartForm::onChange(AbstractWebElement* element) {
 		input->status = IS_MODIFIED;
 	}
 
-	if (this->status == SF_STATUS_NEW)
+//	MZNSendDebugMessageA("OnChange %s value = %s selected = %s",
+//			element->toString().c_str(),
+//			value.c_str(),
+//			input->assignedValue.c_str());
+
+	if ( value == input->assignedValue &&
+			input -> status == IS_LOCKED)
 	{
+//		MZNSendDebugMessageA("OnChange %s (3)", element->toString().c_str());
+	}
+	else if (this->status == SF_STATUS_NEW)
+	{
+//		MZNSendDebugMessageA("OnChange %s (4)", element->toString().c_str());
 		if (!value.empty())
 		{
 			changeStatus (SF_STATUS_MODIFYING);
@@ -1049,6 +1071,7 @@ void SmartForm::onChange(AbstractWebElement* element) {
 	}
 	else if (this->status == SF_STATUS_SELECT)
 	{
+//		MZNSendDebugMessageA("OnChange %s (5)", element->toString().c_str());
 		if (!value.empty())
 		{
 			changeStatus (SF_STATUS_MODIFYING);
@@ -1056,13 +1079,19 @@ void SmartForm::onChange(AbstractWebElement* element) {
 	}
 	else if (this->status == SF_STATUS_GENERATING)
 	{
+//		MZNSendDebugMessageA("OnChange %s (6)", element->toString().c_str());
 		if (!value.empty())
 		{
 			changeStatus (SF_STATUS_MODIFYING);
 		}
+		else
+		{
+
+		}
 	}
 	else if (status == SF_STATUS_MODIFYING)
 	{
+//		MZNSendDebugMessageA("OnChange %s (7)", element->toString().c_str());
 		if (input->type == IT_NEW_PASSWORD)
 		{
 			if (value.empty())
@@ -1070,7 +1099,10 @@ void SmartForm::onChange(AbstractWebElement* element) {
 		}
 		else
 		{
-			input->status = IS_MODIFIED;
+			if (value.empty())
+				input->status = IS_EMPTY;
+			else
+				input->status = IS_MODIFIED;
 			updateIcon(input);
 		}
 	}
@@ -1157,7 +1189,7 @@ void SmartForm::save ()
 	int unnamed = 1;
 	for (std::vector<InputDescriptor*>::iterator it = inputs.begin(); it != inputs.end(); it++)
 	{
-		if ((*it)->type == IT_GENERAL)
+		if ((*it)->type == IT_GENERAL && (*it)->isVisible())
 		{
 			AbstractWebElement *element = (*it)->input;
 			element->sanityCheck();
@@ -1165,12 +1197,8 @@ void SmartForm::save ()
 			std::string name;
 			std::string id;
 			element->getProperty("value", value);
-			element->getAttribute("name", name);
-			element->getAttribute("id", id);
-			if (name.empty())
-				name = id;
-			if (name.empty())
-				element->getAttribute("data-bind", name);
+
+			name = (*it)->getAttributeName();
 			if (name.empty())
 			{
 				char ach[10];
@@ -1203,8 +1231,9 @@ void SmartForm::save ()
 	for (std::vector<InputDescriptor*>::iterator it = inputs.begin (); it != inputs.end(); it++)
 	{
 		InputDescriptor *input = *it;
-		if (input->type == IT_PASSWORD ||
-				input->type == IT_NEW_PASSWORD)
+		if (input->isVisible() && (
+				input->type == IT_PASSWORD ||
+				input->type == IT_NEW_PASSWORD))
 		{
 			std::string value;
 			input->input->getProperty("value", value);
@@ -1316,6 +1345,7 @@ void SmartForm::onClickLevel(AbstractWebElement* element, const char *level) {
 				if (id -> type == descriptor -> type)
 				{
 					id -> input -> focus();
+					id -> assignedValue = newPass.c_str();
 					id -> input -> setProperty("value", newPass.c_str());
 				}
 			}
@@ -1407,17 +1437,18 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 	{
 		InputDescriptor *descr = *it;
 		AbstractWebElement *e = descr->input;
+//		MZNSendDebugMessageA("Setting attributes for element %s (visible = %s) type = %d",
+//				descr->input->toString().c_str(),
+//				e->isVisible() ? "true" : "false",
+//				descr->type);
 		e->sanityCheck();
-		if (descr->type == IT_GENERAL && e->isVisible())
+		if (descr->type == IT_GENERAL &&
+				(e->isVisible() || !descr->getMirrorOf().empty()))
 		{
 			std::string currentValue;
 			std::string name;
 			std::string id;
-			e->getAttribute("name", name);
-			if (name.empty())
-				e->getAttribute("id", name);
-			if (name.empty())
-				e->getAttribute("data-bind", name);
+			name = descr->getAttributeName();
 			if (name.empty())
 			{
 				char ach[10];
@@ -1430,7 +1461,9 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 				std::string v2 = MZNC_strtoutf8(attributes[name].c_str());
 				if (v2 != currentValue)
 				{
-					e->focus();
+					if (e->isVisible())
+						e->focus();
+					descr->assignedValue = v2.c_str();
 					e->setProperty("value", v2.c_str());
 				}
 			}
@@ -1445,6 +1478,7 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 					if (value != currentValue)
 					{
 						e->focus();
+						descr-> assignedValue = value.c_str();
 						e->setProperty("value", value.c_str());
 					}
 				}
@@ -1459,6 +1493,7 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 							if (value != currentValue)
 							{
 								e->focus();
+								descr-> assignedValue = value.c_str();
 								e->setProperty("value", value.c_str());
 							}
 						}
@@ -1468,10 +1503,11 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 				//MZNSendDebugMessageA("Cannot find value for %s", name.c_str());
 			}
 		}
-		else if (e->isVisible() &&
+		else if ((e->isVisible() || descr->getInputType() == "password") &&
 					(descr->type == IT_PASSWORD ||
 					 descr->type == IT_NEW_PASSWORD && selectedElement != NULL && e->equals(selectedElement) ))
 		{
+//			MZNSendDebugMessageA("It is password type");
 			SecretStore s(MZNC_getUserName());
 			std::wstring secret = L"pass.";
 			secret += as.system;
@@ -1481,9 +1517,17 @@ void SmartForm::fetchAttributes(AccountStruct &as, AbstractWebElement *selectedE
 			if (pass != NULL)
 			{
 				e->focus();
-				e->setProperty("value", MZNC_wstrtoutf8(pass).c_str());
+				std::string type;
+				e->getAttribute("type", type);
+				if (type == "password")
+				{
+					descr-> assignedValue = MZNC_wstrtoutf8(pass).c_str();
+					e->setProperty("value", MZNC_wstrtoutf8(pass).c_str());
+//					MZNSendDebugMessageA("Setting password value");
+				} else {
+//					MZNSendDebugMessageA("Ignoring dummy password input");
+				}
 				s.freeSecret(pass);
-				MZNSendDebugMessageA("Setting password value");
 			}
 			wchar_t *sessionKey = s.getSecret(L"sessionKey");
 			wchar_t *user = s.getSecret(L"user");
@@ -1529,11 +1573,7 @@ bool SmartForm::detectAttributeChange()
 		e->sanityCheck();
 		std::string name;
 		std::string id;
-		e->getAttribute("name", name);
-		if (name.empty())
-			e->getAttribute("id", name);
-		if (name.empty())
-			e->getAttribute("data-bind", name);
+		name = (*it)->getAttributeName();
 		if (name.empty())
 		{
 			char ach[10];
@@ -1934,3 +1974,36 @@ InputDescriptor::InputDescriptor() {
 
 }
 
+std::string InputDescriptor::getMirrorOf() {
+	if (hasInputData)
+		return data.mirrorOf;
+	else
+	{
+		std::string mirror;
+		input->getProperty("soffidMirrorOf", mirror);
+		return mirror;
+	}
+}
+
+std::string InputDescriptor::getInputType() {
+	if (hasInputData)
+		return data.inputType;
+	else
+	{
+		std::string type;
+		input->getProperty("soffidInputType", type);
+		return type;
+	}
+}
+
+std::string InputDescriptor::getAttributeName() {
+	std::string name;
+	name = getMirrorOf();
+	if (name.empty())
+		name = getName();
+	if (name.empty())
+		name = getId();
+	if (name.empty())
+		name = getDataBind();
+	return name;
+}

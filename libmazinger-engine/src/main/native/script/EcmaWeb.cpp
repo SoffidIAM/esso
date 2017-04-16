@@ -675,27 +675,26 @@ static void MZN_document_autofill(struct SEE_interpreter *interp,
 	MZN_document_object *pObj = (MZN_document_object*) thisobj;
 
 	SEE_parse_args(interp, argc, argv, "A", &s);
-	if (s != NULL)
+
+	struct SEE_interpreter_state *state = SEE_interpreter_save_state( interp);
+	MZNC_endMutex2();
+	AbstractWebApplication *app = pObj -> spec;
+	SmartWebPage *page = app->getWebPage();
+	if (page != NULL)
 	{
-		struct SEE_interpreter_state *state = SEE_interpreter_save_state( interp);
-		MZNC_endMutex2();
-		AbstractWebApplication *app = pObj -> spec;
-		SmartWebPage *page = app->getWebPage();
-		if (page != NULL)
-		{
-			page->fetchAccounts(app, s);
-			page->parse(app);
-		}
-		while (! MZNC_waitMutex2())
-		{
-#ifdef WIN32
-			Sleep(1000);
-#else
-			usleep (1000 * 1000);
-#endif
-		}
-		SEE_interpreter_restore_state(interp, state);
+		page->fetchAccounts(app, s);
+		page->parse(app);
 	}
+	while (! MZNC_waitMutex2())
+	{
+#ifdef WIN32
+		Sleep(1000);
+#else
+		usleep (1000 * 1000);
+#endif
+	}
+	SEE_interpreter_restore_state(interp, state);
+
 	SEE_SET_UNDEFINED(res);
 
 }

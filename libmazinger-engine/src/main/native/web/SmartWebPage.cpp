@@ -260,7 +260,6 @@ bool SmartWebPage::getAccounts(const char *system, const char *targetSystem) {
 						it -> first.substr(0, attPrefix2Len) == attPrefix2 )
 				{
 					std::wstring attName = it->first.substr(attPrefix2Len, std::string::npos).c_str();
-					MZNSendDebugMessage("attname=%ls", attName.c_str());
 					if (attName == L"URL")
 					{
 						as.url = it->second;
@@ -275,7 +274,6 @@ bool SmartWebPage::getAccounts(const char *system, const char *targetSystem) {
 							std::string split2 = MZNC_wstrtostr(SeyconCommon::urlDecode(MZNC_wstrtoutf8(value.substr(i+1).c_str()).c_str()).c_str());
 							if ( ! isAnyAttributeNamed (split1.c_str()))
 							{
-								MZNSendDebugMessageA("Registering attribute %s", split1.c_str());
 								accountAttributes.push_back(split1);
 							}
 						}
@@ -359,6 +357,9 @@ void SmartWebPage::getAccountStruct (const char* id, AccountStruct &as)
 
 bool SmartWebPage::isAnyAttributeNamed (const char *attName)
 {
+
+	if (attName == NULL)
+		return false;
 
 	std::vector<std::string>::iterator it = std::find ( accountAttributes.begin (), accountAttributes.end(), std::string(attName));
 

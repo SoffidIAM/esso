@@ -43,6 +43,7 @@ static void initDebugLevel () {
 }
 
 #ifdef WIN32
+
 static HINSTANCE hWTSAPI;
 typedef struct _MY_WTS_CLIENT_ADDRESS {
     DWORD AddressFamily;  // AF_INET, AF_IPX, AF_NETBIOS, AF_UNSPEC

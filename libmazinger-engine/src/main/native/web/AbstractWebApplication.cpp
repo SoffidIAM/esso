@@ -47,7 +47,6 @@ static char* createMenuWndClass ()
 		wcx.hIconSm = NULL;
 		// Register the window class.
 
-		MZNSendDebugMessage("Registering %s", windowClassName);
 		RegisterClassEx(&wcx);
 	}
 	return windowClassName;
@@ -71,8 +70,7 @@ void AbstractWebApplication::selectAction (const char * title,
 
 	for (int i = 0; i < optionId.size() && i < names.size(); i++)
 	{
-		MZNSendDebugMessageA("Adding menu %s (%d)", names[i].c_str(), i+1000);
-		AppendMenuA (hm, MF_STRING|MF_ENABLED, i+1000, strdup(names[i].c_str()));
+		AppendMenuA (hm, MF_STRING|MF_ENABLED, i+1000, MZNC_utf8tostr(names[i].c_str()).c_str());
 	}
 	AppendMenuA (hm, MF_STRING|MF_ENABLED, 1, "Cancel");
 
@@ -82,11 +80,9 @@ void AbstractWebApplication::selectAction (const char * title,
 	while (GetForegroundWindow() != hwnd)
 	{
 		Sleep(100);
-		MZNSendDebugMessageA("Going foreground");
 		SetForegroundWindow(hwnd);
 		SetFocus(hwnd);
 	}
-	MZNSendDebugMessageA("Opening menu");
 
 	DWORD now = GetCurrentTime();
 	selectedAction = TrackPopupMenu(hm, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN | TPM_LEFTBUTTON, pt.x, pt.y, 0,
@@ -96,8 +92,6 @@ void AbstractWebApplication::selectAction (const char * title,
 		selectedAction = TrackPopupMenu(hm, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN | TPM_LEFTBUTTON, pt.x, pt.y, 0,
 				hwnd, NULL);
 	}
-
-	MZNSendDebugMessageA("Closed menu %d (%x)", selectedAction, GetLastError());
 
 	CloseWindow(hwnd);
 	//DestroyWindow(hwnd);

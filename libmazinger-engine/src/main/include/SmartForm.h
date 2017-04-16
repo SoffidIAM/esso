@@ -34,7 +34,8 @@ class AccountStruct;
 enum InputType {
 	IT_GENERAL = 0,
 	IT_PASSWORD,
-	IT_NEW_PASSWORD
+	IT_NEW_PASSWORD,
+	IT_IGNORE
 };
 
 enum InputStatus {
@@ -58,6 +59,7 @@ public:
 	bool hasInputData;
 	InputData data;
 	bool existingData;
+	std::string assignedValue;
 
 	long getClientHeight();
 	long getClientWidth ();
@@ -76,6 +78,9 @@ public:
 	std::string getTextAlign ();
 	std::string getValue();
 	std::string getVisibility ();
+	std::string getMirrorOf ();
+	std::string getInputType ();
+	std::string getAttributeName ();
 };
 
 class SmartForm: public LockableObject {

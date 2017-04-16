@@ -286,8 +286,8 @@ static void freeCitrixMemory(PVOID pMemory) {
 }
 
 static void getCitrixClientName(std::string &name) {
-	char* lpszBytes;
-	DWORD dwBytes = 0;
+	char* lpszBytes = (char*) LocalAlloc (LMEM_FIXED, 100);
+	DWORD dwBytes = 99;
 	BOOL bOK = FALSE;
 	name.clear ();
 
@@ -413,13 +413,14 @@ static void SystemInfo_init(struct SEE_interpreter *interp) {
 	SEE_native_init(systemInfo_object, interp,
 			&systemInfo_inst_class, interp->Object_prototype);
 
-	systemInfo_setClientHostName(interp, &systemInfo_object->object);
+//	systemInfo_setClientHostName(interp, &systemInfo_object->object);
 	systemInfo_setOs(interp, &systemInfo_object->object);
 	systemInfo_setOsVersion(interp, &systemInfo_object->object);
 	systemInfo_setOsDistribution(interp, &systemInfo_object->object);
 	systemInfo_setHostName(interp, &systemInfo_object->object);
 	systemInfo_setFileSeparator(interp, &systemInfo_object->object);
 	systemInfo_setUser(interp, &systemInfo_object->object);
+
 
 	PUTOBJ(interp->Global, systemInfo, &systemInfo_object->object);
 
