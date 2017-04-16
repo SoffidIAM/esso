@@ -267,13 +267,11 @@ public:
 
 static gboolean onSelectGtkMenu (GtkWidget *menuitem, gpointer userdata) {
 
-	MZNSendDebugMessage("Selected");
 	ListenerData *ld = (ListenerData*) userdata;
 	if (ld != NULL &&
 			ld->listener != NULL &&
 			! ld->id.empty())
 	{
-		MZNSendDebugMessage("Selected %s", ld->id.c_str());
 		ld->listener->onEvent("selectAction", ld->app, ld->element, ld->id.c_str());
 	}
 	return false;
@@ -282,35 +280,25 @@ static gboolean onSelectGtkMenu (GtkWidget *menuitem, gpointer userdata) {
 static gboolean releaseMenuObjects (GtkWidget *widget,
                gpointer   user_data)
 {
-	MZNSendDebugMessage("Cleaning menu data");
 	ListenerData *ld = (ListenerData*) user_data;
 	if (ld != NULL)
 	{
-		MZNSendDebugMessage("Cleaning menu data q %p", ld);
 
 		if (ld->element != NULL)
 		{
-			MZNSendDebugMessage("Cleaning menu data q1.");
 			ld->element->sanityCheck();
-			MZNSendDebugMessage("Cleaning menu data q1q");
 			ld->element->release();
 		}
-		MZNSendDebugMessage("Cleaning menu data q1");
 		if (ld->listener != NULL)
 			ld->listener->release();
-		MZNSendDebugMessage("Cleaning menu data q2");
 		if (ld->app != NULL)
 			ld->app->release();
-		MZNSendDebugMessage("Cleaning menu data B");
 		for (int i = 0 ; i < ld->v.size(); i++)
 		{
-			MZNSendDebugMessage("Cleaning menu data %d", i);
 			delete ld->v[i];
 		}
-		MZNSendDebugMessage("Cleaning menu data END");
 		delete ld;
 	}
-	MZNSendDebugMessage("Cleaned up menu data");
 	return false;
 }
 
@@ -348,15 +336,13 @@ static gboolean displayGtkMenu (const char * title,
 		l->app = app;
 		l->element = element;
 		masterData->v.push_back(l);
-		menuitem = gtk_menu_item_new_with_label(names[i].c_str());
-		MZNSendDebugMessageA("Created option %s", names[i].c_str());
+		menuitem = gtk_menu_item_new_with_label(MZNC_utf8tostr(names[i].c_str()).c_str());
 		if ( optionId[i].empty() )
 		{
 			gtk_widget_set_sensitive(menuitem, false);
 		}
 		else
 		{
-			MZNSendDebugMessageA("Connecting id %s", optionId[i].c_str());
 			g_signal_connect(menuitem, "activate",
 					G_CALLBACK(onSelectGtkMenu), l);
 		}
@@ -368,7 +354,6 @@ static gboolean displayGtkMenu (const char * title,
 	masterData->listener = listener;
 
 	gtk_widget_show_all(menu);
-	MZNSendDebugMessage("Setting menu data on %p", masterData);
 
 	g_signal_connect(menu, "destroy",
 			G_CALLBACK(releaseMenuObjects), masterData);
@@ -377,9 +362,7 @@ static gboolean displayGtkMenu (const char * title,
 	 *  gdk_event_get_time() accepts a NULL argument */
 	gdk_threads_leave();
 
-	MZNSendDebugMessageA("Opening popup");
 	gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 1, gtk_get_current_event_time());
-	MZNSendDebugMessageA("Closed popup");
 
 //	listener->release();
 //	element->release();
