@@ -561,7 +561,7 @@ void CommunicationManager::mainLoop() {
 				if (waitMutex())
 				{
 					std::map<std::string,ThreadStatus*>::iterator it = threads.find(pageId->value);
-					if (it != threads.end() && ! it->second->end)
+					if (it != threads.end() && it->second != NULL && ! it->second->end)
 					{
 						it->second->notifyMessage(jsonMap);
 						deleteMap = false;
@@ -759,7 +759,7 @@ std::string CommunicationManager::unregisterListener(ChromeWebApplication* app,
 
 std::string CommunicationManager::unregisterListener(ChromeWebApplication* app,
 		const char* eventId) {
-	if (waitMutex())
+	if (eventId != NULL && waitMutex())
 	{
 		std::map<std::string,ActiveListenerInfo*>::iterator it = activeListeners.find(std::string(eventId));
 		if ( it != activeListeners.end())
