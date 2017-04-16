@@ -109,7 +109,7 @@ FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON	"Sesioa bukatu",IDOK,174,7,50,14
     PUSHBUTTON      	"Ezeztatu",IDCANCEL,174,24,50,14
-    LTEXT           			"Sesio hau ixteko eskaera bat jaso da. Itxi nahi baduzu ""Sesioa bukatu"" botoia sakatu. Bestela ""Ezeztatu"" sakatu"
+    LTEXT           			"Sesio hau ixteko eskaera bat jaso da. Itxi nahi baduzu ""Sesioa bukatu"" botoia sakatu. Bestela ""Ezeztatu"" sakatu",
                     				IDC_STATIC,7,9,150,35
     LTEXT           			"Ez baduzu ezer ez adierazten sistema berehala itxi egingo da",
                     				IDC_STATIC,8,48,167,21
