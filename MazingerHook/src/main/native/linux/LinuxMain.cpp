@@ -120,6 +120,9 @@ MAZINGERAPI void MZNStop(const char *user) {
 
 MAZINGERAPI bool MZNLoadConfiguration (const char *user, const wchar_t * wszFile) {
 	MazingerEnv *pEnv = MazingerEnv::getEnv(user);
+#ifndef WIN32
+	MZNC_setUserName(user);
+#endif
 
 	PMAZINGER_DATA pData = pEnv->getDataRW();
 

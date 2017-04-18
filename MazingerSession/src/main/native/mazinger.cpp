@@ -27,10 +27,12 @@
 void SeyconSession::parseAndStoreSecrets (SeyconResponse *resp)
 {
 	// Add 128 extra padding needed by AES encrypt module
-	wchar_t *wchComposedSecrets = (wchar_t*) malloc(resp->getSize() * sizeof (wchar_t) + 128);
+	int size = resp->getSize() * sizeof (wchar_t) + 128;
+	wchar_t *wchComposedSecrets = (wchar_t*) malloc(size);
 	if (wchComposedSecrets == NULL)
 		return;
-	memset(wchComposedSecrets, sizeof wchComposedSecrets, 0);
+	memset(wchComposedSecrets, 0, size);
+
 	long last = 0;
 	int secretNumber = 1;
 	std::wstring secret;
@@ -42,7 +44,6 @@ void SeyconSession::parseAndStoreSecrets (SeyconResponse *resp)
 		{
 			if (m_dialog != NULL)
 				m_dialog -> notify("Cannot handle so many secrets. Internal buffer size is too small");
-			wchComposedSecrets[last] = wchComposedSecrets[last+1] = L'\0';
 			break;
 		}
 		wcscpy(&wchComposedSecrets[last], secret2.c_str());
@@ -52,6 +53,7 @@ void SeyconSession::parseAndStoreSecrets (SeyconResponse *resp)
 		secretNumber++;
 		resp->getToken(secretNumber, secret);
 	}
+	wchComposedSecrets[last] = wchComposedSecrets[last+1] = L'\0';
 	MZNSetSecrets(MZNC_getUserName(), wchComposedSecrets);
 	memset(wchComposedSecrets, sizeof wchComposedSecrets, 0);
 	free (wchComposedSecrets);

@@ -414,7 +414,7 @@ static char *s_username = NULL;
 void MZNC_setUserName (const char *username ) {
 	if (s_username != NULL)
 		free (s_username);
-	if (username == NULL)
+	if (username == NULL || username[0] == '\0')
 		s_username = NULL;
 	else
 		s_username = strdup (username);
@@ -424,7 +424,7 @@ const char * MZNC_getUserName ( ) {
 	if (s_username != NULL)
 		return s_username;
 	const char * logName = getenv ("LOGNAME");
-	return logName == NULL ? "": logName;
+	return logName == NULL ? "nobody": logName;
 }
 
 const char *MZNC_getHostName () {
