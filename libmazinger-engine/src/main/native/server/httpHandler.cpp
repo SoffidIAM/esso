@@ -175,22 +175,27 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 							| PKCS_7_ASN_ENCODING,
 							&issuerContext->pCertInfo->SubjectPublicKeyInfo,
 							&pSeyconRootCert->pCertInfo->SubjectPublicKeyInfo)) {
-						SeyconCommon::info("Received certificate not allowed\n");
-						char pszNameString[256] = "<unknown>";
-						char pszNameString2[256] = "<unknown>";
+						std::string ignore;
+						SeyconCommon::readProperty("ignoreCert", ignore);
+						if (ignore != "true")
+						{
+							SeyconCommon::info("Received certificate not allowed\n");
+							char pszNameString[256] = "<unknown>";
+							char pszNameString2[256] = "<unknown>";
 
-						CertGetNameStringA(pSeyconRootCert,
-								CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL,
-								pszNameString2, 128);
+							CertGetNameStringA(pSeyconRootCert,
+									CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL,
+									pszNameString2, 128);
 
-						CertGetNameStringA(issuerContext,
-								CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL,
-								pszNameString, 128);
+							CertGetNameStringA(issuerContext,
+									CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL,
+									pszNameString, 128);
 
-						SeyconCommon::warn ("ERROR: Invalid CA %s. Should be %s\n",
-								pszNameString, pszNameString2);
-						bResults = NULL;
-						SetLastError(ERROR_WINHTTP_SECURE_FAILURE);
+							SeyconCommon::warn ("ERROR: Invalid CA %s. Should be %s\n",
+									pszNameString, pszNameString2);
+							bResults = NULL;
+							SetLastError(ERROR_WINHTTP_SECURE_FAILURE);
+						}
 					}
 				}
 			}
