@@ -43,6 +43,8 @@ ThreadStatus::~ThreadStatus() {
 	sem_close(&eventSemaphore);
 #endif
 
+	if (pageData != NULL)
+		delete pageData;
 }
 
 PendingEventList::~PendingEventList() {

@@ -127,6 +127,16 @@ std::string CommunicationManager::readMessage() {
 
 	if ( fread (&messageSize, 4, 1, stdin) == 1)
 	{
+		if (messageSize < 1 || messageSize > 128000)
+		{
+			SeyconCommon::warn("Protocol error. Received message with size %d",
+					messageSize);
+#ifdef WIN32
+			ExitProcess(0);
+#else
+			exit(0);
+#endif
+		}
 		char *buffer = (char*) malloc (messageSize+1);
 		if (buffer != NULL)
 		{
@@ -404,7 +414,10 @@ void CommunicationManager::mainLoop() {
 			else
 			{
 				if (ts != NULL) // Old thread status
-					ts->release();
+				{
+					ts->end = true;
+					ts->notifyEventMessage();
+				}
 				ts = new ThreadStatus();
 				if (pageId != NULL)
 				{
@@ -634,7 +647,6 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 		if (tsOld == threadStatus)
 		{
 			threads.erase(threadStatus->pageId);
-			threadStatus->release();
 		}
 		for (std::map<std::string,ActiveListenerInfo*>::iterator it = activeListeners.begin(); it != activeListeners.end();)
 		{
@@ -652,12 +664,10 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 			else
 				it ++;
 		}
+		threadStatus->release();
 		endMutex();
 	}
 	cwa->release();
-	if (threadStatus -> pageData != NULL)
-		delete threadStatus->pageData;
-	threadStatus->release();
 }
 
 std::string CommunicationManager::registerListener(ChromeElement* element,
