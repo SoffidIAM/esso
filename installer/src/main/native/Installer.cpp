@@ -39,6 +39,7 @@ static const char* DEF_DEFAULT_SERVERS = "";
 
 bool anyError = false;
 bool quiet = false;
+bool pam = true;
 bool updateConfigFlag = false;
 bool reboot = false;
 bool isUpdate = false;
@@ -1625,30 +1626,34 @@ void installCP(const char *file)
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, "ThreadingModel", REG_SZ,
 			(void*) szValue, strlen(szValue));
 
-	const char *shiroClsid = "{e30dee24-e1aa-4880-a0ca-4a02e74f78f2}";
 
-	// SHIRO CREDENTIAL PROVIDER
-	sprintf(szKey, "Software\\Microsoft\\Windows\\"
-			"CurrentVersion\\Authentication\\Credential Providers\\%s",
-			shiroClsid);
-	strcpy(szValue, "ShiroKabuto Credential Provider");
-	HelperWriteKey(0, HKEY_LOCAL_MACHINE, szKey, NULL, REG_SZ, (void*) szValue,
-			strlen(szValue));
+	if (pam)
+	{
+		const char *shiroClsid = "{e30dee24-e1aa-4880-a0ca-4a02e74f78f2}";
 
-	// SHIRO CLSID
-	sprintf(szKey, "CLSID\\%s", shiroClsid);
-	strcpy(szValue, "Shiro Kabuto Credential Provider");
-	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
-			strlen(szValue));
+		// SHIRO CREDENTIAL PROVIDER
+		sprintf(szKey, "Software\\Microsoft\\Windows\\"
+				"CurrentVersion\\Authentication\\Credential Providers\\%s",
+				shiroClsid);
+		strcpy(szValue, "ShiroKabuto Credential Provider");
+		HelperWriteKey(0, HKEY_LOCAL_MACHINE, szKey, NULL, REG_SZ, (void*) szValue,
+				strlen(szValue));
 
-	// SHIRO CLSID / Inprocserver32
-	sprintf(szKey, "CLSID\\%s\\InprocServer32", shiroClsid);
-	strcpy(szValue, file);
-	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
-			strlen(szValue));
-	strcpy(szValue, "Apartment");
-	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, "ThreadingModel", REG_SZ,
-			(void*) szValue, strlen(szValue));
+		// SHIRO CLSID
+		sprintf(szKey, "CLSID\\%s", shiroClsid);
+		strcpy(szValue, "Shiro Kabuto Credential Provider");
+		HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
+				strlen(szValue));
+
+		// SHIRO CLSID / Inprocserver32
+		sprintf(szKey, "CLSID\\%s\\InprocServer32", shiroClsid);
+		strcpy(szValue, file);
+		HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
+				strlen(szValue));
+		strcpy(szValue, "Apartment");
+		HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, "ThreadingModel", REG_SZ,
+				(void*) szValue, strlen(szValue));
+	}
 
 	const char *recoverClsid = "{e046f8f0-7ca2-4c83-8e6b-a273f4911a48}";
 	// Recover CREDENTIAL PROVIDER
@@ -1753,11 +1758,14 @@ void registerKojiKabuto()
 		installCP(achNewPath);
 	}
 
-	if (!anyError)
+	if (pam)
 	{
-		strcpy(achNewPath, getMazingerDir());
-		strcat(achNewPath, "\\ShiroKabuto.exe");
-		installShiroKabuto(achNewPath);
+		if (!anyError)
+		{
+			strcpy(achNewPath, getMazingerDir());
+			strcat(achNewPath, "\\ShiroKabuto.exe");
+			installShiroKabuto(achNewPath);
+		}
 	}
 }
 
@@ -2433,14 +2441,13 @@ extern "C" int main(int argc, char **argv)
 {
 	const char* serverName = NULL;
 	bool checkPending = true;
-	int ibsalut = 0;
 
 	// Read call arguments
 	for (int i = 0; i < argc; i++)
 	{
-		if (strcmp(argv[i], "/ibsalut") == 0 || strcmp(argv[i], "-ibsalut") == 0)
+		if (strcmp(argv[i], "/nopam") == 0 || strcmp(argv[i], "-nopam") == 0)
 		{
-			ibsalut = 1;
+			pam = false;
 		}
 
 		// Check quiet install method
@@ -2478,7 +2485,7 @@ extern "C" int main(int argc, char **argv)
 		}
 	}
 
-	log("Preparing install %s", ibsalut ? "/ibsalut" : "");
+	log("Preparing install");
 	log("Configured server %s", serverName);
 
 	// Check pending operations
@@ -2503,7 +2510,7 @@ extern "C" int main(int argc, char **argv)
 		}
 	}
 
-	int result = install(!ibsalut);
+	int result = install(true);
 
 	if (noGina)
 	{
