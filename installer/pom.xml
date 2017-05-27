@@ -124,6 +124,7 @@
 								<echo message="Compiling resources..." />
 								<exec executable="${windres.32w}">
 									<arg value="-Isrc/main/include" />
+									<arg value="-Itarget/resources" />
 									<arg value="-Itarget/native/lib" />
 									<arg value="-Itarget/native/include" />
 									<arg value="-itarget/resources/resources.rc" />

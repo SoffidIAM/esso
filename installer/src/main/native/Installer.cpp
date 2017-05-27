@@ -2441,10 +2441,15 @@ extern "C" int main(int argc, char **argv)
 {
 	const char* serverName = NULL;
 	bool checkPending = true;
+	bool uninstall = false;
 
 	// Read call arguments
 	for (int i = 0; i < argc; i++)
 	{
+		if (strcmp(argv[i], "/u") == 0 || strcmp(argv[i], "-u") == 0)
+		{
+			uninstall = true;
+		}
 		if (strcmp(argv[i], "/nopam") == 0 || strcmp(argv[i], "-nopam") == 0)
 		{
 			pam = false;
@@ -2485,95 +2490,105 @@ extern "C" int main(int argc, char **argv)
 		}
 	}
 
-	log("Preparing install");
-	log("Configured server %s", serverName);
 
-	// Check pending operations
-	if (checkPending)
+	int result;
+
+	if (uninstall)
 	{
-		bool pendingOperations = notifyPendingRenames();
+		RunProgram((char *)"uninstall.exe", (char *)getMazingerDir());
+		result = 0;
+	}
+	else
+	{
+		log("Preparing install");
+		log("Configured server %s", serverName);
 
-		if (pendingOperations)
+		// Check pending operations
+		if (checkPending)
 		{
-			log("Installation aborted due to pending changes to apply");
+			bool pendingOperations = notifyPendingRenames();
+
+			if (pendingOperations)
+			{
+				log("Installation aborted due to pending changes to apply");
+				printf(
+						"\n\nERROR. A prior installation needed to reboot the system.\nReboot prior to install\n\n");
+
+				if (!quiet)
+				{
+					MessageBoxA(NULL,
+							"A prior installation needed to reboot the system.\nReboot prior to install",
+							"Soffid ESSO", MB_OK | MB_ICONEXCLAMATION);
+				}
+
+				exit(-1);
+			}
+		}
+
+		result = install(true);
+
+		if (noGina)
+		{
+			SetOriginalWinlogon();
+		}
+
+		if (result == 0 && serverName != NULL)
+		{
+			if (isUpdate && ! updateConfigFlag)
+			{
+				// Skip configuration
+				setProgressMessage("Skipping server configuration");
+			} else {
+				setProgressMessage("Connecting to %s", serverName);
+
+				if (!configure(getMazingerDir(), serverName))
+					!quiet ? result = 1 : result = 3;
+			}
+		}
+
+		disableProgressWindow();
+
+		if (result)
+		{
+			if (!quiet)
+			{
+				MessageBoxA(NULL, "Installation has failed. Please, look at log file", "Soffid ESSO",
+						MB_OK | MB_ICONEXCLAMATION);
+			}
+		}
+
+		else if (reboot)
+		{
 			printf(
-					"\n\nERROR. A prior installation needed to reboot the system.\nReboot prior to install\n\n");
+					"\n\n\nWARNING: Reboot is needed in order to complete setup\n\n\n");
 
 			if (!quiet)
 			{
-				MessageBoxA(NULL,
-						"A prior installation needed to reboot the system.\nReboot prior to install",
+				MessageBoxA(NULL, "Reboot is needed in order to complete setup",
 						"Soffid ESSO", MB_OK | MB_ICONEXCLAMATION);
+
+				if (!isUpdate)
+				{
+					RunConfigurationTool();
+				}
 			}
-
-			exit(-1);
 		}
-	}
 
-	int result = install(true);
-
-	if (noGina)
-	{
-		SetOriginalWinlogon();
-	}
-
-	if (result == 0 && serverName != NULL)
-	{
-		if (isUpdate && ! updateConfigFlag)
+		else
 		{
-			// Skip configuration
-			setProgressMessage("Skipping server configuration");
-		} else {
-			setProgressMessage("Connecting to %s", serverName);
-
-			if (!configure(getMazingerDir(), serverName))
-				!quiet ? result = 1 : result = 3;
-		}
-	}
-
-	disableProgressWindow();
-
-	if (result)
-	{
-		if (!quiet)
-		{
-			MessageBoxA(NULL, "Installation has failed. Please, look at log file", "Soffid ESSO",
-					MB_OK | MB_ICONEXCLAMATION);
-		}
-	}
-
-	else if (reboot)
-	{
-		printf(
-				"\n\n\nWARNING: Reboot is needed in order to complete setup\n\n\n");
-
-		if (!quiet)
-		{
-			MessageBoxA(NULL, "Reboot is needed in order to complete setup",
-					"Soffid ESSO", MB_OK | MB_ICONEXCLAMATION);
-
-			if (!isUpdate)
+			if (!quiet)
 			{
-				RunConfigurationTool();
+				MessageBoxA(NULL, "Installation complete", "Soffid ESSO",
+						MB_OK | MB_ICONEXCLAMATION);
+
+				// Check update installation process
+				if (!isUpdate)
+				{
+					RunConfigurationTool();
+				}
 			}
 		}
 	}
-
-	else
-	{
-		if (!quiet)
-		{
-			MessageBoxA(NULL, "Installation complete", "Soffid ESSO",
-					MB_OK | MB_ICONEXCLAMATION);
-
-			// Check update installation process
-			if (!isUpdate)
-			{
-				RunConfigurationTool();
-			}
-		}
-	}
-
 	ExitProcess ( result );
 	return result;
 }

@@ -1,0 +1,31 @@
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x01L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040a04b0"
+        BEGIN
+            VALUE "CompanyName", "Soffid IAM\0"
+            VALUE "FileDescription", "Soffid ESSO Installer\0"
+            VALUE "FileVersion", "${pom.version}\0"
+            VALUE "InternalName", "ESSO Installer\0"
+            VALUE "LegalCopyright", "Copyright (c) 2017\0"
+            VALUE "OriginalFilename", "setup.exe\0"
+            VALUE "ProductName", "Soffid ESSO\0"
+            VALUE "ProductVersion", "${pom.version}\0"
+            VALUE "Language", "English\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x40a, 1200
+    END
+END
+
+

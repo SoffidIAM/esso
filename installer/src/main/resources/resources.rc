@@ -1,5 +1,8 @@
 //Microsoft Developer Studio generated resource script.
 //
+#include <windows.h>
+#include <winver.h>
+
 #include "resource.h"
 
 1 RT_MANIFEST "installer.exe.manifest" 
@@ -54,3 +57,7 @@ libwinpthread-1-64.dll	IDT_FILE "libwinpthread-1-64.dll.bzip"
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_SOFFID_ICON	ICON	DISCARDABLE     "Soffid_Icon.ico"
+
+
+#include "version.rc"
+
