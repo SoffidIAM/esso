@@ -14,7 +14,7 @@ port.onMessage.addListener (function (request) {
 			document.getElementById("labelError").style.display = "none";
 			document.getElementById("labelSuccess").style.display = "block";
 			document.getElementById("labelVersion").innerText = request.version;
-	    	document.getElementById("selfServiceLink").setAttribute("href", request.url);
+	    	document.getElementById("selfServiceLink").setAttribute("href", request.url+"/selfservice/");
 	    	chrome.windows.getCurrent(function(w) {
 	    	    chrome.tabs.getSelected(w.id,
 	    	    	function (response){
