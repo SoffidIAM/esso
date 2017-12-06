@@ -234,6 +234,10 @@ void JavaVirtualMachine::adjustPolicy () {
 	sprintf (achDeploymentFile, "%s%s\\AppData\\LocalLow\\Sun\\Java\\Deployment\\deployment.properties", getenv("HOMEDRIVE"), getenv("HOMEPATH"));
 	changeDeploymentFile (achDeploymentFile);
 
+	// For WXP
+	sprintf (achDeploymentFile, "%s\\Sun\\Java\\Deployment\\deployment.properties", getenv("APPDATA"));
+	changeDeploymentFile (achDeploymentFile);
+
 #else
 	sprintf (achPolicyFile, "%s/.java.policy", getenv("HOME"));
 	createFile (achPolicyFile, szMznDir);
