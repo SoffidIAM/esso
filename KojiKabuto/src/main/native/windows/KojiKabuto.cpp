@@ -749,6 +749,20 @@ static void switchNewDesktop() {
 	CloseHandle(hToken);
 }
 
+static void enableFocusSteal()
+{
+	HKEY hKey;
+	if (RegOpenKeyEx(HKEY_CURRENT_USER,
+			"Control Panel\\Desktop", 0,
+			KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
+	{
+		DWORD dwValue = 0;
+		RegSetValueEx(hKey, "ForegroundLockTimeout", 0, REG_DWORD, (LPBYTE) &dwValue,
+				sizeof dwValue);
+		RegCloseKey(hKey);
+	}
+
+}
 extern "C" int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hInst2,
 		LPSTR cmdLine, int nShow) {
 	time_t t;
@@ -808,6 +822,7 @@ extern "C" int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hInst2,
 	}
 
 	KojiKabuto::enableTaskManager(FALSE);
+	enableFocusSteal();
 
 	// Eliminar configuración de DNIe
 	RegDeleteKey(HKEY_CURRENT_USER,
