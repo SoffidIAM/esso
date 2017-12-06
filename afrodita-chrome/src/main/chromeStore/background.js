@@ -49,7 +49,7 @@ var mazingerBridge = {
 		}
 		else if (msg.message == "selectAction2")
 		{
-			console.log(JSON.stringify(msg));
+//			console.log(JSON.stringify(msg));
 			var hborder = (msg.window.outerWidth-msg.window.innerWidth)/2;
 			var vborder = (msg.window.outerHeight-msg.window.innerHeight-hborder);
 			var left = Math.round(msg.rect.left +
@@ -89,7 +89,7 @@ var mazingerBridge = {
 			var console = chrome.extension.getBackgroundPage().console;
 			var result = "";
 			var pageId = parseInt(request.pageId);
-			console.log("Got message  for "+pageId+"/"+request.pageId+":"+JSON.stringify(request));
+	//		console.log("Got message  for "+pageId+"/"+request.pageId+":"+JSON.stringify(request));
 			var port = mazingerBridge.ports[pageId];
 			if (port == null) {
 				if ( request.requestId != null )
@@ -103,8 +103,8 @@ var mazingerBridge = {
 						"exception": "Page already unloaded"
 					});
 				}
-			} 
-			if (request.action == "selectAction")
+			}
+			else if (request.action == "selectAction")
 			{
 				currentSelectActionMessage = request;
 				port.postMessage({action: "selectAction1", request: request});
