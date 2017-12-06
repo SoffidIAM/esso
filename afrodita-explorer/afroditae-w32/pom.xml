@@ -96,6 +96,7 @@
 						<linkerEndOption>-lwsock32</linkerEndOption>
 						<linkerEndOption>-lmazinger-engine</linkerEndOption>
 						<linkerEndOption>-lsee</linkerEndOption>
+						<linkerEndOption>-lmazinger-engine</linkerEndOption>
 						<linkerEndOption>-lpcreposix</linkerEndOption>
 						<linkerEndOption>-lgdi32</linkerEndOption>
 						<linkerEndOption>-lwinhttp</linkerEndOption>

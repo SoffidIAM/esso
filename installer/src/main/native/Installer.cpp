@@ -522,6 +522,8 @@ void registerFFHook()
 	//
 	//write the default value
 	//
+
+	// EXTENSION FOR FF < 52
 	wsprintf(szBuff, "%s\\afroditaFf.xpi", getMazingerDir());
 
 	log("Registering Firefox extension");
@@ -535,6 +537,74 @@ void registerFFHook()
 			"Software\\Mozilla\\Firefox\\Extensions",
 			"{df382936-f24b-11df-96e1-9bf54f13e327}", REG_SZ, (void*) szBuff,
 			lstrlen(szBuff));
+
+	// Extension for FF >= 52
+
+	// Register ff extension
+	wsprintf(szBuff, "%s\\afroditaFf2.xpi", getMazingerDir());
+
+	log("Registering Firefox extension");
+	HelperWriteKey(32, HKEY_LOCAL_MACHINE,
+			"Software\\Mozilla\\Firefox\\Extensions",
+			"esso@soffid.com", REG_SZ, (void*) szBuff,
+			lstrlen(szBuff));
+
+	log("Registering Firefox extension 64 bits");
+	HelperWriteKey(64, HKEY_LOCAL_MACHINE,
+			"Software\\Mozilla\\Firefox\\Extensions",
+			"esso@soffid.com", REG_SZ, (void*) szBuff,
+			lstrlen(szBuff));
+
+	// Register ff manifest
+	HKEY hKey;
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+			"SOFTWARE\\Mozilla\\NativeMessagingHosts",
+			0, (LPSTR) "", REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey,
+			NULL) == ERROR_SUCCESS)
+	{
+		RegCloseKey(hKey);
+
+	}
+
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+			"SOFTWARE\\Mozilla\\NativeMessagingHosts\\com.soffid.esso_chrome1",
+			0, (LPSTR) "", REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey,
+			NULL) == ERROR_SUCCESS)
+	{
+		RegCloseKey(hKey);
+	}
+
+	std::string dir = getMazingerDir();
+	dir += "\\afrodita-firefox.manifest";
+
+	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
+		"SOFTWARE\\Mozilla\\NativeMessagingHosts\\com.soffid.esso_chrome1",
+		NULL,
+		REG_SZ, dir.c_str(), dir.length());
+
+
+	// Create ff application manifest
+	LPCSTR mznDir = getMazingerDir();
+	std::string dir2 ;
+	for (int i = 0; mznDir[i]; i++)
+	{
+		if (mznDir[i] == '\\')
+			dir2 += '\\';
+		dir2 += mznDir[i];
+	}
+
+	FILE * f = fopen (dir.c_str(), "w");
+	fprintf (f, "{"
+				"\"name\": \"com.soffid.esso_chrome1\","
+				"\"description\": \"Soffid ESSO native host\","
+				"\"type\": \"stdio\","
+				"\"path\": \"%s\\\\afrodita-chrome.exe\","
+				"\"allowed_extensions\": [\"esso@soffid.com\"]"
+				"}",
+				dir2.c_str());
+	fclose (f);
+
+
 }
 
 void registerChromePlugin()
@@ -1471,6 +1541,37 @@ void updateConfig()
 		registerBoss();
 }
 
+static bool needsUpdate ()
+{
+	HKEY hKey;
+	char ach[4096];
+	DWORD dw;
+	DWORD dwType;
+
+	DWORD dwResult;
+	bool needsUpdate = false;
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+				DEF_REGISTRY_FOLDER.c_str(), 0, Wow64Key(KEY_READ),
+				&hKey) == ERROR_SUCCESS)
+	{
+
+		dw = sizeof ach;
+		if (RegQueryValueEx(hKey, "MazingerVersion", NULL, &dwType, (LPBYTE) ach, &dw) == ERROR_SUCCESS)
+		{
+			ach[dw] = '\0';
+			if (strcmp(ach, MAZINGER_VERSION_STR) != 0)
+				needsUpdate = true;
+		}
+		else
+			needsUpdate = true;
+		RegCloseKey(hKey);
+	}
+	else
+		needsUpdate = true;
+
+	return needsUpdate;
+
+}
 void updateUserInit(const char *quitar, const char*poner)
 {
 	HKEY hKey;
@@ -2328,6 +2429,7 @@ int install(int full)
 	installResource(NULL, "sewbr.dll");
 	installResource(NULL, "profyumi.jar");
 	installResource(NULL, "afroditaFf.xpi");
+	installResource(NULL, "afroditaFf2.xpi");
 
 
 //	installTCL();
@@ -2442,10 +2544,15 @@ extern "C" int main(int argc, char **argv)
 	const char* serverName = NULL;
 	bool checkPending = true;
 	bool uninstall = false;
+	bool smartUpdate = false;
 
 	// Read call arguments
 	for (int i = 0; i < argc; i++)
 	{
+		if (stricmp(argv[i], "/smartupdate") == 0 || stricmp(argv[i], "-smartupdate") == 0)
+		{
+			smartUpdate = true;
+		}
 		if (strcmp(argv[i], "/u") == 0 || strcmp(argv[i], "-u") == 0)
 		{
 			uninstall = true;
@@ -2498,7 +2605,7 @@ extern "C" int main(int argc, char **argv)
 		RunProgram((char *)"uninstall.exe", (char *)getMazingerDir());
 		result = 0;
 	}
-	else
+	else if ( !smartUpdate || needsUpdate() )
 	{
 		log("Preparing install");
 		log("Configured server %s", serverName);

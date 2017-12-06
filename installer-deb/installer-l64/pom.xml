@@ -172,6 +172,7 @@
                                         <architecture>amd64</architecture>
                                         <packageName>mazinger</packageName>
                                         <maintainerRevision>1</maintainerRevision>
+                                        <debFileName>mazinger-${version}-${architecture}.deb</debFileName>
                                         <extraDependencies>
                                         	<debianDependency>
                                         		<artifactId>libsoup2.4-1</artifactId>

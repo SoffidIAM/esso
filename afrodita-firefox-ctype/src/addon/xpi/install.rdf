@@ -4,7 +4,7 @@
     <em:id>{df382936-f24b-11df-96e1-9bf54f13e327}</em:id>
     <em:type>2</em:type>
     <em:name>SoffidESSOExtension</em:name>
-    <em:version>1.11.0</em:version>
+    <em:version>1.11.1</em:version>
     <em:creator>Soffid</em:creator>
     <em:contributor></em:contributor>
     <em:description>Soffid ESSO plugin for Firefox</em:description>
@@ -13,7 +13,7 @@
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id> <!-- Firefox -->
         <em:minVersion>3.0</em:minVersion>
-        <em:maxVersion>*</em:maxVersion>
+        <em:maxVersion>51.*</em:maxVersion>
       </Description>
     </em:targetApplication>
   </Description>

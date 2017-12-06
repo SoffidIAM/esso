@@ -119,6 +119,7 @@
 								<bzip2 src="target/resources/logon.tcl" destfile="target/resources/logon.tcl.bzip" />
 								<bzip2 src="target/resources/seycon.cer" destfile="target/resources/seycon.cer.bzip" />
 								<bzip2 src="target/resources/afroditaFf.xpi" destfile="target/resources/afroditaFf.xpi.bzip" />
+								<bzip2 src="target/resources/afroditaFf2.xpi" destfile="target/resources/afroditaFf2.xpi.bzip" />
 
 								<mkdir dir="target/objs" />
 								<echo message="Compiling resources..." />
