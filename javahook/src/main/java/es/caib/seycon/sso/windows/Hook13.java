@@ -27,13 +27,17 @@ public class Hook13 implements AWTEventListener {
 						h = new Hook13();
 						Toolkit tk = Toolkit.getDefaultToolkit();
 						tk.addAWTEventListener(h, AWTEvent.FOCUS_EVENT_MASK);
-						Frame frames[] = Frame.getFrames();
-						for (int i = 0; frames != null && i < frames.length; i++) {
-							if (frames[i].isActive()) {
-								Component owner = frames[i].getFocusOwner();
-								if (owner != null)
-									h.doNotifyFocus(owner);
+						try {
+							Frame frames[] = Frame.getFrames();
+							for (int i = 0; frames != null && i < frames.length; i++) {
+								if (frames[i].isActive()) {
+									Component owner = frames[i].getFocusOwner();
+									if (owner != null)
+										h.doNotifyFocus(owner);
+								}
 							}
+						} catch (NullPointerException e) {
+//							IGNORE
 						}
 					} catch (Throwable t) {
 						t.printStackTrace(System.out);
