@@ -58,11 +58,16 @@ void OnAnyElementFocusListener::onEvent (const char *eventName, AbstractWebAppli
 		component->getProperty("soffidManaged", managed);
 		if (managed != "true" && strcasecmp (tag.c_str(), "input") == 0)
 		{
-			app->sanityCheck();
-			if (page != NULL)
+			std::string type;
+			component->getAttribute("type", type);
+			if (strcasecmp (type.c_str(), "password") == 0)
 			{
-				page->sanityCheck();
-				page -> parse (app);
+				app->sanityCheck();
+				if (page != NULL)
+				{
+					page->sanityCheck();
+					page -> parse (app);
+				}
 			}
 		}
 		MZNC_endMutex();
@@ -86,6 +91,7 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 		for (std::vector<AbstractWebElement*>::iterator it = bodies.begin(); it != bodies.end (); it++)
 		{
 			(*it)->subscribe("focus", wl);
+			(*it)->release();
 			parsed = true;
 		}
 		wl->release();

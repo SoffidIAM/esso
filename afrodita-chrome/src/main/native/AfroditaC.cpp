@@ -132,10 +132,11 @@ extern "C" void __attribute__((constructor)) startup() {
 static void* qtThreadProc (void *app)
 {
 	SeyconCommon::setDebugLevel(0);
-	DEBUG ("Started AfroditaC");
 	CommunicationManager* manager = CommunicationManager::getInstance();
 
 	manager->mainLoop();
+
+	return NULL;
 }
 
 #endif

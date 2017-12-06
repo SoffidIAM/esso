@@ -55,6 +55,10 @@ static char* createMenuWndClass ()
 #endif
 
 
+#ifdef WIN32
+static HWND hwnd = NULL;
+#endif
+
 void AbstractWebApplication::selectAction (const char * title,
 		std::vector<std::string> &optionId,
 		std::vector<std::string> &names,
@@ -62,7 +66,8 @@ void AbstractWebApplication::selectAction (const char * title,
 		WebListener *listener)
 {
 #ifdef WIN32
-	HWND hwnd = CreateWindowA(createMenuWndClass(), "TITLE", WS_POPUP|WS_VISIBLE, 0,0, 1, 1, NULL, NULL, GetModuleHandle(NULL), (LPVOID) NULL);
+	if (hwnd == NULL)
+		hwnd = CreateWindowA(createMenuWndClass(), "TITLE", WS_POPUP, 0,0, 1, 1, NULL, NULL, GetModuleHandle(NULL), (LPVOID) NULL);
 	HMENU hm = CreatePopupMenu();
 
 	AppendMenuA (hm, MF_STRING|MF_DISABLED, -1, title);
@@ -77,13 +82,16 @@ void AbstractWebApplication::selectAction (const char * title,
 	selectedAction = -1;
 	POINT pt;
 	GetCursorPos(&pt);
-	while (GetForegroundWindow() != hwnd)
-	{
-		Sleep(100);
+#if 0
+	do {
 		SetForegroundWindow(hwnd);
 		SetFocus(hwnd);
-	}
+		consumeMessages();
+		Sleep(500);
+	} while (GetForegroundWindow() != hwnd);
 
+	consumeMessages();
+#endif
 	DWORD now = GetCurrentTime();
 	selectedAction = TrackPopupMenu(hm, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN | TPM_LEFTBUTTON, pt.x, pt.y, 0,
 			hwnd, NULL);
@@ -93,9 +101,11 @@ void AbstractWebApplication::selectAction (const char * title,
 				hwnd, NULL);
 	}
 
-	CloseWindow(hwnd);
+//	CloseWindow(hwnd);
 	//DestroyWindow(hwnd);
 	DestroyMenu(hm);
+
+//	consumeMessages();
 
 	if (selectedAction >= 1000 && selectedAction < 1000+optionId.size())
 	{

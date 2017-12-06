@@ -27,6 +27,9 @@
 
 using namespace json;
 
+// #undef DEBUG
+// #define DEBUG(x) SeyconCommon::warn("%s",x)
+
 namespace mazinger_chrome {
 
 /**
@@ -92,6 +95,16 @@ static void endMutex () {
 #endif
 
 CommunicationManager *CommunicationManager::instance = NULL;
+
+
+static void dumpMessage(const char* action, JsonAbstractObject *json)
+{
+#if 0
+	std::string s;
+	json->write(s, 0);
+	fprintf(stderr, "%s %s\n", action, s.c_str());
+#endif
+}
 
 CommunicationManager::CommunicationManager() {
 #ifdef WIN32
@@ -179,6 +192,7 @@ json::JsonAbstractObject* CommunicationManager::getEventMessage() {
 	{
 		const char * strMsg = textMsg.c_str();
 		msg = JsonAbstractObject::readObject(strMsg);
+		dumpMessage("GOT MESSAGE", msg);
 	}
 	return msg;
 }
@@ -275,21 +289,11 @@ JsonAbstractObject* CommunicationManager::call(bool &error, const std::string& p
 
 
 
-	ThreadStatus *ts = NULL;
+	ThreadStatus *ts = threadPool.get( pageId) ;
 
-	if (waitMutex())
+	if (ts == NULL)
 	{
-		std::map<std::string,ThreadStatus*>::iterator it = threads.find(pageId);
-		if (it == threads.end())
-		{
-			error = true;
-			endMutex();
-			return NULL;
-		} else {
-			ts = it->second;
-			endMutex();
-		}
-	} else {
+		error = true;
 		return NULL;
 	}
 
@@ -315,6 +319,7 @@ JsonAbstractObject* CommunicationManager::call(bool &error, const std::string& p
 		if ( v == NULL || v->value != msgId)
 		{
 			error = true;
+			dumpMessage("Delete 1", jsonMsg);
 			delete jsonMsg;
 			return NULL;
 		}
@@ -327,12 +332,14 @@ JsonAbstractObject* CommunicationManager::call(bool &error, const std::string& p
 			{
 				MZNSendDebugMessage("Error got from Chrome port: %s", ex->value.c_str());
 			}
+			dumpMessage("Delete 2", jsonMsg);
 			delete jsonMsg;
 			return NULL;
 		}
 		JsonAbstractObject *result = map->getObject("response");
 		map->remove("response");
 //		MZNSendDebugMessage("Respnse got");
+		dumpMessage("Delete 3", jsonMsg);
 		delete jsonMsg;
 		error = false;
 		return result;
@@ -340,6 +347,7 @@ JsonAbstractObject* CommunicationManager::call(bool &error, const std::string& p
 	else
 	{
 		error = true;
+		dumpMessage("Delete 4", jsonMsg);
 		delete jsonMsg;
 		return NULL;
 	}
@@ -378,7 +386,12 @@ void CommunicationManager::mainLoop() {
 		JsonAbstractObject *message = getEventMessage();
 		if (message == NULL)
 		{
-			DEBUG ("End message");
+//			fprintf(stderr, "End message\n");
+#ifdef WIN32
+			ExitProcess(0);
+#else
+			exit (0);
+#endif
 			return;
 		}
 		bool deleteMap = true;
@@ -396,12 +409,7 @@ void CommunicationManager::mainLoop() {
 			JsonValue* title = dynamic_cast<JsonValue*>(jsonMap->getObject("title"));
 			JsonValue* url = dynamic_cast<JsonValue*>(jsonMap->getObject("url"));
 
-			ThreadStatus *ts = NULL;
-			if (waitMutex())
-			{
-				ts = threads[pageId->value];
-				endMutex();
-			}
+			ThreadStatus *ts =  threadPool.get(pageId->value);
 
 			if (ts != NULL && ! ts->end)
 			{
@@ -417,6 +425,7 @@ void CommunicationManager::mainLoop() {
 				{
 					ts->end = true;
 					ts->notifyEventMessage();
+					threadPool.remove(ts->pageId);
 				}
 				ts = new ThreadStatus();
 				if (pageId != NULL)
@@ -427,20 +436,15 @@ void CommunicationManager::mainLoop() {
 					if (url != NULL)
 						ts->url = url->value;
 					ts->pageData = parsePageData ( ts, jsonPageData );
-					if (waitMutex())
-					{
-						threads[ts->pageId] = ts;
-						ts->lock();
-						endMutex();
+					threadPool.add(ts);
 #ifdef WIN32
-						if ( CreateThread (NULL,  0, win32ThreadProc, ts,0, NULL) == NULL)
-							ExitProcess(1);
+					if ( CreateThread (NULL,  0, win32ThreadProc, ts,0, NULL) == NULL)
+						ExitProcess(1);
 #else
-						pthread_t threadId;
-						if (pthread_create(&threadId, NULL, linuxThreadProc, ts) != 0)
-							exit(1);
+					pthread_t threadId;
+					if (pthread_create(&threadId, NULL, linuxThreadProc, ts) != 0)
+						exit(1);
 #endif
-					}
 				}
 			}
 		}
@@ -451,12 +455,7 @@ void CommunicationManager::mainLoop() {
 //			MZNSendDebugMessageA("THREAD TO END");
 			if (pageId != NULL)
 			{
-				ThreadStatus *ts = NULL;
-				if (waitMutex())
-				{
-					ts = threads[pageId->value];
-					endMutex();
-				}
+				ThreadStatus *ts = threadPool.get(pageId->value);
 				if (ts != NULL)
 				{
 //					MZNSendDebugMessageA("THREAD TO END %s", ts->url.c_str());
@@ -473,86 +472,79 @@ void CommunicationManager::mainLoop() {
 
 			if (pageId != NULL && eventId != NULL)
 			{
-				if (waitMutex ())
+				ThreadStatus *ts = threadPool.get(pageId->value);
+				if (ts != NULL)
 				{
-					ThreadStatus *ts = threads[pageId->value];
-					if (ts != NULL)
+
+					ActiveListenerInfo *ali = activeListeners.get(eventId->value);
+					if (ali != NULL)
 					{
-						std::map<std::string,ActiveListenerInfo*>::iterator it = activeListeners.find(eventId->value);
-						if (it != activeListeners.end())
-						{
-							ActiveListenerInfo *ali = it->second;
-
-							endMutex();
-
-							Event *ev = new Event();
-							ev->target = (target == NULL ? "" : target->value.c_str());
-							ev->data = (data == NULL ? "" : data->value.c_str());
-							ev->listener = ali;
-							ts->pendingEvents.push(ev);
-							ts->notifyEventMessage();
-						}
-						else
-							endMutex();
-					} else
-						endMutex();
+						Event *ev = new Event();
+						ev->target = (target == NULL ? "" : target->value.c_str());
+						ev->data = (data == NULL ? "" : data->value.c_str());
+						ev->listener = ali;
+						ts->pendingEvents.push(ev);
+						ts->notifyEventMessage();
+					}
 				}
 			}
 		}
 		else if (messageName != NULL && messageName->value == "search" && pageId != NULL)
 		{
 			JsonValue* text = dynamic_cast<JsonValue*>(jsonMap->getObject("text"));
-//			MZNSendDebugMessage("Received event %s : %s", messageName->value.c_str(), text->value.c_str());
-			WebAddonHelper h;
-			std::vector<UrlStruct> result;
-			h.searchUrls (MZNC_utf8towstr(text->value.c_str()), result);
 			std::string response = " {\"action\":\"searchResult\", \"pageId\":\""+pageId->value +"\",\"result\": [";
-			bool first = true;
-			for ( std::vector<UrlStruct>::iterator it = result.begin(); it != result.end (); it++)
+			if (text != NULL)
 			{
-				UrlStruct s = *it;
-				if (first) first = false;
-				else response += ",";
-				response += "{\"url\":";
-				response += Encoder::encode (MZNC_wstrtoutf8(s.url.c_str()).c_str());
-				response += ",\"name\":";
-				response += Encoder::encode (MZNC_wstrtoutf8(s.description.c_str()).c_str());
-				response += ",\"account\":";
-				response += Encoder::encode (MZNC_wstrtoutf8(s.name.c_str()).c_str());
-				response += ",\"system\":";
-				response += Encoder::encode (MZNC_wstrtoutf8(s.server.c_str()).c_str());
-				response += "}";
+				WebAddonHelper h;
+				std::vector<UrlStruct> result;
+				h.searchUrls (MZNC_utf8towstr(text->value.c_str()), result);
+				bool first = true;
+				for ( std::vector<UrlStruct>::iterator it = result.begin(); it != result.end (); it++)
+				{
+					UrlStruct s = *it;
+					if (first) first = false;
+					else response += ",";
+					response += "{\"url\":";
+					response += Encoder::encode (MZNC_wstrtoutf8(s.url.c_str()).c_str());
+					response += ",\"name\":";
+					response += Encoder::encode (MZNC_wstrtoutf8(s.description.c_str()).c_str());
+					response += ",\"account\":";
+					response += Encoder::encode (MZNC_wstrtoutf8(s.name.c_str()).c_str());
+					response += ",\"system\":";
+					response += Encoder::encode (MZNC_wstrtoutf8(s.server.c_str()).c_str());
+					response += "}";
+				}
 			}
 			response += "]}";
-//			MZNSendDebugMessage("Response %s", response.c_str());
 			writeMessage(response);
 		}
 		else if (messageName != NULL && messageName->value == "searchForServer" && pageId != NULL)
 		{
 			JsonValue* text = dynamic_cast<JsonValue*>(jsonMap->getObject("text"));
-//			MZNSendDebugMessage("Received event %s : %s", messageName->value.c_str(), text->value.c_str());
-			WebAddonHelper h;
-			std::vector<UrlStruct> result;
-			h.searchUrlsForServer(MZNC_utf8towstr(text->value.c_str()), result);
 			std::string response = " {\"action\":\"searchForServerResult\", \"pageId\":\""+pageId->value +"\",\"result\": [";
-			bool first = true;
-			for ( std::vector<UrlStruct>::iterator it = result.begin(); it != result.end (); it++)
+			if (text != NULL)
 			{
-				UrlStruct s = *it;
-				if (first) first = false;
-				else response += ",";
-				response += "{\"url\":";
-				response += Encoder::encode (MZNC_wstrtoutf8(s.url.c_str()).c_str());
-				response += ",\"name\":";
-				response += Encoder::encode (MZNC_wstrtoutf8(s.description.c_str()).c_str());
-				response += ",\"account\":";
-				response += Encoder::encode (MZNC_wstrtoutf8(s.name.c_str()).c_str());
-				response += ",\"system\":";
-				response += Encoder::encode (MZNC_wstrtoutf8(s.server.c_str()).c_str());
-				response += "}";
+				WebAddonHelper h;
+				std::vector<UrlStruct> result;
+				h.searchUrlsForServer(MZNC_utf8towstr(text->value.c_str()), result);
+				bool first = true;
+				for ( std::vector<UrlStruct>::iterator it = result.begin(); it != result.end (); it++)
+				{
+					UrlStruct s = *it;
+					if (first) first = false;
+					else response += ",";
+					response += "{\"url\":";
+					response += Encoder::encode (MZNC_wstrtoutf8(s.url.c_str()).c_str());
+					response += ",\"name\":";
+					response += Encoder::encode (MZNC_wstrtoutf8(s.description.c_str()).c_str());
+					response += ",\"account\":";
+					response += Encoder::encode (MZNC_wstrtoutf8(s.name.c_str()).c_str());
+					response += ",\"system\":";
+					response += Encoder::encode (MZNC_wstrtoutf8(s.server.c_str()).c_str());
+					response += "}";
+				}
 			}
 			response += "]}";
-//			MZNSendDebugMessage("Response %s", response.c_str());
 			writeMessage(response);
 		}
 		else if (messageName != NULL && messageName->value == "info" && pageId != NULL)
@@ -571,20 +563,19 @@ void CommunicationManager::mainLoop() {
 		{
 			if ( pageId != NULL)
 			{
-				if (waitMutex())
+				ThreadStatus *ts = threadPool.get(pageId->value);
+				if (ts != NULL)
 				{
-					std::map<std::string,ThreadStatus*>::iterator it = threads.find(pageId->value);
-					if (it != threads.end() && it->second != NULL && ! it->second->end)
-					{
-						it->second->notifyMessage(jsonMap);
-						deleteMap = false;
-					}
-					endMutex();
+					ts->notifyMessage(jsonMap);
+					deleteMap = false;
 				}
 			}
 		}
 		if (deleteMap)
+		{
+			dumpMessage("Delete 5", message);
 			delete message;
+		}
 	} while (true);
 }
 
@@ -592,6 +583,9 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 	ChromeWebApplication *cwa = new ChromeWebApplication (threadStatus);
 	std::string url;
 	cwa->getUrl(url);
+
+//	fprintf (stderr, "Created thread loop %s\n", threadStatus->pageId.c_str() );
+
 //	MZNSendDebugMessageA("Started thread for %s", url.c_str());
 	cwa->setPageData( threadStatus->pageData );
 	threadStatus->pageData = NULL;
@@ -641,33 +635,19 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 			MZNWebMatch(cwa);
 		}
 	}
-	if (waitMutex())
+
+	ThreadStatus *tsOld = threadPool.get(threadStatus->pageId);
+	if (tsOld == threadStatus)
 	{
-		ThreadStatus *tsOld = threads[threadStatus->pageId];
-		if (tsOld == threadStatus)
-		{
-			threads.erase(threadStatus->pageId);
-		}
-		for (std::map<std::string,ActiveListenerInfo*>::iterator it = activeListeners.begin(); it != activeListeners.end();)
-		{
-			if (it->second != NULL && it->second->app != NULL && it->second->app == cwa)
-			{
-				ActiveListenerInfo *ali = it->second;
-				std::map<std::string,ActiveListenerInfo*>::iterator it2 = it ++;
-				activeListeners.erase(it2);
-				if (ali->element != NULL)
-					ali->element->release();
-				ali->listener->release();
-				ali->app->release();
-				delete ali;
-			}
-			else
-				it ++;
-		}
-		threadStatus->release();
-		endMutex();
+		threadPool.remove(threadStatus->pageId);
 	}
+
+	activeListeners.removeApp(cwa);
+	threadStatus->release();
+	cwa->releaseWebPage();
 	cwa->release();
+
+//	fprintf (stderr, "End thread loop %s\n", threadStatus->pageId.c_str() );
 }
 
 std::string CommunicationManager::registerListener(ChromeElement* element,
@@ -685,37 +665,15 @@ std::string CommunicationManager::registerListener(ChromeElement* element,
 	al->element->lock();
 	al->listener->lock();
 	std::string id = ach;
-	if (waitMutex())
-	{
-		activeListeners[ach] = al;
-		endMutex();
-	}
-//	MZNSendDebugMessageA("Registering listener %s [ %s ]",event, ach);
+	activeListeners.add(id, al);
+//	fprintf(stderr, "Register element listener %s %s: %s\n", app->toString().c_str(), event, id.c_str());
 	return id;
 }
 
 std::string CommunicationManager::unregisterListener(ChromeElement* element,
 		const char* event, WebListener* listener) {
-	if (waitMutex())
-	{
-		for (std::map<std::string,ActiveListenerInfo*>::iterator it = activeListeners.begin(); it != activeListeners.end(); it++)
-		{
-			ActiveListenerInfo *al = it->second;
-			if (al->element != NULL && al->element->equals (element) && al->event == event && al->listener == listener)
-			{
-				std::string id = it->first;
-				if (al->element != NULL)
-					al->element->release();
-				al->listener->release();
-				if (al->app != NULL)
-					al->app->release();
-				activeListeners.erase(id);
-				endMutex();
-				return  id;
-			}
-		}
-		endMutex();
-	}
+	activeListeners.removeByListener(element, event, listener);
+//	fprintf(stderr, "UNREGISTER element listener %s %s\n", element->toString().c_str(), event);
 	return std::string ("");
 
 }
@@ -735,55 +693,22 @@ std::string CommunicationManager::registerListener(ChromeWebApplication* app,
 		al->element->lock();
 	al->listener->lock();
 	std::string id = ach;
-	if (waitMutex())
-	{
-		activeListeners[ach] = al;
-		endMutex();
-	}
+	activeListeners.add(id, al);
+//	fprintf(stderr, "Register app listener %s %s: %s\n", app->toString().c_str(), event, ach);
 	return id;
 }
 
 std::string CommunicationManager::unregisterListener(ChromeWebApplication* app,
 		const char* event, WebListener* listener) {
-	if (waitMutex())
-	{
-		for (std::map<std::string,ActiveListenerInfo*>::iterator it = activeListeners.begin(); it != activeListeners.end(); it++)
-		{
-			ActiveListenerInfo *al = it->second;
-			if (al->element == NULL &&
-					al->app->equals (app) && al->event == event && al->listener == listener)
-			{
-				std::string id = it->first;
-				al->app->release();
-				al->listener->release();
-				activeListeners.erase(id);
-				endMutex();
-				return  id;
-			}
-		}
-		endMutex();
-	}
+	activeListeners.removeByApp(app, event, listener);
 	return std::string ("");
 
 }
 
 std::string CommunicationManager::unregisterListener(ChromeWebApplication* app,
 		const char* eventId) {
-	if (eventId != NULL && waitMutex())
-	{
-		std::map<std::string,ActiveListenerInfo*>::iterator it = activeListeners.find(std::string(eventId));
-		if ( it != activeListeners.end())
-		{
-			ActiveListenerInfo *al = it->second;
-			std::string id = it->first;
-			al->app->release();
-			al->listener->release();
-			activeListeners.erase(id);
-			endMutex();
-			return  id;
-		}
-		endMutex();
-	}
+	activeListeners.remove(std::string(eventId));
+//	fprintf(stderr, "UNREGISTER app listener %s %s\n", app->toString().c_str(), eventId);
 	return std::string ("");
 
 }
@@ -792,29 +717,19 @@ void CommunicationManager::sendEvent(const char* eventId, const char* pageId,
 		const char* target, const char* data) {
 	if (pageId != NULL && eventId != NULL)
 	{
-		if (waitMutex ())
+		ThreadStatus *ts = threadPool.get(std::string(pageId));
+		if (ts != NULL)
 		{
-			ThreadStatus *ts = threads[std::string(pageId)];
-			if (ts != NULL)
+			ActiveListenerInfo *ali = activeListeners.get(std::string(eventId));
+			if (ali != NULL)
 			{
-				std::map<std::string,ActiveListenerInfo*>::iterator it = activeListeners.find(std::string(eventId));
-				if (it != activeListeners.end())
-				{
-					ActiveListenerInfo *ali = it->second;
-
-					endMutex();
-
-					Event *ev = new Event();
-					ev->target = "";
-					ev->data = (data == NULL ? "" : data);
-					ev->listener = ali;
-					ts->pendingEvents.push(ev);
-					ts->notifyEventMessage();
-				}
-				else
-					endMutex();
-			} else
-				endMutex();
+				Event *ev = new Event();
+				ev->target = "";
+				ev->data = (data == NULL ? "" : data);
+				ev->listener = ali;
+				ts->pendingEvents.push(ev);
+				ts->notifyEventMessage();
+			}
 		}
 	}
 

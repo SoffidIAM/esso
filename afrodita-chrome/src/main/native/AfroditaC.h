@@ -14,7 +14,7 @@
 //#define DEBUG(x) MZNSendDebugMessage("%s",x);
 #else
 #define DEBUG(x)
-//#define DEBUG(x) printf("%s\n", x)
+//#define DEBUG(x) fprintf(stderr, "%s\n", x)
 #endif
 
 #include <string>

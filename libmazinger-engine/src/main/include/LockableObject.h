@@ -11,7 +11,7 @@
 #include <string>
 
 class LockableObject {
-private:
+protected:
 	int locks;
 	std::string str;
 

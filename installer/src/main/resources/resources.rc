@@ -31,7 +31,8 @@ sewbr.dll 				IDT_FILE "com.soffid.iam.esso.w32.Sewbr.dll.bzip"
 profyumi.jar 			IDT_FILE "com.soffid.iam.esso.java.javahook.jar.bzip"
 logon.tcl 					IDT_FILE "logon.tcl.bzip"
 seycon.cer				IDT_FILE "seycon.cer.bzip"
-afroditaFf.xpi 				IDT_FILE "afroditaFf.xpi.bzip"
+afroditaFf.xpi 			IDT_FILE "afroditaFf.xpi.bzip"
+afroditaFf2.xpi 		IDT_FILE "afroditaFf2.xpi.bzip"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Ejectuables 64 bits

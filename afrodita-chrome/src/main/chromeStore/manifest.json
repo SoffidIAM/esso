@@ -12,13 +12,13 @@
       "js": [ "content.js" ],
       "matches": [ "*://*/*" ]
    } ],
-   "description": "Soffid Enterprise Single Sign-On extension (version 2.8.1)",
+   "description": "Soffid Enterprise Single Sign-On extension (version 2.8.2)",
    "icons": {
       "128": "soffid.png",
       "32": "icon.png"
    },
    "manifest_version": 2,
-   "name": "Soffid ESSO v2.8.1",
+   "name": "Soffid ESSO v2.8.2",
    "permissions": [ "*://*/", "tabs", "nativeMessaging" ],
-   "version": "2.8.1"
+   "version": "2.8.2"
 }

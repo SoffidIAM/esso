@@ -142,12 +142,10 @@ json::JsonAbstractObject* ThreadStatus::waitForMessage() {
 }
 
 void ThreadStatus::notifyMessage(json::JsonAbstractObject* message) {
-	std::string s;
-	if (message == NULL)
-		s = "NULL";
-	else
-		message->write(s, 3);
-//	MZNSendDebugMessageA("Notifying message %s", s.c_str());
+	if (readObject != NULL)
+	{
+		delete readObject;
+	}
 	readObject = message;
 	if (message == NULL)
 		readObject = &NULL_MESSAGE;
