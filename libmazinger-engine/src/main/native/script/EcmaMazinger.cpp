@@ -621,7 +621,11 @@ static void MZNECMA_setSecret(struct SEE_interpreter *interp,
 	SEE_ToString(interp, argv[1], &valueValue);
 
 	std::wstring secret = SEE_StringToWChars(interp, secretValue.u.string);
+
+	std::wstring encodedSecret = MZNC_strtowstr(SeyconCommon::urlEncode(secret.c_str()).c_str());
+
 	std::wstring value = SEE_StringToWChars(interp, valueValue.u.string);
+	std::wstring encodedValue = MZNC_strtowstr(SeyconCommon::urlEncode(value.c_str()).c_str());
 
 	SecretStore s (MZNC_getUserName()) ;
 	wchar_t *sessionKey = s.getSecret(L"sessionKey");
@@ -631,7 +635,7 @@ static void MZNECMA_setSecret(struct SEE_interpreter *interp,
 	SeyconService ss;
 
 	SeyconResponse *response = ss.sendUrlMessage(L"/setSecret?user=%ls&key=%ls&secret=%ls&value=%ls",
-			user, sessionKey, secret.c_str(), value.c_str());
+			user, sessionKey, encodedSecret.c_str(), encodedValue.c_str());
 
 	if (response == NULL)
 	{
@@ -856,12 +860,15 @@ static void MZNECMA_setPassword(struct SEE_interpreter *interp,
 
 	std::wstring secret = L"pass.";
 	std::wstring system = SEE_StringToWChars(interp, systemValue.u.string);
+	std::wstring encodedSystem = MZNC_strtowstr(SeyconCommon::urlEncode(system.c_str()).c_str());
 	secret += system;
 	secret += L".";
 	std::wstring account = SEE_StringToWChars(interp, accountValue.u.string);
+	std::wstring encodedAccount = MZNC_strtowstr(SeyconCommon::urlEncode(account.c_str()).c_str());
 	secret += account;
 
 	std::wstring value = SEE_StringToWChars(interp, valueValue.u.string);
+	std::wstring encodedValue = MZNC_strtowstr(SeyconCommon::urlEncode(value.c_str()).c_str());
 
 	SecretStore s (MZNC_getUserName()) ;
 	wchar_t *sessionKey = s.getSecret(L"sessionKey");
@@ -869,7 +876,7 @@ static void MZNECMA_setPassword(struct SEE_interpreter *interp,
 
 	SeyconService ss;
 	SeyconResponse *response = ss.sendUrlMessage(L"/setSecret?user=%ls&key=%ls&system=%ls&account=%ls&value=%ls",
-			user, sessionKey, system.c_str(), account.c_str(), value.c_str());
+			user, sessionKey, encodedSystem.c_str(), encodedAccount.c_str(), encodedValue.c_str());
 
 	if (response == NULL)
 	{
