@@ -441,8 +441,11 @@ void CommunicationManager::mainLoop() {
 					if ( CreateThread (NULL,  0, win32ThreadProc, ts,0, NULL) == NULL)
 						ExitProcess(1);
 #else
+					pthread_attr_t att;
 					pthread_t threadId;
-					if (pthread_create(&threadId, NULL, linuxThreadProc, ts) != 0)
+					pthread_attr_init(& att);
+					pthread_attr_setdetachstate(&att, PTHREAD_CREATE_DETACHED);
+					if (pthread_create(&threadId, &att, linuxThreadProc, ts) != 0)
 						exit(1);
 #endif
 				}
