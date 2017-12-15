@@ -2158,7 +2158,29 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 			else
 				log("> FAILED to create file %s ", filePath.c_str());
 		}
+		// Si no puedo borrarlo, intento renombrarlo ahora
+		else if (noGina && IsWindowsXP())
+		{
+			reboot = true;
+			if (MoveFileEx(filePath.c_str(), NULL, MOVEFILE_DELAY_UNTIL_REBOOT))
+			{
+				log("> Old file %s will be deleted on reboot",
+						oldFile.c_str());
+			}
 
+			// Despu\E9s de renombrar, puedo sustituir el fichero nuevo
+			if (MoveFileEx(tempFilePath.c_str(), filePath.c_str(),
+					MOVEFILE_DELAY_UNTIL_REBOOT))
+			{
+				log("> New file %s will be replaced on reboot",
+						tempFilePath.c_str());
+				success = true;
+			}
+
+			else
+				log("> FAILED to replace file %s with %s", filePath.c_str(),
+						tempFilePath.c_str());
+		}
 		// Si no puedo borrarlo, intento renombrarlo ahora
 		else if (replaceAction == HARD_REPLACE
 				&& MoveFileEx(filePath.c_str(), oldFile.c_str(),
