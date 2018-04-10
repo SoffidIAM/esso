@@ -2422,16 +2422,13 @@ int install(int full)
 	std::string system = getenv("SystemRoot");
 	if (IsWow64())
 	{
-		std::string sys1 = system + "\\System32";
+		std::string sys1 = system + "\\Sysnative";
 		installResource (sys1.c_str(), "libwinpthread-1-64.dll", "libwinpthread-1.dll");
 		std::string sys2 = system + "\\SysWOW64";
 		installResource (sys2.c_str(), "libwinpthread-1-32.dll", "libwinpthread-1.dll");
-//		installResource (NULL, "libwinpthread-1-64.dll", "libwinpthread-1.dll");
 	}
 	else
 	{
-//		std::string sys1 = system + "\\System32";
-//		installResource (sys1.c_str(), "Winpthread-1-32.dll", "WINPTHREAD-1.DLL");
 		installResource (NULL, "libwinpthread-1-32.dll", "libwinpthread-1.dll");
 	}
 
