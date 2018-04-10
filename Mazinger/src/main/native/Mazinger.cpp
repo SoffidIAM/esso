@@ -309,7 +309,8 @@ void doStatus() {
 	MZNStatus(achUser);
 }
 
-void doDebug(int debugLevel) {
+void doDebug(int _debugLevel) {
+	debugLevel = _debugLevel;
 	// Initialization complete - report running status
 	if (! MZNIsStarted(achUser))
 	{
@@ -433,11 +434,14 @@ DWORD CALLBACK LeerMailSlot(LPVOID lpData) {
 				(LPOVERLAPPED) NULL);
 		if (cbRead > 0 )
 		{
-			time_t t;
-			time(&t);
-			struct tm* tm = localtime(&t);
+			SYSTEMTIME st;
+			GetSystemTime(&st);
 			achMessage[cbRead/2] = L'\0';
-			fwprintf (logFile == NULL ? stdout: logFile, L"%02d:%02d:%02d %ls\n", tm->tm_hour, tm->tm_min, tm->tm_sec, achMessage);
+			DWORD ticks = GetTickCount();
+			if (debugLevel > 1)
+				fwprintf (logFile == NULL ? stdout: logFile, L"%02d:%02d:%02d.%03d %ls\n", st.wHour, st.wMinute, st.wSecond, st.wMilliseconds, achMessage);
+			else
+				fwprintf (logFile == NULL ? stdout: logFile, L"%02d:%02d:%02d %ls\n", st.wHour, st.wMinute, st.wSecond, achMessage);
 		}
 	}
 	return 0;
