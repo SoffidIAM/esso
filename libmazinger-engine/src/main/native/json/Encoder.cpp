@@ -25,7 +25,7 @@ std::string Encoder::encode(const char* str) {
 	{
 		switch ( str[i])
 		{
-		case '\\': result += '\\\\'; break;
+		case '\\': result += "\\\\"; break;
 //		case '\'': result += "\\'"; break;
 		case '\"': result += "\\\""; break;
 		case '\t': result += "\\t"; break;
