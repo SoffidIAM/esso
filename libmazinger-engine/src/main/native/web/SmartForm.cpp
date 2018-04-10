@@ -193,60 +193,91 @@ static long getIntProperty (AbstractWebElement *element, const char* property)
 }
 
 
-void SmartForm::findInputs (AbstractWebApplication* app, AbstractWebElement *element, std::vector<InputDescriptor*> &inputs,
-		bool first, bool visible, std::string indent)
+static bool checkFormMembership (AbstractWebElement *loopElement, AbstractWebElement*form, std::map<std::string, bool> &visibility)
 {
-	std::string tagname;
-	element->getTagName(tagname);
-	if (visible && element->getComputedStyle("display")  == "none")
-			visible = false;
-	if (visible && element->getComputedStyle("visibility")  == "hidden")
-			visible = false;
-	if (strcasecmp (tagname.c_str(), "input") == 0)
+	bool result;
+	std::string id = loopElement->toString();
+	std::map<std::string, bool>::iterator it = visibility.find( id );
+	if (it == visibility.end() )
 	{
-		InputDescriptor *id = new InputDescriptor();
-		id->input = element;
-		id->hasInputData = false;
-		inputs.push_back(id);
-		element->lock();
-		if (!visible || id->getClientHeight() < 8)
+		std::string tagname;
+		loopElement->getTagName(tagname);
+		if (strcasecmp (tagname.c_str(), "form") == 0)
 		{
-			std::string soft;
-			element->getProperty("soffidOnFocusTrigger", soft);
-			if (soft != "true")
-			{
-				if (soft != "false")
-					element->subscribe("focus", onHiddenElementFocusListener);
-				element->setProperty("soffidOnFocusTrigger", "true");
-			}
+			MZNSendDebugMessageA("Found form %s/%s", loopElement->toString().c_str(), (form == NULL ? "ROOT": form->toString().c_str()));
+			result = form != NULL && form->equals(loopElement) ? true: false;
 		}
 		else
 		{
-			std::string soft;
-			element->getProperty("soffidOnFocusTrigger", soft);
-			if (soft == "true")
+			AbstractWebElement *parent = loopElement->getParent();
+			if (parent == NULL)
 			{
-				element->setProperty("soffidOnFocusTrigger", "false");
+				MZNSendDebugMessageA("Found ROOT/%s", (form == NULL ? "ROOT": form->toString().c_str()));
+				result = form == NULL ? true : false;
+			}
+			else
+			{
+				result = checkFormMembership(parent, form, visibility);
+				parent->release();
 			}
 		}
-	}
-	else if (! first && strcasecmp (tagname.c_str(), "form") == 0)
-	{
-		// Do not go inside nested forms
+		visibility[id] = result;
 	}
 	else
 	{
-		std::vector<AbstractWebElement*> children;
-		element->getChildren(children);
-		for (std::vector<AbstractWebElement*>::iterator it = children.begin(); it != children.end(); it++)
+		result = it->second;
+	}
+	return result;
+}
+
+
+void SmartForm::findInputs (AbstractWebApplication* app, AbstractWebElement *form, std::vector<InputDescriptor*> &inputs,
+		bool first, bool visible, std::string indent)
+{
+	std::vector<AbstractWebElement*> inputs2;
+	app->sanityCheck();
+	std::map<std::string, bool> visibility;
+	MZNSendDebugMessageA("Finding form inputs");
+	app->getElementsByTagName("input", inputs2 );
+	for (std::vector<AbstractWebElement*>::iterator it = inputs2.begin () ; it!= inputs2.end(); it++)
+	{
+		AbstractWebElement *element = *it;
+		MZNSendDebugMessageA("Checking element %s", element->toString().c_str());
+		bool member = checkFormMembership(element, form, visibility);
+		MZNSendDebugMessage ("                 %s status = %d", element->toString().c_str(), (int) member);
+		if (member)
 		{
-			AbstractWebElement *child = *it;
-			std::string indent2 = indent;
-			indent2 += "   ";
-			findInputs (app, child, inputs, false, visible, indent2);
-			child->release();
+			bool visible = element->isVisible();
+			MZNSendDebugMessageA("Adding element %s", element->toString().c_str());
+			InputDescriptor *id = new InputDescriptor();
+			id->hasInputData = false;
+			id->input = element;
+			inputs.push_back(id);
+			if( ! visible || id->getClientHeight() < 8)
+			{
+				std::string soft;
+				element->getProperty("soffidOnFocusTrigger", soft);
+				if (soft != "true")
+				{
+					if (soft != "false")
+						element->subscribe("focus", onHiddenElementFocusListener);
+					element->setProperty("soffidOnFocusTrigger", "true");
+				}
+			}
+			else
+			{
+				std::string soft;
+				element->getProperty("soffidOnFocusTrigger", soft);
+				if (soft == "true")
+				{
+					element->setProperty("soffidOnFocusTrigger", "false");
+				}
+			}
+		} else {
+			element->release();
 		}
 	}
+	inputs2.clear();
 }
 
 void SmartForm::findInputs (std::vector<InputData> *inputDatae, std::vector<InputDescriptor*> &inputs)
@@ -294,40 +325,29 @@ void SmartForm::findInputs (AbstractWebApplication* app, std::vector<InputDescri
 	std::vector<AbstractWebElement*> inputs2;
 	app->sanityCheck();
 	app->getElementsByTagName("input", inputs2 );
+	MZNSendDebugMessage("Looking for input elements");
+
+	std::map<std::string, bool> visibility;
+
 	for (std::vector<AbstractWebElement*>::iterator it = inputs2.begin () ; it!= inputs2.end(); it++)
 	{
 		AbstractWebElement *element = *it;
-		bool visible = true;
-		bool omit = false;
 		AbstractWebElement *loopElement = element;
-		loopElement->lock();
-		do
-		{
-			std::string tagname;
-			loopElement->getTagName(tagname);
-			if (strcasecmp (tagname.c_str(), "form") == 0)
-			{
-				omit = true;
-				loopElement->release();
-				break;
-			}
-			else if (loopElement->getComputedStyle("display")  == "none" ||
-					loopElement->getComputedStyle("visibility")  == "hidden")
-			{
-				visible = false;
-			}
-			AbstractWebElement *parent = loopElement->getParent();
-			loopElement->release();
-			loopElement = parent;
-		} while (loopElement != NULL);
+		MZNSendDebugMessage("Looking element %s", element->toString().c_str());
+		bool member = checkFormMembership(loopElement, NULL, visibility);
+		MZNSendDebugMessage("                %s status = %d", element->toString().c_str(), (int) member);
 
-		if (!omit)
+		if (!member)
+			loopElement->release();
+		else
 		{
+			bool visible = loopElement->isVisible();
+			MZNSendDebugMessageA("Adding element %s", element->toString().c_str());
 			InputDescriptor *id = new InputDescriptor();
 			id->hasInputData = false;
 			id->input = element;
 			inputs.push_back(id);
-			if( ! visible || id->getClientHeight() < 8)
+			if( !visible || id->getClientHeight() < 8)
 			{
 				std::string soft;
 				element->getProperty("soffidOnFocusTrigger", soft);

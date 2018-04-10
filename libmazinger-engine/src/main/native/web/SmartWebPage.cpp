@@ -138,7 +138,7 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 			rootForm->parse(app, NULL, NULL);
 		else
 			rootForm->reparse(NULL);
-		MZNSendDebugMessageA("* Parsed form");
+		MZNSendDebugMessageA("* Parsed page");
 
 
 		app->getForms(forms);
@@ -146,6 +146,8 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 		int i = 0;
 		for (std::vector<AbstractWebElement*>::iterator it = forms.begin(); it != forms.end(); it++)
 		{
+			MZNSendDebugMessageA("* Parsing form %d", i);
+			i ++ ;
 			AbstractWebElement *element = *it;
 			std::string action;
 			element->getAttribute("action", action);
@@ -156,6 +158,7 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 				if (form2->getRootElement() != NULL && form2->getRootElement()->equals(element))
 				{
 					form2->reparse(NULL);
+					MZNSendDebugMessageA("* Reparsed form %d", i);
 					found = true;
 					break;
 				}
@@ -165,6 +168,7 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 				SmartForm *form = new SmartForm(this);
 				this->forms.push_back(form);
 				form->parse ( app, element, NULL);
+				MZNSendDebugMessageA("* Parsed form %d", i);
 			}
 			element->release();
 		}
