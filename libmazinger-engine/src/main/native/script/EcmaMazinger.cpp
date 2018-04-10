@@ -1050,10 +1050,7 @@ static void MZNECMA_getText(struct SEE_interpreter *interp,
 		std::string s;
 		obj->spec->m_pMatchedComponent->getAttribute("text", s);
 		struct SEE_string *buf;
-		buf = SEE_string_new(interp, s.length() + 1);
-		const char *str = s.c_str();
-		for (int i = 0; str[i] != 0; i++)
-			SEE_string_addch(buf, str[i]);
+		buf = SEE_UTF8ToString(interp, s.c_str());
 		SEE_SET_STRING(res, buf);
 
 	}
@@ -1072,7 +1069,7 @@ static void MZNECMA_setText(struct SEE_interpreter *interp,
 		SEE_parse_args(interp, argc, argv, "s", &message);
 		if (message == NULL)
 			SEE_error_throw(interp, interp->RangeError, "missing argument");
-		std::string text = SEE_StringToChars(interp, message);
+		std::string text = SEE_StringToUTF8(interp, message);
 		obj->spec->m_pMatchedComponent->setAttribute("text", text.c_str());
 	}
 	SEE_SET_UNDEFINED(res);
@@ -1131,6 +1128,33 @@ struct SEE_string* getFocusString() {
 
 
 
+
+static void waitForFocus()
+{
+#ifdef WIN32
+	boolean pause = false;
+	do
+	{
+		HWND hwnd = GetForegroundWindow();
+		if (hwnd != NULL)
+		{
+			DWORD dwActiveProcessId;
+			DWORD dwCurrentProcessId = 0;
+			GetWindowThreadProcessId(hwnd, &dwActiveProcessId);
+			dwCurrentProcessId = GetCurrentProcessId();
+			MZNSendDebugMessageA("Waiting to activate application window %x %lx %lx", hwnd, dwActiveProcessId, dwCurrentProcessId);
+			if (dwActiveProcessId == dwCurrentProcessId)
+			{
+				if (pause)
+					Sleep(300);
+				return;
+			}
+			pause = true;
+			Sleep(100);
+		}
+	} while (true);
+#endif
+}
 /*
  * typeText
  *
@@ -1146,6 +1170,8 @@ static void MZNECMA_sendKeys(struct SEE_interpreter *interp,
 	if (s == NULL)
 		SEE_error_throw(interp, interp->RangeError, "missing argument");
 	std::string message = SEE_StringToChars(interp, s);
+
+	waitForFocus();
 
 	CSendKeys k;
 	k.SendKeys(message.c_str(), true);
@@ -1168,6 +1194,8 @@ static void MZNECMA_sendText(struct SEE_interpreter *interp,
 	if (s == NULL)
 		SEE_error_throw(interp, interp->RangeError, "missing argument");
 	std::wstring message = SEE_StringToWChars(interp, s);
+
+	waitForFocus();
 
 	CSendKeys k;
 	k.SendLiteral(message.c_str(), true);
