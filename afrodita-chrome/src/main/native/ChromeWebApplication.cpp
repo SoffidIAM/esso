@@ -385,15 +385,9 @@ void ChromeWebApplication::selectAction (const char * title,
 
 void ChromeWebApplication::lock() {
 	LockableObject::lock();
-	fprintf (stderr, "APP LOCK %s %d locks\n",
-			toString().c_str(),
-			LockableObject::locks);
 }
 
 void ChromeWebApplication::release() {
-	fprintf (stderr, "APP RELEASE %s %d locks\n",
-			toString().c_str(),
-			LockableObject::locks - 1);
 	LockableObject::release();
 }
 

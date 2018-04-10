@@ -109,7 +109,6 @@ json::JsonAbstractObject* ThreadStatus::waitForMessage() {
 	#ifdef WIN32
 		DWORD dwResult = WaitForSingleObject (hMutex, 10000); // 10 seconds wait
 		acquired = (dwResult == WAIT_OBJECT_0);
-//		MZNSendDebugMessage ("RESULT = %x", dwResult);
 	#else
 		struct timespec timeout;
 		time (&timeout.tv_sec);
@@ -119,7 +118,6 @@ json::JsonAbstractObject* ThreadStatus::waitForMessage() {
 	#endif
 		if (acquired)
 		{
-			fflush(stderr);
 			json::JsonAbstractObject *result = readObject;
 			readObject = NULL;
 			if (result == NULL)
@@ -145,7 +143,11 @@ json::JsonAbstractObject* ThreadStatus::waitForMessage() {
 void ThreadStatus::notifyMessage(json::JsonAbstractObject* message) {
 	if (readObject != NULL)
 	{
-		delete readObject;
+		std::string s;
+		readObject->write(s, 3);
+		json::JsonAbstractObject* oldMessage = readObject;
+		readObject = NULL;
+		delete oldMessage;
 	}
 	readObject = message;
 	if (message == NULL)

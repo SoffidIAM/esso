@@ -308,10 +308,6 @@ JsonAbstractObject* CommunicationManager::call(bool &error, const std::string& p
 	}
 
 
-//	std::string s;
-//	jsonMsg->write(s, 3);
-//	MZNSendDebugMessage("Message      %s", msg.c_str());
-//	MZNSendDebugMessage("Got response %s", s.c_str());
 	JsonMap  *map = dynamic_cast<JsonMap*> (jsonMsg);
 	if (map != NULL)
 	{
@@ -386,7 +382,6 @@ void CommunicationManager::mainLoop() {
 		JsonAbstractObject *message = getEventMessage();
 		if (message == NULL)
 		{
-//			fprintf(stderr, "End message\n");
 #ifdef WIN32
 			ExitProcess(0);
 #else
@@ -400,8 +395,6 @@ void CommunicationManager::mainLoop() {
 		JsonValue* pageId = dynamic_cast<JsonValue*>(jsonMap->getObject("pageId"));
 		JsonMap *jsonPageData = dynamic_cast<JsonMap*>(jsonMap->getObject("pageData"));
 
-//		std::string t;
-//		jsonMap->write(t, 3);
 //		MZNSendDebugMessage("RECEIVED MSG**********************");
 //		MZNSendDebugMessage("Received %s", t.c_str());
 		if (messageName != NULL && messageName->value == "onLoad" && pageId != NULL)
@@ -478,7 +471,6 @@ void CommunicationManager::mainLoop() {
 				ThreadStatus *ts = threadPool.get(pageId->value);
 				if (ts != NULL)
 				{
-
 					ActiveListenerInfo *ali = activeListeners.get(eventId->value);
 					if (ali != NULL)
 					{
@@ -587,8 +579,6 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 	std::string url;
 	cwa->getUrl(url);
 
-//	fprintf (stderr, "Created thread loop %s\n", threadStatus->pageId.c_str() );
-
 //	MZNSendDebugMessageA("Started thread for %s", url.c_str());
 	cwa->setPageData( threadStatus->pageData );
 	threadStatus->pageData = NULL;
@@ -650,7 +640,6 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 	cwa->releaseWebPage();
 	cwa->release();
 
-//	fprintf (stderr, "End thread loop %s\n", threadStatus->pageId.c_str() );
 }
 
 std::string CommunicationManager::registerListener(ChromeElement* element,
@@ -669,14 +658,12 @@ std::string CommunicationManager::registerListener(ChromeElement* element,
 	al->listener->lock();
 	std::string id = ach;
 	activeListeners.add(id, al);
-//	fprintf(stderr, "Register element listener %s %s: %s\n", app->toString().c_str(), event, id.c_str());
 	return id;
 }
 
 std::string CommunicationManager::unregisterListener(ChromeElement* element,
 		const char* event, WebListener* listener) {
 	activeListeners.removeByListener(element, event, listener);
-//	fprintf(stderr, "UNREGISTER element listener %s %s\n", element->toString().c_str(), event);
 	return std::string ("");
 
 }
@@ -697,7 +684,6 @@ std::string CommunicationManager::registerListener(ChromeWebApplication* app,
 	al->listener->lock();
 	std::string id = ach;
 	activeListeners.add(id, al);
-//	fprintf(stderr, "Register app listener %s %s: %s\n", app->toString().c_str(), event, ach);
 	return id;
 }
 
@@ -711,7 +697,6 @@ std::string CommunicationManager::unregisterListener(ChromeWebApplication* app,
 std::string CommunicationManager::unregisterListener(ChromeWebApplication* app,
 		const char* eventId) {
 	activeListeners.remove(std::string(eventId));
-//	fprintf(stderr, "UNREGISTER app listener %s %s\n", app->toString().c_str(), eventId);
 	return std::string ("");
 
 }
