@@ -55,9 +55,6 @@ static char* createMenuWndClass ()
 #endif
 
 
-#ifdef WIN32
-static HWND hwnd = NULL;
-#endif
 
 void AbstractWebApplication::selectAction (const char * title,
 		std::vector<std::string> &optionId,
@@ -66,8 +63,7 @@ void AbstractWebApplication::selectAction (const char * title,
 		WebListener *listener)
 {
 #ifdef WIN32
-	if (hwnd == NULL)
-		hwnd = CreateWindowA(createMenuWndClass(), "TITLE", WS_POPUP, 0,0, 1, 1, NULL, NULL, GetModuleHandle(NULL), (LPVOID) NULL);
+	HWND hwnd = CreateWindowA(createMenuWndClass(), "Soffid ESSO", WS_POPUP, 0,0, 1, 1, NULL, NULL, GetModuleHandle(NULL), (LPVOID) NULL);
 	HMENU hm = CreatePopupMenu();
 
 	AppendMenuA (hm, MF_STRING|MF_DISABLED, -1, title);
@@ -101,9 +97,9 @@ void AbstractWebApplication::selectAction (const char * title,
 				hwnd, NULL);
 	}
 
-//	CloseWindow(hwnd);
-	//DestroyWindow(hwnd);
 	DestroyMenu(hm);
+	CloseWindow(hwnd);
+	DestroyWindow(hwnd);
 
 //	consumeMessages();
 
