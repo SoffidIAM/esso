@@ -7,39 +7,13 @@ using namespace std;
 
 static bool debug = false;
 
+BOOL HelperWriteKey(int bits, HKEY roothk, const char *lpSubKey, LPCTSTR val_name,
+		DWORD dwType, const void *lpvData, DWORD dwDataSize);
+		
+
 static bool setProperty(const char *attribute, const char* value) {
-	HKEY hKey;
-
-	if (RegOpenKeyW(HKEY_LOCAL_MACHINE, L"Software\\Soffid\\esso", &hKey)
-			!= ERROR_SUCCESS) {
-		if (debug)
-			wprintf(L"Missing Software\\Soffid\\esso key\n");
-		return FALSE;
-	}
-
-	DWORD cbSize = strlen(value);
-	DWORD result = RegSetValueEx(hKey, attribute, NULL, REG_SZ, (LPBYTE) value,
-			cbSize);
-	CloseHandle(hKey);
-	return result == ERROR_SUCCESS;
-
-}
-
-static bool setProperty(const wchar_t *attribute, const wchar_t* value) {
-	HKEY hKey;
-
-	if (RegOpenKeyW(HKEY_LOCAL_MACHINE, L"Software\\Soffid\\esso", &hKey)
-			!= ERROR_SUCCESS) {
-		if (debug)
-			wprintf(L"Missing Software\\Soffid\\esso key\n");
-		return FALSE;
-	}
-
-	DWORD cbSize = (wcslen(value)+1) * sizeof(wchar_t);
-	DWORD result = RegSetValueExW(hKey, attribute, NULL, REG_SZ,
-			(LPBYTE) value, cbSize);
-	CloseHandle(hKey);
-	return result == ERROR_SUCCESS;
+	return HelperWriteKey(64, HKEY_LOCAL_MACHINE, "Software\\Soffid\\esso", attribute, 
+			REG_SZ, (void*) value, lstrlen(value));
 
 }
 
@@ -284,8 +258,12 @@ bool configure(LPCSTR mazingerDir, const char* url) {
 		log ("Error setting certificateFile");
 		notifyError();
 	}
-	if (!setProperty(L"SSOServer", szHostName)) {
-		log ("Error setting SSOSErver");
+	
+	char hostName[4096];
+	wcstombs(hostName, szHostName, 4095);
+
+	if (!setProperty("SSOServer", hostName)) {
+		log ("Error setting SSOServer");
 		notifyError();
 	}
 	char szPort[100];
