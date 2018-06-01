@@ -352,8 +352,12 @@ extern "C" int main(int argc, char **argv) {
 
 	g_thread_create(DialogHandler::main, NULL, false, NULL);
 
-
 	gtk_window_new(GTK_WINDOW_TOPLEVEL);
+
+	const char *szUser = MZNC_getUserName();
+
+	if (!MZNIsStarted(szUser))
+		view_popup_menu_onLogin(NULL, NULL);
 
 	gtk_main();
 
