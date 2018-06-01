@@ -112,7 +112,7 @@ static DWORD WINAPI mainThreadProc(
 
 #else
 
-#ifdef USEQT
+#ifdef USE_QT
 
 #include <QApplication>
 #include "ChromeWidget.h"
@@ -163,7 +163,7 @@ extern "C" int main (int argc, char **argv)
 	}
 
 #else
-#ifdef USEQT
+#ifdef USE_QT
  	QApplication *app = new QApplication (argc, argv);
 
 	pthread_t threadId;

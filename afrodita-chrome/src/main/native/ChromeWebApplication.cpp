@@ -22,7 +22,7 @@
 
 #ifndef WIN32
 #ifdef USE_QT
-#include <QApplication>
+#include <QtWidgets/QApplication>
 #else
 
 class PopupMenu {
@@ -336,11 +336,8 @@ void ChromeWebApplication::selectAction (const char * title,
 	for (int i = 0; i < names.size() ; i++)
 		m->names.push_back(MZNC_utf8tostr(names[i].c_str()).c_str());
 
-	MZNSendDebugMessage("Sending signal");
 	currentMenu = m;
-//	g_signal_emit_by_name(signalWindow, "popup-menu", m, NULL );
 	gdk_threads_add_idle(menuPopupHandler, m);
-	MZNSendDebugMessage("Sent signal");
 #endif
 #endif
 
@@ -404,9 +401,14 @@ void ChromeWebApplication::releaseWebPage() {
 
 #include "CommunicationManager.h"
 
-static gboolean onSelectGtkMenu (GtkWidget *menuitem, gpointer userdata) {
+static gboolean onActivate (GtkWidget *dialog, gpointer userdata) {
+	gtk_dialog_response(GTK_DIALOG(dialog), 0);
+	return true;
+}
 
-	MZNSendDebugMessage("Selected");
+static gboolean onSelect (GtkWidget *widget, gpointer userdata) {
+	GtkWidget *dialog = gtk_widget_get_toplevel(widget);
+
 	PopupMenu *ld = (PopupMenu*) userdata;
 	if (ld != NULL &&
 			! ld->selectedOption.empty())
@@ -416,55 +418,47 @@ static gboolean onSelectGtkMenu (GtkWidget *menuitem, gpointer userdata) {
 		mazinger_chrome::CommunicationManager::getInstance()
 			->sendEvent(ld->eventId.c_str(), ld->app->threadStatus->pageId.c_str(),
 					NULL, ld->selectedOption.c_str());
+		gtk_dialog_response(GTK_DIALOG(dialog), 1);
 	}
-	return false;
+	return true;
 }
 
-static gboolean releaseMenuObjects (GtkWidget *widget,
-               gpointer   user_data)
+static gboolean releaseMenuObjects (PopupMenu *ld)
 {
-	MZNSendDebugMessage("Cleaning menu data");
-	PopupMenu *ld = (PopupMenu*) user_data;
 	if (ld != NULL)
 	{
-		MZNSendDebugMessage("Cleaning menu data q %p", ld);
 
 		if (ld->element != NULL)
 		{
-			MZNSendDebugMessage("Cleaning menu data q1.");
 			ld->element->sanityCheck();
-			MZNSendDebugMessage("Cleaning menu data q1q");
 			ld->element->release();
 		}
-		MZNSendDebugMessage("Cleaning menu data q1");
 		mazinger_chrome::CommunicationManager::getInstance()->unregisterListener(ld->app, ld->eventId.c_str());
-		MZNSendDebugMessage("Cleaning menu data q2");
 		if (ld->app != NULL)
 			ld->app->release();
-		MZNSendDebugMessage("Cleaning menu data B");
 		for (int i = 0 ; i < ld->others.size(); i++)
 		{
-			MZNSendDebugMessage("Cleaning menu data %d", i);
 			delete ld->others[i];
 		}
-		MZNSendDebugMessage("Cleaning menu data END");
 		delete ld;
 	}
-	MZNSendDebugMessage("Cleaned up menu data");
 	return false;
 }
 
-gboolean menuPopupHandler (gpointer p) {
+gboolean menuPopupHandler (gpointer dummy) {
 	PopupMenu *masterData  = currentMenu;
 
-	GtkWidget *menu, *menuitem;
-	menu = gtk_menu_new();
+//	GtkWidget* signalWindow = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+//	gtk_window_set_position(GTK_WINDOW(signalWindow), GTK_WIN_POS_MOUSE);
 
-	menuitem = gtk_menu_item_new_with_label(masterData->title.c_str());
+	GtkWidget *dialog = gtk_dialog_new();
+	GdkWindow * w = gtk_widget_get_parent_window ( dialog );
 
+	gdk_window_set_events ( w, GDK_FOCUS_CHANGE_MASK );
+	gtk_window_set_title(GTK_WINDOW(dialog), masterData->title.c_str());
 
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-	gtk_widget_set_sensitive(menuitem, false);
+	GtkWidget * content = gtk_dialog_get_content_area(
+			GTK_DIALOG(dialog));
 
 	for (int i = 0; i < masterData->optionId.size() && i < masterData->names.size(); i++)
 	{
@@ -474,33 +468,39 @@ gboolean menuPopupHandler (gpointer p) {
 		l->app = masterData->app;
 		l->element = masterData->element;
 		masterData->others.push_back(l);
-		menuitem = gtk_menu_item_new_with_label(masterData->names[i].c_str());
-		MZNSendDebugMessageA("Created option %s", masterData->names[i].c_str());
+
+
 		if ( masterData->optionId[i].empty() )
 		{
-			gtk_widget_set_sensitive(menuitem, false);
+			GtkWidget * child = gtk_label_new(masterData->names[i].c_str());
+			gtk_widget_show(child);
+			gtk_container_add ( GTK_CONTAINER( content ), child);
+
 		}
 		else
 		{
-			MZNSendDebugMessageA("Connecting id %s", masterData->optionId[i].c_str());
-			g_signal_connect(menuitem, "activate",
-					G_CALLBACK(onSelectGtkMenu), l);
+			GtkWidget * child = gtk_link_button_new_with_label(masterData->names[i].c_str(), masterData->names[i].c_str());
+			gtk_widget_show(child);
+			gtk_container_add ( GTK_CONTAINER( content ), child);
+
+			g_signal_connect(child, "activate-link", G_CALLBACK(onSelect), l);
 		}
-		gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
 	}
 
-	gtk_widget_show_all(menu);
-	MZNSendDebugMessage("Setting menu data on %p", masterData);
+	MZNSendDebugMessageA("Show menu");
 
-	g_signal_connect(menu, "destroy",
-			G_CALLBACK(releaseMenuObjects), masterData);
+	gtk_dialog_set_default_response(GTK_DIALOG(dialog), -100);
+	gtk_window_set_position(GTK_WINDOW(dialog), GTK_WIN_POS_MOUSE);
+	g_signal_connect(dialog, "focus-out-event", G_CALLBACK(onActivate), NULL);
+	gint result = gtk_dialog_run (GTK_DIALOG (dialog));
 
-	MZNSendDebugMessageA("Opening popup");
-	gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 1, gtk_get_current_event_time());
-	MZNSendDebugMessageA("Closed popup");
+	MZNSendDebugMessageA("Closed popup %d", result);
 
+	releaseMenuObjects(masterData);
 
-	return G_SOURCE_REMOVE;
+	gtk_widget_hide(dialog);
+
+	return FALSE;
 }
 
 
