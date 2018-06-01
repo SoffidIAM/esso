@@ -11,6 +11,7 @@
 #include "Log.h"
 #include "Utils.h"
 #include <openssl/ossl_typ.h>
+#include <openssl/opensslv.h>
 #include <ssoclient.h>
 #include <MZNcompat.h>
 
@@ -62,7 +63,12 @@ bool CertificateHandler::getNearExpireDate(){
 
 	// Calculate expiration time
 	ASN1_GENERALIZEDTIME *expiration = NULL;
+#if OPENSSL_VERSION_NUMBER > 0x10100000L
+	const ASN1_TIME* notAfter = X509_get0_notAfter(cert);
+	ASN1_TIME_to_generalizedtime (notAfter, &expiration);
+#else
 	ASN1_TIME_to_generalizedtime (cert->cert_info->validity->notAfter, &expiration);
+#endif
 	ASN1_STRING_to_UTF8(&expString, expiration);
 
 
@@ -99,12 +105,22 @@ bool CertificateHandler::isValid(){
 
 	// Calculate expiration time
 	ASN1_GENERALIZEDTIME *expiration = NULL;
+#if OPENSSL_VERSION_NUMBER > 0x10100000L
+	const ASN1_TIME* notAfter = X509_get0_notAfter(cert);
+	ASN1_TIME_to_generalizedtime (notAfter, &expiration);
+#else
 	ASN1_TIME_to_generalizedtime (cert->cert_info->validity->notAfter, &expiration);
+#endif
 	ASN1_STRING_to_UTF8(&expString, expiration);
 
 	// Calculate activation time
 	ASN1_GENERALIZEDTIME *activation = NULL;
+#if OPENSSL_VERSION_NUMBER > 0x10100000L
+	const ASN1_TIME* notBefore = X509_get0_notBefore(cert);
+	ASN1_TIME_to_generalizedtime (notBefore, &activation);
+#else
 	ASN1_TIME_to_generalizedtime (cert->cert_info->validity->notBefore, &activation);
+#endif
 	ASN1_STRING_to_UTF8(&actString, activation);
 
 	// Calculate one month from now
@@ -137,7 +153,12 @@ const char* CertificateHandler::getExpirationDate()
 	if (expirationString == NULL && getCertContext() != NULL)
 	{
 		ASN1_GENERALIZEDTIME *expiration = NULL;
+#if OPENSSL_VERSION_NUMBER > 0x10100000L
+		const ASN1_TIME* notAfter = X509_get0_notAfter(getCertContext());
+		ASN1_TIME_to_generalizedtime (notAfter, &expiration);
+#else
 		ASN1_TIME_to_generalizedtime (getCertContext()->cert_info->validity->notAfter, &expiration);
+#endif
 		ASN1_STRING_to_UTF8((unsigned char**)&expirationString, expiration);
 	}
 	return expirationString;
