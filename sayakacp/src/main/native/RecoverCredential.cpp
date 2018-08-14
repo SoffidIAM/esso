@@ -585,19 +585,19 @@ struct REPORT_RESULT_STATUS_INFO
 
 //these are currently defined in the ddk, but not the sdk
 #ifndef STATUS_LOGON_FAILURE
-#define STATUS_LOGON_FAILURE	(0xC000006DL)     // ntsubauth
+#define STATUS_LOGON_FAILURE	((NTSTATUS)0xC000006DL)     // ntsubauth
 #endif
 
 #ifndef STATUS_ACCOUNT_RESTRICTION
-#define STATUS_ACCOUNT_RESTRICTION	(0xC000006EL)     // ntsubauth
+#define STATUS_ACCOUNT_RESTRICTION	((NTSTATUS)0xC000006EL)     // ntsubauth
 #endif
 
 #ifndef STATUS_ACCOUNT_DISABLED
-#define STATUS_ACCOUNT_DISABLED		(0xC0000072L)     // ntsubauth
+#define STATUS_ACCOUNT_DISABLED		((NTSTATUS)0xC0000072L)     // ntsubauth
 #endif
 
 #ifndef STATUS_SUCCESS
-#define STATUS_SUCCESS	(0x000000000)     // ntsubauth
+#define STATUS_SUCCESS	((NTSTATUS)0x000000000)     // ntsubauth
 #endif
 
 #ifndef STATUS_PASSWORD_MUST_CHANGE
