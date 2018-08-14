@@ -19,8 +19,8 @@
 #include <dlfcn.h>
 
 
-#define TRACE printf("[%ld]: At %s:%d\n", pthread_self(), __FILE__, __LINE__)
-//#define TRACE
+//#define TRACE printf("[%ld]: At %s:%d\n", pthread_self(), __FILE__, __LINE__)
+#define TRACE
 
 GtkStatusIcon *tray_icon;
 
