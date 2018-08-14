@@ -1,0 +1,8 @@
+Section: admin
+Priority: optional
+Maintainer: Soffid <contact@soffid.com>
+Package: soffidesso
+Version: ${project.version}
+Architecture: i686
+Description: Soffid ESSO
+Depends:libsoup2.4-1
