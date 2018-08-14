@@ -31,6 +31,7 @@
 #include <SeyconServer.h>
 #include <stdlib.h>
 #include <MZNcompat.h>
+#include <time.h>
 int SeyconCommon::seyconDebugLevel = 0;
 
 __attribute__((constructor))
@@ -589,13 +590,20 @@ void SeyconCommon::updateHostAddress () {
 	}
 
 	SeyconService service ;
-	SeyconResponse*response= service.sendUrlMessage(L"/updateHostAddress?name=%hs&serial=%hs",
-			MZNC_getHostName(), serialNumber.c_str());
-	if (response != NULL && response->getResult() != NULL)  {
-		if (response->getToken(0) == "ERROR") {
-			SeyconCommon::warn ("Error updating host address: %hs", response->getToken(1).c_str());
+	time_t start;
+	time_t now;
+	time (&start);
+	do {
+		SeyconResponse*response= service.sendUrlMessage(L"/updateHostAddress?name=%hs&serial=%hs",
+				MZNC_getHostName(), serialNumber.c_str());
+		if (response != NULL && response->getResult() != NULL)  {
+			if (response->getToken(0) == "ERROR") {
+				SeyconCommon::warn ("Error updating host address: %hs", response->getToken(1).c_str());
+			}
+			break;
 		}
-	}
+		time (&now);
+	} while (now - start < 30);
 }
 
 
