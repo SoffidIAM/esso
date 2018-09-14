@@ -171,7 +171,7 @@ BEGIN
 	MENUITEM 	"Sesioa ez da hasi",	IDM_USER_ESSO
 	MENUITEM 	SEPARATOR
         MENUITEM	"ESSO desaktibatu",	IDM_DISABLE_ESSO
-        MENUITEM 	"ESSO akatibatu",		IDM_ENABLE_ESSO
+        MENUITEM 	"ESSO aktibatu",		IDM_ENABLE_ESSO
         MENUITEM 	SEPARATOR
         MENUITEM 	"Eguneratu",			IDM_UPDATE
         MENUITEM "Sesioa ireki", IDM_LOGIN
