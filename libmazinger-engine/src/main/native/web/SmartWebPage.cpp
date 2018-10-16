@@ -75,7 +75,7 @@ void OnAnyElementFocusListener::onEvent (const char *eventName, AbstractWebAppli
 
 }
 
-void SmartWebPage::parse(AbstractWebApplication* app) {
+void SmartWebPage::parse(AbstractWebApplication* app, PageData *data, bool formless) {
 	std::vector<AbstractWebElement*> forms;
 
 	if (! parsed)
@@ -98,7 +98,6 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 	}
 
 	MZNSendDebugMessageA("* Parsing HTML document");
-	PageData *data = app->getPageData();
 	if (data != NULL)
 	{
 		data->dump();
@@ -133,6 +132,13 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 			}
 			element->release();
 		}
+	} else if (formless){
+		rootForm->setFormless();
+		if (! rootForm->isParsed())
+			rootForm->parse(app, NULL, NULL);
+		else
+			rootForm->reparse(NULL);
+		MZNSendDebugMessageA("* Parsed page");
 	} else {
 		if (! rootForm->isParsed())
 			rootForm->parse(app, NULL, NULL);
@@ -175,6 +181,33 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 	}
 
 
+}
+
+void SmartWebPage::parse(AbstractWebApplication* app) {
+	parse (app, app->getPageData(), false);
+}
+
+void SmartWebPage::formlessParse(AbstractWebApplication* app) {
+	MZNSendDebugMessageA("Formless parse");
+	PageData *data = app->getPageData();
+	if (data != NULL)
+	{
+		MZNSendDebugMessageA("Formless initial data:");
+		data->dump();
+		for (std::vector<FormData>::iterator it = data->forms.begin(); it != data->forms.end(); it++)
+		{
+			FormData &form = *it;
+			for (std::vector<InputData>::iterator it2 = form.inputs.begin(); it2 != form.inputs.end(); it2++ )
+			{
+				InputData d = *it2;
+				data -> inputs.push_back(d);
+			}
+			form.inputs.clear();
+		}
+		MZNSendDebugMessageA("Formless data:");
+		data->dump();
+	}
+	parse (app, data, true);
 }
 
 

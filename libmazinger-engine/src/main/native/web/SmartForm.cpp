@@ -165,6 +165,7 @@ SmartForm::SmartForm(SmartWebPage *page) {
 	stylePrefix = ach;
 	numPasswords = 0;
 	parsed = false;
+	formlessMode = false;
 }
 
 SmartForm::~SmartForm() {
@@ -182,6 +183,14 @@ SmartForm::~SmartForm() {
 		this->onHiddenElementFocusListener->release();
 }
 
+
+void SmartForm::setFormless(){
+	if (!formlessMode)
+	{
+		formlessMode = true;
+		parsed = false;
+	}
+}
 
 static long getIntProperty (AbstractWebElement *element, const char* property)
 {
@@ -243,7 +252,7 @@ void SmartForm::findInputs (AbstractWebApplication* app, AbstractWebElement *for
 	{
 		AbstractWebElement *element = *it;
 		MZNSendDebugMessageA("Checking element %s", element->toString().c_str());
-		bool member = checkFormMembership(element, form, visibility);
+		bool member = formlessMode || checkFormMembership(element, form, visibility);
 		MZNSendDebugMessage ("                 %s status = %d", element->toString().c_str(), (int) member);
 		if (member)
 		{
@@ -334,7 +343,7 @@ void SmartForm::findInputs (AbstractWebApplication* app, std::vector<InputDescri
 		AbstractWebElement *element = *it;
 		AbstractWebElement *loopElement = element;
 		MZNSendDebugMessage("Looking element %s", element->toString().c_str());
-		bool member = checkFormMembership(loopElement, NULL, visibility);
+		bool member = formlessMode || checkFormMembership(loopElement, NULL, visibility);
 		MZNSendDebugMessage("                %s status = %d", element->toString().c_str(), (int) member);
 
 		if (!member)

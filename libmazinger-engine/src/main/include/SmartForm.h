@@ -98,6 +98,7 @@ public:
 	void createGenerateModal(AbstractWebElement *img);
 	void createSaveModal(AbstractWebElement *img);
 	void onBeforeUnload ();
+	void setFormless ();
 	bool isParsed () { return parsed; }
 	AbstractWebElement *getRootElement () {return element;}
 	virtual std::string toString ();
@@ -138,6 +139,7 @@ protected:
 
 	int currentModalInput;
 	bool lockedOnce;
+	bool formlessMode;
 
 public:
 	unsigned int numPasswords;

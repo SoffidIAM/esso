@@ -267,13 +267,17 @@ void InputData::dump() {
 		MZNSendDebugMessageA("           soffidInputType: %s",
 			inputType.c_str());
 	if (! this->id.empty())
-		MZNSendDebugMessageA("           id:     %s", this->id.c_str());
+		MZNSendDebugMessageA("           id:          %s", this->id.c_str());
 	if (! this->name.empty())
-		MZNSendDebugMessageA("           name:   %s", this->name.c_str());
+		MZNSendDebugMessageA("           name:        %s", this->name.c_str());
 	if (! this->type.empty())
-		MZNSendDebugMessageA("           type:   %s", this->type.c_str());
+		MZNSendDebugMessageA("           type:        %s", this->type.c_str());
 	if (! this->value.empty())
-		MZNSendDebugMessageA("           value:  %s", this->value.c_str());
+		MZNSendDebugMessageA("           value:       %s", this->value.c_str());
+	if (! this->soffidId.empty())
+		MZNSendDebugMessageA("           soffidId:    %s", this->soffidId.c_str());
+	if (! this->inputType.empty())
+		MZNSendDebugMessageA("           input type:  %s", this->inputType.c_str());
 	MZNSendDebugMessageA("           pos:    (%ld, %ld, %ld, %ld) (%ld, %ld)",
 			offsetTop, offsetLeft, offsetHeight, offsetWidth,
 			clientHeight, clientWidth);
