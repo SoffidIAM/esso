@@ -46,14 +46,18 @@ MazingerEnv::~MazingerEnv() {
 	if (pDefaultEnv == this)
 		pDefaultEnv = NULL;
 
-	for (std::vector<MazingerEnv*>::iterator it = environments.begin ();
-			it != environments.end(); it++)
+	if (MZNC_waitMutex3())
 	{
-		MazingerEnv* env = *it;
-		if (env == this) {
-			environments.erase(it);
-			return;
+		for (std::vector<MazingerEnv*>::iterator it = environments.begin ();
+				it != environments.end(); it++)
+		{
+			MazingerEnv* env = *it;
+			if (env == this) {
+				environments.erase(it);
+				return;
+			}
 		}
+		MZNC_endMutex3();
 	}
 }
 
@@ -95,20 +99,32 @@ MazingerEnv* MazingerEnv::getEnv(const char *user) {
 }
 
 MazingerEnv* MazingerEnv::getEnv(const char *user, const char*desktop) {
-	for (std::vector<MazingerEnv*>::iterator it = environments.begin ();
-			it != environments.end(); it++)
+	if (! MZNC_waitMutex3())
 	{
-		MazingerEnv* env = *it;
-		if (env->user == user && env->desktop == desktop)
-		{
-			return env;
-		}
+		MazingerEnv *env = new MazingerEnv;
+		env->user = user;
+		env->desktop = desktop;
+		return env;
 	}
-	MazingerEnv *env = new MazingerEnv;
-	env->user = user;
-	env->desktop = desktop;
-	environments.push_back(env);
-	return env;
+	else
+	{
+		for (std::vector<MazingerEnv*>::iterator it = environments.begin ();
+				it != environments.end(); it++)
+		{
+			MazingerEnv* env = *it;
+			if (env->user == user && env->desktop == desktop)
+			{
+				return env;
+			}
+		}
+		MazingerEnv *env = new MazingerEnv;
+		env->user = user;
+		env->desktop = desktop;
+		environments.push_back(env);
+		MZNC_endMutex3();
+		return env;
+	}
+
 }
 
 const PMAZINGER_DATA MazingerEnv::getData () {
