@@ -54,6 +54,7 @@ MazingerEnv::~MazingerEnv() {
 			MazingerEnv* env = *it;
 			if (env == this) {
 				environments.erase(it);
+				MZNC_endMutex3();
 				return;
 			}
 		}
@@ -114,6 +115,7 @@ MazingerEnv* MazingerEnv::getEnv(const char *user, const char*desktop) {
 			MazingerEnv* env = *it;
 			if (env->user == user && env->desktop == desktop)
 			{
+				MZNC_endMutex3();
 				return env;
 			}
 		}

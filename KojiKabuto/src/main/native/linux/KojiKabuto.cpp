@@ -349,7 +349,6 @@ extern "C" int main(int argc, char **argv) {
 
 	create_tray_icon();
 
-
 	g_thread_create(DialogHandler::main, NULL, false, NULL);
 
 	gtk_window_new(GTK_WINDOW_TOPLEVEL);
