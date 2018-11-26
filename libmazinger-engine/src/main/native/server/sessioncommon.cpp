@@ -594,11 +594,12 @@ void SeyconCommon::updateHostAddress () {
 	time_t now;
 	time (&start);
 	do {
+		SeyconCommon::info ("Connecting to sync server to update host address %hs", MZNC_getHostName());
 		SeyconResponse*response= service.sendUrlMessage(L"/updateHostAddress?name=%hs&serial=%hs",
 				MZNC_getHostName(), serialNumber.c_str());
 		if (response != NULL && response->getResult() != NULL)  {
 			if (response->getToken(0) == "ERROR") {
-				SeyconCommon::warn ("Error updating host address: %hs", response->getToken(1).c_str());
+				SeyconCommon::warn ("Error updating host %hs: %hs", MZNC_getHostName(), response->getToken(1).c_str());
 			}
 			break;
 		}
