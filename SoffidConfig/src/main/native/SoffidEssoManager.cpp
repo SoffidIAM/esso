@@ -311,7 +311,7 @@ LPSTR SoffidEssoManager::readURL (HINTERNET hSession, const wchar_t* host, int p
 
 	if (debug)
 	{
-		log("Connecting to %s:%d...\n", host, port);
+		log("Connecting to %ls:%d...\n", host, port);
 	}
 
 	hConnect = WinHttpConnect(hSession, host, port, 0);
@@ -320,7 +320,7 @@ LPSTR SoffidEssoManager::readURL (HINTERNET hSession, const wchar_t* host, int p
 	{
 		if (debug)
 		{
-			log("Performing request %s...\n", path);
+			log("Performing request %ls...\n", path);
 		}
 
 		hRequest = WinHttpOpenRequest(hConnect, L"GET", path, NULL, WINHTTP_NO_REFERER,
@@ -719,8 +719,7 @@ void SoffidEssoManager::UpdateGina (const char *ginaPath)
 	else
 	{
 		printf("Unable to deregister Mazinger\n");
-		log(
-				"Cannot open HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon");
+		log("Cannot open HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon");
 	}
 }
 
