@@ -275,17 +275,18 @@ const char * MZNC_getUserName ( ) {
 
 
 const char *MZNC_getHostName () {
-    static char achHostName[1024] = "";
+    static char achHostName[MAX_COMPUTERNAME_LENGTH ] = "";
 
     std::string s;
 
 	DWORD dwSize = sizeof achHostName;
     if ( SeyconCommon::readProperty("soffid.hostname.format", s) && s == "short")
     {
-		GetComputerName(achHostName, &dwSize);
+		GetComputerNameA(achHostName, &dwSize);
     }
     else
     {
+		GetComputerNameA(achHostName, &dwSize);
 		GetComputerNameExA(ComputerNameDnsFullyQualified, achHostName, &dwSize);
     }
 	for (int i = 0; achHostName[i]; i++)
