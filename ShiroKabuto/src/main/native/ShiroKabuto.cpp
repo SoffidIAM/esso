@@ -212,7 +212,7 @@ bool notifyNewPassword (const wchar_t* password)
 	std::wstring hostname = MZNC_strtowstr (MZNC_getHostName());
 
 	SeyconResponse *resp = service.sendUrlMessage(
-			L"/sethostadmin?host=%s&user=%s&pass=%s&shiroId=%s&serial=%s",
+			L"/sethostadmin?host=%ls&user=%ls&pass=%ls&shiroId=%ls&serial=%ls",
 			service.escapeString(hostname.c_str()).c_str(), achShiroAccount,
 			service.escapeString(password).c_str(),
 			service.escapeString(shiroId.c_str()).c_str(),
