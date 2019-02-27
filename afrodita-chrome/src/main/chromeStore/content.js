@@ -41,6 +41,7 @@ function parsePageData () {
 		var formData = {};
 		formData.action = form.action;
 		formData.id = form.id;
+		formData.name = form.name;
 		formData.soffidId = soffidRegisterElement(form);
 		formData.method = form.method;
 		formData.inputs = [];
