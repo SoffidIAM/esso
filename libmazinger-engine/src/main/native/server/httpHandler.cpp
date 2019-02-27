@@ -131,14 +131,13 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 
 		if (hConnect) {
 
-
-
 			hRequest = WinHttpOpenRequest(hConnect, L"GET", path, NULL,
 					WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES,
 					WINHTTP_FLAG_SECURE);
 
+			unsigned long timeout = 120000;
 			WinHttpSetOption(hRequest, WINHTTP_OPTION_RECEIVE_TIMEOUT,
-					(LPVOID) 120000, 0); // 2 minuts de timeout
+					(LPVOID) &timeout, sizeof timeout); // 2 minuts de timeout
 
 			WinHttpSetOption(hRequest, WINHTTP_OPTION_CLIENT_CERT_CONTEXT,
 					WINHTTP_NO_CLIENT_CERT_CONTEXT, 0);
@@ -459,6 +458,7 @@ void SeyconService::resetServerStatus () {
 		size_t pointer2 =  servers.find_first_of (", ", pointer);
 		if (pointer2 == std::string::npos)
 			pointer2 = servers.size();
+		SeyconCommon::debug("Server {%s}", servers.substr (pointer, pointer2-pointer).c_str());
 		hosts.push_back (servers.substr (pointer, pointer2-pointer));
 		pointer = servers.find_first_not_of(", ", pointer2);
 	}
@@ -503,6 +503,7 @@ ServiceIteratorResult SeyconService::iterateServers(SeyconServiceIterator &it) {
 		}
 		resetServerStatus();
 	}
+
 	time_t startTime;
 	time (&startTime);
 	int port;
