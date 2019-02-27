@@ -43,6 +43,7 @@ function parsePageData () {
 		formData.id = form.id;
 		formData.soffidId = soffidRegisterElement(form);
 		formData.method = form.method;
+		formData.name = form.name;
 		formData.inputs = [];
 		pageData.forms.push (formData);
 	}
