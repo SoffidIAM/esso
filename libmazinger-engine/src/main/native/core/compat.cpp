@@ -287,6 +287,7 @@ const char *MZNC_getHostName () {
     else
     {
 		GetComputerNameA(achHostName, &dwSize);
+        dwSize = sizeof achHostName;
 		GetComputerNameExA(ComputerNameDnsFullyQualified, achHostName, &dwSize);
     }
 	for (int i = 0; achHostName[i]; i++)
