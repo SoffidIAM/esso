@@ -275,7 +275,7 @@ const char * MZNC_getUserName ( ) {
 
 
 const char *MZNC_getHostName () {
-    static char achHostName[MAX_COMPUTERNAME_LENGTH ] = "";
+    static char achHostName[ 4096 ] = "";
 
     std::string s;
 
