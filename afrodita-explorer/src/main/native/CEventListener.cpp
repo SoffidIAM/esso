@@ -23,6 +23,7 @@ CEventListener::CEventListener ()
 	isAddEventListener = true;
 	m_eventID = ++eventCounter;
 	m_nRefCount = 0;
+	disabled = false;
 //	MZNSendDebugMessage("Created EventListener %d", m_eventID);
 }
 
@@ -273,7 +274,7 @@ HRESULT CEventListener::GetNameSpaceParent(IUnknown** ppunk) {
 }
 
 void CEventListener::execute(DISPPARAMS* pDispParams) {
-//	MZNSendDebugMessageA("Executind eventListener %d", m_eventID);
+//	MZNSendDebugMessageA("Executing eventListener %d", m_eventID);
 	if (m_pElement != NULL && m_listener != NULL)
 	{
 		AbstractWebElement *pElement = m_pElement;
@@ -330,16 +331,17 @@ void CEventListener::execute(DISPPARAMS* pDispParams) {
 			pElement->release();
 //		MZNSendDebugMessage("Processed listener");
 	}
-	else if (m_pApplication != NULL && false)
+	else if (m_pApplication != NULL)
 	{
 //		MZNSendDebugMessageA("m_pApplication != null");
-		if (!preventLoop)
+		if (!preventLoop && !disabled)
 		{
+			disabled = true;
 			preventLoop = true;
 			std::string url;
 			m_pApplication->getUrl(url);
 //			MZNSendDebugMessage("Invoked refresh event %p; %s", m_pApplication, url.c_str());
-			MZNWebMatchRefresh(m_pApplication);
+			MZNWebMatch(m_pApplication);
 			preventLoop = false;
 		}
 	}
@@ -395,7 +397,7 @@ void CEventListener::connectRefresh (ExplorerWebApplication *app)
 					long timer;
 					v.vt = VT_BSTR;
 					v.bstrVal = b2;
-					w->setInterval(b, 10000, &v, &timer);
+					w->setInterval(b, 2000, &v, &timer);
 					SysFreeString(b);
 					SysFreeString(b2);
 				}

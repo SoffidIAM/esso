@@ -486,11 +486,11 @@ std::string ExplorerWebApplication::toString() {
 }
 
 void ExplorerWebApplication::installIntervalListener() {
-//	if (pIntervalListener == NULL)
-//	{
-//		pIntervalListener = new CEventListener();
-//		pIntervalListener->connectRefresh(this);
-//	}
+	if (pIntervalListener == NULL)
+	{
+		pIntervalListener = new CEventListener();
+		pIntervalListener->connectRefresh(this);
+	}
 }
 
 bool ExplorerWebApplication::supportsPageData() {

@@ -31,7 +31,8 @@ struct SEE_string;
 void dumpDiagnostic (NativeComponent *top);
 const char*xmlEncode (const char* value);
 
-void MZNWebMatch (AbstractWebApplication *app) ;
+bool MZNWebMatch (AbstractWebApplication *app) ;
+bool MZNWebMatch (AbstractWebApplication *app, bool defaultRule) ;
 void MZNWebMatchRefresh (AbstractWebApplication *app) ;
 void MZNHllMatch (HllApplication *app) ;
 

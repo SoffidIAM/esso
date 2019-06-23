@@ -85,26 +85,30 @@ static DWORD dwTlsIndex = TLS_OUT_OF_INDEXES;
 static __thread bool recursive;
 #endif
 
-void MZNWebMatch (AbstractWebApplication *app) {
+bool MZNWebMatch (AbstractWebApplication *app) {
+	MZNWebMatch (app, true);
+}
+
+bool MZNWebMatch (AbstractWebApplication *app, bool defaultRule) {
+	bool foundRule = false;
 	static ConfigReader *c = NULL;
-//	MZNSendTraceMessageA("Waiting for mutex");
 	if (MZNC_waitMutex())
 	{
 #ifdef WIN32
 		if (dwTlsIndex == TLS_OUT_OF_INDEXES)
 		{
 			if ((dwTlsIndex = TlsAlloc()) == TLS_OUT_OF_INDEXES)
-				return;
+				return false;
 		}
 		if (TlsGetValue (dwTlsIndex) != NULL)
 		{
 			MZNC_endMutex();
-			return;
+			return false;
 		}
 		TlsSetValue (dwTlsIndex, (LPVOID) 1);
 #else
 		if (recursive)
-			return;
+			return false;
 		recursive = true;
 #endif
 		PMAZINGER_DATA pMazinger = MazingerEnv::getDefaulEnv()->getData();
@@ -128,12 +132,11 @@ void MZNWebMatch (AbstractWebApplication *app) {
 			MZNC_endMutex();
 			if (m.isFound())
 			{
-//					MZNSendTraceMessageA("Executing matched triggers");
 				m.triggerLoadEvent();
+				foundRule = true;
 			}
-			else
+			else if (defaultRule)
 			{
-//					MZNSendTraceMessageA("Executing auto login mechanism");
 				SmartWebPage *page = app->getWebPage();
 				if (page != NULL)
 				{
@@ -150,6 +153,7 @@ void MZNWebMatch (AbstractWebApplication *app) {
 #else
 		recursive = false;
 #endif
+		return foundRule;
 	}
 }
 

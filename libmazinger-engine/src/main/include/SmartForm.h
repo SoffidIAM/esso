@@ -141,6 +141,8 @@ protected:
 	bool lockedOnce;
 	bool formlessMode;
 
+	InputDescriptor* lastElement;
+
 public:
 	unsigned int numPasswords;
 	std::vector<InputDescriptor*> inputs;

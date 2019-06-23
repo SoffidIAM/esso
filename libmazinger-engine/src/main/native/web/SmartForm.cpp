@@ -159,6 +159,7 @@ SmartForm::SmartForm(SmartWebPage *page) {
 	this->onHiddenElementFocusListener = new OnHiddenElementFocusListener();
 	this->onHiddenElementFocusListener->form = this;
 	this->lockedOnce = false;
+	this->lastElement = NULL;
 	status = SF_STATUS_NEW;
 	char ach[100];
 	sprintf (ach, "_soffid_%ld_id_", (long) (long long) this);
@@ -1132,9 +1133,11 @@ void SmartForm::onChange(AbstractWebElement* element) {
 				input->status = IS_EMPTY;
 			else
 				input->status = IS_MODIFIED;
-			updateIcon(input);
+			if (lastElement != input)
+				updateIcon(input);
 		}
 	}
+	lastElement = input;
 }
 
 void SmartForm::onFocus(AbstractWebElement* element) {
@@ -1624,13 +1627,16 @@ bool SmartForm::detectAttributeChange()
 
 void SmartForm::changeStatus (int status)
 {
-	this->status = status;
-//	MZNSendDebugMessage("Updating icons (status = %d)", status);
-
-	for (std::vector<InputDescriptor*>::iterator it = inputs.begin(); it != inputs.end(); it++)
+	if (this->status != status)
 	{
-		InputDescriptor *id = *it;
-		updateIcon (id);
+		this->status = status;
+		MZNSendDebugMessage("Updating icons (status = %d)", status);
+
+		for (std::vector<InputDescriptor*>::iterator it = inputs.begin(); it != inputs.end(); it++)
+		{
+			InputDescriptor *id = *it;
+			updateIcon (id);
+		}
 	}
 }
 
