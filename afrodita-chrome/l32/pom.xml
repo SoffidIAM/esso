@@ -47,29 +47,24 @@
 					</compilerMiddleOptions>
 					<linkerMiddleOptions>
 						<linkerMiddleOption>-m32</linkerMiddleOption>
+						<linkerMiddleOption>-Wl,--exclude-libs=ALL</linkerMiddleOption>
 						<linkerMiddleOption>-Lsrc/lib/</linkerMiddleOption>
-						<linkerMiddleOption>-lglib-2.0</linkerMiddleOption>
-						<linkerMiddleOption>-lgobject-2.0</linkerMiddleOption>
 						<linkerMiddleOption>-lrt</linkerMiddleOption>
+						<linkerMiddleOption>-lX11</linkerMiddleOption>
 					</linkerMiddleOptions>
 					<linkerEndOptions>
 						<linkerEndOption>-lsee</linkerEndOption>
 						<linkerEndOption>-lpcreposix</linkerEndOption>
-						<linkerEndOption>-lsoup-2.4</linkerEndOption>
-						<linkerEndOption>-lgobject-2.0</linkerEndOption>
-						<linkerEndOption>-lglib-2.0</linkerEndOption>
-						<linkerEndOption>-lffi</linkerEndOption>
 						<linkerEndOption>-ldl</linkerEndOption>
+						<linkerEndOption>-lsoup-2.4</linkerEndOption>
 						<linkerEndOption>-lpthread</linkerEndOption>
 						<linkerEndOption>-lX11</linkerEndOption>
-						<linkerEndOption>-lgio-2.0</linkerEndOption>
-						<linkerEndOption>-lgmodule-2.0</linkerEndOption>
-						<linkerEndOption>-lrt</linkerEndOption>
-						<linkerEndOption>-lz</linkerEndOption>
-						<linkerEndOption>-lffi</linkerEndOption>
-						<linkerEndOption>-lselinux</linkerEndOption>
-						<linkerEndOption>-lresolv</linkerEndOption>
-						<linkerEndOption>-lgobject-2.0</linkerEndOption>
+                        <linkerEndOption>-lrt</linkerEndOption>
+                        <linkerEndOption>-lz</linkerEndOption>
+                        <linkerEndOption>-lffi</linkerEndOption>
+                        <linkerEndOption>-lselinux</linkerEndOption>
+                        <linkerEndOption>-lresolv</linkerEndOption>
+                        <linkerEndOption>-lgobject-2.0</linkerEndOption>
 						<linkerEndOption>-lgtk-3</linkerEndOption>
 						<linkerEndOption>-lgdk-3</linkerEndOption>
 						<linkerEndOption>-lglib-2.0</linkerEndOption>

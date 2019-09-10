@@ -62,7 +62,6 @@
 						<linkerEndOption>-lrt</linkerEndOption>
 						<linkerEndOption>-lpthread</linkerEndOption>
 						<linkerEndOption>-ldl</linkerEndOption>
-
 						<linkerEndOption>-lffi</linkerEndOption>
 					</linkerEndOptions>
 					<sources>
