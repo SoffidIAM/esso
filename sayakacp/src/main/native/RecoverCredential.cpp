@@ -501,7 +501,8 @@ HRESULT RecoverCredential::GetSerialization(
 					else
 					{
 						tries ++;
-						Sleep (tries * 1000);
+						if (tries < 10)
+							Sleep (tries * 3000);
 					}
 				} while (!ok && tries < 10);
 				hr = GenerateLoginSerialization(pcpgsr, pcpcs, ppwzOptionalStatusText, pcpsiOptionalStatusIcon);
@@ -534,7 +535,7 @@ HRESULT RecoverCredential::GenerateLoginSerialization(
 			user.c_str(),
 			desiredPassword1.c_str(),
 			windowsDomain.c_str(),
-			CPUS_LOGON,
+			m_usage,
 			kiul);
 	if (SUCCEEDED(hr))
 	{
