@@ -283,8 +283,8 @@ void createHllComponents (HllApplication *pApp)
 
 }
 
-void MZNEvaluateJSMatch(WebMatcher &matcher, const char *script) {
-
+bool MZNEvaluateJSMatch(WebMatcher &matcher, const char *script) {
+	bool ok = false;
 	if (MZNC_waitMutex2())
 	{
 		std::string msg;
@@ -296,7 +296,7 @@ void MZNEvaluateJSMatch(WebMatcher &matcher, const char *script) {
 
 		createDocumentObject ( matcher.getWebApp(), &interp_storage);
 
-		MZNEvaluateJS_internal(script, msg);
+		ok = MZNEvaluateJS_internal(script, msg);
 
 
 		for ( std::vector<struct SEE_string*>::iterator it=nomsToDelete.begin();
@@ -311,6 +311,7 @@ void MZNEvaluateJSMatch(WebMatcher &matcher, const char *script) {
 		ScriptDialog::getScriptDialog()->cancelProgressMessage();
 		MZNC_endMutex2();
 	}
+	return ok;
 }
 
 void MZNEvaluateJSMatch(HllMatcher &matcher, const char *script) {

@@ -38,7 +38,7 @@ void MZNHllMatch (HllApplication *app) ;
 
 void MZNEvaluateJSMatch(ComponentMatcher &match, const char *script) ;
 void MZNEvaluateJSMatch(HllMatcher &match, const char *script) ;
-void MZNEvaluateJSMatch(WebMatcher &match, const char *script) ;
+bool MZNEvaluateJSMatch(WebMatcher &match, const char *script) ;
 bool MZNEvaluateJS(const char *script) ; // True is success, False is error
 bool MZNEvaluateJS(const char *script, std::string &errorMessage);
 void MZNSendSpyMessageA(const char* lpszMessage, ...);

@@ -183,7 +183,10 @@ HRESULT __stdcall CExplorerEventHandler::Invoke(DISPID dispIdMember,REFIID riid,
 			bool found = MZNWebMatch(app, false);
 			IHTMLWindow2 *w;
 			if ( ! found )
+			{
+				MZNSendDebugMessageA("web match failed. Retry in 2 seconds");
 				app->installIntervalListener();
+			}
 		}
 	} else if (dispIdMember == DISPID_PROGRESSCHANGE){
 

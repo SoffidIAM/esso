@@ -57,7 +57,8 @@ int WebMatcher::search (ConfigReader &reader, AbstractWebApplication& focus) {
 }
 
 
-void WebMatcher::triggerLoadEvent () {
+bool WebMatcher::triggerLoadEvent () {
+	bool ok = false;
 	if (m_bMatched)
 	{
 //		MZNSendTraceMessageA("Searching on matched apps");
@@ -72,11 +73,13 @@ void WebMatcher::triggerLoadEvent () {
 					it != pApp->m_actions.end();
 					it ++)
 			{
-				(*it)->executeAction(*this);
+				if ((*it)->executeAction(*this))
+					ok = true;
 			}
 			m_pMatchedSpec = NULL;
 		}
 	}
+	return ok;
 }
 
 #ifdef WIN32
@@ -86,7 +89,7 @@ static __thread bool recursive;
 #endif
 
 bool MZNWebMatch (AbstractWebApplication *app) {
-	MZNWebMatch (app, true);
+	return MZNWebMatch (app, true);
 }
 
 bool MZNWebMatch (AbstractWebApplication *app, bool defaultRule) {
@@ -132,8 +135,7 @@ bool MZNWebMatch (AbstractWebApplication *app, bool defaultRule) {
 			MZNC_endMutex();
 			if (m.isFound())
 			{
-				m.triggerLoadEvent();
-				foundRule = true;
+				foundRule = m.triggerLoadEvent();
 			}
 			else if (defaultRule)
 			{
@@ -155,6 +157,8 @@ bool MZNWebMatch (AbstractWebApplication *app, bool defaultRule) {
 #endif
 		return foundRule;
 	}
+	else
+		return false;
 }
 
 void MZNWebMatchRefresh (AbstractWebApplication *app) {
