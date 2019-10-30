@@ -556,6 +556,11 @@ void SeyconCommon::wipe (std::wstring &str) {
 }
 
 void SeyconCommon::updateHostAddress () {
+	std::string disable;
+	SeyconCommon::readProperty("registerHostAddress", disable);
+	if (disable == "false")
+		return;
+
 	std::string serialNumber;
 	SeyconCommon::readProperty("serialNumber", serialNumber);
 	if (serialNumber.size() == 0) {
