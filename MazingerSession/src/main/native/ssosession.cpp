@@ -170,7 +170,7 @@ ServiceIteratorResult SeyconSession::kerberosLogin (const char* hostName, size_t
 	SecBuffer InSecBuff;
 	ULONG ContextAttributes;
 
-	const int MAX_MESSAGE = 4096;
+	const int MAX_MESSAGE = 32000;
 	char outBuffer[MAX_MESSAGE];
 
 	SeyconCommon::info("Trying kerberos login on %s:%d\n", hostName, dwPort);
