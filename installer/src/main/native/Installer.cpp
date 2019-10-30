@@ -45,6 +45,10 @@ bool reboot = false;
 bool isUpdate = false;
 bool noGina = false;
 
+char *enableCloseSession = "false";
+char *forceStartupLogin = "true";
+char *loginType = "both";
+
 BOOL IsWow64()
 {
 	BOOL bIsWow64 = FALSE;
@@ -1398,6 +1402,27 @@ void updateConfig()
 					strlen(ach));
 		}
 
+		if (RegQueryValueEx(hKey, "enableCloseSession", NULL, NULL, NULL,
+				NULL) == ERROR_FILE_NOT_FOUND)
+		{
+			RegSetValueEx(hKey, "enableCloseSession", 0, REG_SZ, (LPBYTE) enableCloseSession,
+					strlen(ach));
+		}
+
+		if (RegQueryValueEx(hKey, "ForceStartupLogin", NULL, NULL, NULL,
+				NULL) == ERROR_FILE_NOT_FOUND)
+		{
+			RegSetValueEx(hKey, "ForceStartupLogin", 0, REG_SZ, (LPBYTE) forceStartupLogin,
+					strlen(ach));
+		}
+
+		if (RegQueryValueEx(hKey, "LoginType", NULL, NULL, NULL,
+				NULL) == ERROR_FILE_NOT_FOUND)
+		{
+			RegSetValueEx(hKey, "LoginType", 0, REG_SZ, (LPBYTE) loginType,
+					strlen(ach));
+		}
+
 		// Check previous version installed
 		dw = sizeof ach;
 		if (RegQueryValueEx(hKey, "MazingerVersion", NULL, &dwType, (LPBYTE) ach, &dw) == ERROR_SUCCESS)
@@ -2604,6 +2629,34 @@ extern "C" int main(int argc, char **argv)
 				serverName = argv[i];
 			}
 		}
+
+		if (strcmp(argv[i], "/loginType") == 0 || strcmp(argv[i], "-loginType") == 0)
+		{
+			i++;
+			if (i < argc)
+			{
+				loginType = argv[i];
+			}
+		}
+
+		if (strcmp(argv[i], "/enableCloseSession") == 0 || strcmp(argv[i], "-enableCloseSession") == 0)
+		{
+			i++;
+			if (i < argc)
+			{
+				enableCloseSession = argv[i];
+			}
+		}
+
+		if (strcmp(argv[i], "/forceStartupLogin") == 0 || strcmp(argv[i], "-forceStartupLogin") == 0)
+		{
+			i++;
+			if (i < argc)
+			{
+				forceStartupLogin = argv[i];
+			}
+		}
+
 
 		if (strcmp(argv[i], "/force") == 0 || strcmp(argv[i], "-force") == 0)
 			checkPending = false;
