@@ -397,6 +397,11 @@ SeyconURLServiceIterator::~SeyconURLServiceIterator () {
 }
 
 SeyconResponse*  SeyconService::sendUrlMessage(const char* host, int port, const wchar_t* url, ...) {
+#ifdef WIN32
+	if (pSeyconRootCert == NULL) {
+		return NULL;
+	}
+#endif
 
 	va_list v;
 	va_start (v, url);
@@ -411,6 +416,7 @@ SeyconResponse*  SeyconService::sendUrlMessage(const char* host, int port, const
 
 	if (wch[0] == L'\0')
 		SeyconCommon::debug("URL too big problem invoking %ls", url);
+
 	SeyconCommon::debug("Invoking %ls", wch);
 	SeyconURLServiceIterator it;
 	it.path = wch;
@@ -426,6 +432,12 @@ SeyconResponse*  SeyconService::sendUrlMessage(const char* host, int port, const
 }
 
 SeyconResponse* SeyconService::sendUrlMessage(const wchar_t* url, ...) {
+#ifdef WIN32
+	if (pSeyconRootCert == NULL) {
+		return NULL;
+	}
+#endif
+
 	va_list v;
 	va_start (v, url);
 	wchar_t wch[4000];
