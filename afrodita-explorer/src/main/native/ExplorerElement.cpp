@@ -56,7 +56,7 @@ void ExplorerElement::getChildren(std::vector<AbstractWebElement*> &children)
 	if (!FAILED(hr))
 		hr = childrenDisp-> QueryInterface(IID_IHTMLElementCollection, reinterpret_cast<void**>(&col));
 	if (!FAILED(hr) && col != NULL)
-		hr=col->get_length(&size);
+		hr = col->get_length(&size);
 	if (!FAILED(hr))
 	{
 		IDispatch *el2;
@@ -574,15 +574,7 @@ bool ExplorerElement::equals(AbstractWebElement* other) {
 
 std::string ExplorerElement::toString() {
 
-	char ach[200];
-	sprintf (ach, " %p->%p ( %s )", this, m_pElement, m_internalId.c_str());
-	std::string s = "ExplorerElement ";
-
-	std::string tag;
-	getTagName(tag);
-	s += tag;
-	s += ach;
-	return s;
+	return std::string("ExplorerElement ")+m_internalId;
 }
 
 void ExplorerElement::removeAttribute(const char* attribute) {
@@ -628,30 +620,73 @@ void ExplorerElement::setProperty(const char* property, const char* value) {
 	va.bstrVal = Utils::str2bstr(value);
 	setDispatchProperty(m_pElement, property, va);
 	SysFreeString(bstr);
-	if (strcmp (property, "value") == 0)
+	if (stricmp (property, "value") == 0)
 	{
-		BSTR eventName = Utils::str2bstr("onchange");
+		MZNSendDebugMessage("Sending on change event");
 		IHTMLElement3 *pElement3 = NULL;
 		static IID local_IIDHtmlElement3 = {0x3050f673,0x98b5,0x11cf,{0xbb, 0x82, 0x00, 0xaa, 0x00, 0xbd, 0xce, 0x0b}};
 		HRESULT hr = m_pElement->QueryInterface(local_IIDHtmlElement3, reinterpret_cast<void**>(&pElement3));
 		if (!FAILED(hr) && pElement3 != NULL)
 		{
+			MZNSendDebugMessage("Interface got");
 			VARIANT_BOOL cancelled = 0;
-			IHTMLEventObj *pEventObj;
-			hr = m_pApp->getHTMLDocument4()->createEventObject(NULL, &pEventObj);
+			IHTMLEventObj *pEventObj = NULL;
+			VARIANT v;
+			v.vt = VT_NULL;
+			hr = m_pApp->getHTMLDocument4()->createEventObject(&v, &pEventObj);
 			if (! FAILED(hr))
 			{
+				BSTR eventName = Utils::str2bstr("onchange");
+				MZNSendDebugMessage("Event created");
 				VARIANT_BOOL cancelled = 0;
 				VARIANT v;
 				v.vt = VT_DISPATCH;
 				v.pdispVal = pEventObj;
 				hr = pElement3->fireEvent(eventName, &v, &cancelled);
-				if (!FAILED(hr))
-					pEventObj->Release();
+				if (FAILED(hr))
+				{
+					MZNSendDebugMessage("Failed to send event");
+				}
+				pEventObj->Release();
+				SysFreeString(eventName);
 			}
 			pElement3->Release();
+
+#if 0
+			MZNSendDebugMessage("Sending on change event 2");
+			IEventTarget* pTarget = NULL;
+			//    MIDL_INTERFACE("305104b9-98b5-11cf-bb82-00aa00bdce0b")
+			static IID local_IID_IEventTarget = {0x305104b9,0x98b5,0x11cf,{0xbb, 0x82, 0x00, 0xaa, 0x00, 0xbd, 0xce, 0x0b}};
+			hr = m_pElement->QueryInterface(local_IID_IEventTarget, reinterpret_cast<void**>(&pTarget));
+			if (!FAILED(hr) && pTarget != NULL)
+			{
+				MZNSendDebugMessage("Interface got 2");
+				VARIANT_BOOL cancelled = 0;
+				IDOMEvent *pEventObj = NULL;
+				IDocumentEvent *de = m_pApp->getDocumentEvent();
+				if (de != NULL)
+				{
+					MZNSendDebugMessage("Document Event got 2");
+					BSTR eventType = Utils::str2bstr("UIEvent");
+					BSTR eventName = Utils::str2bstr("input");
+					hr = de->createEvent(eventType, &pEventObj);
+					if (! FAILED(hr))
+					{
+						MZNSendDebugMessage("Sending event 2");
+						pEventObj->initEvent(eventName, TRUE, TRUE);
+						VARIANT_BOOL result;
+						hr = pTarget->dispatchEvent(pEventObj, &result);
+						if (FAILED(hr))
+						{
+							MZNSendDebugMessage("Failed to send event");
+						}
+						pEventObj->Release();
+					}
+				}
+				pTarget->Release();
+			}
+#endif
 		}
-		SysFreeString(eventName);
 	}
 }
 
@@ -662,7 +697,6 @@ static IID local_IID_IHTMLWindow7 = { 0x305104b7, 0x98b5, 0x11cf, {0xbb, 0x82, 0
 std::string ExplorerElement::getComputedStyle(const char* style)
 {
 	std::string value;
-
 
 	// pDoc = element.document
 	IHTMLDocument2 *pDoc = m_pApp->getHTMLDocument2();
@@ -677,7 +711,6 @@ std::string ExplorerElement::getComputedStyle(const char* style)
 			w->QueryInterface(local_IID_IHTMLWindow7, reinterpret_cast<void**>(&w7));
 			if (FAILED(hr) || w7 == NULL)
 			{
-//				MZNSendDebugMessageA("Cannot get w7");
 			}
 			else
 			{
@@ -685,21 +718,18 @@ std::string ExplorerElement::getComputedStyle(const char* style)
 				HRESULT hr = m_pElement->QueryInterface(IID_IHTMLDOMNode, reinterpret_cast<void**>(&node));
 				if (FAILED(hr) || node == NULL)
 				{
-//					MZNSendDebugMessageA("Cannot cast to htmldomnode");
 				}
 				else {
 					IHTMLCSSStyleDeclaration *pComputedStyle;
 					hr = w7->getComputedStyle(node, NULL, &pComputedStyle);
 					if ( FAILED(hr))
 					{
-//						MZNSendDebugMessage("Cannot get computedStyle");
 					} else {
 						BSTR bstr = Utils::str2bstr(style);
 						BSTR bstr2 = NULL;
 						hr = pComputedStyle->getPropertyValue(bstr, &bstr2);
 						if (FAILED(hr))
 						{
-//							MZNSendDebugMessage("Cannot get property on computedStyle %s", style);
 						}
 						else
 						{

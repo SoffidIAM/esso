@@ -116,7 +116,7 @@
 							<builder buildPath="${workspace_loc:/AfroditaF-ctype}/Debug" id="cdt.managedbuild.builder.gnu.cross.1139477670" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" stopOnErr="false" superClass="cdt.managedbuild.builder.gnu.cross"/>
 							<tool command="i686-w64-mingw32-gcc" id="cdt.managedbuild.tool.gnu.cross.c.compiler.1213314760" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
 								<option id="gnu.c.compiler.option.include.paths.952896450" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/AfroditaF-ctype/w32/target/native/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/AfroditaF-ctype/l64/target/native/include}&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.929137546" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="XPCOM_GLUE_AVOID_NSPR=1"/>
@@ -129,7 +129,7 @@
 								<option id="gnu.cpp.compiler.option.include.paths.1181549987" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/include/nspr"/>
 									<listOptionValue builtIn="false" value="/usr/include/xulrunner-1.9.0.19/stable/"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/AfroditaF-ctype/w32/target/native/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/AfroditaF-ctype/l64/target/native/include}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.optimization.level.2066598042" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.1775396770" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
@@ -158,7 +158,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.1769534381" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.76604614" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
 								<option id="gnu.both.asm.option.include.paths.50847941" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/AfroditaF-ctype/w32/target/native/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/AfroditaF-ctype/l64/target/native/include}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.463371569" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>

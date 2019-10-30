@@ -30,7 +30,7 @@ public:
 	ComponentSpec *m_component;
 
 	void executeAction (ComponentMatcher& matcher);
-	void executeAction (WebMatcher& matcher);
+	bool executeAction (WebMatcher& matcher);
 	void executeAction (HllMatcher& matcher);
 	void executeAction ();
 

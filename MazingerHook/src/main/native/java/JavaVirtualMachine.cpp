@@ -176,6 +176,8 @@ static void createFile (const char *szPolicyFile, const char *szMazingerUrl) {
 		do {
 			policyLength += read;
 			ensureCapacity(pszUserPolicy, policyLength, policyAllocated);
+			if (pszUserPolicy == NULL)
+				return;
 			read = fread(&pszUserPolicy[policyLength], 1, 1024, f);
 		} while (read > 0);
 		fclose (f);
@@ -230,6 +232,10 @@ void JavaVirtualMachine::adjustPolicy () {
 	createFile (achPolicyFile, szMznDir);
 
 	sprintf (achDeploymentFile, "%s%s\\AppData\\LocalLow\\Sun\\Java\\Deployment\\deployment.properties", getenv("HOMEDRIVE"), getenv("HOMEPATH"));
+	changeDeploymentFile (achDeploymentFile);
+
+	// For WXP
+	sprintf (achDeploymentFile, "%s\\Sun\\Java\\Deployment\\deployment.properties", getenv("APPDATA"));
 	changeDeploymentFile (achDeploymentFile);
 
 #else

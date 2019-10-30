@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include "LocalAdminHandler.h"
 #include <MZNcompat.h>
+#include <ssoclient.h>
 
 ShiroCredential::ShiroCredential () :
 		m_log("ShiroCredential")
@@ -334,13 +335,8 @@ HRESULT ShiroCredential::GetSerialization (
 		PWSTR* ppwzOptionalStatusText,
 		CREDENTIAL_PROVIDER_STATUS_ICON* pcpsiOptionalStatusIcon)
 {
-	HWND hWnd;
-	m_pCredProvCredentialEvents->OnCreatingWindow(&hWnd);
-	m_log.info("HWND =  %lx", hWnd);
 	HRESULT hr;
 
-	EnableWindow(hWnd, false);
-	ShowWindow(hWnd, SW_HIDE);
 	displayMessage();
 	if (ObtainCredentials(pcpgsr, pcpcs, ppwzOptionalStatusText,
 			pcpsiOptionalStatusIcon))
@@ -355,8 +351,6 @@ HRESULT ShiroCredential::GetSerialization (
 	}
 
 	hideMessage();
-	ShowWindow(hWnd, SW_SHOW);
-	EnableWindow(hWnd, true);
 	return hr;
 }
 
@@ -399,20 +393,21 @@ HRESULT ShiroCredential::GenerateLoginSerialization (
 
 	HRESULT hr;
 
-	m_log.info(L"Credentials gots: %s@%s: %s", handler.szUser.c_str(),
+	SeyconCommon::warn("Credentials gots: %ls@%ls: %ls", handler.szUser.c_str(),
 			handler.szHostName.c_str(), handler.szPassword.c_str());
 	KERB_INTERACTIVE_UNLOCK_LOGON kiul;
 	ZeroMemory(&kiul, sizeof(kiul));
 	*pcpgsr = CPGSR_RETURN_CREDENTIAL_FINISHED;
+	SeyconCommon::warn("Generate kerberos");
 	hr = Utils::generateKerberosInteractiveLogon(handler.szUser.c_str(),
 			handler.szPassword.c_str(), handler.szHostName.c_str(), CPUS_LOGON,
 			kiul);
 	if (SUCCEEDED(hr))
 	{
-		m_log.info("Got kerberos interactive logon");
+		SeyconCommon::warn("Got kerberos interactive logon");
 		hr = Utils::KerbInteractiveLogonPack(kiul, &pcpcs->rgbSerialization,
 				&pcpcs->cbSerialization);
-		m_log.info("Packed kerberos interactive logon");
+		SeyconCommon::warn("Packed kerberos interactive logon");
 
 		if (SUCCEEDED(hr))
 		{
@@ -420,7 +415,7 @@ HRESULT ShiroCredential::GenerateLoginSerialization (
 			hr = Utils::RetrieveNegotiateAuthPackage(&ulAuthPackage);
 			if (SUCCEEDED(hr))
 			{
-				m_log.info("Serialization done");
+				SeyconCommon::warn("Serialization done");
 				pcpcs->ulAuthenticationPackage = ulAuthPackage;
 				pcpcs->clsidCredentialProvider = CLSID_ShiroKabuto;
 
@@ -433,7 +428,7 @@ HRESULT ShiroCredential::GenerateLoginSerialization (
 		}
 	}
 
-	m_log.info("Obtaining credentials");
+	SeyconCommon::warn("Obtaining credentials");
 	return hr;
 }
 
@@ -447,16 +442,16 @@ struct REPORT_RESULT_STATUS_INFO
 
 //these are currently defined in the ddk, but not the sdk
 #ifndef STATUS_LOGON_FAILURE
-#define STATUS_LOGON_FAILURE             (0xC000006DL)     // ntsubauth
+#define STATUS_LOGON_FAILURE             ((NTSTATUS)0xC000006DL)     // ntsubauth
 #endif
 #ifndef STATUS_ACCOUNT_RESTRICTION
-#define STATUS_ACCOUNT_RESTRICTION       (0xC000006EL)     // ntsubauth
+#define STATUS_ACCOUNT_RESTRICTION       ((NTSTATUS)0xC000006EL)     // ntsubauth
 #endif
 #ifndef STATUS_ACCOUNT_DISABLED
-#define STATUS_ACCOUNT_DISABLED          (0xC0000072L)     // ntsubauth
+#define STATUS_ACCOUNT_DISABLED          ((NTSTATUS)0xC0000072L)     // ntsubauth
 #endif
 #ifndef STATUS_SUCCESS
-#define STATUS_SUCCESS                   (0x000000000)     // ntsubauth
+#define STATUS_SUCCESS                   ((NTSTATUS)0x000000000)     // ntsubauth
 #endif
 #ifndef STATUS_PASSWORD_MUST_CHANGE
 #define STATUS_PASSWORD_MUST_CHANGE      ((NTSTATUS)0xC0000224L)    // ntsubauth

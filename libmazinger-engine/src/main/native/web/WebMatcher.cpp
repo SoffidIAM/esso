@@ -57,7 +57,8 @@ int WebMatcher::search (ConfigReader &reader, AbstractWebApplication& focus) {
 }
 
 
-void WebMatcher::triggerLoadEvent () {
+bool WebMatcher::triggerLoadEvent () {
+	bool ok = false;
 	if (m_bMatched)
 	{
 //		MZNSendTraceMessageA("Searching on matched apps");
@@ -72,11 +73,13 @@ void WebMatcher::triggerLoadEvent () {
 					it != pApp->m_actions.end();
 					it ++)
 			{
-				(*it)->executeAction(*this);
+				if ((*it)->executeAction(*this))
+					ok = true;
 			}
 			m_pMatchedSpec = NULL;
 		}
 	}
+	return ok;
 }
 
 #ifdef WIN32
@@ -85,26 +88,30 @@ static DWORD dwTlsIndex = TLS_OUT_OF_INDEXES;
 static __thread bool recursive;
 #endif
 
-void MZNWebMatch (AbstractWebApplication *app) {
+bool MZNWebMatch (AbstractWebApplication *app) {
+	return MZNWebMatch (app, true);
+}
+
+bool MZNWebMatch (AbstractWebApplication *app, bool defaultRule) {
+	bool foundRule = false;
 	static ConfigReader *c = NULL;
-//	MZNSendTraceMessageA("Waiting for mutex");
 	if (MZNC_waitMutex())
 	{
 #ifdef WIN32
 		if (dwTlsIndex == TLS_OUT_OF_INDEXES)
 		{
 			if ((dwTlsIndex = TlsAlloc()) == TLS_OUT_OF_INDEXES)
-				return;
+				return false;
 		}
 		if (TlsGetValue (dwTlsIndex) != NULL)
 		{
 			MZNC_endMutex();
-			return;
+			return false;
 		}
 		TlsSetValue (dwTlsIndex, (LPVOID) 1);
 #else
 		if (recursive)
-			return;
+			return false;
 		recursive = true;
 #endif
 		PMAZINGER_DATA pMazinger = MazingerEnv::getDefaulEnv()->getData();
@@ -119,23 +126,19 @@ void MZNWebMatch (AbstractWebApplication *app) {
 			}
 			std::string url;
 			app->getUrl(url);
+			MZNSendDebugMessageA("START ================================================================");
 			PageData *data = app->getPageData();
-			if (data != NULL)
-				data->dump();
-			else
-				MZNSendDebugMessageA("PAGE  %s", url.c_str());
+			MZNSendDebugMessageA("PAGE  %s", url.c_str());
 			MZNSendDebugMessageA("      ================================================================");
 			m.search(*c, *app);
 			MZNSendDebugMessageA("      ================================================================");
 			MZNC_endMutex();
 			if (m.isFound())
 			{
-//					MZNSendTraceMessageA("Executing matched triggers");
-				m.triggerLoadEvent();
+				foundRule = m.triggerLoadEvent();
 			}
-			else
+			else if (defaultRule)
 			{
-//					MZNSendTraceMessageA("Executing auto login mechanism");
 				SmartWebPage *page = app->getWebPage();
 				if (page != NULL)
 				{
@@ -152,7 +155,10 @@ void MZNWebMatch (AbstractWebApplication *app) {
 #else
 		recursive = false;
 #endif
+		return foundRule;
 	}
+	else
+		return false;
 }
 
 void MZNWebMatchRefresh (AbstractWebApplication *app) {

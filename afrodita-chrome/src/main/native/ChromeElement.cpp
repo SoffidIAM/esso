@@ -339,7 +339,7 @@ bool ChromeElement::equals(AbstractWebElement* other) {
 }
 
 std::string ChromeElement::toString() {
-	return std::string("ChromeElement "+externalId);
+	return std::string("ChromeElement ")+externalId;
 }
 
 void ChromeElement::removeAttribute(const char* attribute) {
@@ -392,6 +392,10 @@ void ChromeElement::setProperty(const char* property, const char* value) {
 			d->id = value;
 		if (strcmp (property, "type") == 0)
 			d->type = value;
+		if (strcmp (property, "soffidMirrorOf") == 0)
+			d->mirrorOf = value;
+		if (strcmp (property, "soffidInputType") == 0)
+			d->inputType = value;
 	}
 }
 

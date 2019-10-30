@@ -90,6 +90,46 @@ void MZNC_destroyMutex2 () {
 	}
 }
 
+HANDLE hMutex3 = NULL;
+static HANDLE getMutex3() {
+	if (hMutex3 == NULL)
+	{
+		hMutex3 = CreateMutexA(NULL, FALSE, NULL);
+
+	}
+	return hMutex3;
+}
+
+
+bool MZNC_waitMutex3 () {
+	HANDLE hMutex = getMutex3();
+	if (hMutex != NULL)
+	{
+		DWORD dwResult = WaitForSingleObject (hMutex, INFINITE);
+		if (dwResult == WAIT_OBJECT_0)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void MZNC_endMutex3 () {
+	HANDLE hMutex = getMutex3();
+	if (hMutex != NULL)
+	{
+		ReleaseMutex (hMutex);
+	}
+}
+
+void MZNC_destroyMutex3 () {
+	HANDLE hMutex = getMutex3();
+	if (hMutex != NULL)
+	{
+		CloseHandle (hMutex);
+	}
+}
+
 const char *MZNC_getCommandLine() {
 	return GetCommandLineA ();
 }
@@ -235,17 +275,19 @@ const char * MZNC_getUserName ( ) {
 
 
 const char *MZNC_getHostName () {
-    static char achHostName[1024] = "";
+    static char achHostName[ 4096 ] = "";
 
     std::string s;
 
 	DWORD dwSize = sizeof achHostName;
     if ( SeyconCommon::readProperty("soffid.hostname.format", s) && s == "short")
     {
-		GetComputerName(achHostName, &dwSize);
+		GetComputerNameA(achHostName, &dwSize);
     }
     else
     {
+		GetComputerNameA(achHostName, &dwSize);
+        dwSize = sizeof achHostName;
 		GetComputerNameExA(ComputerNameDnsFullyQualified, achHostName, &dwSize);
     }
 	for (int i = 0; achHostName[i]; i++)
@@ -414,7 +456,7 @@ static char *s_username = NULL;
 void MZNC_setUserName (const char *username ) {
 	if (s_username != NULL)
 		free (s_username);
-	if (username == NULL)
+	if (username == NULL || username[0] == '\0')
 		s_username = NULL;
 	else
 		s_username = strdup (username);
@@ -424,7 +466,7 @@ const char * MZNC_getUserName ( ) {
 	if (s_username != NULL)
 		return s_username;
 	const char * logName = getenv ("LOGNAME");
-	return logName == NULL ? "": logName;
+	return logName == NULL ? "nobody": logName;
 }
 
 const char *MZNC_getHostName () {
@@ -490,6 +532,35 @@ void MZNC_endMutex2 () {
 
 void MZNC_destroyMutex2 () {
 	sem_t* s = getSemaphore2();
+	sem_destroy(s);
+}
+
+static sem_t semaphore3;
+static bool initialized3 = false;
+sem_t* getSemaphore3 () {
+	if (! initialized)
+		sem_init ( &semaphore, true, 1);
+
+	return &semaphore;
+}
+
+
+bool MZNC_waitMutex3 () {
+	sem_t* s = getSemaphore();
+	if (s != NULL && sem_wait(s) >= 0)
+			return true;
+	return false;
+}
+
+void MZNC_endMutex3 () {
+	sem_t* s = getSemaphore();
+	if (s != NULL)
+		sem_post(s);
+}
+
+
+void MZNC_destroyMutex3 () {
+	sem_t* s = getSemaphore();
 	sem_destroy(s);
 }
 

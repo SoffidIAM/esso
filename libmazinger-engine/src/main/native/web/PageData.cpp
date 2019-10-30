@@ -59,7 +59,8 @@ static InputData parseInput (JsonMap* value)
 	d.text_align = parseString(value, "text_align");
 	d.type = parseString(value,"type");
 	d.rightAlign = d.text_align == "right";
-
+	d.mirrorOf = parseString(value, "mirrorOf");
+	d.inputType = parseString(value, "inputType");
 	return d;
 }
 
@@ -151,6 +152,8 @@ InputData::InputData(const InputData &other) {
 	this->type = other.type;
 	this->value = other.value;
 	this->visibility = other.visibility;
+	this->inputType = other.inputType;
+	this->mirrorOf = other.mirrorOf;
 }
 
 InputData &InputData::operator =(const InputData &other) {
@@ -171,6 +174,8 @@ InputData &InputData::operator =(const InputData &other) {
 	this->type = other.type;
 	this->value = other.value;
 	this->visibility = other.visibility;
+	this->inputType = other.inputType;
+	this->mirrorOf = other.mirrorOf;
 	return *this;
 }
 
@@ -254,14 +259,30 @@ void PageData::loadJson (JsonMap *map) {
 }
 
 void InputData::dump() {
-	MZNSendDebugMessageA("    INPUT  id:     %s", this->id.c_str());
-	MZNSendDebugMessageA("           name:   %s", this->name.c_str());
-	MZNSendDebugMessageA("           type:   %s", this->type.c_str());
-	MZNSendDebugMessageA("           value:  %s", this->value.c_str());
+	MZNSendDebugMessageA("    INPUT  soffidId:     %s", this->soffidId.c_str());
+	if (! this->mirrorOf.empty())
+		MZNSendDebugMessageA("           soffidMirrorOf: %s",
+			mirrorOf.c_str());
+	if (! this->inputType.empty())
+		MZNSendDebugMessageA("           soffidInputType: %s",
+			inputType.c_str());
+	if (! this->id.empty())
+		MZNSendDebugMessageA("           id:          %s", this->id.c_str());
+	if (! this->name.empty())
+		MZNSendDebugMessageA("           name:        %s", this->name.c_str());
+	if (! this->type.empty())
+		MZNSendDebugMessageA("           type:        %s", this->type.c_str());
+	if (! this->value.empty())
+		MZNSendDebugMessageA("           value:       %s", this->value.c_str());
+	if (! this->soffidId.empty())
+		MZNSendDebugMessageA("           soffidId:    %s", this->soffidId.c_str());
+	if (! this->inputType.empty())
+		MZNSendDebugMessageA("           input type:  %s", this->inputType.c_str());
 	MZNSendDebugMessageA("           pos:    (%ld, %ld, %ld, %ld) (%ld, %ld)",
 			offsetTop, offsetLeft, offsetHeight, offsetWidth,
 			clientHeight, clientWidth);
-	MZNSendDebugMessageA("           style:  display: %s; visibility: %s",
+	if (! this->display.empty() || ! this->visibility.empty())
+		MZNSendDebugMessageA("           style:  display: %s; visibility: %s",
 			display.c_str(), visibility.c_str());
 
 }
@@ -276,7 +297,6 @@ void FormData::dump() {
 }
 
 void PageData::dump() {
-	MZNSendDebugMessageA("+++++++++++++++++++++ PAGE : %s", this->url.c_str());
 	MZNSendDebugMessageA("PAGE : %s", this->url.c_str());
 	MZNSendDebugMessageA("Title: %s", this->title.c_str());
 	for (std::vector<InputData>::iterator it = inputs.begin(); it != inputs.end(); it++)

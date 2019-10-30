@@ -1,0 +1,7 @@
+{
+  "name": "com.soffid.esso_chrome1",
+  "description": "Soffid ESSO native host",
+  "type": "stdio",
+  "path": "/usr/bin/afrodita-chrome",
+  "allowed_extensions": ["esso@soffid.com"]
+}

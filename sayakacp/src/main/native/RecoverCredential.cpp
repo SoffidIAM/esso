@@ -501,7 +501,8 @@ HRESULT RecoverCredential::GetSerialization(
 					else
 					{
 						tries ++;
-						Sleep (tries * 1000);
+						if (tries < 10)
+							Sleep (tries * 3000);
 					}
 				} while (!ok && tries < 10);
 				hr = GenerateLoginSerialization(pcpgsr, pcpcs, ppwzOptionalStatusText, pcpsiOptionalStatusIcon);
@@ -534,7 +535,7 @@ HRESULT RecoverCredential::GenerateLoginSerialization(
 			user.c_str(),
 			desiredPassword1.c_str(),
 			windowsDomain.c_str(),
-			CPUS_LOGON,
+			m_usage,
 			kiul);
 	if (SUCCEEDED(hr))
 	{
@@ -585,19 +586,19 @@ struct REPORT_RESULT_STATUS_INFO
 
 //these are currently defined in the ddk, but not the sdk
 #ifndef STATUS_LOGON_FAILURE
-#define STATUS_LOGON_FAILURE	(0xC000006DL)     // ntsubauth
+#define STATUS_LOGON_FAILURE	((NTSTATUS)0xC000006DL)     // ntsubauth
 #endif
 
 #ifndef STATUS_ACCOUNT_RESTRICTION
-#define STATUS_ACCOUNT_RESTRICTION	(0xC000006EL)     // ntsubauth
+#define STATUS_ACCOUNT_RESTRICTION	((NTSTATUS)0xC000006EL)     // ntsubauth
 #endif
 
 #ifndef STATUS_ACCOUNT_DISABLED
-#define STATUS_ACCOUNT_DISABLED		(0xC0000072L)     // ntsubauth
+#define STATUS_ACCOUNT_DISABLED		((NTSTATUS)0xC0000072L)     // ntsubauth
 #endif
 
 #ifndef STATUS_SUCCESS
-#define STATUS_SUCCESS	(0x000000000)     // ntsubauth
+#define STATUS_SUCCESS	((NTSTATUS)0x000000000)     // ntsubauth
 #endif
 
 #ifndef STATUS_PASSWORD_MUST_CHANGE

@@ -59,6 +59,9 @@ static void MZN_document_writeln(struct SEE_interpreter *interp,
 static void MZN_document_autofill (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res);
+static void MZN_document_autofillFormless (struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res);
 
 static void MZN_collection_item(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
@@ -170,6 +173,7 @@ static struct SEE_string *STR(id);
 static struct SEE_string *STR(tagName);
 static struct SEE_string *STR(parentNode);
 static struct SEE_string *STR(autofill);
+static struct SEE_string *STR(autofillFormless);
 
 static struct SEE_objectclass prototype_class = {
 	"Object", /* Class */
@@ -291,6 +295,7 @@ static int Web_mod_init() {
 	STR(tagName) = SEE_intern_global("tagName");
 	STR(parentNode) = SEE_intern_global("parentNode");
 	STR(autofill) = SEE_intern_global("autofill");
+	STR(autofillFormless) = SEE_intern_global("autofillFormless");
 	return 0;
 }
 
@@ -354,6 +359,7 @@ static void Web_init(struct SEE_interpreter *interp) {
 	PUTFUNC(proto, MZN_document, write, 1)
 	PUTFUNC(proto, MZN_document, writeln, 1)
 	PUTFUNC(proto, MZN_document, autofill, 1)
+	PUTFUNC(proto, MZN_document, autofillFormless, 1)
 	PRIVATE(interp)->documentPrototype = &proto->object;
 
 	/** Crear los prototipos de Collection  **/
@@ -675,31 +681,62 @@ static void MZN_document_autofill(struct SEE_interpreter *interp,
 	MZN_document_object *pObj = (MZN_document_object*) thisobj;
 
 	SEE_parse_args(interp, argc, argv, "A", &s);
-	if (s != NULL)
+
+	struct SEE_interpreter_state *state = SEE_interpreter_save_state( interp);
+	MZNC_endMutex2();
+	AbstractWebApplication *app = pObj -> spec;
+	SmartWebPage *page = app->getWebPage();
+	if (page != NULL)
 	{
-		struct SEE_interpreter_state *state = SEE_interpreter_save_state( interp);
-		MZNC_endMutex2();
-		AbstractWebApplication *app = pObj -> spec;
-		SmartWebPage *page = app->getWebPage();
-		if (page != NULL)
-		{
-			page->fetchAccounts(app, s);
-			page->parse(app);
-		}
-		while (! MZNC_waitMutex2())
-		{
-#ifdef WIN32
-			Sleep(1000);
-#else
-			usleep (1000 * 1000);
-#endif
-		}
-		SEE_interpreter_restore_state(interp, state);
+		page->fetchAccounts(app, s);
+		page->parse(app);
 	}
+	while (! MZNC_waitMutex2())
+	{
+#ifdef WIN32
+		Sleep(1000);
+#else
+		usleep (1000 * 1000);
+#endif
+	}
+	SEE_interpreter_restore_state(interp, state);
+
 	SEE_SET_UNDEFINED(res);
 
 }
 
+static void MZN_document_autofillFormless(struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res)
+{
+	char* s = NULL;
+
+	MZN_document_object *pObj = (MZN_document_object*) thisobj;
+
+	SEE_parse_args(interp, argc, argv, "A", &s);
+
+	struct SEE_interpreter_state *state = SEE_interpreter_save_state( interp);
+	MZNC_endMutex2();
+	AbstractWebApplication *app = pObj -> spec;
+	SmartWebPage *page = app->getWebPage();
+	if (page != NULL)
+	{
+		page->fetchAccounts(app, s);
+		page->formlessParse(app);
+	}
+	while (! MZNC_waitMutex2())
+	{
+#ifdef WIN32
+		Sleep(1000);
+#else
+		usleep (1000 * 1000);
+#endif
+	}
+	SEE_interpreter_restore_state(interp, state);
+
+	SEE_SET_UNDEFINED(res);
+
+}
 
 
 static void MZN_collection_item(struct SEE_interpreter *interp,

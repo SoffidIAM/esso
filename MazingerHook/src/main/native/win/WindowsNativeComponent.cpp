@@ -106,7 +106,8 @@ void WindowsNativeComponent::getChildren(std::vector<NativeComponent*> &children
 void WindowsNativeComponent::setAttribute(const char*attributeName, const char* value) {
 	if (strcmp (attributeName, "text") == 0)
 	{
-		SetWindowText (m_hwnd, value);
+		std::wstring wvalue = MZNC_utf8towstr(value);
+		SetWindowTextW (m_hwnd, wvalue.c_str());
 	}
 	else
 	{

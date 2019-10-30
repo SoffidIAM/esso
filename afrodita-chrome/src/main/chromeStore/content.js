@@ -41,6 +41,7 @@ function parsePageData () {
 		var formData = {};
 		formData.action = form.action;
 		formData.id = form.id;
+		formData.name = form.name;
 		formData.soffidId = soffidRegisterElement(form);
 		formData.method = form.method;
 		formData.inputs = [];
@@ -74,6 +75,8 @@ function parsePageData () {
 		inputData.textAlign    = cs["text-align"] ;
 		inputData.type         = input.type;
 		inputData.visibility   = cs["visibility"];
+		inputData.mirrorOf     = input.soffidMirrorOf;
+		inputData.inputType    = input.soffidInputType;
 		// Check parent visibility
 		var parent = input.parentElement;
 		try {

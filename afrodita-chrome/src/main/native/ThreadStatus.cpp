@@ -20,6 +20,7 @@ ThreadStatus::ThreadStatus() {
 	sem_init(&semaphore, false, 0);
 	sem_init(&eventSemaphore, false, 0);
 #endif
+	readObject = NULL;
 	pageData = NULL;
 	end = false;
 
@@ -43,6 +44,8 @@ ThreadStatus::~ThreadStatus() {
 	sem_close(&eventSemaphore);
 #endif
 
+	if (pageData != NULL)
+		delete pageData;
 }
 
 PendingEventList::~PendingEventList() {
@@ -106,7 +109,6 @@ json::JsonAbstractObject* ThreadStatus::waitForMessage() {
 	#ifdef WIN32
 		DWORD dwResult = WaitForSingleObject (hMutex, 10000); // 10 seconds wait
 		acquired = (dwResult == WAIT_OBJECT_0);
-//		MZNSendDebugMessage ("RESULT = %x", dwResult);
 	#else
 		struct timespec timeout;
 		time (&timeout.tv_sec);
@@ -116,7 +118,6 @@ json::JsonAbstractObject* ThreadStatus::waitForMessage() {
 	#endif
 		if (acquired)
 		{
-			fflush(stderr);
 			json::JsonAbstractObject *result = readObject;
 			readObject = NULL;
 			if (result == NULL)
@@ -140,12 +141,14 @@ json::JsonAbstractObject* ThreadStatus::waitForMessage() {
 }
 
 void ThreadStatus::notifyMessage(json::JsonAbstractObject* message) {
-	std::string s;
-	if (message == NULL)
-		s = "NULL";
-	else
-		message->write(s, 3);
-//	MZNSendDebugMessageA("Notifying message %s", s.c_str());
+	if (readObject != NULL)
+	{
+		std::string s;
+		readObject->write(s, 3);
+		json::JsonAbstractObject* oldMessage = readObject;
+		readObject = NULL;
+		delete oldMessage;
+	}
 	readObject = message;
 	if (message == NULL)
 		readObject = &NULL_MESSAGE;

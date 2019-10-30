@@ -64,6 +64,8 @@ private:
 	std::string libraryName;
 	std::string expandedLibraryName;
 	void *m_library;
+
+	CK_SESSION_HANDLE session;
 };
 
 

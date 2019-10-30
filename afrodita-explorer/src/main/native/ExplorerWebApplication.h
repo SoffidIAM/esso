@@ -20,6 +20,7 @@ class CEventListener;
 
 class IHTMLElementCollection;
 class IHTMLDocument4;
+class IDocumentEvent;
 
 class ExplorerWebApplication: public AbstractWebApplication {
 public:
@@ -58,6 +59,7 @@ public:
 	long getNextCounter() { return m_counter ++;}
 	IHTMLDocument2 * getHTMLDocument2 ();
 	IHTMLDocument4 * getHTMLDocument4 ();
+	IDocumentEvent * getDocumentEvent ();
 	void installIntervalListener ();
 private:
 
@@ -68,6 +70,7 @@ private:
 	IHTMLDocument2* m_pHtmlDoc2;
 	IHTMLDocument3* m_pHtmlDoc3;
 	IHTMLDocument4* m_pHtmlDoc4;
+	IDocumentEvent* m_pDocumentEvent;
     void populateVector(IHTMLElementCollection *pCol, std::vector<AbstractWebElement*> & elements);
 	IDispatch * getIDispatch ();
 	IHTMLDocument3 * getHTMLDocument3 ();

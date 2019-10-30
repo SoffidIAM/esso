@@ -723,9 +723,6 @@ int uninstall (int argc, char **argv)
 
 	notifyPendingRenames();
 
-	char ach[4096];
-	printf("Press ENTER to continue\n");
-	gets(ach);
 	return 0;
 }
 

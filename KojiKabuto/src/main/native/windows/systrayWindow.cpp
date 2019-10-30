@@ -498,7 +498,7 @@ static void testSessionTimeout ()
 	std::string idleTimeout;
 
 	// Timeout in seconds
-	SeyconCommon::readProperty("soffid.esos.idleTimeout", idleTimeout);
+	SeyconCommon::readProperty("soffid.esso.idleTimeout", idleTimeout);
 	if (!idleTimeout.empty() )
 	{
 		long timeout = 99999;

@@ -11,6 +11,8 @@
 #include <string>
 #include "json/JsonAbstractObject.h"
 #include "ThreadStatus.h"
+#include "ThreadPool.h"
+#include "ListenerPool.h"
 #include <map>
 
 #include <WebListener.h>
@@ -45,11 +47,13 @@ public:
 	std::string unregisterListener (ChromeWebApplication *app, const char *eventId);
 
 private:
-	std::map<std::string, ThreadStatus*> threads;
+	ThreadStatus* fresthreads;
 	std::string readMessage ();
 	void writeMessage (const std::string &msg);
 	static CommunicationManager *instance;
 	int requestId;
+	ThreadPool threadPool;
+
 	json::JsonAbstractObject *pendingMessage;
 #ifdef WIN32
 	HANDLE hMutex;
@@ -57,7 +61,7 @@ private:
 	sem_t semaphore;
 #endif
 	int nextListener;
-	std::map<std::string,ActiveListenerInfo*> activeListeners;
+	ListenerPool activeListeners;
 };
 
 } /* namespace mazinger_chrome */

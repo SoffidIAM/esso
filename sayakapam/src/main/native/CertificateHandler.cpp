@@ -11,6 +11,7 @@
 #include "Log.h"
 #include "Utils.h"
 #include <openssl/ossl_typ.h>
+#include <openssl/opensslv.h>
 #include <ssoclient.h>
 #include <MZNcompat.h>
 
@@ -62,7 +63,12 @@ bool CertificateHandler::getNearExpireDate(){
 
 	// Calculate expiration time
 	ASN1_GENERALIZEDTIME *expiration = NULL;
+#if OPENSSL_VERSION_NUMBER > 0x10100000L
+	const ASN1_TIME* notAfter = X509_get0_notAfter(cert);
+	ASN1_TIME_to_generalizedtime (notAfter, &expiration);
+#else
 	ASN1_TIME_to_generalizedtime (cert->cert_info->validity->notAfter, &expiration);
+#endif
 	ASN1_STRING_to_UTF8(&expString, expiration);
 
 
@@ -99,12 +105,22 @@ bool CertificateHandler::isValid(){
 
 	// Calculate expiration time
 	ASN1_GENERALIZEDTIME *expiration = NULL;
+#if OPENSSL_VERSION_NUMBER > 0x10100000L
+	const ASN1_TIME* notAfter = X509_get0_notAfter(cert);
+	ASN1_TIME_to_generalizedtime (notAfter, &expiration);
+#else
 	ASN1_TIME_to_generalizedtime (cert->cert_info->validity->notAfter, &expiration);
+#endif
 	ASN1_STRING_to_UTF8(&expString, expiration);
 
 	// Calculate activation time
 	ASN1_GENERALIZEDTIME *activation = NULL;
+#if OPENSSL_VERSION_NUMBER > 0x10100000L
+	const ASN1_TIME* notBefore = X509_get0_notBefore(cert);
+	ASN1_TIME_to_generalizedtime (notBefore, &activation);
+#else
 	ASN1_TIME_to_generalizedtime (cert->cert_info->validity->notBefore, &activation);
+#endif
 	ASN1_STRING_to_UTF8(&actString, activation);
 
 	// Calculate one month from now
@@ -137,7 +153,12 @@ const char* CertificateHandler::getExpirationDate()
 	if (expirationString == NULL && getCertContext() != NULL)
 	{
 		ASN1_GENERALIZEDTIME *expiration = NULL;
+#if OPENSSL_VERSION_NUMBER > 0x10100000L
+		const ASN1_TIME* notAfter = X509_get0_notAfter(getCertContext());
+		ASN1_TIME_to_generalizedtime (notAfter, &expiration);
+#else
 		ASN1_TIME_to_generalizedtime (getCertContext()->cert_info->validity->notAfter, &expiration);
+#endif
 		ASN1_STRING_to_UTF8((unsigned char**)&expirationString, expiration);
 	}
 	return expirationString;
@@ -176,7 +197,7 @@ bool CertificateHandler::obtainCredentials() {
 			SeyconCommon::wipe(szPassword);
 			return true;
 		} else {
-			m_errorMessage.assign("No te accés al servidor. No se pot iniciar sessió");
+			m_errorMessage.assign("Cannot connect to server to start session");
 			return false;
 		}
 	} else {
@@ -186,7 +207,7 @@ bool CertificateHandler::obtainCredentials() {
 			resp->getToken(1, sessionId);
 			std::string utf8SessionId = MZNC_wstrtoutf8(sessionId.c_str());
 			if (! m_handler->sign(this, utf8SessionId.c_str(), &pData, &dwSize)) {
-				m_errorMessage.assign("Error a la targeta criptogràfica. No s'ha pogut signar la sol·licitud d'inici de sessió");
+				m_errorMessage.assign("Smart card error. Cannot sign login request");
 				delete resp;
 				return false;
 			}
@@ -199,14 +220,14 @@ bool CertificateHandler::obtainCredentials() {
 
 			if (resp == NULL)
 			{
-				m_errorMessage.assign ("No te accés a la xarxa Intranet. No se pot iniciar sessió");
+				m_errorMessage.assign ("Cannot contact Soffid server");
 				return false;
 			}
 			return parseResponse(resp);
 		} else {
 			std::string msg = resp->getToken(1);
 
-			m_errorMessage.assign ("El servidor ha rebutjat la petició d'inici de sesió: ");
+			m_errorMessage.assign ("Server has rejected login request: ");
 			m_errorMessage.append(msg.c_str());
 			delete resp;
 			return NULL;
@@ -224,7 +245,7 @@ bool CertificateHandler::parseResponse (SeyconResponse *resp) {
 	}
 	std::string status = resp->getToken(0);
 	if (status != "OK") {
-		m_errorMessage.assign ("Error accedit al servidor: ");
+		m_errorMessage.assign ("Error connecting to server: ");
 		m_errorMessage.append( resp->getToken(1));
 		return false;
 	} else {
@@ -243,7 +264,7 @@ bool CertificateHandler::parseResponse (SeyconResponse *resp) {
 			tag = resp->getToken(i);
 		}
 		if (m_user.empty() || m_password.empty ()) {
-			m_errorMessage.assign ("El sistema no disposa de les credenciasl necessàries. Contacti amb el centre de suport");
+			m_errorMessage.assign ("Internal error. Missing required credentials in login response.");
 			return false;
 		} else {
 			m_handler->saveCredentials(this, m_user.c_str(), m_password.c_str());

@@ -455,8 +455,6 @@ void Pkcs11Handler::evaluateCert (CK_SESSION_HANDLE sess, CK_OBJECT_HANDLE obj, 
 					} else {
 						m_log.info ("No constraints extension found");
 					}
-					m_log.info ("Almost done");
-
 					if (!isCA) {
 						m_log.info ("Adding cert");
 						addCert(cert);
@@ -638,10 +636,8 @@ TokenHandler* Pkcs11Handler::createToken (CK_SLOT_ID slot) {
 
 std::vector<CertificateHandler*>& Pkcs11Handler::enumCertificates (PamHandler *handler, TokenHandler* token) {
 	m_certs.clear ();
-	CK_SESSION_HANDLE session;
 	CK_RV  rv;
 
-	m_log.info ("Analyzing token");
 	rv = m_p11->C_OpenSession(token->getSlot_num(), CKF_SERIAL_SESSION, NULL, NULL, &session);
 
 	if (rv != CKR_OK) {
@@ -651,14 +647,14 @@ std::vector<CertificateHandler*>& Pkcs11Handler::enumCertificates (PamHandler *h
 
 	if (login(session, token)) {
 		enumerateToken(session, token);
-		m_p11->C_Logout(session);
+//		m_p11->C_Logout(session);
 	} else {
 		handler->notify("PIN incorrecte");
 	}
 
 	m_log.info("Token analyzed");
 
-	m_p11->C_CloseSession(session);
+//	m_p11->C_CloseSession(session);
 
 	return m_certs;
 }
@@ -747,20 +743,23 @@ bool Pkcs11Handler::sign( CertificateHandler *cert,
 		unsigned char **ppData,
 		unsigned long *pdwSize) {
 
-		loadModule();
-		CK_SESSION_HANDLE session;
-		CK_RV rv = m_p11->C_OpenSession(cert->getTokenHandler()->getSlot_num(),
-				CKF_SERIAL_SESSION, NULL, NULL, &session);
+	CK_RV rv;
 
-		if (rv != CKR_OK) {
-			p11_warn("OpenSession", rv);
-			return FALSE;
-		}
-		if (!login(session, cert->getTokenHandler()))
-		{
-			m_p11->C_CloseSession(session);
-			return FALSE;
-		}
+		loadModule();
+//		CK_SESSION_HANDLE session = 0L;
+//		m_log.info("Opening session for slot %d", cert->getTokenHandler()->getSlot_num());
+//		rv = m_p11->C_OpenSession(cert->getTokenHandler()->getSlot_num(),
+//				CKF_SERIAL_SESSION, NULL, NULL, &session);
+//
+//		if (rv != CKR_OK) {
+//			p11_warn("OpenSession", rv);
+//			return FALSE;
+//		}
+//		if (!login(session, cert->getTokenHandler()))
+//		{
+//			m_p11->C_CloseSession(session);
+//			return FALSE;
+//		}
 
 		// Obtenir la clau
 
@@ -777,7 +776,7 @@ bool Pkcs11Handler::sign( CertificateHandler *cert,
 		rv = m_p11->C_FindObjectsInit(session, attrs, 2);
 		if (rv != CKR_OK) {
 			p11_warn("C_FindObjects", rv);
-			m_p11->C_CloseSession(session);
+//			m_p11->C_CloseSession(session);
 			return FALSE;
 		}
 		CK_OBJECT_HANDLE key;
@@ -785,14 +784,14 @@ bool Pkcs11Handler::sign( CertificateHandler *cert,
 		rv = m_p11->C_FindObjects(session, &key, 1, &cObjects);
 		if (rv != CKR_OK) {
 			p11_warn("C_FindObjects", rv);
-			m_p11->C_CloseSession(session);
+//			m_p11->C_CloseSession(session);
 			return FALSE;
 		}
 		m_p11->C_FindObjectsFinal(session);
 
 		if (cObjects == 0) {
 			m_log.warn("Cannot find certificate when trying to sign with %s", cert->getName());
-			m_p11->C_CloseSession(session);
+//			m_p11->C_CloseSession(session);
 			return false;
 		}
 
@@ -807,7 +806,7 @@ bool Pkcs11Handler::sign( CertificateHandler *cert,
 				szDataToSign), NULL, pdwSize);
 		if (rv != CKR_BUFFER_TOO_SMALL && rv != CKR_OK) {
 			p11_warn("c_sign(pre)", rv);
-			m_p11->C_CloseSession(session);
+//			m_p11->C_CloseSession(session);
 			return false;
 		}
 		*ppData = (unsigned char*) malloc(*pdwSize);
@@ -816,11 +815,11 @@ bool Pkcs11Handler::sign( CertificateHandler *cert,
 
 		if (rv != CKR_OK) {
 			p11_warn("c_sign", rv);
-			m_p11->C_CloseSession(session);
+//			m_p11->C_CloseSession(session);
 			return false;
 		}
-		m_p11->C_Logout(session);
-		m_p11->C_CloseSession(session);
+//		m_p11->C_Logout(session);
+//		m_p11->C_CloseSession(session);
 
 	return true;
 
@@ -829,6 +828,8 @@ bool Pkcs11Handler::sign( CertificateHandler *cert,
 
 bool Pkcs11Handler::getSavedCredentials(CertificateHandler *cert, std::string &szUser, std::string &szPassword) {
 	bool found = false;
+
+	return false;
 
 		CK_SESSION_HANDLE session;
 		CK_RV rv = m_p11->C_OpenSession(cert->getTokenHandler()->getSlot_num(),
@@ -859,7 +860,7 @@ bool Pkcs11Handler::getSavedCredentials(CertificateHandler *cert, std::string &s
 		rv = m_p11->C_FindObjectsInit(session, attrs, 2);
 		if (rv != CKR_OK) {
 			p11_warn("C_FindObjects", rv);
-			m_p11->C_CloseSession(session);
+//			m_p11->C_CloseSession(session);
 			return FALSE;
 		}
 		CK_OBJECT_HANDLE obj;
@@ -886,6 +887,7 @@ bool Pkcs11Handler::getSavedCredentials(CertificateHandler *cert, std::string &s
 }
 
 bool Pkcs11Handler::saveCredentials(CertificateHandler *cert, const char* szUser, const char* szPassword) {
+	return false;
 		CK_SESSION_HANDLE session;
 		CK_RV rv = m_p11->C_OpenSession(cert->getTokenHandler()->getSlot_num(),
 				CKF_SERIAL_SESSION | CKF_RW_SESSION, NULL, NULL, &session);

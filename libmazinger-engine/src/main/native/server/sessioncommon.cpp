@@ -31,6 +31,7 @@
 #include <SeyconServer.h>
 #include <stdlib.h>
 #include <MZNcompat.h>
+#include <time.h>
 int SeyconCommon::seyconDebugLevel = 0;
 
 __attribute__((constructor))
@@ -43,6 +44,7 @@ static void initDebugLevel () {
 }
 
 #ifdef WIN32
+
 static HINSTANCE hWTSAPI;
 typedef struct _MY_WTS_CLIENT_ADDRESS {
     DWORD AddressFamily;  // AF_INET, AF_IPX, AF_NETBIOS, AF_UNSPEC
@@ -554,6 +556,11 @@ void SeyconCommon::wipe (std::wstring &str) {
 }
 
 void SeyconCommon::updateHostAddress () {
+	std::string disable;
+	SeyconCommon::readProperty("registerHostAddress", disable);
+	if (disable == "false")
+		return;
+
 	std::string serialNumber;
 	SeyconCommon::readProperty("serialNumber", serialNumber);
 	if (serialNumber.size() == 0) {
@@ -588,13 +595,21 @@ void SeyconCommon::updateHostAddress () {
 	}
 
 	SeyconService service ;
-	SeyconResponse*response= service.sendUrlMessage(L"/updateHostAddress?name=%hs&serial=%hs",
-			MZNC_getHostName(), serialNumber.c_str());
-	if (response != NULL && response->getResult() != NULL)  {
-		if (response->getToken(0) == "ERROR") {
-			SeyconCommon::warn ("Error updating host address: %hs", response->getToken(1).c_str());
+	time_t start;
+	time_t now;
+	time (&start);
+	do {
+		SeyconCommon::info ("Connecting to sync server to update host address %hs", MZNC_getHostName());
+		SeyconResponse*response= service.sendUrlMessage(L"/updateHostAddress?name=%hs&serial=%hs",
+				MZNC_getHostName(), serialNumber.c_str());
+		if (response != NULL && response->getResult() != NULL)  {
+			if (response->getToken(0) == "ERROR") {
+				SeyconCommon::warn ("Error updating host %hs: %hs", MZNC_getHostName(), response->getToken(1).c_str());
+			}
+			break;
 		}
-	}
+		time (&now);
+	} while (now - start < 30);
 }
 
 

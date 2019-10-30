@@ -23,40 +23,6 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>compile</id>
-						<phase>process-sources</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-						<inherited>false</inherited>
-						<configuration>
-							<tasks>
-								<mkdir dir="target/qt" />
-								<exec executable="moc">
-								<!-- 
-									<arg value="-DQT_QML_DEBUG" />
-									<arg value="-DQT_DECLARATIVE_DEBUG" />
-									<arg value="-DQT_WIDGETS_LIB" />
-									<arg value="-DQT_GUI_LIB" />
-									<arg value="-DQT_CORE_LIB" />
-									<arg value="-I../src/main/native" />
-									<arg value="-I../src/main/include" />
-									<arg value="-I/usr/include/qt5/QtWidgets" />
-									<arg value="-I/usr/include/qt5/QtGui" />
-									<arg value="-I/usr/include/qt5/QtCore" /> -->
-									<arg value="../src/main/native/ChromeWidget.h" />
-									<arg value="-o" />
-									<arg value="${pom.basedir}/target/qt/moc_ChromeWidget.cpp" />
-								</exec>
-							</tasks>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>native-maven-plugin</artifactId>
 				<extensions>true</extensions>
@@ -106,29 +72,11 @@
 						<linkerEndOption>-lgtk-3</linkerEndOption>
 						<linkerEndOption>-lgdk-3</linkerEndOption>
 						<linkerEndOption>-lglib-2.0</linkerEndOption>
-						<!-- 
-						<linkerEndOption>-lQt5Widgets</linkerEndOption>
-                        <linkerEndOption>-lQt5Gui</linkerEndOption>
-                        <linkerEndOption>-lQt5Core</linkerEndOption>
-                        -->
 					</linkerEndOptions>
 					<sources>
 						<source>
 							<!-- relative to your project directory -->
 							<directory>../src/main/native</directory>
-							<includes>
-								<include>**/*.cpp</include>
-							</includes>
-							<excludes>
-								<exclude>**/*.h</exclude>
-							</excludes>
-
-							<deployable>false</deployable>
-							<dependencyAnalysisParticipation>false</dependencyAnalysisParticipation>
-						</source>
-						<source>
-							<!-- relative to your project directory -->
-							<directory>target/qt</directory>
 							<includes>
 								<include>**/*.cpp</include>
 							</includes>

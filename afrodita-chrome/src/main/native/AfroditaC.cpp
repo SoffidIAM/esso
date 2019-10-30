@@ -112,7 +112,7 @@ static DWORD WINAPI mainThreadProc(
 
 #else
 
-#ifdef USEQT
+#ifdef USE_QT
 
 #include <QApplication>
 #include "ChromeWidget.h"
@@ -132,10 +132,11 @@ extern "C" void __attribute__((constructor)) startup() {
 static void* qtThreadProc (void *app)
 {
 	SeyconCommon::setDebugLevel(0);
-	DEBUG ("Started AfroditaC");
 	CommunicationManager* manager = CommunicationManager::getInstance();
 
 	manager->mainLoop();
+
+	return NULL;
 }
 
 #endif
@@ -162,7 +163,7 @@ extern "C" int main (int argc, char **argv)
 	}
 
 #else
-#ifdef USEQT
+#ifdef USE_QT
  	QApplication *app = new QApplication (argc, argv);
 
 	pthread_t threadId;
@@ -177,16 +178,7 @@ extern "C" int main (int argc, char **argv)
 	gtk_init(&argc, &argv);
 
 
-	fprintf(stderr, "A1\n");
-	fprintf(stderr, "A2\n");
-
 	signalWindow = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-
-	fprintf(stderr, "A3\n");
-
-//	g_signal_connect_object(signalWindow, "popup-menu",
-//				G_CALLBACK(menuPopupHandler), NULL, (GConnectFlags)0);
-	fprintf(stderr, "A4\n");
 
 	pthread_t threadId;
 	if (pthread_create(&threadId, NULL, qtThreadProc, NULL) != 0)

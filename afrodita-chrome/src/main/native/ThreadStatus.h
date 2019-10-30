@@ -77,6 +77,7 @@ public:
 	sem_t semaphore;
 	sem_t eventSemaphore;
 #endif
+	ThreadStatus *next;
 
 	Event *waitForEvent ();
 	json::JsonAbstractObject* waitForMessage ();

@@ -54,6 +54,7 @@ public:
 	std::vector<SmartForm*> forms;
 	SmartForm *rootForm;
 
+	void formlessParse (AbstractWebApplication *app);
 	void parse (AbstractWebApplication *app);
 	void fetchAccounts (AbstractWebApplication *app, const char *systemName);
 	void fetchAccounts (const char *systemName);
@@ -70,6 +71,7 @@ public:
 	}
 private:
 	bool sendSecret (AccountStruct &account, const char* sso, std::string &value, std::string &errorMsg);
+	void parse (AbstractWebApplication *app, PageData* data, bool formless);
 
 
 public:

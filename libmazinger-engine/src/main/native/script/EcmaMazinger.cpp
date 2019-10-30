@@ -621,7 +621,11 @@ static void MZNECMA_setSecret(struct SEE_interpreter *interp,
 	SEE_ToString(interp, argv[1], &valueValue);
 
 	std::wstring secret = SEE_StringToWChars(interp, secretValue.u.string);
+
+	std::wstring encodedSecret = MZNC_strtowstr(SeyconCommon::urlEncode(secret.c_str()).c_str());
+
 	std::wstring value = SEE_StringToWChars(interp, valueValue.u.string);
+	std::wstring encodedValue = MZNC_strtowstr(SeyconCommon::urlEncode(value.c_str()).c_str());
 
 	SecretStore s (MZNC_getUserName()) ;
 	wchar_t *sessionKey = s.getSecret(L"sessionKey");
@@ -631,7 +635,7 @@ static void MZNECMA_setSecret(struct SEE_interpreter *interp,
 	SeyconService ss;
 
 	SeyconResponse *response = ss.sendUrlMessage(L"/setSecret?user=%ls&key=%ls&secret=%ls&value=%ls",
-			user, sessionKey, secret.c_str(), value.c_str());
+			user, sessionKey, encodedSecret.c_str(), encodedValue.c_str());
 
 	if (response == NULL)
 	{
@@ -856,12 +860,15 @@ static void MZNECMA_setPassword(struct SEE_interpreter *interp,
 
 	std::wstring secret = L"pass.";
 	std::wstring system = SEE_StringToWChars(interp, systemValue.u.string);
+	std::wstring encodedSystem = MZNC_strtowstr(SeyconCommon::urlEncode(system.c_str()).c_str());
 	secret += system;
 	secret += L".";
 	std::wstring account = SEE_StringToWChars(interp, accountValue.u.string);
+	std::wstring encodedAccount = MZNC_strtowstr(SeyconCommon::urlEncode(account.c_str()).c_str());
 	secret += account;
 
 	std::wstring value = SEE_StringToWChars(interp, valueValue.u.string);
+	std::wstring encodedValue = MZNC_strtowstr(SeyconCommon::urlEncode(value.c_str()).c_str());
 
 	SecretStore s (MZNC_getUserName()) ;
 	wchar_t *sessionKey = s.getSecret(L"sessionKey");
@@ -869,7 +876,7 @@ static void MZNECMA_setPassword(struct SEE_interpreter *interp,
 
 	SeyconService ss;
 	SeyconResponse *response = ss.sendUrlMessage(L"/setSecret?user=%ls&key=%ls&system=%ls&account=%ls&value=%ls",
-			user, sessionKey, system.c_str(), account.c_str(), value.c_str());
+			user, sessionKey, encodedSystem.c_str(), encodedAccount.c_str(), encodedValue.c_str());
 
 	if (response == NULL)
 	{
@@ -1043,10 +1050,7 @@ static void MZNECMA_getText(struct SEE_interpreter *interp,
 		std::string s;
 		obj->spec->m_pMatchedComponent->getAttribute("text", s);
 		struct SEE_string *buf;
-		buf = SEE_string_new(interp, s.length() + 1);
-		const char *str = s.c_str();
-		for (int i = 0; str[i] != 0; i++)
-			SEE_string_addch(buf, str[i]);
+		buf = SEE_UTF8ToString(interp, s.c_str());
 		SEE_SET_STRING(res, buf);
 
 	}
@@ -1065,7 +1069,7 @@ static void MZNECMA_setText(struct SEE_interpreter *interp,
 		SEE_parse_args(interp, argc, argv, "s", &message);
 		if (message == NULL)
 			SEE_error_throw(interp, interp->RangeError, "missing argument");
-		std::string text = SEE_StringToChars(interp, message);
+		std::string text = SEE_StringToUTF8(interp, message);
 		obj->spec->m_pMatchedComponent->setAttribute("text", text.c_str());
 	}
 	SEE_SET_UNDEFINED(res);
@@ -1124,6 +1128,33 @@ struct SEE_string* getFocusString() {
 
 
 
+
+static void waitForFocus()
+{
+#ifdef WIN32
+	boolean pause = false;
+	do
+	{
+		HWND hwnd = GetForegroundWindow();
+		if (hwnd != NULL)
+		{
+			DWORD dwActiveProcessId;
+			DWORD dwCurrentProcessId = 0;
+			GetWindowThreadProcessId(hwnd, &dwActiveProcessId);
+			dwCurrentProcessId = GetCurrentProcessId();
+			MZNSendDebugMessageA("Waiting to activate application window %x %lx %lx", hwnd, dwActiveProcessId, dwCurrentProcessId);
+			if (dwActiveProcessId == dwCurrentProcessId)
+			{
+				if (pause)
+					Sleep(300);
+				return;
+			}
+			pause = true;
+			Sleep(100);
+		}
+	} while (true);
+#endif
+}
 /*
  * typeText
  *
@@ -1139,6 +1170,8 @@ static void MZNECMA_sendKeys(struct SEE_interpreter *interp,
 	if (s == NULL)
 		SEE_error_throw(interp, interp->RangeError, "missing argument");
 	std::string message = SEE_StringToChars(interp, s);
+
+	waitForFocus();
 
 	CSendKeys k;
 	k.SendKeys(message.c_str(), true);
@@ -1161,6 +1194,8 @@ static void MZNECMA_sendText(struct SEE_interpreter *interp,
 	if (s == NULL)
 		SEE_error_throw(interp, interp->RangeError, "missing argument");
 	std::wstring message = SEE_StringToWChars(interp, s);
+
+	waitForFocus();
 
 	CSendKeys k;
 	k.SendLiteral(message.c_str(), true);

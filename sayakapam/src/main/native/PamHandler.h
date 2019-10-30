@@ -14,6 +14,9 @@
 #include "Pkcs11Configuration.h"
 #include <ssoclient.h>
 
+// #define __TRACE__ printf ( ">> %s: %d\n", __FILE__, __LINE__ )
+#define __TRACE__ NULL
+
 class PamDialog;
 
 class PamHandler {

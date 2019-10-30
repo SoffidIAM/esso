@@ -27,6 +27,8 @@ ExplorerWebApplication::~ExplorerWebApplication() {
 		m_pHtmlDoc3->Release();
 	if (m_pHtmlDoc4 != NULL)
 		m_pHtmlDoc4->Release();
+	if (m_pDocumentEvent != NULL)
+		m_pDocumentEvent->Release();
 	if (smartWebPage != NULL)
 	{
 		MZNSendDebugMessage("** Releasing smart web page");
@@ -56,6 +58,7 @@ ExplorerWebApplication::ExplorerWebApplication(IWebBrowser2 *pBrowser, IDispatch
 	m_pHtmlDoc2 = NULL;
 	m_pHtmlDoc3 = NULL;
 	m_pHtmlDoc4 = NULL;
+	m_pDocumentEvent = NULL;
 	pIntervalListener = NULL;
 	smartWebPage = new SmartWebPage();
 }
@@ -175,6 +178,22 @@ IHTMLDocument4 * ExplorerWebApplication::getHTMLDocument4 ()
 		MZNSendDebugMessageA("Unable to get ExplorerWebApplications's IHTMLDocument4");
 	}
 	return m_pHtmlDoc4;
+}
+
+IDocumentEvent * ExplorerWebApplication::getDocumentEvent ()
+{
+	static IID local_IID_IDocumentEvent = {0x305104bc, 0x98b5, 0x11cf, {0xbb, 0x82, 0x00, 0xaa, 0x00, 0xbd, 0xce, 0x0b}};
+
+	IDispatch *pDispatch = getIDispatch();
+	if (m_pDocumentEvent == NULL && pDispatch != NULL)
+	{
+		pDispatch->QueryInterface(local_IID_IDocumentEvent,reinterpret_cast<void**>(&m_pDocumentEvent));
+	}
+	if (m_pDocumentEvent == NULL)
+	{
+		MZNSendDebugMessageA("Unable to get ExplorerWebApplications's IHTMLDocument4");
+	}
+	return m_pDocumentEvent;
 }
 
 AbstractWebElement *ExplorerWebApplication::getDocumentElement()

@@ -47,13 +47,13 @@ static char* createMenuWndClass ()
 		wcx.hIconSm = NULL;
 		// Register the window class.
 
-		MZNSendDebugMessage("Registering %s", windowClassName);
 		RegisterClassEx(&wcx);
 	}
 	return windowClassName;
 }
 
 #endif
+
 
 
 void AbstractWebApplication::selectAction (const char * title,
@@ -63,7 +63,7 @@ void AbstractWebApplication::selectAction (const char * title,
 		WebListener *listener)
 {
 #ifdef WIN32
-	HWND hwnd = CreateWindowA(createMenuWndClass(), "TITLE", WS_POPUP|WS_VISIBLE, 0,0, 1, 1, NULL, NULL, GetModuleHandle(NULL), (LPVOID) NULL);
+	HWND hwnd = CreateWindowA(createMenuWndClass(), "Soffid ESSO", WS_POPUP, 0,0, 1, 1, NULL, NULL, GetModuleHandle(NULL), (LPVOID) NULL);
 	HMENU hm = CreatePopupMenu();
 
 	AppendMenuA (hm, MF_STRING|MF_DISABLED, -1, title);
@@ -71,23 +71,23 @@ void AbstractWebApplication::selectAction (const char * title,
 
 	for (int i = 0; i < optionId.size() && i < names.size(); i++)
 	{
-		MZNSendDebugMessageA("Adding menu %s (%d)", names[i].c_str(), i+1000);
-		AppendMenuA (hm, MF_STRING|MF_ENABLED, i+1000, strdup(names[i].c_str()));
+		AppendMenuA (hm, MF_STRING|MF_ENABLED, i+1000, MZNC_utf8tostr(names[i].c_str()).c_str());
 	}
 	AppendMenuA (hm, MF_STRING|MF_ENABLED, 1, "Cancel");
 
 	selectedAction = -1;
 	POINT pt;
 	GetCursorPos(&pt);
-	while (GetForegroundWindow() != hwnd)
-	{
-		Sleep(100);
-		MZNSendDebugMessageA("Going foreground");
+#if 0
+	do {
 		SetForegroundWindow(hwnd);
 		SetFocus(hwnd);
-	}
-	MZNSendDebugMessageA("Opening menu");
+		consumeMessages();
+		Sleep(500);
+	} while (GetForegroundWindow() != hwnd);
 
+	consumeMessages();
+#endif
 	DWORD now = GetCurrentTime();
 	selectedAction = TrackPopupMenu(hm, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN | TPM_LEFTBUTTON, pt.x, pt.y, 0,
 			hwnd, NULL);
@@ -97,11 +97,11 @@ void AbstractWebApplication::selectAction (const char * title,
 				hwnd, NULL);
 	}
 
-	MZNSendDebugMessageA("Closed menu %d (%x)", selectedAction, GetLastError());
-
-	CloseWindow(hwnd);
-	//DestroyWindow(hwnd);
 	DestroyMenu(hm);
+	CloseWindow(hwnd);
+	DestroyWindow(hwnd);
+
+//	consumeMessages();
 
 	if (selectedAction >= 1000 && selectedAction < 1000+optionId.size())
 	{

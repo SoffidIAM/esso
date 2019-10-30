@@ -56,6 +56,8 @@
 						<linkerMiddleOption>-static-libstdc++</linkerMiddleOption>
 					</linkerMiddleOptions>
 					<linkerEndOptions>
+						<linkerMiddleOption>-lwsock32</linkerMiddleOption>
+						<linkerMiddleOption>-lmpr</linkerMiddleOption>
 					</linkerEndOptions>
 					<sources>
 						<source>

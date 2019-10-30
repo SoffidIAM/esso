@@ -19,8 +19,8 @@
 #include <dlfcn.h>
 
 
-#define TRACE printf("[%ld]: At %s:%d\n", pthread_self(), __FILE__, __LINE__)
-//#define TRACE
+//#define TRACE printf("[%ld]: At %s:%d\n", pthread_self(), __FILE__, __LINE__)
+#define TRACE
 
 GtkStatusIcon *tray_icon;
 
@@ -210,8 +210,11 @@ void view_popup_menu_onStop(GtkWidget *menuitem, gpointer userdata) {
 }
 
 void view_popup_menu_onReload(GtkWidget *menuitem, gpointer userdata) {
-	SeyconSession session;
-	session.setUser(MZNC_getUserName());
+	if ( ! session.isOpen())
+	{
+		session.setUser(MZNC_getUserName());
+		session.setSoffidUser(MZNC_getUserName());
+	}
 	session.updateMazingerConfig();
 
 	GtkWidget *dialog = gtk_dialog_new_with_buttons("Mazinger", NULL,
@@ -346,11 +349,14 @@ extern "C" int main(int argc, char **argv) {
 
 	create_tray_icon();
 
-
 	g_thread_create(DialogHandler::main, NULL, false, NULL);
 
-
 	gtk_window_new(GTK_WINDOW_TOPLEVEL);
+
+	const char *szUser = MZNC_getUserName();
+
+	if (!MZNIsStarted(szUser))
+		view_popup_menu_onLogin(NULL, NULL);
 
 	gtk_main();
 

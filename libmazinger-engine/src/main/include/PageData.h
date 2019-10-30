@@ -28,6 +28,8 @@ public:
 	std::string type;
 	std::string style;
 	std::string text_align;
+	std::string inputType;
+	std::string mirrorOf;
 
 	long offsetLeft;
 	long offsetTop;

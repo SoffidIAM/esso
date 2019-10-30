@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <SeyconServer.h>
 
 void SecretStore::applySeed(unsigned char const *lpszSeed, int size, unsigned char* achKey, int & k)
 {
@@ -290,19 +290,9 @@ void SecretStore::setSecrets(const wchar_t * secrets) {
 	int counter = 0;
 	int targetCounter = 0;
 	memset (pMazinger->achSecrets, 0,  sizeof pMazinger->achSecrets);
-#ifdef TRACE_AES
-	wprintf (L"Setting secrets\n");
-#endif
 	while ( secrets[counter] != L'\0')
 	{
-//		MZNSendDebugMessageW(L"Storing secret %ls", &secrets[counter]);
-#ifdef TRACE_AES
-		wprintf (L"Set secret at %d: %s\n", targetCounter, &secrets[counter]);
-#endif
 		putString(pMazinger->achSecrets, targetCounter, &secrets[counter]);
-#ifdef TRACE_AES
-		wprintf (L"Counter now at %d\n", targetCounter);
-#endif
 		counter += wcslen (&secrets[counter])+1;
 	}
 	putString(pMazinger->achSecrets, targetCounter, L"");
@@ -327,23 +317,7 @@ wchar_t *SecretStore::readString (const wchar_t* buffer, int &index) {
 	for (unsigned int i = 0; i < bufferSizeBytes; i+=AESCHUNK_SIZE)
 	{
 		memcpy (b, (unsigned char*) &buffer[index], AESCHUNK_SIZE);
-#ifdef TRACE_AES
-		printf ("Decrypting\n");
-		for (int j = 0; j < AESCHUNK_SIZE; j++)
-		{
-			printf ("%02x ", (unsigned int)b[j]);
-		}
-		printf("\n");
-#endif
 		AESDecrypt(b, m_expkey, &out[i]);
-#ifdef TRACE_AES
-		printf ("Descrypted\n");
-		for (int j = 0; j < AESCHUNK_SIZE; j++)
-		{
-			printf ("%02x ", (unsigned int)out[i+j]);
-		}
-		printf("\n");
-#endif
 		index += AESCHUNK_SIZE / sizeof (wchar_t);
 	}
 	wchar_t * wout = (wchar_t*) out;

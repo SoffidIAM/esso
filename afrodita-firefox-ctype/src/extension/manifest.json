@@ -12,20 +12,19 @@
       "js": [ "content.js" ],
       "matches": [ "*://*/*" ]
    } ],
-   "description": "Soffid Enterprise Single Sign-On extension (version 2.5)",
+   "description": "Soffid Enterprise Single Sign-On extension",
    "icons": {
       "128": "soffid.png",
       "32": "icon.png"
    },
    "manifest_version": 2,
-   "name": "Soffid ESSO v2.5",
-   "permissions": [ "*://*/", "tabs" ],
-   "version": "2.5.0.0",
+   "name": "Soffid ESSO v2.0",
+   "permissions": [ "*://*/", "tabs", "nativeMessaging" ],
+   "version": "2.0.0.4",
    "applications" : {
    		"gecko": {
    			"id": "esso@soffid.com",
-   			"strict_min_version": "42a1",
-   			"strict_max_version": "*",
+   			"strict_min_version": "52.0",
    			"update_url": "https://soffid.com/esso/updates.json"
    		}
    	}

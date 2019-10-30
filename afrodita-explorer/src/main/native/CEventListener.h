@@ -90,6 +90,7 @@ private:
 	LONG m_nRefCount;   //for managing the reference count
 
 	bool preventLoop;
+	bool disabled;
 
 };
 

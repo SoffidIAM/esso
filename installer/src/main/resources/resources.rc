@@ -1,5 +1,8 @@
 //Microsoft Developer Studio generated resource script.
 //
+#include <windows.h>
+#include <winver.h>
+
 #include "resource.h"
 
 1 RT_MANIFEST "installer.exe.manifest" 
@@ -28,7 +31,8 @@ sewbr.dll 				IDT_FILE "com.soffid.iam.esso.w32.Sewbr.dll.bzip"
 profyumi.jar 			IDT_FILE "com.soffid.iam.esso.java.javahook.jar.bzip"
 logon.tcl 					IDT_FILE "logon.tcl.bzip"
 seycon.cer				IDT_FILE "seycon.cer.bzip"
-afroditaFf.xpi 				IDT_FILE "afroditaFf.xpi.bzip"
+afroditaFf.xpi 			IDT_FILE "afroditaFf.xpi.bzip"
+afroditaFf2.xpi 		IDT_FILE "afroditaFf2.xpi.bzip"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Ejectuables 64 bits
@@ -54,3 +58,7 @@ libwinpthread-1-64.dll	IDT_FILE "libwinpthread-1-64.dll.bzip"
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_SOFFID_ICON	ICON	DISCARDABLE     "Soffid_Icon.ico"
+
+
+#include "version.rc"
+

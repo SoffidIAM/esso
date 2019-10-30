@@ -19,7 +19,7 @@ public:
 	virtual ~WebMatcher();
 	int search (ConfigReader &reader, AbstractWebApplication& app);
 	int isFound();
-	void triggerLoadEvent () ;
+	bool triggerLoadEvent () ;
 	void dumpDiagnostic (AbstractWebApplication *app);
 	AbstractWebApplication *getWebApp ()
 		{ return m_pWebApp;};

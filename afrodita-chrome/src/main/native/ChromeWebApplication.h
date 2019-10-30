@@ -64,6 +64,11 @@ public:
 		}
 	}
 	bool equals(ChromeWebApplication *app);
+
+	void releaseWebPage();
+	virtual void lock ();
+	virtual void release ();
+
 private:
     std::string url;
     std::string title;

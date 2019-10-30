@@ -51,6 +51,8 @@ function parsePageData (docid, document ) {
 		inputData.soffidId     = AfroditaExtension.registerElement(docid, input);
 		inputData.textAlign    = cs["text-align"] ;
 		inputData.type         = input.type;
+		inputData.mirrorOf     = input.soffidMirrorOf;
+		inputData.inputType    = input.soffidInputType;
 		// Check parent visibilityd
 		var parent = input.parentElement;
 		try {

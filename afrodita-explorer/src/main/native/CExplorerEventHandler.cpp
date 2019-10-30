@@ -180,9 +180,13 @@ HRESULT __stdcall CExplorerEventHandler::Invoke(DISPID dispIdMember,REFIID riid,
 		if (pDispatch != NULL)
 		{
 			ExplorerWebApplication *app = new ExplorerWebApplication(NULL, pDispatch, NULL);
-			MZNWebMatch(app);
+			bool found = MZNWebMatch(app, false);
 			IHTMLWindow2 *w;
-			app->installIntervalListener();
+			if ( ! found )
+			{
+				MZNSendDebugMessageA("web match failed. Retry in 2 seconds");
+				app->installIntervalListener();
+			}
 		}
 	} else if (dispIdMember == DISPID_PROGRESSCHANGE){
 

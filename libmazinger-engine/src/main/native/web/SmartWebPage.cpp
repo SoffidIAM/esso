@@ -58,11 +58,16 @@ void OnAnyElementFocusListener::onEvent (const char *eventName, AbstractWebAppli
 		component->getProperty("soffidManaged", managed);
 		if (managed != "true" && strcasecmp (tag.c_str(), "input") == 0)
 		{
-			app->sanityCheck();
-			if (page != NULL)
+			std::string type;
+			component->getAttribute("type", type);
+			if (strcasecmp (type.c_str(), "password") == 0)
 			{
-				page->sanityCheck();
-				page -> parse (app);
+				app->sanityCheck();
+				if (page != NULL)
+				{
+					page->sanityCheck();
+					page -> parse (app);
+				}
 			}
 		}
 		MZNC_endMutex();
@@ -70,7 +75,7 @@ void OnAnyElementFocusListener::onEvent (const char *eventName, AbstractWebAppli
 
 }
 
-void SmartWebPage::parse(AbstractWebApplication* app) {
+void SmartWebPage::parse(AbstractWebApplication* app, PageData *data, bool formless) {
 	std::vector<AbstractWebElement*> forms;
 
 	if (! parsed)
@@ -86,13 +91,13 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 		for (std::vector<AbstractWebElement*>::iterator it = bodies.begin(); it != bodies.end (); it++)
 		{
 			(*it)->subscribe("focus", wl);
+			(*it)->release();
 			parsed = true;
 		}
 		wl->release();
 	}
 
 	MZNSendDebugMessageA("* Parsing HTML document");
-	PageData *data = app->getPageData();
 	if (data != NULL)
 	{
 		data->dump();
@@ -127,12 +132,19 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 			}
 			element->release();
 		}
+	} else if (formless){
+		rootForm->setFormless();
+		if (! rootForm->isParsed())
+			rootForm->parse(app, NULL, NULL);
+		else
+			rootForm->reparse(NULL);
+		MZNSendDebugMessageA("* Parsed page");
 	} else {
 		if (! rootForm->isParsed())
 			rootForm->parse(app, NULL, NULL);
 		else
 			rootForm->reparse(NULL);
-		MZNSendDebugMessageA("* Parsed form");
+		MZNSendDebugMessageA("* Parsed page");
 
 
 		app->getForms(forms);
@@ -140,6 +152,8 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 		int i = 0;
 		for (std::vector<AbstractWebElement*>::iterator it = forms.begin(); it != forms.end(); it++)
 		{
+			MZNSendDebugMessageA("* Parsing form %d", i);
+			i ++ ;
 			AbstractWebElement *element = *it;
 			std::string action;
 			element->getAttribute("action", action);
@@ -150,6 +164,7 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 				if (form2->getRootElement() != NULL && form2->getRootElement()->equals(element))
 				{
 					form2->reparse(NULL);
+					MZNSendDebugMessageA("* Reparsed form %d", i);
 					found = true;
 					break;
 				}
@@ -159,12 +174,40 @@ void SmartWebPage::parse(AbstractWebApplication* app) {
 				SmartForm *form = new SmartForm(this);
 				this->forms.push_back(form);
 				form->parse ( app, element, NULL);
+				MZNSendDebugMessageA("* Parsed form %d", i);
 			}
 			element->release();
 		}
 	}
 
 
+}
+
+void SmartWebPage::parse(AbstractWebApplication* app) {
+	parse (app, app->getPageData(), false);
+}
+
+void SmartWebPage::formlessParse(AbstractWebApplication* app) {
+	MZNSendDebugMessageA("Formless parse");
+	PageData *data = app->getPageData();
+	if (data != NULL)
+	{
+		MZNSendDebugMessageA("Formless initial data:");
+		data->dump();
+		for (std::vector<FormData>::iterator it = data->forms.begin(); it != data->forms.end(); it++)
+		{
+			FormData &form = *it;
+			for (std::vector<InputData>::iterator it2 = form.inputs.begin(); it2 != form.inputs.end(); it2++ )
+			{
+				InputData d = *it2;
+				data -> inputs.push_back(d);
+			}
+			form.inputs.clear();
+		}
+		MZNSendDebugMessageA("Formless data:");
+		data->dump();
+	}
+	parse (app, data, true);
 }
 
 
@@ -260,7 +303,6 @@ bool SmartWebPage::getAccounts(const char *system, const char *targetSystem) {
 						it -> first.substr(0, attPrefix2Len) == attPrefix2 )
 				{
 					std::wstring attName = it->first.substr(attPrefix2Len, std::string::npos).c_str();
-					MZNSendDebugMessage("attname=%ls", attName.c_str());
 					if (attName == L"URL")
 					{
 						as.url = it->second;
@@ -275,7 +317,6 @@ bool SmartWebPage::getAccounts(const char *system, const char *targetSystem) {
 							std::string split2 = MZNC_wstrtostr(SeyconCommon::urlDecode(MZNC_wstrtoutf8(value.substr(i+1).c_str()).c_str()).c_str());
 							if ( ! isAnyAttributeNamed (split1.c_str()))
 							{
-								MZNSendDebugMessageA("Registering attribute %s", split1.c_str());
 								accountAttributes.push_back(split1);
 							}
 						}
@@ -359,6 +400,9 @@ void SmartWebPage::getAccountStruct (const char* id, AccountStruct &as)
 
 bool SmartWebPage::isAnyAttributeNamed (const char *attName)
 {
+
+	if (attName == NULL)
+		return false;
 
 	std::vector<std::string>::iterator it = std::find ( accountAttributes.begin (), accountAttributes.end(), std::string(attName));
 

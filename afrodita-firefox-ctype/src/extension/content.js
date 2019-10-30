@@ -1,5 +1,3 @@
-window.console.log ("CONTENT. JS");
-   
 var soffidCachedElements= {};
 var soffidNextElement = 0;
 var soffidTimer = undefined;
@@ -29,8 +27,108 @@ function soffidHasInputInside (node) {
 	return false;
 }
 
+function parsePageData () {
+	var pageData = {};
+	pageData.url = document.URL;
+	pageData.title = document.tile;
+	pageData.forms = [];
+	pageData.inputs = [];
+//	console.log("FORMS="+JSON.stringify(document.forms));
+	// Parse forms
+	for (var i = 0; i < document.forms.length; i++)
+	{
+		var form = document.forms[i];
+		var formData = {};
+		formData.action = form.action;
+		formData.id = form.id;
+		formData.soffidId = soffidRegisterElement(form);
+		formData.method = form.method;
+		formData.name = form.name;
+		formData.inputs = [];
+		pageData.forms.push (formData);
+	}
+	
+	// Parse inputs
+	var inputs = document.getElementsByTagName("input");
+//	console.log("INPUTS="+JSON.stringify(inputs));
+	for (var i = 0; i < inputs.length; i++)
+	{
+		var input = inputs[i];
+		var inputData = {};
+		var cs= {};
+		try {
+			cs = window.getComputesStyle(input)
+		} catch (e) {
+		}
+		inputData.clientHeight = input.clientHeight;
+		inputData.clientWitdh  = input.clientWidth;
+		inputData.data_bind    = input.getAttribute("data-bind");
+		inputData.display      = cs["display"];
+		inputData.id           = input.id;
+		inputData.name         = input.name;
+		inputData.offsetHeight = input.offsetHeight;
+		inputData.offsetLeft   = input.offsetLeft;
+		inputData.offsetTop    = input.offsetTop;
+		inputData.offsetWidth  = input.offsetWidth;
+		inputData.style        = input.getAttribute("style");
+		inputData.soffidId     = soffidRegisterElement(input);
+		inputData.textAlign    = cs["text-align"] ;
+		inputData.type         = input.type;
+		inputData.visibility   = cs["visibility"];
+		inputData.mirrorOf     = input.soffidMirrorOf;
+		inputData.inputType    = input.soffidInputType;
+		// Check parent visibility
+		var parent = input.parentElement;
+		try {
+			while (parent != null)
+			{
+				var cs = window.getComputedStyle(parent);
+				if (cs.visibility == "hidden")
+					inputData.visibility = "hidden";
+				if (cs.display == "none")
+					inputData.display = "none";
+				parent = parent.parentElement;
+			}
+		} catch (e) {
+			// Ignore failure to get computed style for htmldocument
+		}
+		// Add to form
+		var form = input.form;
+		var found = false;
+		if ( form ) {
+			var soffidId = soffidRegisterElement(form);
+			for (f in pageData.forms)
+			{
+				var formData = pageData.forms[f];
+				if (formData.soffidId == soffidId)
+				{
+					found = true;
+					formData.inputs.push (inputData);
+					break;
+				}
+			}
+			if (! found)
+			{
+				formData = {inputs:[]};
+				formData.action = form.getAttribute("action");
+				formData.method = form.getAttribute ("method");
+				formData.id = form.getAttribute("id");
+				formData.name = form.getAttribute("name");
+				formData.soffidId = soffidId;
+				formData.inputs.push (inputData);
+				pageData.forms.push (formData);
+			}
+		}
+		else {
+			pageData.inputs.push (inputData);
+		}
+	}
+	
+	return pageData;
+}
+
+
 function soffidLoadProcedure () {
-    window.console.log("Connect on "+document.URL);
     var port = chrome.runtime.connect ();
     port.onMessage.addListener (function (request) {
 		try {
@@ -41,23 +139,35 @@ function soffidLoadProcedure () {
 			    }
 			    else if (request.action == "getInfo")
 			    {
-//					console.log("Parsing page");
 					var pageId = request.pageId;
 					var soffidPageId = pageId;
-					window.addEventListener("unload", function () { 
-						port.postMessage ({message: "onUnload", pageId: soffidPageId});
-						port.disconnect();
-					});
-				    port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: pageId});
+					try {
+						window.addEventListener("unload", function () {
+							try {
+								port.postMessage ({message: "onUnload", pageId: soffidPageId});
+							} catch (e) {
+								console.log ("ERRR :"+e);
+							}
+//							port.disconnect();
+						}, true);
+					} catch (e ) {
+						
+					}
+				    port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: pageId,
+				    	pageData: parsePageData()});
  				    var observer = new MutationObserver ( function (mutations) {
+// 					   console.log("MUTATION");
+ 				       var launched = false;
 					   mutations.forEach (function (mutation) {
-						  if (mutation.type == 'childList' && mutation.addedNodes.length > 0 )
+						  if (mutation.type == 'childList' && mutation.addedNodes.length > 0 && ! launched )
 						  {
-							  for (var i = 0; i < mutation.addedNodes.length; i++)
+							  for (var i = 0; !launched && i < mutation.addedNodes.length; i++)
 							  {
+//			 					   console.log("MUTATION "+i);
 								  var node = mutation.addedNodes.item(i);
 								  if (soffidHasInputInside(node))
 								  {
+//				 					   console.log("MUTATION with input");
 									  var doc =  mutation.target.ownerDocument;
 									  var newTime;
 //									  console.log("timer="+soffidTimer);
@@ -77,10 +187,11 @@ function soffidLoadProcedure () {
 									  }
 //									  console.log("Creating timer");
 									  soffidTimerTime = newTime;
-									  soffidTimer = window.setTimeout(1000, function () {
-//										console.log("TIMEOUT FINISHED");
-										port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: pageId});});
+									  soffidTimer = window.setTimeout(function () {
+										port.postMessage({url: document.URL, title: document.title, message: "onLoad", pageId: pageId, pageData: parsePageData()});},
+										1000);
 //									  console.log("Created timer "+soffidTimer);
+									  launched = true;
 									  return;
 								  }
 							  }
@@ -132,7 +243,7 @@ function soffidLoadProcedure () {
 			    	var response = []; 
 			    	for (var i = 0; i < elements.length; i++)
 			    	{
-			    		e = elements[i];
+			    		var e = elements[i];
 				    	response[i] = soffidRegisterElement(e);
 			    	}
 				    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
@@ -143,7 +254,7 @@ function soffidLoadProcedure () {
 			    	var response = []; 
 			    	for (var i = 0; i < elements.length; i++)
 			    	{
-			    		e = elements[i];
+			    		var e = elements[i];
 				    	response[i] = soffidRegisterElement(e);
 			    	}
 				    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
@@ -154,7 +265,7 @@ function soffidLoadProcedure () {
 			    	var response = []; 
 			    	for (var i = 0; i < elements.length; i++)
 			    	{
-			    		e = elements[i];
+			    		var e = elements[i];
 				    	response[i] = soffidRegisterElement(e);
 			    	}
 				    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
@@ -165,7 +276,7 @@ function soffidLoadProcedure () {
 			    	var response = []; 
 			    	for (var i = 0; i < elements.length; i++)
 			    	{
-			    		e = elements[i];
+			    		var e = elements[i];
 				    	response[i] = soffidRegisterElement(e);
 			    	}
 				    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
@@ -176,7 +287,7 @@ function soffidLoadProcedure () {
 			    	var response = []; 
 			    	for (var i = 0; i < elements.length; i++)
 			    	{
-			    		e = elements[i];
+			    		var e = elements[i];
 				    	response[i] = soffidRegisterElement(e);
 			    	}
 				    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
@@ -407,6 +518,8 @@ function soffidLoadProcedure () {
 			    	if (typeof element != 'undefined')
 			    	{
 			    		element.addEventListener (event, function (ev) {
+			    			if (event == "click")
+			    				ev.stopPropagation();
 				    		port.postMessage({message: "event", eventId: listener, target: soffidRegisterElement(ev.target), pageId: request.pageId});
 			    		}, true);
 						port.postMessage({response: "OK", requestId: request.requestId, pageId: request.pageId});
@@ -433,6 +546,9 @@ function soffidLoadProcedure () {
 						{
 							var evt  = document.createEvent ("HTMLEvents");
 							evt.initEvent ("change", true, true);
+							element.dispatchEvent(evt);
+							evt  = document.createEvent ("HTMLEvents");
+							evt.initEvent ("input", true, true);
 							element.dispatchEvent(evt);
 						}
 			    	}
@@ -495,13 +611,42 @@ function soffidLoadProcedure () {
 				    	var response = []; 
 				    	for (var i = 0; i < elements.length; i++)
 				    	{
-				    		e = elements[i];
+				    		var e = elements[i];
 							response[i]  = soffidRegisterElement(e); 
 				    	}
 					    port.postMessage({response: response, requestId: request.requestId, pageId: request.pageId});
 			    	}
 			    	else
 			    		port.postMessage({error: true, requestId: request.requestId, pageId: request.pageId});
+			    }
+			    else if (request.action == "selectAction1")
+			    {
+			    	console.log("en selectAction1");
+			    	var elementId = request.request.element;
+			    	var element = soffidCachedElements[elementId];
+			    	
+			    	var windowRect = { left: window.screenLeft, top: window.screenTop,
+			    			innerHeight: window.innerHeight,
+			    			outerHeight: window.outerHeight,
+			    			innerWidth: window.innerWidth,
+			    			outerWidth: window.outerWidth
+			    			};
+			    	if (typeof element != 'undefined')
+			    	{
+			    		console.log("element:"+element);
+			    		var rect = element.getBoundingClientRect();
+					    port.postMessage({message: "selectAction2", request: request.request, 
+					    	rect: {left: rect.left, 
+					    		top: rect.top,
+					    		right: rect.right,
+					    		bottom: rect.bottom,
+					    		width: rect.width,
+					    		height: rect.height},
+					    	window: windowRect});
+			    	}
+			    	else
+					    port.postMessage({message: "selectAction2", request: request.request,
+					    	window: windowRect});
 			    } else {
 					var result = "";
 					for (var key in request) {
@@ -518,13 +663,10 @@ function soffidLoadProcedure () {
 };
 
 
-console.log("En content.js");
-
 var state = document.readyState ;
 if (state == "uninitialized" || state == "loading")
 	window.addEventListener("load", soffidLoadProcedure);
 else {
 	soffidLoadProcedure();
 }
-
 

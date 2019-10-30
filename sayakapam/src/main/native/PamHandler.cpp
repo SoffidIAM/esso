@@ -50,15 +50,20 @@ private:
 PamHandler::PamHandler(pam_handle_t *pamh):
 		p11config(this)
 {
+	__TRACE__;
 	user = NULL;
 	password = NULL;
 	newpassword = NULL;
 	service = NULL;
 	m_pamh = pamh;
 	m_pkcs11 = true;
+	__TRACE__;
 	pamDialog = new PamDialog (this);
+	__TRACE__;
 	session.setDialog(pamDialog);
+	__TRACE__;
 	m_log.init (this);
+	m_log.info("Starting pam handler");
 	success = false;
 	dialogSocket = -1;
 	listenSocket = -1;
@@ -555,15 +560,23 @@ static void PamHandlerCleanup (pam_handle_t *pamh, void *data, int error_status)
 
 
 PamHandler* PamHandler::getPamHandler (pam_handle_t *pamh) {
-	PamHandler *handler;
+	__TRACE__;
+	PamHandler *handler = NULL;
+	__TRACE__;
 	if (pam_get_data(pamh, "pam_sayaka", (const void**)&handler) == PAM_NO_MODULE_DATA) {
+		__TRACE__;
 		handler = new PamHandler(pamh);
+		__TRACE__;
 		pam_set_data (pamh, "pam_sayaka", handler, PamHandlerCleanup);
+		__TRACE__;
 	}
+	__TRACE__;
 	return handler;
 }
 
 void PamHandler::parse (int argc, const char **argv) {
+	__TRACE__;
+
 	for (int i = 0; i < argc; i++) {
 		if (strcmp(argv[i], "DEBUG") == 0) {
 			enableDebug();
@@ -572,6 +585,7 @@ void PamHandler::parse (int argc, const char **argv) {
 		}
 
 	}
+	__TRACE__;
 }
 
 int PamHandler::changePassword () {

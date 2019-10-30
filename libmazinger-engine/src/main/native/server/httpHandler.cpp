@@ -131,14 +131,13 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 
 		if (hConnect) {
 
-
-
 			hRequest = WinHttpOpenRequest(hConnect, L"GET", path, NULL,
 					WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES,
 					WINHTTP_FLAG_SECURE);
 
+			unsigned long timeout = 120000;
 			WinHttpSetOption(hRequest, WINHTTP_OPTION_RECEIVE_TIMEOUT,
-					(LPVOID) 120000, 0); // 2 minuts de timeout
+					(LPVOID) &timeout, sizeof timeout); // 2 minuts de timeout
 
 			WinHttpSetOption(hRequest, WINHTTP_OPTION_CLIENT_CERT_CONTEXT,
 					WINHTTP_NO_CLIENT_CERT_CONTEXT, 0);
@@ -175,22 +174,27 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 							| PKCS_7_ASN_ENCODING,
 							&issuerContext->pCertInfo->SubjectPublicKeyInfo,
 							&pSeyconRootCert->pCertInfo->SubjectPublicKeyInfo)) {
-						SeyconCommon::info("Received certificate not allowed\n");
-						char pszNameString[256] = "<unknown>";
-						char pszNameString2[256] = "<unknown>";
+						std::string ignore;
+						SeyconCommon::readProperty("ignoreCert", ignore);
+						if (ignore != "true")
+						{
+							SeyconCommon::info("Received certificate not allowed\n");
+							char pszNameString[256] = "<unknown>";
+							char pszNameString2[256] = "<unknown>";
 
-						CertGetNameStringA(pSeyconRootCert,
-								CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL,
-								pszNameString2, 128);
+							CertGetNameStringA(pSeyconRootCert,
+									CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL,
+									pszNameString2, 128);
 
-						CertGetNameStringA(issuerContext,
-								CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL,
-								pszNameString, 128);
+							CertGetNameStringA(issuerContext,
+									CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL,
+									pszNameString, 128);
 
-						SeyconCommon::warn ("ERROR: Invalid CA %s. Should be %s\n",
-								pszNameString, pszNameString2);
-						bResults = NULL;
-						SetLastError(ERROR_WINHTTP_SECURE_FAILURE);
+							SeyconCommon::warn ("ERROR: Invalid CA %s. Should be %s\n",
+									pszNameString, pszNameString2);
+							bResults = NULL;
+							SetLastError(ERROR_WINHTTP_SECURE_FAILURE);
+						}
 					}
 				}
 			}
@@ -393,17 +397,27 @@ SeyconURLServiceIterator::~SeyconURLServiceIterator () {
 }
 
 SeyconResponse*  SeyconService::sendUrlMessage(const char* host, int port, const wchar_t* url, ...) {
+#ifdef WIN32
+	if (pSeyconRootCert == NULL) {
+		return NULL;
+	}
+#endif
 
 	va_list v;
 	va_start (v, url);
-	wchar_t wch[4000];
+	wchar_t wch[32000];
+	wch[0] == L'\0';
 #ifdef WIN32
-	vsnwprintf(wch, 3999, url, v);
+	vsnwprintf(wch, 31999, url, v);
 #else
-	vswprintf(wch, 3999, url, v);
+	vswprintf(wch, 31999, url, v);
 #endif
 	va_end (v);
 
+	if (wch[0] == L'\0')
+		SeyconCommon::debug("URL too big problem invoking %ls", url);
+
+	SeyconCommon::debug("Invoking %ls", wch);
 	SeyconURLServiceIterator it;
 	it.path = wch;
 	ServiceIteratorResult r = it.iterate (host, port);
@@ -418,13 +432,19 @@ SeyconResponse*  SeyconService::sendUrlMessage(const char* host, int port, const
 }
 
 SeyconResponse* SeyconService::sendUrlMessage(const wchar_t* url, ...) {
+#ifdef WIN32
+	if (pSeyconRootCert == NULL) {
+		return NULL;
+	}
+#endif
+
 	va_list v;
 	va_start (v, url);
-	wchar_t wch[4000];
+	wchar_t wch[32000];
 #ifdef WIN32
-	vsnwprintf(wch, 3999, url, v);
+	vsnwprintf(wch, 31999, url, v);
 #else
-	vswprintf(wch, 3999, url, v);
+	vswprintf(wch, 31999, url, v);
 #endif
 	va_end (v);
 	SeyconURLServiceIterator it;
@@ -454,6 +474,7 @@ void SeyconService::resetServerStatus () {
 		size_t pointer2 =  servers.find_first_of (", ", pointer);
 		if (pointer2 == std::string::npos)
 			pointer2 = servers.size();
+		SeyconCommon::debug("Server {%s}", servers.substr (pointer, pointer2-pointer).c_str());
 		hosts.push_back (servers.substr (pointer, pointer2-pointer));
 		pointer = servers.find_first_not_of(", ", pointer2);
 	}
@@ -498,6 +519,7 @@ ServiceIteratorResult SeyconService::iterateServers(SeyconServiceIterator &it) {
 		}
 		resetServerStatus();
 	}
+
 	time_t startTime;
 	time (&startTime);
 	int port;
