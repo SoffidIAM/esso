@@ -243,8 +243,11 @@ HRESULT RecoverProvider::GetCredentialCount(
 {
     m_log.info("Provider::GetCredentialCount");
 
-    SeyconCommon::updateConfig("addon.retrieve-password.right_number");
+
     std::string v;
+    if (!SeyconCommon::readProperty("addon.retrieve-password.right_number", v) ||
+    		v.empty())
+		SeyconCommon::updateConfig("addon.retrieve-password.right_number");
     if (cred == NULL ||
     		!SeyconCommon::readProperty("addon.retrieve-password.right_number", v) ||
     		v.empty())
