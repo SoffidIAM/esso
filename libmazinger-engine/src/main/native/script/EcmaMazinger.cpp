@@ -77,6 +77,9 @@ static void MZNECMA_getPassword(struct SEE_interpreter *, struct SEE_object *,
 static void MZNECMA_setPassword(struct SEE_interpreter *, struct SEE_object *,
 		struct SEE_object *, int, struct SEE_value **, struct SEE_value *);
 
+static void MZNECMA_audit(struct SEE_interpreter *, struct SEE_object *,
+		struct SEE_object *, int, struct SEE_value **, struct SEE_value *);
+
 static void MZNECMA_generatePassword(struct SEE_interpreter *, struct SEE_object *,
 		struct SEE_object *, int, struct SEE_value **, struct SEE_value *);
 
@@ -148,6 +151,7 @@ static struct SEE_string *STR(getAccounts);
 static struct SEE_string *STR(getAccount);
 static struct SEE_string *STR(getPassword);
 static struct SEE_string *STR(setPassword);
+static struct SEE_string *STR(audit);
 static struct SEE_string *STR(generatePassword);
 static struct SEE_string *STR(setText);
 static struct SEE_string *STR(getText);
@@ -246,6 +250,7 @@ static int Mazinger_mod_init() {
 	STR(getPassword) = SEE_intern_global("getPassword");
 	STR(setPassword) = SEE_intern_global("setPassword");
 	STR(generatePassword) = SEE_intern_global("generatePassword");
+	STR(audit) = SEE_intern_global("audit");
 	STR(secretStore) = SEE_intern_global("secretStore");
 	STR(setText) = SEE_intern_global("setText");
 	STR(getText) = SEE_intern_global("getText");
@@ -336,6 +341,7 @@ static void Mazinger_init(struct SEE_interpreter *interp) {
 	PUTFUNC(secretStore, getAccount, 1);
 	PUTFUNC(secretStore, getPassword, 2);
 	PUTFUNC(secretStore, setPassword, 3);
+	PUTFUNC(secretStore, audit, 3);
 	PUTFUNC(secretStore, generatePassword, 2);
 	PUTOBJ (interp->Global, secretStore, secretStore);
 
@@ -837,6 +843,41 @@ static void MZNECMA_getPassword(struct SEE_interpreter *interp,
 		SEE_SET_STRING(res, buf);
 		s.freeSecret(str);
 	}
+}
+
+/*
+ * secretStore.getAccounts()
+ *
+ *
+ */
+static void MZNECMA_audit(struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res) {
+	if (argc != 3)
+	{
+		SEE_error_throw(interp, interp->RangeError, "missing argument");
+		return;
+	}
+	SEE_value system, account, info;
+	SEE_ToString(interp, argv[0], &system);
+	SEE_ToString(interp, argv[1], &account);
+	SEE_ToString(interp, argv[2], &info);
+
+	std::wstring secret = L"pass.";
+	std::wstring systemStr = SEE_StringToWChars(interp, system.u.string);
+	std::wstring accountStr = SEE_StringToWChars(interp, account.u.string);
+	std::wstring infoStr = SEE_StringToWChars(interp, info.u.string);
+
+	SecretStore s (MZNC_getUserName()) ;
+
+	wchar_t *sessionKey = s.getSecret(L"sessionKey");
+	wchar_t *user = s.getSecret(L"user");
+	SeyconService ss;
+	SeyconResponse *response = ss.sendUrlMessage(L"/auditPassword?user=%ls&key=%ls&system=%ls&account=%ls&application=%ls",
+			user, sessionKey, systemStr.c_str(), accountStr.c_str(),
+			ss.escapeString(infoStr).c_str());
+
+	SEE_SET_UNDEFINED(res);
 }
 
 /*
