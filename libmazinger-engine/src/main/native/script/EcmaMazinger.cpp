@@ -875,7 +875,7 @@ static void MZNECMA_audit(struct SEE_interpreter *interp,
 	SeyconService ss;
 	SeyconResponse *response = ss.sendUrlMessage(L"/auditPassword?user=%ls&key=%ls&system=%ls&account=%ls&application=%ls",
 			user, sessionKey, systemStr.c_str(), accountStr.c_str(),
-			ss.escapeString(infoStr).c_str());
+			ss.escapeString(infoStr.c_str()).c_str());
 
 	SEE_SET_UNDEFINED(res);
 }
