@@ -1406,21 +1406,21 @@ void updateConfig()
 				NULL) == ERROR_FILE_NOT_FOUND)
 		{
 			RegSetValueEx(hKey, "enableCloseSession", 0, REG_SZ, (LPBYTE) enableCloseSession,
-					strlen(ach));
+					strlen(enableCloseSession));
 		}
 
 		if (RegQueryValueEx(hKey, "ForceStartupLogin", NULL, NULL, NULL,
 				NULL) == ERROR_FILE_NOT_FOUND)
 		{
 			RegSetValueEx(hKey, "ForceStartupLogin", 0, REG_SZ, (LPBYTE) forceStartupLogin,
-					strlen(ach));
+					strlen(forceStartupLogin));
 		}
 
 		if (RegQueryValueEx(hKey, "LoginType", NULL, NULL, NULL,
 				NULL) == ERROR_FILE_NOT_FOUND)
 		{
 			RegSetValueEx(hKey, "LoginType", 0, REG_SZ, (LPBYTE) loginType,
-					strlen(ach));
+					strlen(loginType));
 		}
 
 		// Check previous version installed
