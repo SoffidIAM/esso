@@ -2466,7 +2466,7 @@ int install(int full)
 	installResource(NULL, "ShiroKabuto.exe");
 	installResource(NULL, "Nossori.exe");
 
-	installResource(NULL, "seycon.cer");
+//	installResource(NULL, "seycon.cer");
 	installResource(NULL, "logon.tcl");
 	installResource(NULL, "uninstall.exe");
 	installResource(NULL, "sewashi.exe");
