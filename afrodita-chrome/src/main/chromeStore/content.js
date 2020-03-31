@@ -459,6 +459,11 @@ function soffidLoadProcedure () {
 					alert (request.text);
 		    		port.postMessage({response: "OK", requestId: request.requestId, pageId: request.pageId});
 			    }
+			    else if (request.action == "execute")
+			    {
+					eval (request.text);
+		    		port.postMessage({response: "OK", requestId: request.requestId, pageId: request.pageId});
+			    }
 			    else if (request.action == "appendChild")
 			    {
 			    	var elementId = request.element;

@@ -52,6 +52,7 @@ public:
 			std::vector<std::string> &names,
 			AbstractWebElement *element,
 			WebListener *listener) ;
+	virtual void execute (const char* script);
 
 	ThreadStatus *threadStatus;
 	virtual SmartWebPage* getWebPage () { return webPage;}

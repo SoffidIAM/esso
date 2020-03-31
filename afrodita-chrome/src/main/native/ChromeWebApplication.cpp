@@ -241,6 +241,16 @@ void ChromeWebApplication::writeln(const char *text)
 		delete response;
 }
 
+void ChromeWebApplication::execute(const char *script)
+{
+	bool error;
+	const char * msg [] = {"action","execute", "pageId", threadStatus->pageId.c_str(), "text", script, NULL};
+	json::JsonAbstractObject * response = CommunicationManager::getInstance()->call(error,msg);
+
+	if (response != NULL)
+		delete response;
+}
+
 
 
 
