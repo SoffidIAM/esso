@@ -23,9 +23,19 @@
 #include <string>
 
 const char *MZNC_getCommandLine();
+// Configuration mutex
 bool MZNC_waitMutex();
 void MZNC_endMutex();
 void MZNC_destroyMutex();
+// Scripting mutex
+bool MZNC_waitMutex2();
+void MZNC_endMutex2();
+void MZNC_destroyMutex2();
+// MazingerEnv mutex
+bool MZNC_waitMutex3();
+void MZNC_endMutex3();
+void MZNC_destroyMutex3();
+
 std::string MZNC_utf8tostr(const char *sz);
 std::string MZNC_strtoutf8 (const char *pszString) ;
 std::wstring MZNC_strtowstr (const char *pszString) ;

@@ -27,10 +27,11 @@ public:
 	ComponentSpec* getFocusComponent ();
 	int isFound();
 	void notifyMatch (ComponentSpec &spec, NativeComponent &native);
+	void triggerBlurEvent () ;
 	void triggerFocusEvent () ;
 	std::vector<ComponentSpec*> &getAliasedComponents();
 	ComponentMatcher *clone();
-	void dumpDiagnostic (NativeComponent *top);
+	void dumpDiagnostic (NativeComponent *top, NativeComponent *focus);
 
 private:
 

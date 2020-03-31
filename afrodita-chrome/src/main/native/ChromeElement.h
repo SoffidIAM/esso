@@ -10,27 +10,53 @@
 
 #include <AbstractWebElement.h>
 #include "AfroditaC.h"
-#include "PluginObject.h"
+#include "ChromeWebApplication.h"
+#include <WebListener.h>
+#include <PageData.h>
 
 namespace mazinger_chrome
 {
 
+class ChromeWebApplication;
+
 class ChromeElement: public AbstractWebElement {
 public:
-	ChromeElement (PluginObject *plugin, NPObject *object);
+	ChromeElement (ChromeWebApplication *app, const char *externalId);
 	virtual ~ChromeElement();
 	virtual void getChildren (std::vector<AbstractWebElement*> &children);
 	virtual AbstractWebElement* getParent();
+	virtual AbstractWebElement* getOffsetParent();
+	virtual AbstractWebElement* getPreviousSibling();
+	virtual AbstractWebElement* getNextSibling() ;
 	virtual void getTagName (std::string &value);
+	virtual void getProperty (const char* attribute, std::string &value);
 	virtual void getAttribute (const char* attribute, std::string &value);
 	virtual void setAttribute (const char* attribute, const char *value);
 	virtual void focus ();
 	virtual void click ();
 	virtual void blur ();
+	virtual void appendChild (AbstractWebElement *element);
+	virtual void insertBefore(AbstractWebElement *element, AbstractWebElement *before);
 	virtual AbstractWebElement* clone();
+	virtual void subscribe ( const char *eventName, WebListener *listener) ;
+	virtual void unSubscribe ( const char *eventName, WebListener *listener) ;
+	virtual void setTextContent (const char*text);
+	virtual AbstractWebApplication* getApplication () ;
+	virtual bool equals (AbstractWebElement *other) ;
+	virtual std::string toString() ;
+	virtual void removeAttribute (const char* attribute) ;
+	virtual void removeChild (AbstractWebElement* child) ;
+	virtual void setProperty (const char* property, const char *value);
+	virtual std::string getComputedStyle(const char* style) ;
+
+	const std::string getExternalId() {
+		return externalId;
+	}
+
 private:
-	PluginObject *plugin;
-	NPObject* elementObject;
+	ChromeWebApplication *app;
+	std::string externalId;
+	InputData* findInputData();
 };
 
 }

@@ -104,6 +104,13 @@ const std::string& SoffidEssoManager::getEnableCloseSession () const
 	return enableCloseSession;
 }
 
+
+// Get enable close session by user value
+const std::string& SoffidEssoManager::getEnableSharedSession () const
+{
+	return enableSharedSession;
+}
+
 // Set enable close session by user value
 void SoffidEssoManager::setEnableCloseSession (const std::string& enableCloseSession)
 {
@@ -115,6 +122,20 @@ void SoffidEssoManager::setEnableCloseSession (const std::string& enableCloseSes
 	else
 	{
 		this->enableCloseSession = enableCloseSession;
+	}
+}
+
+// Set enable close session by user value
+void SoffidEssoManager::setEnableSharedSession (const std::string& enableSharedSession)
+{
+	if (enableSharedSession.size() == 0)
+	{
+		this->enableSharedSession = "false";
+	}
+
+	else
+	{
+		this->enableSharedSession = enableSharedSession;
 	}
 }
 
@@ -290,7 +311,7 @@ LPSTR SoffidEssoManager::readURL (HINTERNET hSession, const wchar_t* host, int p
 
 	if (debug)
 	{
-		log("Connecting to %s:%d...\n", host, port);
+		log("Connecting to %ls:%d...\n", host, port);
 	}
 
 	hConnect = WinHttpConnect(hSession, host, port, 0);
@@ -299,7 +320,7 @@ LPSTR SoffidEssoManager::readURL (HINTERNET hSession, const wchar_t* host, int p
 	{
 		if (debug)
 		{
-			log("Performing request %s...\n", path);
+			log("Performing request %ls...\n", path);
 		}
 
 		hRequest = WinHttpOpenRequest(hConnect, L"GET", path, NULL, WINHTTP_NO_REFERER,
@@ -575,6 +596,8 @@ bool SoffidEssoManager::LoadConfiguration ()
 	// Load enable close session
 	SeyconCommon::readProperty("EnableCloseSession", regValue);
 	setEnableCloseSession(regValue);
+	SeyconCommon::readProperty("enableLocalAccounts", regValue);
+	setEnableSharedSession(regValue);
 
 	// Load login on startup
 	SeyconCommon::readProperty("ForceStartupLogin", regValue);
@@ -638,6 +661,9 @@ bool SoffidEssoManager::SaveConfiguration ()
 	// Save enable close session
 	SeyconCommon::writeProperty("EnableCloseSession", getEnableCloseSession().c_str());
 
+	// Save enable close session
+	SeyconCommon::writeProperty("enableLocalAccounts", getEnableSharedSession().c_str());
+
 	// Save login on startup
 	SeyconCommon::writeProperty("ForceStartupLogin", getForceLogin().c_str());
 
@@ -693,8 +719,7 @@ void SoffidEssoManager::UpdateGina (const char *ginaPath)
 	else
 	{
 		printf("Unable to deregister Mazinger\n");
-		log(
-				"Cannot open HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon");
+		log("Cannot open HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon");
 	}
 }
 

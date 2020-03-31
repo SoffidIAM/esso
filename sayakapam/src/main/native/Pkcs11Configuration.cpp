@@ -16,8 +16,11 @@
 #include <unistd.h>
 
 Pkcs11Configuration::Pkcs11Configuration(PamHandler *handler) {
+	__TRACE__;
 	m_log.init (handler);
+	__TRACE__;
 	this->handler = handler;
+	__TRACE__;
 }
 
 class Tokenizer {

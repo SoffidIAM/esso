@@ -1,0 +1,182 @@
+
+// Language definition
+LANGUAGE LANG_BASQUE, SUBLANG_NEUTRAL
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+	1,			""
+	2,			""
+	3,			""
+	4,			"MAZINGER"
+	5,			""
+ 	6,			"IBMPC"
+ 	7,			""
+ 	8,			""
+	9,			"Ezin da exekutatu"
+	10,		"Zure ekipoak ez du blokeo automatikoa aktibatua\n\nEzaugarri hau beharrezkoa da abenduak 13ko 1720/2007 errege dekretuaren 91. artikulua betetzeko\n\nNahi ahal duzu blokeo automatikoa orain aktibatu?"
+	11,		"Intranet Korporatiboa"
+	12,		"Zure ekipoak 15 minutuko blokeo denbora ezarrita dauka\n\nAbenduak 13ko 1720/2007 errege dekretuaren 91. artikulua betetzeko,\nekipoa lanik egin gabe 10 minutu pasatu eta gero blokeatzea gomendatzen da\n\nNahi ahal duzu orain aktibatu 10 minuto eta geroko blokeoa?""
+	13,		"Sarea lortuz ..."
+	14,		"Kongigurazioa eguneratuta"
+	15,		"Kaixo"
+	16,		"Mazinger"
+	17,		"Argumentu okerra%s"
+	18,		"Konfigurazioa eguneratu da"
+ 	19,		"Aktibatuta"
+ 	20,		"Jarduerik gabekoa"
+ 	21,		"(Bertsioa %s)"
+ 	22,		"Sarea lortuz"
+ 	23,		"Pasahitza ezin da hutsik utzi"
+ 	24,		"Pasahitzak desberdinak dira"
+ 	25,		"Pasahitza eguneratu da"
+ 	26,		"Pasahitza ongi eguneratu da"
+ 	27,		"Hasi gabeko sesioa"
+ 	
+	1000,	"Abisua"
+	1001,	"Soffid Enterprise Single Sign on"
+	1002,	"Koji Kabuto"
+END
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WAIT DIALOG DISCARDABLE  0, 0, 156, 38
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT		"Saioa hasten", IDC_STATIC, 7, 7, 142, 8
+    CTEXT		"", IDC_TEXT, 7, 20, 142, 11
+END
+
+IDD_CARD DIALOGEX 0, 0, 199, 87
+STYLE DS_ABSALIGN | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Identifikazio txartela"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    EDITTEXT        			IDC_VALOR, 69, 65, 37, 15, ES_AUTOHSCROLL, WS_EX_RIGHT
+    DEFPUSHBUTTON	"Onartu", IDOK, 142, 7, 50, 14
+    PUSHBUTTON      	"Ezeztatu", IDCANCEL, 142, 24, 50, 14
+    LTEXT           			"Mesedez, hurrengo zenbaki txartela kontsultatu", IDC_STATIC, 7, 7, 115, 8
+    LTEXT           			"eta laukiko balorea sartu", IDC_STATIC, 8, 33, 93, 8
+    EDITTEXT        			IDC_TARGETA,7,15,126,15,ES_AUTOHSCROLL | NOT WS_TABSTOP,
+                    				WS_EX_DLGMODALFRAME | WS_EX_RIGHT
+    EDITTEXT        			IDC_CELLA,107,30,26,15,ES_AUTOHSCROLL | NOT WS_TABSTOP,
+                    				WS_EX_DLGMODALFRAME | WS_EX_RIGHT
+    LTEXT           			"balorea:",IDC_STATIC,48,67,19,8
+END
+
+IDD_CREDITS1 DIALOG DISCARDABLE  0, 0, 276, 172
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Créditos"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT           			"Para poder acceder a los créditos tiene que acceder al nivel C de FRIKI.\nCon tal de probar su capacidad, deberá responder correctamente la siguiente pregunta:",
+                    				IDC_STATIC, 7, 7, 262, 28
+    CTEXT           			"",IDC_QUESTIO, 27, 40, 209, 19
+    CONTROL         		"",IDC_BITMAP,"Static",SS_BITMAP | SS_CENTERIMAGE,71,60,
+                    				126,82
+    EDITTEXT        			IDC_TEXT,7,151,206,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON	"Aceptar",IDOK,219,151,50,14
+END
+
+IDD_CREDITS2 DIALOG DISCARDABLE  0, 0, 391, 225
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Créditos"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT           			"El sistema SEU-SEYCON-Mazinger ha sido desarrollado por el servicio de seguridad de la Dirección General de Innovación y Desarrollo Tecnológico.",
+                    				IDC_STATIC,7,8,373,16
+    CTEXT           			"Desarrollo: Alejandro Usero / Cristina Miranzo",
+                    				IDC_STATIC,7,24,373,8
+    CTEXT           			"Pruebas: Andrés Solomando / Pere Joseph / Sara Aizcorbe / Damià Andreu Verger",
+                    				IDC_STATIC,7,32,373,8
+    CTEXT           			"Dirección: Gabriel Buades",IDC_STATIC,7,40,373,8
+    CONTROL         		"SEGURIDAD",IDC_BITMAP,"Static",SS_BITMAP | 
+                    				SS_CENTERIMAGE,0,60,391,125
+    LTEXT           			"Muchas gracias a todos",IDC_STATIC,9,206,209,13
+    DEFPUSHBUTTON	"Aceptar",IDOK,337,204,50,14
+END
+
+IDD_CLOSEDIALOG DIALOG DISCARDABLE  0, 0, 231, 79
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Urrutiko sesioaren bukaera"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON	"Sesioa bukatu",IDOK,174,7,50,14
+    PUSHBUTTON      	"Ezeztatu",IDCANCEL,174,24,50,14
+    LTEXT           			"Sesio hau ixteko eskaera bat jaso da. Itxi nahi baduzu ""Sesioa bukatu"" botoia sakatu. Bestela ""Ezeztatu"" sakatu",
+                    				IDC_STATIC,7,9,150,35
+    LTEXT           			"Ez baduzu ezer ez adierazten sistema berehala itxi egingo da",
+                    				IDC_STATIC,8,48,167,21
+    LTEXT           			"30",IDC_CONTADOR,212,58,9,8
+END
+
+IDD_TOOMANYSESSIONS DIALOG DISCARDABLE  0, 0, 265, 82
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION " Urrutiko sesioaren bukaera"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON	"Urrutiko sesioa bukatu",IDC_CLOSE_REMOTE,175,7,83,14
+    PUSHBUTTON      	"Berriro saiatu",IDC_WAITBUTTON,175,24,83,14
+    LTEXT           			"Dagoeneko sesio bat irekita daukazu. Aurreko sesioa bukatu arte ezingo duzu jarraitu",
+                    				-1,7,9,150,26
+    LTEXT           			"",IDC_HOST,8,48,167,21
+    PUSHBUTTON      	"Ezeztatu",IDCANCEL,175,42,83,14
+END
+
+IDD_LOGINDIALOG DIALOGEX 0, 0, 314, 186
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU 
+CAPTION "Sesioa ireki"
+FONT 8, "MS Sans Serif"
+BEGIN
+	EDITTEXT					IDC_USER,88,74,184,14,ES_AUTOHSCROLL
+	EDITTEXT					IDC_PASSWORD,88,93,184,14,ES_PASSWORD | ES_AUTOHSCROLL
+	DEFPUSHBUTTON	"Onartu",IDOK,88,165,50,14
+	PUSHBUTTON			"Ezeztatu",IDCANCEL,155,165,50,14
+	CONTROL					"SOFFID_LOGO",IDC_BITMAP,"Static",SS_BITMAP | SS_CENTERIMAGE,
+									0,0,314,71,WS_EX_TRANSPARENT
+	LTEXT						"Erabiltzaile kodea:", IDC_STATIC, 16, 78, 65, 8
+	LTEXT						"Pasahitza:",IDC_STATIC,16,96,67,10
+END
+
+IDD_NEWPASS_DIALOG DIALOGEX 0, 0, 279, 119
+STYLE DS_CENTER | DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
+CAPTION "Pasahitza aldatu"
+FONT 8, "MS Sans Serif", 0, 0, 1
+BEGIN
+	EDITTEXT					IDC_PASSWORD, 115, 43, 120, 14, ES_AUTOHSCROLL | ES_PASSWORD
+	EDITTEXT					IDC_REPEATPASSWORD, 115, 62, 120, 14, ES_AUTOHSCROLL | ES_PASSWORD
+	DEFPUSHBUTTON	"Onartu", IDOK, 88, 95, 50, 14
+	PUSHBUTTON			"Ezeztatu", IDCANCEL, 155, 95, 50, 14
+	LTEXT						"", IDC_REASON, 10, 9, 260, 26, SS_CENTER
+	LTEXT						"Pasahitza berria:", IDC_STATIC, 43, 47, 65, 8, SS_LEFT
+	LTEXT						"Pasahitza berriro sartu:", IDC_STATIC, 43, 65, 67, 10, SS_LEFT
+END
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_POPUPMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "eQUEMPLO"
+    BEGIN
+	MENUITEM 	"Soffid ESSO",	-1, INACTIVE
+	MENUITEM 	"Sesioa ez da hasi",	IDM_USER_ESSO
+	MENUITEM 	SEPARATOR
+        MENUITEM	"ESSO desaktibatu",	IDM_DISABLE_ESSO
+        MENUITEM 	"ESSO aktibatu",		IDM_ENABLE_ESSO
+        MENUITEM 	SEPARATOR
+        MENUITEM 	"Eguneratu",			IDM_UPDATE
+        MENUITEM "Sesioa ireki", IDM_LOGIN
+        MENUITEM "Sesioa bukatu", IDM_LOGOFF
+		MENUITEM 	SEPARATOR
+		MENUITEM	"Sesio berria",		IDM_USER_NEW_DESKTOP
+    END
+END

@@ -13,6 +13,7 @@
 #include <string>
 #include <stdlib.h>
 #include <stdio.h>
+#include <strings.h>
 
 ComponentMatcher::ComponentMatcher():
 	m_aliasedComponents(0)
@@ -52,15 +53,16 @@ void ComponentMatcher::registerFailure(FailureReason *reason)
 	m_failedComponents.push_back(reason);
 }
 
-void ComponentMatcher::dumpDiagnostic (NativeComponent *top)
+void ComponentMatcher::dumpDiagnostic (NativeComponent *top, NativeComponent *focus)
 {
 	PMAZINGER_DATA data = MazingerEnv::getDefaulEnv()->getData();
 	if (data != NULL && data->spy)
 	{
 		const char* szCmdLine = MZNC_getCommandLine();
+		MZNSendSpyMessage("<!--=============================================================-->");
 		MZNSendSpyMessage("<Application cmdLine='^%s$'>",
 				xmlEncode(szCmdLine));
-		top->dumpXML(2);
+		top->dumpXML(2, focus);
 		MZNSendSpyMessage("</Application>",
 				xmlEncode(szCmdLine));
 	}
@@ -88,7 +90,7 @@ int ComponentMatcher::search (ConfigReader &reader, NativeComponent& focus) {
 		PMAZINGER_DATA data = MazingerEnv::getDefaulEnv()->getData();
 		if (data != NULL && data->spy)
 		{
-			dumpDiagnostic(lastparent);
+			dumpDiagnostic(lastparent, m_nativeFocus);
 		}
 		//TRACE;
 		int ruleNumber = 0;
@@ -142,7 +144,26 @@ void ComponentMatcher::triggerFocusEvent () {
 					it != current->m_actions.end();
 					it ++)
 			{
-				(*it)->executeAction(*this);
+				if ( (*it)->szType == NULL || stricmp((*it)->szType, "onBlur") != 0)
+					(*it)->executeAction(*this);
+			}
+			current = current->m_parent;
+		}
+	}
+}
+
+void ComponentMatcher::triggerBlurEvent () {
+	if (m_bMatched)
+	{
+		ComponentSpec *current = m_focus;
+		while (current != NULL)
+		{
+			for (std::vector<Action*>::iterator it = current->m_actions.begin();
+					it != current->m_actions.end();
+					it ++)
+			{
+				if ( (*it)->szType != NULL || stricmp((*it)->szType, "onBlur") == 0)
+					(*it)->executeAction(*this);
 			}
 			current = current->m_parent;
 		}

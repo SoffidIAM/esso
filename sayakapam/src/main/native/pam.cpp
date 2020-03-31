@@ -17,7 +17,11 @@ extern "C"
 int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 		int argc, const char **argv)
 {
+	__TRACE__;
+
 	PamHandler::getPamHandler(pamh)->parse(argc, argv);
+
+	__TRACE__;
 
 	return PamHandler::getPamHandler(pamh)->authenticate();
 }
@@ -32,7 +36,9 @@ int pam_sm_setcred(pam_handle_t *pamh,int flags,int argc,
 extern "C"
 int pam_sm_open_session(pam_handle_t *pamh, int flags,
 		       int argc, const char **argv) {
+	__TRACE__;
 	PamHandler::getPamHandler(pamh)->parse(argc, argv);
+	__TRACE__;
 
 	return PamHandler::getPamHandler(pamh)->createSession();
 }

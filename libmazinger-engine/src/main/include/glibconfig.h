@@ -1,8 +1,16 @@
-//
+	//
 
 
 #ifdef __i386__
-#include <glibconfig_i386.h>
+	#ifdef __bionic
+		#include <glibconfig_i386_bionic.h>
+	#else
+		#include <glibconfig_i386.h>
+	#endif
 #else
-#include <glibconfig_x86_64.h>
+	#ifdef __bionic
+		#include <glibconfig_x86_64_bionic.h>
+	#else
+		#include <glibconfig_x86_64.h>
+	#endif
 #endif

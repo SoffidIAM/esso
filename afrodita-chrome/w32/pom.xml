@@ -2,8 +2,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.soffid.iam.esso.w32</groupId>
 	<artifactId>afrodita-chrome</artifactId>
-	<packaging>dll</packaging>
-	<name>Dll per a injecció d'Usuaris i Passwords al Firefox 4 (Windows)</name>
+	<packaging>exe</packaging>
+	<name>Dll to inject users and passwords on Google Chrome (win 32)</name>
 	<parent>
 		<artifactId>afrodita-chrome</artifactId>
 		<groupId>com.soffid.iam.esso</groupId>
@@ -61,16 +61,13 @@
 						<compilerMiddleOption>-D_WIN32_WINNT=0x0500</compilerMiddleOption>
 						<compilerMiddleOption>-DWIN32</compilerMiddleOption>
 						<compilerMiddleOption>-DXP_WIN</compilerMiddleOption>
-						<compilerMiddleOption>-DFF_VERSION=4</compilerMiddleOption>
+						<compilerMiddleOption>-DVERSION="${pom.version}"</compilerMiddleOption>
 					</compilerMiddleOptions>
 					<linkerMiddleOptions>
-						<linkerMiddleOption>../src/main/def/afroditaf.def</linkerMiddleOption>
-						<linkerMiddleOption>-s</linkerMiddleOption>
+						<linkerMiddleOption>-mwindows</linkerMiddleOption>
 						<linkerMiddleOption>-Xlinker</linkerMiddleOption>
 						<linkerMiddleOption>--strip-all</linkerMiddleOption>
-						<linkerMiddleOption>-shared</linkerMiddleOption>
 						<linkerMiddleOption>target/objs/resources.o</linkerMiddleOption>
-						<linkerMiddleOption>-shared</linkerMiddleOption>
 						<linkerMiddleOption>-static-libgcc</linkerMiddleOption>
 						<linkerMiddleOption>-static-libstdc++</linkerMiddleOption>
 					</linkerMiddleOptions>
@@ -79,10 +76,13 @@
 						<linkerMiddleOption>-lwsock32</linkerMiddleOption>
 						<linkerMiddleOption>-lsee</linkerMiddleOption>
 						<linkerMiddleOption>-lmpr</linkerMiddleOption>
+						<linkerMiddleOption>-ldbghelp</linkerMiddleOption>
 						<linkerMiddleOption>-lgdi32</linkerMiddleOption>
 						<linkerMiddleOption>-lcrypt32</linkerMiddleOption>
 						<linkerMiddleOption>-lwinhttp</linkerMiddleOption>
 						<linkerEndOption>-static</linkerEndOption>
+						<linkerEndOption>-Xlinker</linkerEndOption>
+						<linkerEndOption>-Map=target/${pom.artifactId}-${pom.version}.mapfile.txt</linkerEndOption>
 					</linkerEndOptions>
 					<sources>
 						<source>

@@ -9,9 +9,11 @@
 #define WEBCOMPONENTSPEC_H_
 
 class AbstractWebElement;
+class AbstractWebApplication;
 
 #include <vector>
 #include <pcreposix.h>
+#include <PageData.h>
 
 class WebComponentSpec {
 
@@ -28,8 +30,11 @@ public:
 	std::vector<WebComponentSpec*> m_children;
 
 	virtual bool matches (AbstractWebElement *element);
+	virtual bool matches (AbstractWebApplication *app, FormData &form);
+	virtual bool matches (AbstractWebApplication *app, InputData &input);
 	virtual void dump ()=0;
 	bool matchAttribute (regex_t *expr, AbstractWebElement *element, const char*attributeName) ;
+	bool matchValue (regex_t *expr, const char*value) ;
 
 	virtual void clearMatches ();
 	virtual void setMatched(AbstractWebElement *element);

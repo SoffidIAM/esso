@@ -37,8 +37,10 @@ bool LocalAdminHandler::getAdminCredentials (std::wstring &szUser, std::wstring 
 
 	std::wstring pass = service.escapeString(szPassword.c_str());
 	SeyconResponse * response = service.sendUrlMessage(
-			L"gethostadmin?user=%s&pass=%s&host=%s",
-			szUser.c_str(), pass.c_str(), szHostName.c_str());
+			L"gethostadmin?user=%ls&pass=%ls&host=%ls",
+			service.escapeString(szUser.c_str()).c_str(),
+			service.escapeString(pass.c_str()).c_str(),
+			service.escapeString(szHostName.c_str()).c_str());
 
 	if (response == NULL) {
 		szErrorMessage.assign (

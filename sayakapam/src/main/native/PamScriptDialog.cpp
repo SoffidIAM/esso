@@ -35,7 +35,18 @@ void PamScriptDialog::cancelProgressMessage()
 }
 
 
-std::wstring PamScriptDialog::selectAccount(std::vector<std::wstring>accounts)
+std::wstring PamScriptDialog::selectAccount(std::vector<std::wstring>accounts,
+		std::vector<std::wstring>accountDescriptions)
+{
+	return std::wstring();
+}
+
+std::wstring PamScriptDialog::askPassword (std::wstring label)
+{
+	return std::wstring();
+}
+
+std::wstring PamScriptDialog::askText (std::wstring label)
 {
 	return std::wstring();
 }

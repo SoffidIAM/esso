@@ -21,23 +21,28 @@ Log::Log() {
 }
 
 void Log::init(PamHandler *handler) {
+	__TRACE__;
 	this->handler = handler;
 	name.assign("PamHandler ");
-	char ach[15];
+	char ach[30];
 
-	sprintf (ach, "%lx", (long) handler->getPamHandler());
+	sprintf (ach, "%p", handler->getPamHandler());
 	name.append (ach);
-	if (logFile == NULL)
+	if (logFile == NULL && false)
 	{
+		__TRACE__;
 		std::string debugFile;
 		if (SeyconCommon::readProperty("pamLogFile", debugFile) ) {
+			__TRACE__;
 			fclose (stdout);
 			logFile = fopen(debugFile.c_str(), "a");
 			setbuf(logFile, NULL);
 			SeyconCommon::setDebugLevel(3);
+			__TRACE__;
 		}
+		__TRACE__;
 	}
-
+	__TRACE__;
 }
 
 Log::~Log() {

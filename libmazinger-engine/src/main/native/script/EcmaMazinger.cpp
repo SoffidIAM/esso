@@ -65,10 +65,19 @@ static void MZNECMA_getAccount(struct SEE_interpreter *, struct SEE_object *,
 static void MZNECMA_getAccounts(struct SEE_interpreter *, struct SEE_object *,
 		struct SEE_object *, int, struct SEE_value **, struct SEE_value *);
 
+static void MZNECMA_askText(struct SEE_interpreter *, struct SEE_object *,
+		struct SEE_object *, int, struct SEE_value **, struct SEE_value *);
+
+static void MZNECMA_askPassword(struct SEE_interpreter *, struct SEE_object *,
+		struct SEE_object *, int, struct SEE_value **, struct SEE_value *);
+
 static void MZNECMA_getPassword(struct SEE_interpreter *, struct SEE_object *,
 		struct SEE_object *, int, struct SEE_value **, struct SEE_value *);
 
 static void MZNECMA_setPassword(struct SEE_interpreter *, struct SEE_object *,
+		struct SEE_object *, int, struct SEE_value **, struct SEE_value *);
+
+static void MZNECMA_audit(struct SEE_interpreter *, struct SEE_object *,
 		struct SEE_object *, int, struct SEE_value **, struct SEE_value *);
 
 static void MZNECMA_generatePassword(struct SEE_interpreter *, struct SEE_object *,
@@ -142,6 +151,7 @@ static struct SEE_string *STR(getAccounts);
 static struct SEE_string *STR(getAccount);
 static struct SEE_string *STR(getPassword);
 static struct SEE_string *STR(setPassword);
+static struct SEE_string *STR(audit);
 static struct SEE_string *STR(generatePassword);
 static struct SEE_string *STR(setText);
 static struct SEE_string *STR(getText);
@@ -155,6 +165,8 @@ static struct SEE_string *STR(exec);
 static struct SEE_string *STR(execWait);
 static struct SEE_string *STR(sendText);
 static struct SEE_string *STR(sendKeys);
+static struct SEE_string *STR(askPassword);
+static struct SEE_string *STR(askText);
 
 
 // Clase d'objectes per a finestres i components
@@ -238,6 +250,7 @@ static int Mazinger_mod_init() {
 	STR(getPassword) = SEE_intern_global("getPassword");
 	STR(setPassword) = SEE_intern_global("setPassword");
 	STR(generatePassword) = SEE_intern_global("generatePassword");
+	STR(audit) = SEE_intern_global("audit");
 	STR(secretStore) = SEE_intern_global("secretStore");
 	STR(setText) = SEE_intern_global("setText");
 	STR(getText) = SEE_intern_global("getText");
@@ -251,6 +264,8 @@ static int Mazinger_mod_init() {
 	STR(execWait) = SEE_intern_global("execWait");
 	STR(sendText) = SEE_intern_global("sendText");
 	STR(sendKeys) = SEE_intern_global("sendKeys");
+	STR(askText) = SEE_intern_global("askText");
+	STR(askPassword) = SEE_intern_global("askPassword");
 	return 0;
 }
 
@@ -312,6 +327,8 @@ static void Mazinger_init(struct SEE_interpreter *interp) {
 	PUTFUNC(interp->Global, exec, 1)
 	PUTFUNC(interp->Global, sendText, 1)
 	PUTFUNC(interp->Global, sendKeys, 1)
+	PUTFUNC(interp->Global, askText, 1)
+	PUTFUNC(interp->Global, askPassword, 1)
 
 	/** Creates SECRET STORE **/
 	struct SEE_object * secretStore =
@@ -324,6 +341,7 @@ static void Mazinger_init(struct SEE_interpreter *interp) {
 	PUTFUNC(secretStore, getAccount, 1);
 	PUTFUNC(secretStore, getPassword, 2);
 	PUTFUNC(secretStore, setPassword, 3);
+	PUTFUNC(secretStore, audit, 3);
 	PUTFUNC(secretStore, generatePassword, 2);
 	PUTOBJ (interp->Global, secretStore, secretStore);
 
@@ -609,7 +627,11 @@ static void MZNECMA_setSecret(struct SEE_interpreter *interp,
 	SEE_ToString(interp, argv[1], &valueValue);
 
 	std::wstring secret = SEE_StringToWChars(interp, secretValue.u.string);
+
+	std::wstring encodedSecret = MZNC_strtowstr(SeyconCommon::urlEncode(secret.c_str()).c_str());
+
 	std::wstring value = SEE_StringToWChars(interp, valueValue.u.string);
+	std::wstring encodedValue = MZNC_strtowstr(SeyconCommon::urlEncode(value.c_str()).c_str());
 
 	SecretStore s (MZNC_getUserName()) ;
 	wchar_t *sessionKey = s.getSecret(L"sessionKey");
@@ -619,7 +641,7 @@ static void MZNECMA_setSecret(struct SEE_interpreter *interp,
 	SeyconService ss;
 
 	SeyconResponse *response = ss.sendUrlMessage(L"/setSecret?user=%ls&key=%ls&secret=%ls&value=%ls",
-			user, sessionKey, secret.c_str(), value.c_str());
+			user, sessionKey, encodedSecret.c_str(), encodedValue.c_str());
 
 	if (response == NULL)
 	{
@@ -735,7 +757,37 @@ static void MZNECMA_getAccount(struct SEE_interpreter *interp,
 		}
 		else
 		{
-			std::wstring account = sd->selectAccount(accounts);
+			/* Saves interpreter state for concurrent access */
+
+			struct SEE_interpreter_state *state = SEE_interpreter_save_state( interp );
+			/* Restores interpreter state; destroys state */
+			MZNC_endMutex2();
+
+			std::vector<std::wstring> accountDescriptions;
+			std::wstring prefix = L"accdesc.";
+			prefix += SEE_StringToWChars(interp, message);
+			prefix += L".";
+			for (std::vector<std::wstring>::iterator it = accounts.begin();
+					it != accounts.end();
+					it++)
+			{
+				std::wstring account = *it;
+				std::wstring secret = prefix+account;
+				std::wstring description = s.getSecret(secret.c_str());
+				accountDescriptions.push_back(description);
+			}
+			std::wstring account = sd->selectAccount(accounts, accountDescriptions);
+
+			while (! MZNC_waitMutex2())
+			{
+	#ifdef WIN32
+				Sleep(1000);
+	#else
+				usleep (1000 * 1000);
+	#endif
+			}
+			SEE_interpreter_restore_state(interp, state);
+
 			if (account.empty())
 				SEE_error_throw(interp, interp->EvalError, "No account selected");
 			else
@@ -765,9 +817,11 @@ static void MZNECMA_getPassword(struct SEE_interpreter *interp,
 	SEE_ToString(interp, argv[1], &account);
 
 	std::wstring secret = L"pass.";
-	secret += SEE_StringToWChars(interp, system.u.string);
+	std::wstring systemStr = SEE_StringToWChars(interp, system.u.string);
+	std::wstring accountStr = SEE_StringToWChars(interp, account.u.string);
+	secret += systemStr;
 	secret += L".";
-	secret += SEE_StringToWChars(interp, account.u.string);
+	secret += accountStr;
 
 	SecretStore s (MZNC_getUserName()) ;
 	wchar_t *str = s.getSecret(secret.c_str());
@@ -775,10 +829,55 @@ static void MZNECMA_getPassword(struct SEE_interpreter *interp,
 	if (str == NULL)
 		SEE_SET_UNDEFINED(res);
 	else {
+
+		wchar_t *sessionKey = s.getSecret(L"sessionKey");
+		wchar_t *user = s.getSecret(L"user");
+		SeyconService ss;
+		SeyconResponse *response = ss.sendUrlMessage(L"/auditPassword?user=%ls&key=%ls&system=%ls&account=%ls&application=%ls",
+				user, sessionKey, systemStr.c_str(), accountStr.c_str(),
+				ss.escapeString(MZNC_getCommandLine()).c_str());
+
+
+
 		struct SEE_string *buf = SEE_WCharsToString(interp, str);
 		SEE_SET_STRING(res, buf);
 		s.freeSecret(str);
 	}
+}
+
+/*
+ * secretStore.getAccounts()
+ *
+ *
+ */
+static void MZNECMA_audit(struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res) {
+	if (argc != 3)
+	{
+		SEE_error_throw(interp, interp->RangeError, "missing argument");
+		return;
+	}
+	SEE_value system, account, info;
+	SEE_ToString(interp, argv[0], &system);
+	SEE_ToString(interp, argv[1], &account);
+	SEE_ToString(interp, argv[2], &info);
+
+	std::wstring secret = L"pass.";
+	std::wstring systemStr = SEE_StringToWChars(interp, system.u.string);
+	std::wstring accountStr = SEE_StringToWChars(interp, account.u.string);
+	std::wstring infoStr = SEE_StringToWChars(interp, info.u.string);
+
+	SecretStore s (MZNC_getUserName()) ;
+
+	wchar_t *sessionKey = s.getSecret(L"sessionKey");
+	wchar_t *user = s.getSecret(L"user");
+	SeyconService ss;
+	SeyconResponse *response = ss.sendUrlMessage(L"/auditPassword?user=%ls&key=%ls&system=%ls&account=%ls&application=%ls",
+			user, sessionKey, systemStr.c_str(), accountStr.c_str(),
+			ss.escapeString(infoStr.c_str()).c_str());
+
+	SEE_SET_UNDEFINED(res);
 }
 
 /*
@@ -802,12 +901,15 @@ static void MZNECMA_setPassword(struct SEE_interpreter *interp,
 
 	std::wstring secret = L"pass.";
 	std::wstring system = SEE_StringToWChars(interp, systemValue.u.string);
+	std::wstring encodedSystem = MZNC_strtowstr(SeyconCommon::urlEncode(system.c_str()).c_str());
 	secret += system;
 	secret += L".";
 	std::wstring account = SEE_StringToWChars(interp, accountValue.u.string);
+	std::wstring encodedAccount = MZNC_strtowstr(SeyconCommon::urlEncode(account.c_str()).c_str());
 	secret += account;
 
 	std::wstring value = SEE_StringToWChars(interp, valueValue.u.string);
+	std::wstring encodedValue = MZNC_strtowstr(SeyconCommon::urlEncode(value.c_str()).c_str());
 
 	SecretStore s (MZNC_getUserName()) ;
 	wchar_t *sessionKey = s.getSecret(L"sessionKey");
@@ -815,7 +917,7 @@ static void MZNECMA_setPassword(struct SEE_interpreter *interp,
 
 	SeyconService ss;
 	SeyconResponse *response = ss.sendUrlMessage(L"/setSecret?user=%ls&key=%ls&system=%ls&account=%ls&value=%ls",
-			user, sessionKey, system.c_str(), account.c_str(), value.c_str());
+			user, sessionKey, encodedSystem.c_str(), encodedAccount.c_str(), encodedValue.c_str());
 
 	if (response == NULL)
 	{
@@ -905,6 +1007,68 @@ static void MZNECMA_generatePassword(struct SEE_interpreter *interp,
 
 
 /*
+ * askPassword()
+ *
+ *
+ */
+static void MZNECMA_askPassword(struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res) {
+	if (argc != 1)
+	{
+		SEE_error_throw(interp, interp->RangeError, "missing argument");
+		return;
+	}
+	SEE_value label;
+	SEE_ToString(interp, argv[0], &label);
+
+	ScriptDialog* sd;
+	sd = ScriptDialog::getScriptDialog();
+	if (sd == NULL)
+	{
+		SEE_error_throw(interp, interp->EvalError, "missing dialog manager");
+	}
+	else
+	{
+		std::wstring labelStr = SEE_StringToWChars(interp, label.u.string);
+		std::wstring p = sd -> askPassword(labelStr);
+		SEE_string * str = SEE_WCharsToString(interp, p.c_str());
+		SEE_SET_STRING(res, str);
+	}
+}
+
+/*
+ * askText()
+ *
+ *
+ */
+static void MZNECMA_askText(struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res) {
+	if (argc != 1)
+	{
+		SEE_error_throw(interp, interp->RangeError, "missing argument");
+		return;
+	}
+	SEE_value label;
+	SEE_ToString(interp, argv[0], &label);
+
+	ScriptDialog* sd;
+	sd = ScriptDialog::getScriptDialog();
+	if (sd == NULL)
+	{
+		SEE_error_throw(interp, interp->EvalError, "missing dialog manager");
+	}
+	else
+	{
+		std::wstring labelStr = SEE_StringToWChars(interp, label.u.string);
+		std::wstring p = sd -> askText(labelStr);
+		SEE_string * str = SEE_WCharsToString(interp, p.c_str());
+		SEE_SET_STRING(res, str);
+	}
+}
+
+/*
  * Funcions de finestra
  */
 static struct MZN_window_object * towindow(struct SEE_interpreter *interp,
@@ -927,10 +1091,7 @@ static void MZNECMA_getText(struct SEE_interpreter *interp,
 		std::string s;
 		obj->spec->m_pMatchedComponent->getAttribute("text", s);
 		struct SEE_string *buf;
-		buf = SEE_string_new(interp, s.length() + 1);
-		const char *str = s.c_str();
-		for (int i = 0; str[i] != 0; i++)
-			SEE_string_addch(buf, str[i]);
+		buf = SEE_UTF8ToString(interp, s.c_str());
 		SEE_SET_STRING(res, buf);
 
 	}
@@ -949,7 +1110,7 @@ static void MZNECMA_setText(struct SEE_interpreter *interp,
 		SEE_parse_args(interp, argc, argv, "s", &message);
 		if (message == NULL)
 			SEE_error_throw(interp, interp->RangeError, "missing argument");
-		std::string text = SEE_StringToChars(interp, message);
+		std::string text = SEE_StringToUTF8(interp, message);
 		obj->spec->m_pMatchedComponent->setAttribute("text", text.c_str());
 	}
 	SEE_SET_UNDEFINED(res);
@@ -1008,6 +1169,33 @@ struct SEE_string* getFocusString() {
 
 
 
+
+static void waitForFocus()
+{
+#ifdef WIN32
+	boolean pause = false;
+	do
+	{
+		HWND hwnd = GetForegroundWindow();
+		if (hwnd != NULL)
+		{
+			DWORD dwActiveProcessId;
+			DWORD dwCurrentProcessId = 0;
+			GetWindowThreadProcessId(hwnd, &dwActiveProcessId);
+			dwCurrentProcessId = GetCurrentProcessId();
+			MZNSendDebugMessageA("Waiting to activate application window %x %lx %lx", hwnd, dwActiveProcessId, dwCurrentProcessId);
+			if (dwActiveProcessId == dwCurrentProcessId)
+			{
+				if (pause)
+					Sleep(300);
+				return;
+			}
+			pause = true;
+			Sleep(100);
+		}
+	} while (true);
+#endif
+}
 /*
  * typeText
  *
@@ -1023,6 +1211,8 @@ static void MZNECMA_sendKeys(struct SEE_interpreter *interp,
 	if (s == NULL)
 		SEE_error_throw(interp, interp->RangeError, "missing argument");
 	std::string message = SEE_StringToChars(interp, s);
+
+	waitForFocus();
 
 	CSendKeys k;
 	k.SendKeys(message.c_str(), true);
@@ -1045,6 +1235,8 @@ static void MZNECMA_sendText(struct SEE_interpreter *interp,
 	if (s == NULL)
 		SEE_error_throw(interp, interp->RangeError, "missing argument");
 	std::wstring message = SEE_StringToWChars(interp, s);
+
+	waitForFocus();
 
 	CSendKeys k;
 	k.SendLiteral(message.c_str(), true);

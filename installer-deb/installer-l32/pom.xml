@@ -21,6 +21,11 @@
 				<filtering>true</filtering>
 				<targetPath>${deb.dir}</targetPath>
 			</resource>
+			<resource>
+				<directory>src/main/deb</directory>
+				<filtering>true</filtering>
+				<targetPath>${deb.dir}/DEBIAN</targetPath>
+			</resource>
 		</resources>
 
 		<plugins>
@@ -70,10 +75,10 @@
 								</artifactItem>
 								<artifactItem>
 									<groupId>com.soffid.iam.esso.${architecture}</groupId>
-									<artifactId>${architecture.libPrefix}afrodita-chrome</artifactId>
+									<artifactId>afrodita-chrome</artifactId>
 									<version>${pom.version}</version>
-									<type>${architecture.dll}</type>
-									<destFileName>/usr/lib/mozilla/plugins/libafroditac.so</destFileName>
+									<type>${architecture.exe}</type>
+									<destFileName>/usr/bin/afrodita-chrome</destFileName>
 								</artifactItem>
 								<artifactItem>
 									<groupId>com.soffid.iam.esso.${architecture}</groupId>
@@ -116,6 +121,7 @@
 									<arg value="${deb.dir}/usr/bin/jetscrander" />
 									<arg value="${deb.dir}/usr/bin/kojikabuto" />
 									<arg value="${deb.dir}/usr/bin/mazinger" />
+									<arg value="${deb.dir}/usr/bin/afrodita-chrome" />
 									<arg value="${deb.dir}/DEBIAN/postinst" />
 									<arg value="${deb.dir}/DEBIAN/prerm" />
 									<arg value="${deb.dir}/DEBIAN/postrm" />
@@ -132,6 +138,13 @@
 									<arg value="440" />
 									<arg value="${deb.dir}/etc/mazinger/sudoers.d/README" />
 								</exec>
+								<exec executable="fakeroot">
+									<arg value="dpkg-deb" />
+									<arg value="-b" />
+									<arg value="${deb.dir}" />
+									<arg value="target/soffidesso-${project.version}.deb" />
+								</exec>
+	
 								<!-- <mkdir dir="${deb.dir}/${ffextension}" /> <symlink link="${deb.dir}/${ffextension}/${ffuid}" resource="/usr/share/mazinger/ffextension" overwrite="true" /> -->
 							</target>
 						</configuration>
@@ -141,27 +154,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>deb-maven-plugin</artifactId>
-				<configuration>
-					<description>Mazinger for Linux</description>
-					<maintainer>Soffid &lt;contact@soffid.com&gt;</maintainer>
-					<section>admin</section>
-					<priority>optional</priority>
-					<architecture>i386</architecture>
-					<packageName>mazinger</packageName>
-					<maintainerRevision>1</maintainerRevision>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>package-binary</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
 			<plugin>
 				<artifactId>maven-resources-plugin</artifactId>
 				<executions>
@@ -184,6 +176,31 @@
 					<preparationGoals>clean verify</preparationGoals>
 				</configuration>
 			</plugin>
+	            <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>1.7</version>
+                    <executions>
+                            <execution>
+                                    <id>attach-artifacts</id>
+                                    <phase>package</phase>
+                                    <goals>
+                                            <goal>attach-artifact</goal>
+                                    </goals>
+                                    <configuration>
+                                            <artifacts>
+                                                    <artifact>
+                                                            <file>
+                                                                    ${build.directory}/soffidesso-${project.version}.deb
+                                                            </file>
+                                                            <type>deb</type>
+                                                    </artifact>
+                                            </artifacts>
+                                    </configuration>
+                            </execution>
+                    </executions>
+            </plugin>
+
 		</plugins>
 	</build>
 	<properties>

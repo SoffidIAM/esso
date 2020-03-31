@@ -1,21 +1,24 @@
 {
-  "manifest_version": 2,
-  "name": "Soffid ESSO",
-  "description": "Soffid Enterprise Single Sign-On",
-  "version": "1.0.8",
-  "icons": { "32": "icon.png", "128": "soffid.png"},
-
-  "permissions": [
-	"*://*/"
-  ],
-
-  "browser_action": {
-    "default_icon": "icon.png",
-    "default_popup": "popup.html"
-  },
-
-  "content_scripts": [ {
-    "matches": ["*://*/*"],
-    "js": ["content.js"]
-  } ]
+   "background": {
+      "persistent": true,
+      "scripts": [ "background.js" ]
+   },
+   "browser_action": {
+      "default_icon": "icon.png",
+      "default_popup": "popup.html"
+   },
+   "content_scripts": [ {
+      "all_frames": true,
+      "js": [ "content.js" ],
+      "matches": [ "*://*/*" ]
+   } ],
+   "description": "Soffid Enterprise Single Sign-On extension (version 2.9.0). Injects and store user credentials in Soffid password vault",
+   "icons": {
+      "128": "soffid.png",
+      "32": "icon.png"
+   },
+   "manifest_version": 2,
+   "name": "Soffid ESSO v2.9.0",
+   "permissions": [ "*://*/", "tabs", "nativeMessaging" ],
+   "version": "2.9.0"
 }

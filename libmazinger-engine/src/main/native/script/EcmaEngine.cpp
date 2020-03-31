@@ -173,114 +173,9 @@ void initializeSEE()
 	}
 }
 
-void MZNEvaluateJSMatch(ComponentMatcher &matcher, const char *script) {
-	initializeSEE();
-    std::vector<struct SEE_string*> nomsToDelete;
-    for ( std::vector<ComponentSpec*>::iterator it=matcher.getAliasedComponents().begin();
-			it != matcher.getAliasedComponents().end();
-			it++)
-	{
-		const char* nom = (*it)->szId;
-		SEE_string *str = SEE_UTF8ToString(&interp_storage, nom);
-		str = SEE_intern(&interp_storage, str);
-		nomsToDelete.push_back(str);
-		createWindowObject ( *it, &interp_storage, str);
-	}
-    if (matcher.getFocusComponent() != NULL)
-		createWindowObject (matcher.getFocusComponent(), &interp_storage, getFocusString());
-
-    MZNEvaluateJS(script);
-
-	for ( std::vector<struct SEE_string*>::iterator it=nomsToDelete.begin();
-			it != nomsToDelete.end();
-			it++)
-	{
-		SEE_OBJECT_DELETE(&interp_storage, interp_storage.Global, *it);
-	}
-	SEE_OBJECT_DELETE(&interp_storage, interp_storage.Global, getFocusString());
-
-	SEE_gcollect(&interp_storage);
-	ScriptDialog::getScriptDialog()->cancelProgressMessage();
-}
-
-void createWebComponents (std::vector<WebComponentSpec*> vector, std::vector<struct SEE_string*> nomsToDelete)
+static bool MZNEvaluateJS_internal(const char *script, std::string& msg)
 {
-	for (std::vector<WebComponentSpec*>::iterator it=vector.begin();
-			it != vector.end();
-			it ++)
-	{
-		if ((*it)->getMatched() != NULL && (*it)->szRefAs != NULL)
-		{
-			const char* nom = (*it)->szRefAs;
-			SEE_string *str = SEE_UTF8ToString(&interp_storage, nom);
-			str = SEE_intern(&interp_storage, str);
-			nomsToDelete.push_back(str);
 
-			createElementObject((*it), &interp_storage, str);
-
-		}
-		createWebComponents((*it)->m_children, nomsToDelete);
-	}
-
-
-}
-
-void createHllComponents (HllApplication *pApp)
-{
-	createHllObject(pApp, &interp_storage);
-
-}
-
-void MZNEvaluateJSMatch(WebMatcher &matcher, const char *script) {
-
-	initializeSEE();
-
-	std::vector<struct SEE_string*> nomsToDelete;
-
-	createWebComponents(matcher.getWebAppSpec()->m_components,nomsToDelete);
-
-	createDocumentObject ( matcher.getWebApp(), &interp_storage);
-
-	MZNEvaluateJS(script);
-
-	for ( std::vector<struct SEE_string*>::iterator it=nomsToDelete.begin();
-			it != nomsToDelete.end();
-			it++)
-	{
-		SEE_OBJECT_DELETE(&interp_storage, interp_storage.Global, *it);
-	}
-	SEE_OBJECT_DELETE(&interp_storage, interp_storage.Global, getFocusString());
-
-	SEE_gcollect(&interp_storage);
-	ScriptDialog::getScriptDialog()->cancelProgressMessage();
-}
-
-void MZNEvaluateJSMatch(HllMatcher &matcher, const char *script) {
-
-	initializeSEE();
-
-	std::vector<struct SEE_string*> nomsToDelete;
-
-	createHllComponents(matcher.getHllApplication());
-
-	MZNEvaluateJS(script);
-
-	for ( std::vector<struct SEE_string*>::iterator it=nomsToDelete.begin();
-			it != nomsToDelete.end();
-			it++)
-	{
-		SEE_OBJECT_DELETE(&interp_storage, interp_storage.Global, *it);
-	}
-	SEE_OBJECT_DELETE(&interp_storage, interp_storage.Global, getFocusString());
-
-	SEE_gcollect(&interp_storage);
-	ScriptDialog::getScriptDialog()->cancelProgressMessage();
-}
-
-
-
-bool MZNEvaluateJS(const char *script, std::string& msg)
-{
 	bool success;
 	initializeSEE();
     struct SEE_input *input = SEE_input_utf8(&interp_storage, script);
@@ -319,7 +214,145 @@ bool MZNEvaluateJS(const char *script, std::string& msg)
 	SEE_gcollect(&interp_storage);
 	ScriptDialog::getScriptDialog()->cancelProgressMessage();
 
+
 	return success;
+}
+
+
+void MZNEvaluateJSMatch(ComponentMatcher &matcher, const char *script) {
+	if (MZNC_waitMutex2())
+	{
+		std::string msg;
+
+		initializeSEE();
+		std::vector<struct SEE_string*> nomsToDelete;
+		for ( std::vector<ComponentSpec*>::iterator it=matcher.getAliasedComponents().begin();
+				it != matcher.getAliasedComponents().end();
+				it++)
+		{
+			const char* nom = (*it)->szId;
+			SEE_string *str = SEE_UTF8ToString(&interp_storage, nom);
+			str = SEE_intern(&interp_storage, str);
+			nomsToDelete.push_back(str);
+			createWindowObject ( *it, &interp_storage, str);
+		}
+		if (matcher.getFocusComponent() != NULL)
+			createWindowObject (matcher.getFocusComponent(), &interp_storage, getFocusString());
+
+		MZNEvaluateJS_internal(script, msg);
+
+		for ( std::vector<struct SEE_string*>::iterator it=nomsToDelete.begin();
+				it != nomsToDelete.end();
+				it++)
+		{
+			SEE_OBJECT_DELETE(&interp_storage, interp_storage.Global, *it);
+		}
+		SEE_OBJECT_DELETE(&interp_storage, interp_storage.Global, getFocusString());
+
+		SEE_gcollect(&interp_storage);
+		ScriptDialog::getScriptDialog()->cancelProgressMessage();
+		MZNC_endMutex2();
+	}
+}
+
+void createWebComponents (std::vector<WebComponentSpec*> vector, std::vector<struct SEE_string*> nomsToDelete)
+{
+	for (std::vector<WebComponentSpec*>::iterator it=vector.begin();
+			it != vector.end();
+			it ++)
+	{
+		if ((*it)->getMatched() != NULL && (*it)->szRefAs != NULL)
+		{
+			const char* nom = (*it)->szRefAs;
+			SEE_string *str = SEE_UTF8ToString(&interp_storage, nom);
+			str = SEE_intern(&interp_storage, str);
+			nomsToDelete.push_back(str);
+
+			createElementObject((*it), &interp_storage, str);
+
+		}
+		createWebComponents((*it)->m_children, nomsToDelete);
+	}
+
+
+}
+
+void createHllComponents (HllApplication *pApp)
+{
+	createHllObject(pApp, &interp_storage);
+
+}
+
+bool MZNEvaluateJSMatch(WebMatcher &matcher, const char *script) {
+	bool ok = false;
+	if (MZNC_waitMutex2())
+	{
+		std::string msg;
+		initializeSEE();
+
+		std::vector<struct SEE_string*> nomsToDelete;
+
+		createWebComponents(matcher.getWebAppSpec()->m_components,nomsToDelete);
+
+		createDocumentObject ( matcher.getWebApp(), &interp_storage);
+
+		ok = MZNEvaluateJS_internal(script, msg);
+
+
+		for ( std::vector<struct SEE_string*>::iterator it=nomsToDelete.begin();
+				it != nomsToDelete.end();
+				it++)
+		{
+			SEE_OBJECT_DELETE(&interp_storage, interp_storage.Global, *it);
+		}
+		SEE_OBJECT_DELETE(&interp_storage, interp_storage.Global, getFocusString());
+
+		SEE_gcollect(&interp_storage);
+		ScriptDialog::getScriptDialog()->cancelProgressMessage();
+		MZNC_endMutex2();
+	}
+	return ok;
+}
+
+void MZNEvaluateJSMatch(HllMatcher &matcher, const char *script) {
+
+	if (MZNC_waitMutex2())
+	{
+		std::string msg;
+
+		initializeSEE();
+
+		std::vector<struct SEE_string*> nomsToDelete;
+
+		createHllComponents(matcher.getHllApplication());
+
+		MZNEvaluateJS_internal(script, msg);
+
+		for ( std::vector<struct SEE_string*>::iterator it=nomsToDelete.begin();
+				it != nomsToDelete.end();
+				it++)
+		{
+			SEE_OBJECT_DELETE(&interp_storage, interp_storage.Global, *it);
+		}
+		SEE_OBJECT_DELETE(&interp_storage, interp_storage.Global, getFocusString());
+
+		SEE_gcollect(&interp_storage);
+		ScriptDialog::getScriptDialog()->cancelProgressMessage();
+		MZNC_endMutex2();
+	}
+}
+
+
+
+bool MZNEvaluateJS(const char *script, std::string& msg)
+{
+	bool result = false;
+	if (MZNC_waitMutex2())
+	{
+		result = MZNEvaluateJS_internal(script, msg);
+		MZNC_endMutex2();
+	}
+	return result;
 }
 
 bool MZNEvaluateJS(const char *script) {

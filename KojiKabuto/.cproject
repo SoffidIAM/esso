@@ -30,15 +30,13 @@
 								<option id="gnu.cpp.compiler.exe.release.option.optimization.level.1735759622" name="Optimization Level" superClass="gnu.cpp.compiler.exe.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.exe.release.option.debugging.level.916181898" name="Debug Level" superClass="gnu.cpp.compiler.exe.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.129333302" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/usr/include/gtk-2.0"/>
-									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
-									<listOptionValue builtIn="false" value="/usr/lib/glib-2.0/include"/>
-									<listOptionValue builtIn="false" value="/usr/lib/gtk-2.0/include"/>
 									<listOptionValue builtIn="false" value="/usr/include/cairo"/>
 									<listOptionValue builtIn="false" value="/usr/include/pango-1.0"/>
 									<listOptionValue builtIn="false" value="/usr/include/atk-1.0"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/KojiKabuto/kojikabuto-l32/target/native/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/KojiKabuto/src/main/include}&quot;"/>
+									<listOptionValue builtIn="false" value="/usr/include/gtk-3.0"/>
+									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.268183285" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -m32" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1118312262" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -47,11 +45,10 @@
 								<option defaultValue="gnu.c.optimization.level.most" id="gnu.c.compiler.exe.release.option.optimization.level.2056019910" name="Optimization Level" superClass="gnu.c.compiler.exe.release.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.exe.release.option.debugging.level.203039870" name="Debug Level" superClass="gnu.c.compiler.exe.release.option.debugging.level" value="gnu.c.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.313553712" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/usr/include/gtk-2.0"/>
-									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
 									<listOptionValue builtIn="false" value="/usr/lib/glib-2.0/include"/>
 									<listOptionValue builtIn="false" value="/usr/include/cairo"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/KojiKabuto/src/main/include}&quot;"/>
+									<listOptionValue builtIn="false" value="/usr/include/gtk-3.0"/>
 								</option>
 								<option id="gnu.c.compiler.option.misc.other.1747675882" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-c -fmessage-length=0 -m32" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.964210792" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
@@ -79,19 +76,16 @@
 							</tool>
 							<tool command="as" id="cdt.managedbuild.tool.gnu.assembler.exe.release.1258808809" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.release">
 								<option id="gnu.both.asm.option.include.paths.2116214709" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/usr/include/gtk-2.0"/>
-									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
-									<listOptionValue builtIn="false" value="/usr/lib/glib-2.0/include"/>
-									<listOptionValue builtIn="false" value="/usr/lib/gtk-2.0/include"/>
 									<listOptionValue builtIn="false" value="/usr/include/cairo"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/KojiKabuto/src/main/include}&quot;"/>
+									<listOptionValue builtIn="false" value="/usr/include/gtk-3.0"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.489944401" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="windows" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src/main/native"/>
+						<entry excluding="windows/" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="src/main/native"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -128,7 +122,7 @@
 								<option id="gnu.cpp.compiler.option.include.paths.1717351522" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/KojiKabuto/target/native/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/KojiKabuto/src/main/resources}&quot;"/>
-									<listOptionValue builtIn="false" value="/usr/i586-mingw32msvc/include/"/>
+									<listOptionValue builtIn="false" value="/usr/include/gtk-3.0"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.optimization.level.334587980" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.1084375775" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
@@ -136,8 +130,8 @@
 							</tool>
 							<tool command="i586-mingw32msvc-gcc" id="cdt.managedbuild.tool.gnu.c.compiler.base.1170390865" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
 								<option id="gnu.c.compiler.option.include.paths.397161480" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/usr/i586-mingw32msvc/include/"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Mazinger/target/native/include}&quot;"/>
+									<listOptionValue builtIn="false" value="/usr/include/gtk-3.0"/>
 								</option>
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.841270395" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.debugging.level.1796835121" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
@@ -175,6 +169,9 @@
 								</inputType>
 							</tool>
 							<tool command="i586-mingw32msvc-as" id="cdt.managedbuild.tool.gnu.assembler.base.1167135248" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base">
+								<option id="gnu.both.asm.option.include.paths.1863691298" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/usr/include/gtk-3.0"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1523059707" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
@@ -215,9 +212,10 @@
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1076687462" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool command="i586-mingw32msvc-g++" id="cdt.managedbuild.tool.gnu.cpp.compiler.base.302372214" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.include.paths.314811969" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/usr/i686-w64-mingw32/include"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/KojiKabuto/src/main/resources}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/KojiKabuto/kojikabuto-w32/target/native/include}&quot;"/>
-									<listOptionValue builtIn="false" value="/usr/i686-w64-mingw32/include/"/>
+									<listOptionValue builtIn="false" value="/usr/include/gtk-3.0"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.optimization.level.191028946" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.1911502282" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
@@ -228,7 +226,8 @@
 							</tool>
 							<tool command="i586-mingw32msvc-gcc" id="cdt.managedbuild.tool.gnu.c.compiler.base.698942675" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
 								<option id="gnu.c.compiler.option.include.paths.2116239363" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/usr/i686-w64-mingw32/include/"/>
+									<listOptionValue builtIn="false" value="/usr/i686-w64-mingw32/include"/>
+									<listOptionValue builtIn="false" value="/usr/include/gtk-3.0"/>
 								</option>
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.1570017865" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.debugging.level.456758165" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
@@ -266,12 +265,15 @@
 								</inputType>
 							</tool>
 							<tool command="i586-mingw32msvc-as" id="cdt.managedbuild.tool.gnu.assembler.base.679224538" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base">
+								<option id="gnu.both.asm.option.include.paths.1946389303" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/usr/include/gtk-3.0"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1270879387" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="linux" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src/main/native"/>
+						<entry excluding="linux/" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src/main/native"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

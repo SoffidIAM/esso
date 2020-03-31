@@ -41,8 +41,8 @@ bool Action::canExecute ()
 	time_t now;
 	time(&now);
 	if (!m_executed ||
-		(m_canRepeat && m_delay < 0 ) ||
-		(m_canRepeat && (now - m_lastExecution) > m_delay) )
+		(m_canRepeat && m_delay <= 0 ) ||
+		(m_canRepeat && (now - m_lastExecution) >= m_delay) )
 	{
 		m_lastExecution = now;
 		m_executed = true;
@@ -91,16 +91,18 @@ void Action::executeAction () {
 	}
 }
 
-void Action::executeAction (WebMatcher& matcher) {
+bool Action::executeAction (WebMatcher& matcher) {
+	bool ok = false;
 	if (canExecute()) {
 		if ((szType == NULL || strcmp (szType, "script") == 0) && szContent != NULL)
 		{
 			MZNSendDebugMessageA("Execution ECMAscript\n%s", szContent);
-			MZNEvaluateJSMatch (matcher, szContent);
+			ok = MZNEvaluateJSMatch (matcher, szContent);
 		} else {
 			MZNSendDebugMessageA("Ignoring action type %s", szType);
 		}
 	}
+	return ok;
 }
 
 

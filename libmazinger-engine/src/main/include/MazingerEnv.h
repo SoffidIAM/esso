@@ -18,12 +18,13 @@
 class ConfigReader;
 
 #define SECRET_MAX_SIZE 256
-#define SECRETS_BUFFER_SIZE 4096
+#define SECRETS_BUFFER_SIZE 1280000
 
 typedef
 struct MazingerDataStruct {
 	unsigned int dwRulesSize;
 	unsigned int started;
+	long lastUpdate;
 	wchar_t achSecrets[SECRETS_BUFFER_SIZE];
 	int debugLevel;
 	int spy;
@@ -38,6 +39,7 @@ public:
 	virtual ~MazingerEnv();
 	static MazingerEnv* getDefaulEnv();
 	static MazingerEnv* getEnv(const char *user);
+	static MazingerEnv* getEnv(const char *user, const char*desktop);
 	const PMAZINGER_DATA getData ();
 	PMAZINGER_DATA getDataRW ();
 	ConfigReader* getConfigReader () ;
@@ -46,6 +48,7 @@ private:
 	static MazingerEnv *pDefaultEnv;
 	static std::vector<MazingerEnv*> environments;
 	std::string user;
+	std::string desktop;
 	bool openReadOnly;
 	PMAZINGER_DATA open (bool readOnly);
 	void close ();

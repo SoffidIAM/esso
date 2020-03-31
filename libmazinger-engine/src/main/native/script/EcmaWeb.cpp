@@ -6,9 +6,14 @@
 #include "../web/WebComponentSpec.h"
 #include <AbstractWebApplication.h>
 #include <AbstractWebElement.h>
+#include <SmartWebPage.h>
 #include <vector>
 #include <see/see.h>
 #include "ecma.h"
+#ifndef WIN32
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
 
 /* Prototypes */
 static int Web_mod_init(void);
@@ -51,6 +56,15 @@ static void MZN_document_write(struct SEE_interpreter *interp,
 static void MZN_document_writeln(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res);
+static void MZN_document_eval(struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res);
+static void MZN_document_autofill (struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res);
+static void MZN_document_autofillFormless (struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res);
 
 static void MZN_collection_item(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
@@ -62,7 +76,13 @@ static void MZN_collection_namedItem(struct SEE_interpreter *interp,
 static void MZN_element_getAttribute (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res);
+static void MZN_element_getProperty (struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res);
 static void MZN_element_setAttribute (struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res);
+static void MZN_element_setProperty (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res);
 static void MZN_element_getElementsByTagName (struct SEE_interpreter *interp,
@@ -130,6 +150,7 @@ static struct SEE_string *STR(getElementById);
 static struct SEE_string *STR(getElementsByTagName);
 static struct SEE_string *STR(write);
 static struct SEE_string *STR(writeln);
+static struct SEE_string *STR(eval);
 static struct SEE_string *STR(length);
 static struct SEE_string *STR(item);
 static struct SEE_string *STR(namedItem);
@@ -142,8 +163,10 @@ static struct SEE_string *STR(forms);
 static struct SEE_string *STR(images);
 static struct SEE_string *STR(links);
 static struct SEE_string *STR(documentElement);
+static struct SEE_string *STR(getProperty);
 static struct SEE_string *STR(getAttribute);
 static struct SEE_string *STR(setAttribute);
+static struct SEE_string *STR(setProperty);
 static struct SEE_string *STR(removeAttribute);
 static struct SEE_string *STR(click);
 static struct SEE_string *STR(blur);
@@ -153,6 +176,8 @@ static struct SEE_string *STR(disabled);
 static struct SEE_string *STR(id);
 static struct SEE_string *STR(tagName);
 static struct SEE_string *STR(parentNode);
+static struct SEE_string *STR(autofill);
+static struct SEE_string *STR(autofillFormless);
 
 static struct SEE_objectclass prototype_class = {
 	"Object", /* Class */
@@ -213,7 +238,7 @@ static struct SEE_objectclass element_inst_class = {
 
 struct MZN_collection_object {
 	struct SEE_native native;
-	std::vector <AbstractWebElement*> elements;
+	std::vector <AbstractWebElement*> *elements;
 };
 
 static struct SEE_objectclass collection_inst_class = {
@@ -248,6 +273,7 @@ static int Web_mod_init() {
 	STR(getElementsByTagName)=SEE_intern_global("getElementsByTagName");
 	STR(write)=SEE_intern_global("write");
 	STR(writeln)=SEE_intern_global("writeln");
+	STR(eval)=SEE_intern_global("eval");
 	STR(length)=SEE_intern_global("length");
 	STR(item)=SEE_intern_global("item");
 	STR(namedItem)=SEE_intern_global("namedItem");
@@ -260,8 +286,10 @@ static int Web_mod_init() {
 	STR(images) = SEE_intern_global("images");
 	STR(links) = SEE_intern_global("links");
 	STR(documentElement) = SEE_intern_global("documentElement");
+	STR(getProperty) = SEE_intern_global("getProperty");
 	STR(getAttribute) = SEE_intern_global("getAttribute");
 	STR(setAttribute) = SEE_intern_global("setAttribute");
+	STR(setProperty) = SEE_intern_global("setProperty");
 	STR(removeAttribute) = SEE_intern_global("removeAttribute");
 	STR(click) = SEE_intern_global("click");
 	STR(blur) = SEE_intern_global("blur");
@@ -271,6 +299,8 @@ static int Web_mod_init() {
 	STR(id) = SEE_intern_global("id");
 	STR(tagName) = SEE_intern_global("tagName");
 	STR(parentNode) = SEE_intern_global("parentNode");
+	STR(autofill) = SEE_intern_global("autofill");
+	STR(autofillFormless) = SEE_intern_global("autofillFormless");
 	return 0;
 }
 
@@ -333,6 +363,9 @@ static void Web_init(struct SEE_interpreter *interp) {
 	PUTFUNC(proto, MZN_document, getElementsByTagName, 1)
 	PUTFUNC(proto, MZN_document, write, 1)
 	PUTFUNC(proto, MZN_document, writeln, 1)
+	PUTFUNC(proto, MZN_document, eval, 1)
+	PUTFUNC(proto, MZN_document, autofill, 1)
+	PUTFUNC(proto, MZN_document, autofillFormless, 1)
 	PRIVATE(interp)->documentPrototype = &proto->object;
 
 	/** Crear los prototipos de Collection  **/
@@ -347,8 +380,10 @@ static void Web_init(struct SEE_interpreter *interp) {
 	/** Crear los prototipos de Element  **/
     proto = SEE_NEW(interp, SEE_native);
     SEE_native_init(proto, interp, &prototype_class, interp->Object_prototype);
+	PUTFUNC(proto, MZN_element, getProperty, 1)
 	PUTFUNC(proto, MZN_element, getAttribute, 1)
 	PUTFUNC(proto, MZN_element, setAttribute, 2)
+	PUTFUNC(proto, MZN_element, setProperty, 2)
 	PUTFUNC(proto, MZN_element, getElementsByTagName, 1)
 	PUTFUNC(proto, MZN_element, removeAttribute, 1)
 	PUTFUNC(proto, MZN_element, click, 0)
@@ -387,7 +422,7 @@ void finalizeElementObject (struct SEE_interpreter *i, void *object,
 	struct MZN_element_object * seeElement = (struct MZN_element_object*) object;
 	if (seeElement->spec != NULL)
 	{
-		delete seeElement->spec;
+		seeElement->spec -> release();
 		seeElement->spec = NULL;
 	}
 }
@@ -419,14 +454,15 @@ void finalizeCollectionObject (struct SEE_interpreter *i, void *object,
 			void *closure)
 {
 	struct MZN_collection_object * seeCollection = (struct MZN_collection_object*) object;
-	for (std::vector<AbstractWebElement*>::iterator it = seeCollection->elements.begin();
-			it != seeCollection->elements.end();
+	for (std::vector<AbstractWebElement*>::iterator it = seeCollection->elements->begin();
+			it != seeCollection->elements->end();
 			it ++)
 	{
 		AbstractWebElement *pElement = *it;
-		delete pElement;
+		pElement -> release ();
 	}
-	seeCollection->elements.clear();
+	seeCollection->elements->clear();
+	delete seeCollection->elements;
 }
 
 MZN_collection_object *createCollectionObject (std::vector<AbstractWebElement*> &v, SEE_interpreter *interp)
@@ -439,15 +475,16 @@ MZN_collection_object *createCollectionObject (std::vector<AbstractWebElement*> 
 	SEE_native_init(&seeCollection->native, interp,
 			&collection_inst_class, PRIVATE(interp)->collectionPrototype);
 
+	seeCollection -> elements = new std::vector<AbstractWebElement*>();
 	for (std::vector<AbstractWebElement*>::iterator it = v.begin();
 			it != v.end();
 			it++)
 	{
-		seeCollection->elements.push_back(*it);
+		seeCollection->elements->push_back(*it);
 	}
 
 	SEE_value v2;
-	SEE_SET_NUMBER(&v2, seeCollection->elements.size());
+	SEE_SET_NUMBER(&v2, seeCollection->elements->size());
 	SEE_OBJECT_PUT(interp, &seeCollection->native.object, STR(length), &v2, SEE_ATTR_READONLY);
 	return seeCollection;
 
@@ -641,6 +678,90 @@ static void MZN_document_writeln(struct SEE_interpreter *interp,
 
 }
 
+static void MZN_document_eval(struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res)
+{
+
+	char* s = NULL;
+
+	MZN_document_object *pObj = (MZN_document_object*) thisobj;
+
+	SEE_parse_args(interp, argc, argv, "A", &s);
+	if (s != NULL)
+	{
+		MZNSendDebugMessageA("Executing %s", s);
+		pObj->spec->execute(s);
+	}
+	SEE_SET_UNDEFINED(res);
+
+}
+
+static void MZN_document_autofill(struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res)
+{
+	char* s = NULL;
+
+	MZN_document_object *pObj = (MZN_document_object*) thisobj;
+
+	SEE_parse_args(interp, argc, argv, "A", &s);
+
+	struct SEE_interpreter_state *state = SEE_interpreter_save_state( interp);
+	MZNC_endMutex2();
+	AbstractWebApplication *app = pObj -> spec;
+	SmartWebPage *page = app->getWebPage();
+	if (page != NULL)
+	{
+		page->fetchAccounts(app, s);
+		page->parse(app);
+	}
+	while (! MZNC_waitMutex2())
+	{
+#ifdef WIN32
+		Sleep(1000);
+#else
+		usleep (1000 * 1000);
+#endif
+	}
+	SEE_interpreter_restore_state(interp, state);
+
+	SEE_SET_UNDEFINED(res);
+
+}
+
+static void MZN_document_autofillFormless(struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res)
+{
+	char* s = NULL;
+
+	MZN_document_object *pObj = (MZN_document_object*) thisobj;
+
+	SEE_parse_args(interp, argc, argv, "A", &s);
+
+	struct SEE_interpreter_state *state = SEE_interpreter_save_state( interp);
+	MZNC_endMutex2();
+	AbstractWebApplication *app = pObj -> spec;
+	SmartWebPage *page = app->getWebPage();
+	if (page != NULL)
+	{
+		page->fetchAccounts(app, s);
+		page->formlessParse(app);
+	}
+	while (! MZNC_waitMutex2())
+	{
+#ifdef WIN32
+		Sleep(1000);
+#else
+		usleep (1000 * 1000);
+#endif
+	}
+	SEE_interpreter_restore_state(interp, state);
+
+	SEE_SET_UNDEFINED(res);
+
+}
 
 
 static void MZN_collection_item(struct SEE_interpreter *interp,
@@ -650,11 +771,11 @@ static void MZN_collection_item(struct SEE_interpreter *interp,
 	SEE_int32_t i = -1;
 	MZN_collection_object *pObj = (MZN_collection_object*) thisobj;
 	SEE_parse_args(interp, argc, argv, "i", &i);
-	if (i < 0 || i >= (SEE_int32_t) pObj->elements.size())
+	if (i < 0 || i >= (SEE_int32_t) pObj->elements->size())
 	{
 		SEE_SET_UNDEFINED(res);
 	} else {
-		AbstractWebElement *pEl = pObj->elements.at(i);
+		AbstractWebElement *pEl = pObj->elements->at(i);
 		if (pEl == NULL)
 		{
 			SEE_SET_NULL(res);
@@ -680,8 +801,8 @@ static void MZN_collection_namedItem(struct SEE_interpreter *interp,
 		SEE_parse_args(interp, argc, argv, "s", &s);
 		std::string ach = SEE_StringToUTF8(interp, s);
 		bool found = false;
-		for ( std::vector<AbstractWebElement*>::iterator it = pObj->elements.begin();
-				!found && it != pObj->elements.end();
+		for ( std::vector<AbstractWebElement*>::iterator it = pObj->elements->begin();
+				!found && it != pObj->elements->end();
 				it ++)
 		{
 			AbstractWebElement *el = *it;
@@ -695,8 +816,8 @@ static void MZN_collection_namedItem(struct SEE_interpreter *interp,
 			}
 		}
 		if (! found) {
-			for ( std::vector<AbstractWebElement*>::iterator it = pObj->elements.begin();
-					!found && it != pObj->elements.end();
+			for ( std::vector<AbstractWebElement*>::iterator it = pObj->elements->begin();
+					!found && it != pObj->elements->end();
 					it ++)
 			{
 				AbstractWebElement *el = *it;
@@ -814,10 +935,14 @@ static void MZN_element_setAttribute (struct SEE_interpreter *interp,
 		std::string ach1 = SEE_StringToUTF8(interp, s1);
 		std::string ach2 = SEE_StringToUTF8(interp, s2);
 		pObj->spec->setAttribute(ach1.c_str(), ach2.c_str());
+		if (ach1 == "value")
+		{
+			pObj->spec->setProperty(ach1.c_str(), ach2.c_str());
+		}
 	}
 }
 
-static void MZN_element_getElementsByTagName (struct SEE_interpreter *interp,
+static void MZN_element_setProperty (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res)
 {
@@ -825,29 +950,52 @@ static void MZN_element_getElementsByTagName (struct SEE_interpreter *interp,
 	SEE_string *s2;
 	MZN_element_object *pObj = (MZN_element_object*) thisobj;
 	SEE_SET_UNDEFINED(res);
+	if (argc == 2)
+	{
+		SEE_parse_args(interp, argc, argv, "s|s", &s1, &s2);
+		std::string ach1 = SEE_StringToUTF8(interp, s1);
+		std::string ach2 = SEE_StringToUTF8(interp, s2);
+		pObj->spec->setProperty(ach1.c_str(), ach2.c_str());
+	}
+}
+
+static void findElementsByTagName( AbstractWebElement *node, const std::string &wantedTag, std::vector<AbstractWebElement *> &result)
+{
+	std::vector<AbstractWebElement *> v1;
+	node->getChildren (v1);
+	for ( std::vector<AbstractWebElement*>::iterator it = v1.begin();
+			it != v1.end();
+			it++)
+	{
+		AbstractWebElement* el = *it;
+		findElementsByTagName(el, wantedTag, result);
+		std::string tagname;
+		el->getTagName(tagname);
+		if (tagname.compare(wantedTag))
+		{
+			result.push_back(el);
+		}
+		else
+		{
+			el->release();
+		}
+	}
+
+}
+
+static void MZN_element_getElementsByTagName (struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res)
+{
+	SEE_string *s1;
+	MZN_element_object *pObj = (MZN_element_object*) thisobj;
+	SEE_SET_UNDEFINED(res);
 	if (argc == 1)
 	{
-		SEE_parse_args(interp, argc, argv, "s", &s1, &s2);
+		SEE_parse_args(interp, argc, argv, "s", &s1);
 		std::string wantedTag = SEE_StringToUTF8(interp, s1);
-		std::vector<AbstractWebElement *> v1;
 		std::vector<AbstractWebElement *> v2;
-		pObj->spec->getChildren (v1);
-		for ( std::vector<AbstractWebElement*>::iterator it = v1.begin();
-				it != v2.end();
-				it++)
-		{
-			AbstractWebElement*el = *it;
-			std::string tagname;
-			el->getTagName(tagname);
-			if (tagname.compare(wantedTag))
-			{
-				v2.push_back(el);
-			}
-			else
-			{
-				delete el;
-			}
-		}
+		findElementsByTagName(pObj->spec, wantedTag, v2);
 		SEE_SET_OBJECT(res, &createCollectionObject(v2, interp)->native.object);
 	}
 }
@@ -888,7 +1036,29 @@ static void MZN_element_getAttribute (struct SEE_interpreter *interp,
 		SEE_parse_args(interp, argc, argv, "s", &s1, &s2);
 		std::string ach1 = SEE_StringToUTF8(interp, s1);
 		std::string v;
-		pObj->spec->getAttribute(ach1.c_str(), v);
+		if (v == "value")
+			pObj->spec->getProperty(ach1.c_str(), v);
+		else
+			pObj->spec->getAttribute(ach1.c_str(), v);
+		SEE_string *str = SEE_UTF8ToString(interp, v.c_str());
+		SEE_SET_STRING(res, str);
+	}
+}
+
+static void MZN_element_getProperty (struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res)
+{
+	SEE_string *s1;
+	SEE_string *s2;
+	MZN_element_object *pObj = (MZN_element_object*) thisobj;
+	SEE_SET_UNDEFINED(res);
+	if (argc > 0)
+	{
+		SEE_parse_args(interp, argc, argv, "s", &s1, &s2);
+		std::string ach1 = SEE_StringToUTF8(interp, s1);
+		std::string v;
+		pObj->spec->getProperty(ach1.c_str(), v);
 		SEE_string *str = SEE_UTF8ToString(interp, v.c_str());
 		SEE_SET_STRING(res, str);
 	}

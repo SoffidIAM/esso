@@ -8,6 +8,8 @@
 #include <string>
 #include <MZNcompat.h>
 #include "Tokenizer.h"
+#include "CreateUserDaemon.h"
+#include <time.h>
 
 // #define TRAMPOTA
 
@@ -117,8 +119,14 @@ const wchar_t* getAdminGroup ()
 	return achAdminGroup;
 }
 
+static time_t lastSeed = 0;
+
 const wchar_t* generatePassword ()
 {
+	time_t t;
+	time(&t);
+	lastSeed += t;
+	srand (lastSeed);
 	int i;
 	for (i = 0; i < PASSWORD_LENGTH; i++)
 	{
@@ -204,7 +212,7 @@ bool notifyNewPassword (const wchar_t* password)
 	std::wstring hostname = MZNC_strtowstr (MZNC_getHostName());
 
 	SeyconResponse *resp = service.sendUrlMessage(
-			L"/sethostadmin?host=%s&user=%s&pass=%s&shiroId=%s&serial=%s",
+			L"/sethostadmin?host=%ls&user=%ls&pass=%ls&shiroId=%ls&serial=%ls",
 			service.escapeString(hostname.c_str()).c_str(), achShiroAccount,
 			service.escapeString(password).c_str(),
 			service.escapeString(shiroId.c_str()).c_str(),
@@ -658,6 +666,7 @@ VOID __stdcall shiroServiceCtrlHandler ( IN DWORD Opcode)
 		case SERVICE_CONTROL_STOP:
 			updateServiceStatus(SERVICE_STOP_PENDING);
 			SetEvent(hStopEvent);
+
 			return;
 	}
 
@@ -707,8 +716,13 @@ void __stdcall shiroServiceStart (DWORD argc, LPTSTR *argv)
 
 	init();
 
+
 	hStopEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	updateServiceStatus(SERVICE_RUNNING);
+
+
+	CreateUserDaemon cud;
+	cud.startDaemon();
 
 	while (WAIT_OBJECT_0 != WaitForSingleObject(hStopEvent, 300000))
 	{
@@ -717,6 +731,8 @@ void __stdcall shiroServiceStart (DWORD argc, LPTSTR *argv)
 		updateHostAddress();
 		printf("Waiting ....\n");
 	}
+
+	cud.stopDaemon();
 
 	updateServiceStatus(SERVICE_STOPPED);
 
@@ -731,12 +747,9 @@ bool registerService ()
 	return StartServiceCtrlDispatcher(DispatchTable);
 }
 
-extern "C" int main ()
+extern "C" int main (int argc, char **argv)
 {
-	time_t t;
-	time(&t);
-	t += GetCurrentProcessId();
-	srand(t);
+	lastSeed = GetCurrentProcessId();
 
 	if (registerService())
 	{
@@ -747,4 +760,12 @@ extern "C" int main ()
 	init();
 	debug = true;
 	loop();
+	if (argc > 1)
+	{
+		CreateUserDaemon cud;
+		cud.startDaemon();
+		printf ("Press enter to stop\n");
+		char ach[89];
+		gets(ach);
+	}
 }

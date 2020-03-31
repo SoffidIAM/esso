@@ -108,6 +108,8 @@
 								<linkerEndOption>-lwsock32</linkerEndOption>
 								<linkerEndOption>-ladvapi32</linkerEndOption>
 								<linkerEndOption>-lsecur32</linkerEndOption>
+								<linkerEndOption>-lmpr</linkerEndOption>
+								<linkerEndOption>-lgdi32</linkerEndOption>
 								<linkerEndOption>-static</linkerEndOption>
 							</linkerEndOptions>
 							<sources>

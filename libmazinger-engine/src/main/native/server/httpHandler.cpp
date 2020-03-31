@@ -120,7 +120,7 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 		wchar_t *query = wcsstr(path2, L"?");
 		if (query != NULL)
 			*query = L'\0';
-		SeyconCommon::debug("Performing request https://%hs:%d%ls...\n", host, port, path2);
+//		SeyconCommon::debug("Performing request https://%hs:%d%ls...\n", host, port, path2);
 		free (path2);
 
 		/*	WinHttpSetOption ( hSession, WINHTTP_OPTION_CLIENT_CERT_CONTEXT,
@@ -131,14 +131,13 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 
 		if (hConnect) {
 
-
-
 			hRequest = WinHttpOpenRequest(hConnect, L"GET", path, NULL,
 					WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES,
 					WINHTTP_FLAG_SECURE);
 
+			unsigned long timeout = 120000;
 			WinHttpSetOption(hRequest, WINHTTP_OPTION_RECEIVE_TIMEOUT,
-					(LPVOID) 120000, 0); // 2 minuts de timeout
+					(LPVOID) &timeout, sizeof timeout); // 2 minuts de timeout
 
 			WinHttpSetOption(hRequest, WINHTTP_OPTION_CLIENT_CERT_CONTEXT,
 					WINHTTP_NO_CLIENT_CERT_CONTEXT, 0);
@@ -175,22 +174,27 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 							| PKCS_7_ASN_ENCODING,
 							&issuerContext->pCertInfo->SubjectPublicKeyInfo,
 							&pSeyconRootCert->pCertInfo->SubjectPublicKeyInfo)) {
-						SeyconCommon::info("Received certificate not allowed\n");
-						char pszNameString[256] = "<unknown>";
-						char pszNameString2[256] = "<unknown>";
+						std::string ignore;
+						SeyconCommon::readProperty("ignoreCert", ignore);
+						if (ignore != "true")
+						{
+							SeyconCommon::info("Received certificate not allowed\n");
+							char pszNameString[256] = "<unknown>";
+							char pszNameString2[256] = "<unknown>";
 
-						CertGetNameStringA(pSeyconRootCert,
-								CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL,
-								pszNameString2, 128);
+							CertGetNameStringA(pSeyconRootCert,
+									CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL,
+									pszNameString2, 128);
 
-						CertGetNameStringA(issuerContext,
-								CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL,
-								pszNameString, 128);
+							CertGetNameStringA(issuerContext,
+									CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL,
+									pszNameString, 128);
 
-						SeyconCommon::warn ("ERROR: Invalid CA %s. Should be %s\n",
-								pszNameString, pszNameString2);
-						bResults = NULL;
-						SetLastError(ERROR_WINHTTP_SECURE_FAILURE);
+							SeyconCommon::warn ("ERROR: Invalid CA %s. Should be %s\n",
+									pszNameString, pszNameString2);
+							bResults = NULL;
+							SetLastError(ERROR_WINHTTP_SECURE_FAILURE);
+						}
 					}
 				}
 			}
@@ -230,50 +234,50 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 		DWORD dw = GetLastError();
 		if (!bResults) {
 			if (dw == ERROR_WINHTTP_CANNOT_CONNECT)
-				SeyconCommon::warn("Error: Cannot connect\n");
+				SeyconCommon::warn("Error: Cannot connect to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_CLIENT_AUTH_CERT_NEEDED)
-				SeyconCommon::warn("Error: Client CERT required\n");
+				SeyconCommon::warn("Error: Client CERT required connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_CONNECTION_ERROR)
-				SeyconCommon::warn("Error: Connection error\n");
+				SeyconCommon::warn("Error: Connection error connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_INCORRECT_HANDLE_STATE)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_INCORRECT_HANDLE_STATE\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_INCORRECT_HANDLE_STATE connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_INCORRECT_HANDLE_TYPE)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_INCORRECT_HANDLE_TYPE\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_INCORRECT_HANDLE_TYPE connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_INTERNAL_ERROR)
-				SeyconCommon::warn("Error: ERRR_WINHTTP_INTERNAL_ERROR\n");
+				SeyconCommon::warn("Error: ERRR_WINHTTP_INTERNAL_ERROR connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_INVALID_URL)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_INVALID_URL\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_INVALID_URL connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_LOGIN_FAILURE)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_LOGIN_FAILURE\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_LOGIN_FAILURE connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_NAME_NOT_RESOLVED)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_NAME_NOT_RESOLVED\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_NAME_NOT_RESOLVED connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_OPERATION_CANCELLED)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_OPERATION_CANCELLED\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_OPERATION_CANCELLED connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_RESPONSE_DRAIN_OVERFLOW)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_RESPONSE_DRAIN_OVERFLOW\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_RESPONSE_DRAIN_OVERFLOW connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_SECURE_FAILURE)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_SECURE_FAILURE\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_SECURE_FAILURE connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_SHUTDOWN)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_SHUTDOWN\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_SHUTDOWN connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_TIMEOUT)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_TIMEOUT\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_TIMEOUT connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_UNRECOGNIZED_SCHEME)
-				SeyconCommon::warn("Error: ERROR_WINHTTP_UNRECOGNIZED_SCHEME\n");
+				SeyconCommon::warn("Error: ERROR_WINHTTP_UNRECOGNIZED_SCHEME connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_NOT_ENOUGH_MEMORY)
-				SeyconCommon::warn("Error: ERROR_NOT_ENOUGH_MEMORY\n");
+				SeyconCommon::warn("Error: ERROR_NOT_ENOUGH_MEMORY connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_INVALID_PARAMETER)
-				SeyconCommon::warn("Error: ERROR_INVALID_PARAMETER\n");
+				SeyconCommon::warn("Error: ERROR_INVALID_PARAMETER connecting to %s:%d\n", host, port);
 			else if (dw == ERROR_WINHTTP_RESEND_REQUEST)
-				SeyconCommon::warn("Error:  ERROR_WINHTTP_RESEND_REQUEST\n");
+				SeyconCommon::warn("Error:  ERROR_WINHTTP_RESEND_REQUEST connecting to %s:%d\n", host, port);
 			else if (dw ==  ERROR_WINHTTP_INVALID_SERVER_RESPONSE ) {
 				if (firstTime) {
 					firstTime = false;
 					repeat = true;
-					SeyconCommon::warn("Error:  ERROR_WINHTTP_INVALID_SERVER_RESPONSE. Retrying...\n");
+					SeyconCommon::warn("Error:  ERROR_WINHTTP_INVALID_SERVER_RESPONSE connecting to %s:%d. Retrying...\n", host, port);
 				} else
-					SeyconCommon::warn("Error:  ERROR_WINHTTP_INVALID_SERVER_RESPONSE\n");
+					SeyconCommon::warn("Error:  ERROR_WINHTTP_INVALID_SERVER_RESPONSE  connecting to %s:%d\n", host, port);
 			} else
-				SeyconCommon::warn("Error:  %d\n", dw);
+				SeyconCommon::warn("Error:  %d  connecting to %s:%d\n", (int) dw, host, port);
 		}
 
 		// Close any open handles.
@@ -302,80 +306,102 @@ struct TempBuffer {
 ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* hostName, size_t dwPort) {
 	if (pSession == NULL)
 	{
-		static void   (*pg_thread_init)   (GThreadFunctions *vtable);
+		static void   (*pg_thread_init)   (GThreadFunctions *vtable) = NULL;
+		static void   (*pg_type_init)  () = NULL;
 
-		pg_thread_init = NULL;
-		if (pg_thread_init == NULL) {
+		if (pg_thread_init == NULL) 
 			pg_thread_init = (void   (*)   (GThreadFunctions *vtable)) dlsym (RTLD_DEFAULT, "g_thread_init");
-		}
 		if (pg_thread_init != NULL)
 			pg_thread_init (NULL);
-		g_type_init ();
+		if (pg_type_init == NULL) 
+			pg_type_init = (void   (*)  ()) dlsym (RTLD_DEFAULT, "g_type_init");
+		if (pg_type_init != NULL) 
+			pg_type_init ();
 
 		std::string fileName;
-
 		SeyconCommon::readProperty("CertificateFile", fileName);
+
 		if (fileName.size() == 0) {
 			SeyconCommon::warn("Unknown certificate file. Please configure /etc/mazinger\n");
 			return SIR_ERROR;
 		}
 
+		std::string timeoutStr;
+		SeyconCommon::readProperty("Timeout", timeoutStr);
+		int timeout = 60;
+		sscanf ( timeoutStr.c_str(), "%d", &timeout);
+
 		pSession = soup_session_sync_new_with_options ( SOUP_SESSION_SSL_CA_FILE, fileName.c_str(),
 				SOUP_SESSION_IDLE_TIMEOUT, 3,
-				SOUP_SESSION_TIMEOUT, 60,
+				SOUP_SESSION_TIMEOUT, timeout,
 				NULL);
 	}
 
-	char num[10];
-	sprintf (num, "%d", dwPort);
+	bool repeat;
+	int retries = 0;
+	do
+	{
+		repeat = false;
+		char num[10];
+		sprintf (num, "%d", dwPort);
 
-	std::string szUri = MZNC_wstrtostr(path);
-	std::string szUrl = "https://";
-	szUrl += hostName;
-	szUrl += ":";
-	szUrl += num;
-	szUrl += szUri;
+		std::string szUri = MZNC_wstrtostr(path);
+		std::string szUrl = "https://";
+		szUrl += hostName;
+		szUrl += ":";
+		szUrl += num;
+		szUrl += szUri;
 
-	char *path2 = strdup (szUrl.c_str());
-	char *query = strstr(path2, "?");
-	if (query != NULL)
-		*query = L'\0';
-
-	SeyconCommon::debug("Performing request %s....", path2);
-
-	free (path2);
-
-	SoupMessage *msg = soup_message_new ("GET", szUrl.c_str());
-
-	SeyconCommon::wipe(szUri);
-	SeyconCommon::wipe(szUrl);
+		char *path2 = strdup (szUrl.c_str());
+		SeyconCommon::debug("Performing request %s....", path2);
+		char *query = strstr(path2, "?");
+		if (query != NULL)
+			*query = L'\0';
 
 
-	if (msg != NULL) {
-		guint status = soup_session_send_message(pSession, msg);
-		if (status == 204) // HTTP-NO-DATA
-		{
-			SeyconCommon::debug ("Success HTTP/204 (No data)", status);
-			g_object_unref(msg);
-			msg = NULL;
-			return SIR_ERROR;
-		} else if (status != 200) // HTTP-OK
-		{
-			SeyconCommon::debug ("Error HTTP/%d at host: %s:%d: %s", status, hostName, dwPort,
-					msg->reason_phrase);
-			g_object_unref(msg);
-			msg = NULL;
-			return SIR_RETRY;
+		free (path2);
+
+		SoupMessage *msg = soup_message_new ("GET", szUrl.c_str());
+
+		SeyconCommon::wipe(szUri);
+		SeyconCommon::wipe(szUrl);
+
+
+		if (msg != NULL) {
+			guint status = soup_session_send_message(pSession, msg);
+			if (status == 204) // HTTP-NO-DATA
+			{
+				SeyconCommon::debug ("Success HTTP/204 (No data)", status);
+				g_object_unref(msg);
+				msg = NULL;
+				return SIR_ERROR;
+			}
+			else if (status == 7 && retries < 2) // Ćonnexion closed
+			{
+				SeyconCommon::debug ("Error HTTP/%d at host: %s:%d: %s. Retrying", status, hostName, dwPort,
+						msg->reason_phrase);
+				retries ++;
+				repeat = true;
+				sleep(3);
+			}
+			else if (status != 200) // HTTP-OK
+			{
+				SeyconCommon::debug ("Error HTTP/%d at host: %s:%d: %s", status, hostName, dwPort,
+						msg->reason_phrase);
+				g_object_unref(msg);
+				msg = NULL;
+				return SIR_RETRY;
+			} else {
+				SoupBuffer *buffer = soup_message_body_flatten(msg->response_body);
+				result = new SeyconResponse ((char*) buffer->data, buffer->length);
+				g_object_unref(msg);
+				return SIR_SUCCESS;
+			}
 		} else {
-			SoupBuffer *buffer = soup_message_body_flatten(msg->response_body);
-			result = new SeyconResponse ((char*) buffer->data, buffer->length);
-			g_object_unref(msg);
-			return SIR_SUCCESS;
+			SeyconCommon::warn("Unable to create soup message\n");
+			return SIR_ERROR;
 		}
-	} else {
-		SeyconCommon::warn("Unable to create soup message\n");
-		return SIR_ERROR;
-	}
+	} while (repeat);
 
 }
 
@@ -386,17 +412,27 @@ SeyconURLServiceIterator::~SeyconURLServiceIterator () {
 }
 
 SeyconResponse*  SeyconService::sendUrlMessage(const char* host, int port, const wchar_t* url, ...) {
+#ifdef WIN32
+	if (pSeyconRootCert == NULL) {
+		return NULL;
+	}
+#endif
 
 	va_list v;
 	va_start (v, url);
-	wchar_t wch[4000];
+	wchar_t wch[32000];
+	wch[0] == L'\0';
 #ifdef WIN32
-	vsnwprintf(wch, 3999, url, v);
+	vsnwprintf(wch, 31999, url, v);
 #else
-	vswprintf(wch, 3999, url, v);
+	vswprintf(wch, 31999, url, v);
 #endif
 	va_end (v);
 
+	if (wch[0] == L'\0')
+		SeyconCommon::debug("URL too big problem invoking %ls", url);
+
+	SeyconCommon::debug("Invoking %ls", wch);
 	SeyconURLServiceIterator it;
 	it.path = wch;
 	ServiceIteratorResult r = it.iterate (host, port);
@@ -411,13 +447,19 @@ SeyconResponse*  SeyconService::sendUrlMessage(const char* host, int port, const
 }
 
 SeyconResponse* SeyconService::sendUrlMessage(const wchar_t* url, ...) {
+#ifdef WIN32
+	if (pSeyconRootCert == NULL) {
+		return NULL;
+	}
+#endif
+
 	va_list v;
 	va_start (v, url);
-	wchar_t wch[4000];
+	wchar_t wch[32000];
 #ifdef WIN32
-	vsnwprintf(wch, 3999, url, v);
+	vsnwprintf(wch, 31999, url, v);
 #else
-	vswprintf(wch, 3999, url, v);
+	vswprintf(wch, 31999, url, v);
 #endif
 	va_end (v);
 	SeyconURLServiceIterator it;
@@ -447,6 +489,7 @@ void SeyconService::resetServerStatus () {
 		size_t pointer2 =  servers.find_first_of (", ", pointer);
 		if (pointer2 == std::string::npos)
 			pointer2 = servers.size();
+		SeyconCommon::debug("Server {%s}", servers.substr (pointer, pointer2-pointer).c_str());
 		hosts.push_back (servers.substr (pointer, pointer2-pointer));
 		pointer = servers.find_first_not_of(", ", pointer2);
 	}
@@ -491,6 +534,7 @@ ServiceIteratorResult SeyconService::iterateServers(SeyconServiceIterator &it) {
 		}
 		resetServerStatus();
 	}
+
 	time_t startTime;
 	time (&startTime);
 	int port;
@@ -528,29 +572,32 @@ time_t SeyconService::lastError = 0;
 
 SeyconService::SeyconService() {
 #ifdef WIN32
-	std::string fileName;
-	SeyconCommon::readProperty ("CertificateFile", fileName);
-	if (fileName.size () == 0)
-		return;
-
-	int allocated = 0;
-	BYTE *buffer = NULL;
-	int size = 0;
-	int chunk = 2048;
-	FILE *file = fopen(fileName.c_str(), "rb");
-	if (file != NULL) {
-		int read = 0;
-		do {
-			allocated += chunk - (allocated - size) + 1;
-			buffer = (BYTE*) realloc(buffer, allocated);
-			read = fread(&buffer[size], 1, chunk, file);
-			size += read;
-			buffer[size] = '\0';
-		} while (read > 0);
-		pSeyconRootCert = CertCreateCertificateContext(X509_ASN_ENCODING,
-				buffer, size);
-	} else {
-		SeyconCommon::warn("Unable to load %s\n", fileName.c_str());
+	if (pSeyconRootCert == NULL) {
+		std::string fileName;
+		SeyconCommon::readProperty ("CertificateFile", fileName);
+		if (fileName.size () == 0)
+			return;
+	
+		int allocated = 0;
+		BYTE *buffer = NULL;
+		int size = 0;
+		int chunk = 2048;
+		FILE *file = fopen(fileName.c_str(), "rb");
+		if (file != NULL) {
+			int read = 0;
+			do {
+				allocated += chunk - (allocated - size) + 1;
+				buffer = (BYTE*) realloc(buffer, allocated);
+				read = fread(&buffer[size], 1, chunk, file);
+				size += read;
+				buffer[size] = '\0';
+			} while (read > 0);
+			pSeyconRootCert = CertCreateCertificateContext(X509_ASN_ENCODING,
+					buffer, size);
+			fclose (file);
+		} else {
+			SeyconCommon::warn("Unable to load certificate file %s\n", fileName.c_str());
+		}
 	}
 #endif
 }

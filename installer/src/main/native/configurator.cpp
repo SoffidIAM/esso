@@ -7,39 +7,13 @@ using namespace std;
 
 static bool debug = false;
 
+BOOL HelperWriteKey(int bits, HKEY roothk, const char *lpSubKey, LPCTSTR val_name,
+		DWORD dwType, const void *lpvData, DWORD dwDataSize);
+		
+
 static bool setProperty(const char *attribute, const char* value) {
-	HKEY hKey;
-
-	if (RegOpenKeyW(HKEY_LOCAL_MACHINE, L"Software\\Soffid\\esso", &hKey)
-			!= ERROR_SUCCESS) {
-		if (debug)
-			wprintf(L"Missing Software\\Soffid\\esso key\n");
-		return FALSE;
-	}
-
-	DWORD cbSize = strlen(value);
-	DWORD result = RegSetValueEx(hKey, attribute, NULL, REG_SZ, (LPBYTE) value,
-			cbSize);
-	CloseHandle(hKey);
-	return result == ERROR_SUCCESS;
-
-}
-
-static bool setProperty(const wchar_t *attribute, const wchar_t* value) {
-	HKEY hKey;
-
-	if (RegOpenKeyW(HKEY_LOCAL_MACHINE, L"Software\\Soffid\\esso", &hKey)
-			!= ERROR_SUCCESS) {
-		if (debug)
-			wprintf(L"Missing Software\\Soffid\\esso key\n");
-		return FALSE;
-	}
-
-	DWORD cbSize = (wcslen(value)+1) * sizeof(wchar_t);
-	DWORD result = RegSetValueExW(hKey, attribute, NULL, REG_SZ,
-			(LPBYTE) value, cbSize);
-	CloseHandle(hKey);
-	return result == ERROR_SUCCESS;
+	return HelperWriteKey(64, HKEY_LOCAL_MACHINE, "Software\\Soffid\\esso", attribute, 
+			REG_SZ, (void*) value, lstrlen(value));
 
 }
 
@@ -164,45 +138,45 @@ static LPSTR readURL(HINTERNET hSession, LPWSTR host, int port, LPCWSTR path,
 	}
 
 	DWORD dw = GetLastError();
-	if (!bResults && debug) {
+	if (!bResults) {
 		if (dw == ERROR_WINHTTP_CANNOT_CONNECT)
-			wprintf(L"Error: Cannot connect\n");
+			log("Error: Cannot connect\n");
 		else if (dw == ERROR_WINHTTP_CLIENT_AUTH_CERT_NEEDED)
-			wprintf(L"Error: Client CERT required\n");
+			log("Error: Client CERT required\n");
 		else if (dw == ERROR_WINHTTP_CONNECTION_ERROR)
-			wprintf(L"Error: Connection error\n");
+			log("Error: Connection error\n");
 		else if (dw == ERROR_WINHTTP_INCORRECT_HANDLE_STATE)
-			wprintf(L"Error: ERROR_WINHTTP_INCORRECT_HANDLE_STATE\n");
+			log("Error: ERROR_WINHTTP_INCORRECT_HANDLE_STATE\n");
 		else if (dw == ERROR_WINHTTP_INCORRECT_HANDLE_TYPE)
-			wprintf(L"Error: ERROR_WINHTTP_INCORRECT_HANDLE_TYPE\n");
+			log("Error: ERROR_WINHTTP_INCORRECT_HANDLE_TYPE\n");
 		else if (dw == ERROR_WINHTTP_INTERNAL_ERROR)
-			wprintf(L"Error: ERROR_WINHTTP_INTERNAL_ERROR\n");
+			log("Error: ERROR_WINHTTP_INTERNAL_ERROR\n");
 		else if (dw == ERROR_WINHTTP_INVALID_URL)
-			wprintf(L"Error: ERROR_WINHTTP_INVALID_URL\n");
+			log("Error: ERROR_WINHTTP_INVALID_URL\n");
 		else if (dw == ERROR_WINHTTP_LOGIN_FAILURE)
-			wprintf(L"Error: ERROR_WINHTTP_LOGIN_FAILURE\n");
+			log("Error: ERROR_WINHTTP_LOGIN_FAILURE\n");
 		else if (dw == ERROR_WINHTTP_NAME_NOT_RESOLVED)
-			wprintf(L"Error: ERROR_WINHTTP_NAME_NOT_RESOLVED\n");
+			log("Error: ERROR_WINHTTP_NAME_NOT_RESOLVED\n");
 		else if (dw == ERROR_WINHTTP_OPERATION_CANCELLED)
-			wprintf(L"Error: ERROR_WINHTTP_OPERATION_CANCELLED\n");
+			log("Error: ERROR_WINHTTP_OPERATION_CANCELLED\n");
 		else if (dw == ERROR_WINHTTP_RESPONSE_DRAIN_OVERFLOW)
-			wprintf(L"Error: ERROR_WINHTTP_RESPONSE_DRAIN_OVERFLOW\n");
+			log("Error: ERROR_WINHTTP_RESPONSE_DRAIN_OVERFLOW\n");
 		else if (dw == ERROR_WINHTTP_SECURE_FAILURE)
-			wprintf(L"Error: ERROR_WINHTTP_SECURE_FAILURE\n");
+			log("Error: ERROR_WINHTTP_SECURE_FAILURE\n");
 		else if (dw == ERROR_WINHTTP_SHUTDOWN)
-			wprintf(L"Error: ERROR_WINHTTP_SHUTDOWN\n");
+			log("Error: ERROR_WINHTTP_SHUTDOWN\n");
 		else if (dw == ERROR_WINHTTP_TIMEOUT)
-			wprintf(L"Error: ERROR_WINHTTP_TIMEOUT\n");
+			log("Error: ERROR_WINHTTP_TIMEOUT\n");
 		else if (dw == ERROR_WINHTTP_UNRECOGNIZED_SCHEME)
-			wprintf(L"Error: ERROR_WINHTTP_UNRECOGNIZED_SCHEME\n");
+			log("Error: ERROR_WINHTTP_UNRECOGNIZED_SCHEME\n");
 		else if (dw == ERROR_NOT_ENOUGH_MEMORY)
-			wprintf(L"Error: ERROR_NOT_ENOUGH_MEMORY\n");
+			log("Error: ERROR_NOT_ENOUGH_MEMORY\n");
 		else if (dw == ERROR_INVALID_PARAMETER)
-			wprintf(L"Error: ERROR_INVALID_PARAMETER\n");
+			log("Error: ERROR_INVALID_PARAMETER\n");
 		else if (dw == ERROR_WINHTTP_RESEND_REQUEST)
-			wprintf(L"Error:  ERROR_WINHTTP_RESEND_REQUEST\n");
+			log("Error:  ERROR_WINHTTP_RESEND_REQUEST\n");
 		else if (dw != ERROR_SUCCESS) {
-			wprintf (L"Unkonwn error %d\n", dw);
+			log ("Unkonwn error %d\n", dw);
 		}
 		notifyError();
 	}
@@ -284,8 +258,12 @@ bool configure(LPCSTR mazingerDir, const char* url) {
 		log ("Error setting certificateFile");
 		notifyError();
 	}
-	if (!setProperty(L"SSOServer", szHostName)) {
-		log ("Error setting SSOSErver");
+	
+	char hostName[4096];
+	wcstombs(hostName, szHostName, 4095);
+
+	if (!setProperty("SSOServer", hostName)) {
+		log ("Error setting SSOServer");
 		notifyError();
 	}
 	char szPort[100];

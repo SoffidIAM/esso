@@ -380,11 +380,7 @@ PasswordIterator::~PasswordIterator ()
 {
 }
 
-//////////////////////////////////////////////////////////
-int SeyconSession::passwordSessionStartup ( const char* lpszUser, const wchar_t* lpszPass )
-{
-	json::JsonAbstractObject::ConfigureChromePreferences();
-
+void SeyconSession::updateConfiguration() {
 	SeyconCommon::updateHostAddress();
     // Actualitzar la configuraci�
     SeyconCommon::updateConfig ( "soffid.hostname.format" );
@@ -395,6 +391,22 @@ int SeyconSession::passwordSessionStartup ( const char* lpszUser, const wchar_t*
     SeyconCommon::updateConfig ( "seycon.https.port" );
     SeyconCommon::updateConfig ( "seycon.https.alternate.port" );
 	SeyconCommon::updateConfig ( "SSOSoffidAgent");
+	SeyconCommon::updateConfig ( "EnableCloseSession");
+	SeyconCommon::updateConfig ( "ForceStartupLogin");
+	SeyconCommon::updateConfig ( "soffid.esso.session.keepalive");
+	SeyconCommon::updateConfig ( "soffid.esso.idleTimeout");
+	SeyconCommon::updateConfig ( "soffid.esso.sharedWorkstation");
+	SeyconCommon::updateConfig ( "AutoSSOSystem");
+	SeyconCommon::updateConfig ( "AutoSSOURL");
+}
+
+//////////////////////////////////////////////////////////
+int SeyconSession::passwordSessionStartup ( const char* lpszUser, const wchar_t* lpszPass )
+{
+	m_kerberosLogin = false;
+	m_passwordLogin = true;
+
+	updateConfiguration();
 
 	errorMessage.assign ( "Can not contact identification servers" );
     DEBUG

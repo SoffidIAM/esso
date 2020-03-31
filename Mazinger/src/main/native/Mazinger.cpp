@@ -27,6 +27,8 @@
 #include <stdio.h>
 #include <MazingerHook.h>
 #include <ssoclient.h>
+#include <time.h>
+#include <SecretStore.h>
 
 extern bool MZNEvaluateJS(const char *script, std::string &msg);
 
@@ -46,10 +48,12 @@ extern "C" BOOL WINAPI ConvertStringSecurityDescriptorToSecurityDescriptorW(
 //
 
 DWORD CALLBACK LeerMailSlot(LPVOID lpData);
+DWORD CALLBACK LeerSpySlot(LPVOID lpData);
 HANDLE createDebugMailSlot ();
 #else
 
 void* LeerMailSlot (void * lpv) ;
+void* LeerSpySlot (void * lpv) ;
 
 #endif
 
@@ -305,7 +309,8 @@ void doStatus() {
 	MZNStatus(achUser);
 }
 
-void doDebug(int debugLevel) {
+void doDebug(int _debugLevel) {
+	debugLevel = _debugLevel;
 	// Initialization complete - report running status
 	if (! MZNIsStarted(achUser))
 	{
@@ -338,6 +343,30 @@ void doDebug(int debugLevel) {
 
 
 #ifdef WIN32
+#define LOW_INTEGRITY_SDDL_SACL_W L"S:(ML;;NW;;;LW)"
+
+static void SetLowLabelToFile(LPWSTR lpszFileName) {
+	// The LABEL_SECURITY_INFORMATION SDDL SACL to be set for low integrity
+	DWORD dwErr = ERROR_SUCCESS;
+	PSECURITY_DESCRIPTOR pSD = NULL;
+
+	PACL pSacl = NULL; // not allocated
+	BOOL fSaclPresent = FALSE;
+	BOOL fSaclDefaulted = FALSE;
+
+	if (ConvertStringSecurityDescriptorToSecurityDescriptorW(
+			LOW_INTEGRITY_SDDL_SACL_W, SDDL_REVISION_1, &pSD, NULL)) {
+		if (GetSecurityDescriptorSacl(pSD, &fSaclPresent, &pSacl,
+				&fSaclDefaulted)) {
+			// Note that psidOwner, psidGroup, and pDacl are
+			// all NULL and set the new LABEL_SECURITY_INFORMATION
+			dwErr = SetNamedSecurityInfoW(lpszFileName, SE_KERNEL_OBJECT,
+					LABEL_SECURITY_INFORMATION, NULL, NULL, NULL, pSacl);
+		}
+		LocalFree(pSD);
+	}
+}
+
 void SetLowLabelToMailslot(HANDLE hKernelObj) {
 	// The LABEL_SECURITY_INFORMATION SDDL SACL to be set for low integrity
 	DWORD dwErr = ERROR_SUCCESS;
@@ -370,6 +399,7 @@ HANDLE createDebugMailSlot ()
 	wsprintfW(ach, L"\\\\.\\mailslot\\MAZINGER_%s", achUser);
 	HANDLE hResult = CreateMailslotW(ach, 10024, MAILSLOT_WAIT_FOREVER, NULL);
 	SetLowLabelToMailslot(hResult);
+//	SetLowLabelToFile(ach);
 	return hResult;
 }
 
@@ -404,8 +434,41 @@ DWORD CALLBACK LeerMailSlot(LPVOID lpData) {
 				(LPOVERLAPPED) NULL);
 		if (cbRead > 0 )
 		{
+			SYSTEMTIME st;
+			GetSystemTime(&st);
 			achMessage[cbRead/2] = L'\0';
-			fwprintf (logFile == NULL ? stdout: logFile, L"%ls\n", achMessage);
+			DWORD ticks = GetTickCount();
+			if (debugLevel > 1)
+				fwprintf (logFile == NULL ? stdout: logFile, L"%02d:%02d:%02d.%03d %ls\n", st.wHour, st.wMinute, st.wSecond, st.wMilliseconds, achMessage);
+			else
+				fwprintf (logFile == NULL ? stdout: logFile, L"%02d:%02d:%02d %ls\n", st.wHour, st.wMinute, st.wSecond, achMessage);
+		}
+	}
+	return 0;
+}
+
+DWORD CALLBACK LeerSpySlot(LPVOID lpData) {
+	DWORD cbRead;
+	WCHAR achMessage[10024];
+
+	HANDLE hSlot = (HANDLE) lpData;
+	if (hSlot == NULL)
+		hSlot = createDebugMailSlot ();
+
+	while (TRUE)
+	{
+		cbRead = 0;
+		ReadFile (hSlot,
+				achMessage,
+				sizeof achMessage,
+				&cbRead,
+				(LPOVERLAPPED) NULL);
+		if (cbRead > 0 )
+		{
+			achMessage[cbRead/2] = L'\0';
+			if (logFile != NULL)
+				fwprintf (logFile, L"%ls\n", achMessage);
+			fwprintf (stdout, L"%ls\n", achMessage);
 		}
 	}
 	return 0;
@@ -445,6 +508,10 @@ void* LeerMailSlot (void * lpv) {
 }
 
 
+void* LeerSpySlot (void * lpv) {
+	return LeerMailSlot (lpv);
+}
+
 #endif
 
 void doSpy(const char *fileName) {
@@ -471,12 +538,12 @@ void doSpy(const char *fileName) {
 	HANDLE mailSlot = createSpyMailSlot ();
 	CreateThread(NULL, // sECURITY ATTRIBUTES
 			0, // Stack Size,
-			LeerMailSlot, mailSlot, // Param
+			LeerSpySlot, mailSlot, // Param
 			0, // Options,
 			NULL); // Thread id
 #else
 	pthread_t thread1;
-	pthread_create( &thread1, NULL, LeerMailSlot, (void*) "spy");
+	pthread_create( &thread1, NULL, LeerSpySlot, (void*) "spy");
 #endif
 	MZNEnableSpy(achUser,1);
 
@@ -531,6 +598,18 @@ extern "C" int main(int argc, char**argv) {
 	{
 		parseArgs(argc, argv);
 		doStart ();
+	}
+	else if (stricmp("setSecret", argv[1]) == 0)
+	{
+		if (argc >= 4)
+		{
+			SecretStore ss(MZNC_getUserName());
+			ss.setSecret (MZNC_strtowstr(argv[2]).c_str(),
+					MZNC_strtowstr(argv[3]).c_str());
+			printf ("Updated secret\n");
+		} else {
+			printf ("Missing arguments\n");
+		}
 	}
 	else if (stricmp("spy", argv[1]) == 0)
 	{

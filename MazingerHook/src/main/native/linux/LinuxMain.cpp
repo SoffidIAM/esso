@@ -19,7 +19,7 @@
 #include <semaphore.h>
 #include <unistd.h>
 #include <pwd.h>
-
+#include <SeyconServer.h>
 
 void cleanMazingerData(const char *user) {
 	MazingerEnv *pEnv = MazingerEnv::getEnv(user);
@@ -78,6 +78,7 @@ MAZINGERAPI void MZNStart(const char *user) {
 	strcat (achFileName, "/mazinger");
 	mkdir (achFileName, 0700);
 
+	SeyconCommon::debug ("Loading %s for %s", achFileName, user);
 	MazingerEnv *pEnv = MazingerEnv::getEnv(user);
 	PMAZINGER_DATA pData = pEnv->getDataRW();
 	if (pData == NULL) {
@@ -119,6 +120,9 @@ MAZINGERAPI void MZNStop(const char *user) {
 
 MAZINGERAPI bool MZNLoadConfiguration (const char *user, const wchar_t * wszFile) {
 	MazingerEnv *pEnv = MazingerEnv::getEnv(user);
+#ifndef WIN32
+	MZNC_setUserName(user);
+#endif
 
 	PMAZINGER_DATA pData = pEnv->getDataRW();
 

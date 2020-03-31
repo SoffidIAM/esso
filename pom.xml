@@ -62,9 +62,9 @@
         <module>libmazinger-engine</module>
         <module>afrodita-explorer</module>
         <module>afrodita-chrome</module>
-        <module>afrodita-firefox-ctype</module>
         <module>javahook</module>
         <module>sewashi</module>
+        <module>sewbr</module>
         <module>KojiHook</module>
         <module>Mazinger</module>
         <module>MazingerHook</module>
@@ -114,9 +114,9 @@
         <module>libmazinger-engine</module>
         <module>afrodita-explorer</module>
         <module>afrodita-chrome</module>
-        <module>afrodita-firefox-ctype</module>
         <module>javahook</module>
         <module>sewashi</module>
+        <module>sewbr</module>
         <module>KojiHook</module>
         <module>Mazinger</module>
         <module>MazingerHook</module>
@@ -140,6 +140,15 @@
   <properties>
     <compile.root>/usr/local</compile.root>
   </properties>
+  <build>
+     <plugins>
+	<plugin>
+		<groupId>org.codehaus.mojo</groupId>
+		<artifactId>native-maven-plugin</artifactId>
+		<version>1.0-alpha-8</version>
+	</plugin>
+     </plugins>
+  </build>
   <pluginRepositories>
     <pluginRepository>
       <id>soffid-open</id>

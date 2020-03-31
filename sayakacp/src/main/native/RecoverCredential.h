@@ -93,6 +93,10 @@ public:
 
 	virtual ~RecoverCredential ();
 
+	void setUsage ( CREDENTIAL_PROVIDER_USAGE_SCENARIO usage) {
+		m_usage = usage;
+	}
+
 private:
 	HRESULT GenerateLoginSerialization(
 		CREDENTIAL_PROVIDER_GET_SERIALIZATION_RESPONSE* pcpgsr,
@@ -114,6 +118,7 @@ private:
     std::wstring user;
     std::wstring domain;
     std::wstring windowsDomain;
+    CREDENTIAL_PROVIDER_USAGE_SCENARIO m_usage;
 
     std::vector<std::wstring> m_questions;
     std::vector<std::wstring> m_answers;

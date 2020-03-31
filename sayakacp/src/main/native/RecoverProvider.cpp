@@ -100,20 +100,22 @@ HRESULT RecoverProvider::SetUsageScenario(
     m_log.info("Provider::SetUsageScenario %d", cpus);
 
     m_cpus = cpus;
+    if (cred != NULL)
+    	cred->setUsage( cpus );
 
     switch (cpus)
     {
     case CPUS_LOGON:
+    case CPUS_UNLOCK_WORKSTATION:
     	s_rgCredProvFieldDescriptors[REC_TITLE].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(35).c_str()).c_str() );
     	s_rgCredProvFieldDescriptors[REC_USER].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(36).c_str()).c_str() );
     	s_rgCredProvFieldDescriptors[REC_NEW_PASSWORD].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(29).c_str()).c_str() );
     	s_rgCredProvFieldDescriptors[REC_NEW_PASSWORD2].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(30).c_str()).c_str() );
     	s_rgCredProvFieldDescriptors[REC_ANSWER].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(30).c_str()).c_str() );
-    case CPUS_UNLOCK_WORKSTATION:
-    case CPUS_CHANGE_PASSWORD:
     	hr = S_OK;
         break;
 
+    case CPUS_CHANGE_PASSWORD:
     case CPUS_CREDUI:
         hr = E_NOTIMPL;
         break;
@@ -241,15 +243,18 @@ HRESULT RecoverProvider::GetCredentialCount(
 {
     m_log.info("Provider::GetCredentialCount");
 
-    SeyconCommon::updateConfig("addon.retrieve-password.right_number");
+
     std::string v;
+    if (!SeyconCommon::readProperty("addon.retrieve-password.right_number", v) ||
+    		v.empty())
+		SeyconCommon::updateConfig("addon.retrieve-password.right_number");
     if (cred == NULL ||
     		!SeyconCommon::readProperty("addon.retrieve-password.right_number", v) ||
     		v.empty())
     	*pdwCount = 0;
     else
     	*pdwCount = 1;
-	*pdwDefault = 0;
+	*pdwDefault = CREDENTIAL_PROVIDER_NO_DEFAULT;
 	*pbAutoLogonWithDefault = false;
     return S_OK;
 }

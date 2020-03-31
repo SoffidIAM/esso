@@ -61,6 +61,7 @@ public:
 	void notify (const char *message);
 	void remoteClose (const char *host);
 	void executeOfflineScript ();
+	void updateConfiguration();
 
 	ServiceIteratorResult iteratePassword (const char* hostName, size_t dwPort, bool prepareOnly);
 	ServiceIteratorResult iterateKerberos (const char* hostName, size_t dwPort);
@@ -75,8 +76,10 @@ public:
 	const char *getSessionKey() { return sessionKey.c_str();}
 	const char *getSessionId() {return sessionId.c_str();}
 	const char *getSoffidUser() {return soffidUser.c_str();}
+	void setSoffidUser(const char *soffidUser) {this->soffidUser = soffidUser;}
 	bool isOpen() {return m_bOpen;}
 	SeyconDialog * getDialog() { return m_dialog;}
+	int restartSession ();
 
 private:
 	std::wstring getCardValue () ;
@@ -116,8 +119,9 @@ private:
 	SsoDaemon *m_daemon;
 	SeyconDialog *m_dialog;
 	int status;
+	bool m_kerberosLogin;
+	bool m_passwordLogin;
 	std::vector<std::string> newKeys;
 };
-
 
 #endif /* SSOCLIENT_H_ */

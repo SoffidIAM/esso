@@ -10,11 +10,24 @@
 
 #ifdef WIN32
 #include <windows.h>
+#define DEBUG(x)
+//#define DEBUG(x) MZNSendDebugMessage("%s",x);
+#else
+#define DEBUG(x)
+//#define DEBUG(x) fprintf(stderr, "%s\n", x)
 #endif
 
-#include <npapi.h>
-#include <npfunctions.h>
+#include <string>
+#include <vector>
 
-extern NPNetscapeFuncs npGlobalFuncs ;
+#ifndef WIN32
+#ifndef USE_QT
 
+#include <gtk/gtk.h>
+
+extern GtkWidget *signalWindow;
+gboolean menuPopupHandler(gpointer userdata) ;
+
+#endif
+#endif
 #endif /* MAZINGERFF_H_ */

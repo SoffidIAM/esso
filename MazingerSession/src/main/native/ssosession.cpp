@@ -31,6 +31,7 @@
 #include "sessioncommon.h"
 #include "httpHandler.h"
 #include "appmenu.h"
+#include <time.h>
 
 #include "json/JsonAbstractObject.h"
 
@@ -109,6 +110,9 @@ void SeyconSession::weakSessionStartup (const char* lpszUser, const wchar_t* lps
 {
 	int i;
 
+	m_passwordLogin = false;
+	m_kerberosLogin = false;
+
 	SeyconCommon::updateHostAddress();
 
 	SeyconService service;
@@ -121,14 +125,7 @@ void SeyconSession::weakSessionStartup (const char* lpszUser, const wchar_t* lps
 
 	if (!SeyconCommon::bNormalized())
 	{
-	    SeyconCommon::updateConfig ( "soffid.hostname.format" );
-	    SeyconCommon::updateConfig ( "soffid.esso.protocol" );
-		SeyconCommon::updateConfig("SSOServer");
-		SeyconCommon::updateConfig("QueryServer");
-		SeyconCommon::updateConfig("PreferedServers");
-		SeyconCommon::updateConfig("seycon.alternate.https.port");
-		SeyconCommon::updateConfig("seycon.https.port");
-		SeyconCommon::updateConfig("SSOSoffidAgent");
+		updateConfiguration();
 		// Propagar password
 		propagatePassword();
 		createWeakSession();
@@ -173,7 +170,7 @@ ServiceIteratorResult SeyconSession::kerberosLogin (const char* hostName, size_t
 	SecBuffer InSecBuff;
 	ULONG ContextAttributes;
 
-	const int MAX_MESSAGE = 4096;
+	const int MAX_MESSAGE = 32000;
 	char outBuffer[MAX_MESSAGE];
 
 	SeyconCommon::info("Trying kerberos login on %s:%d\n", hostName, dwPort);
@@ -253,47 +250,69 @@ ServiceIteratorResult SeyconSession::kerberosLogin (const char* hostName, size_t
 	{
 		OutSecBuff.cbBuffer = MAX_MESSAGE;
 		OutSecBuff.pvBuffer = outBuffer;
+		boolean retry = false;
 
-		ss = InitializeSecurityContext(&hCredential, firstTime ? NULL : &ctxHandle,
-				(SEC_CHAR*) remotePrincipal.c_str(), // achRemotePrincipal
-				ISC_REQ_MUTUAL_AUTH | ISC_REQ_INTEGRITY, // Message attributes
-				0, // Reserved
-				SECURITY_NETWORK_DREP, //Network data representation
-				firstTime ? NULL : &InBuffDesc, // Data received from seycon server
-				0, &ctxHandle, // Receives communication handler
-				&OutBuffDesc, &ContextAttributes, &Lifetime);
-		//-------------------------------------------------------------------
-		//  If necessary, complete the token.
+		time_t start;
+		time_t now;
 
-		if (ss < 0)
+		time(&start);
+		do
 		{
-			const char *msg = "??";
-			if (ss == SEC_E_INSUFFICIENT_MEMORY )
-				msg = ("  Insufficiente memory\n");
-			else if (ss == SEC_E_INTERNAL_ERROR )
-				msg = ("  Internal error\n");
-			else if (ss == SEC_E_INVALID_HANDLE )
-				msg = ("  Invalid handle\n");
-			else if (ss == SEC_E_INVALID_TOKEN )
-				msg = ("  Invalid token\n");
-			else if (ss == SEC_E_LOGON_DENIED )
-				msg = ("  Logon denied\n");
-			else if (ss == SEC_E_NO_AUTHENTICATING_AUTHORITY )
-				msg = ("  No authenticating authority\n");
-			else if (ss == SEC_E_NO_CREDENTIALS )
-				msg = ("  No credentials available\n");
-			else if (ss == SEC_E_TARGET_UNKNOWN )
-				msg = ("  Target unknown\n");
-			else if (ss == SEC_E_UNSUPPORTED_FUNCTION )
-				msg = ("  Unsupported function\n");
-			else if (ss == SEC_E_WRONG_PRINCIPAL )
-				msg = ("  Wrong principal\n");
 
-			SeyconCommon::warn("Error generating token Kerberos: %d", ss);
+			ss = InitializeSecurityContext(&hCredential, firstTime ? NULL : &ctxHandle,
+					(SEC_CHAR*) remotePrincipal.c_str(), // achRemotePrincipal
+					ISC_REQ_MUTUAL_AUTH | ISC_REQ_INTEGRITY, // Message attributes
+					0, // Reserved
+					SECURITY_NETWORK_DREP, //Network data representation
+					firstTime ? NULL : &InBuffDesc, // Data received from seycon server
+					0, &ctxHandle, // Receives communication handler
+					&OutBuffDesc, &ContextAttributes, &Lifetime);
+			//-------------------------------------------------------------------
+			//  If necessary, complete the token.
 
-			errorMessage = "Identity server does not support the Kerberos credential";
-			return SIR_RETRY;
-		}
+			if (ss < 0)
+			{
+				const char *msg = "??";
+				if (ss == SEC_E_INSUFFICIENT_MEMORY )
+					msg = ("  Insufficiente memory\n");
+				else if (ss == SEC_E_INTERNAL_ERROR )
+					msg = ("  Internal error\n");
+				else if (ss == SEC_E_INVALID_HANDLE )
+					msg = ("  Invalid handle\n");
+				else if (ss == SEC_E_INVALID_TOKEN )
+					msg = ("  Invalid token\n");
+				else if (ss == SEC_E_LOGON_DENIED )
+					msg = ("  Logon denied\n");
+				else if (ss == SEC_E_NO_AUTHENTICATING_AUTHORITY )
+					msg = ("  No authenticating authority\n");
+				else if (ss == SEC_E_NO_CREDENTIALS )
+					msg = ("  No credentials available\n");
+				else if (ss == SEC_E_TARGET_UNKNOWN )
+					msg = ("  Target unknown\n");
+				else if (ss == SEC_E_UNSUPPORTED_FUNCTION )
+					msg = ("  Unsupported function\n");
+				else if (ss == SEC_E_WRONG_PRINCIPAL )
+					msg = ("  Wrong principal\n");
+
+				SeyconCommon::warn("Error generating token Kerberos: %d: %s", ss, msg);
+
+				time(&now);
+				if ( ss == SEC_E_NO_AUTHENTICATING_AUTHORITY && (now - start < 60))
+				{
+					Sleep(1000);
+					retry = true;
+				}
+				else
+				{
+					errorMessage = "Identity server does not accect the Kerberos credential: ";
+					errorMessage += msg;
+					return SIR_RETRY;
+				}
+			}
+			else
+				retry = false;
+
+		} while (retry);
 
 		if (ss == SEC_E_OK )
 		{
@@ -451,19 +470,14 @@ KerberosIterator::~KerberosIterator ()
 {
 }
 
+
 //////////////////////////////////////////////////////////
 int SeyconSession::kerberosSessionStartup ()
 {
-	json::JsonAbstractObject::ConfigureChromePreferences();
+	m_kerberosLogin = true;
+	m_passwordLogin = false;
 
-	SeyconCommon::updateHostAddress();
-    SeyconCommon::updateConfig ( "soffid.hostname.format" );
-    SeyconCommon::updateConfig ( "soffid.esso.protocol" );
-	SeyconCommon::updateConfig("SSOServer");
-	SeyconCommon::updateConfig("QueryServer");
-	SeyconCommon::updateConfig("PreferedServers");
-	SeyconCommon::updateConfig("seycon.https.port");
-	SeyconCommon::updateConfig("SSOSoffidAgent");
+	updateConfiguration();
 
 	KerberosIterator it(this);
 	SeyconService service;
@@ -473,6 +487,17 @@ int SeyconSession::kerberosSessionStartup ()
 	ServiceIteratorResult result = service.iterateServers(it);
 
 	return status;
+}
+
+//////////////////////////////////////////////////////////
+int SeyconSession::restartSession ()
+{
+	if (m_kerberosLogin)
+		return kerberosSessionStartup();
+	else if (m_passwordLogin)
+		return passwordSessionStartup(user.c_str(), password.c_str());
+	else
+		return LOGIN_ERROR;
 }
 
 void SeyconSession::close ()

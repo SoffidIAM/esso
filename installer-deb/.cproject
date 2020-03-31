@@ -42,7 +42,6 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.exe.release.1949739406.678357414" name="gmipnihabpcggdnlbbncgleblgjapgkm.json" rcbsApplicability="disable" resourcePath="src/main/resources/opt/google/chrome/extensions/gmipnihabpcggdnlbbncgleblgjapgkm.json" toolsToInvoke=""/>
 					<sourceEntries>
 						<entry excluding="src/main/include" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
@@ -724,4 +723,5 @@
 		</scannerConfigBuildInfo>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="refreshScope"/>
 </cproject>

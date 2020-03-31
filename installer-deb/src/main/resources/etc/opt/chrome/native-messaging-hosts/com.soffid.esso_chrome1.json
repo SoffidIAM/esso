@@ -1,0 +1,10 @@
+{
+	"name": "com.soffid.esso_chrome1",
+	"description": "Soffid Chrome ESSO Handler",
+	"path": "/usr/bin/afrodita-chrome",
+	"type": "stdio",
+	"allowed_origins": [
+		"chrome-extension://gacgphonbajokjblndebfhakgcpbemdl/",
+		"chrome-extension://jifeaeogflchkagefncajkjjdddmpiba/"
+	]
+}

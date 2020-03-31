@@ -26,24 +26,61 @@
 #include <ConfigReader.h>
 #include <Action.h>
 #include <SecretStore.h>
-
+#include <time.h>
 
 #ifdef WIN32
 // Missing at sddl.h
 wchar_t achMailSlotName[4096] = L"";
 static FILE *logFile = NULL;
-void sendMessage(HANDLE hMailSlot, LPCWSTR lpszMessage) {
+static void sendMessage(HANDLE hMailSlot, LPCWSTR lpszMessage) {
 
 	if (hMailSlot != NULL) {
+		time_t t;
 		DWORD dwWritten = 0;
-		WriteFile(hMailSlot, lpszMessage, 2 * wcslen(lpszMessage), &dwWritten,
-				NULL);
+
+//		wchar_t achMessage[5021];
+//		snwprintf(achMessage,  sizeof achMessage / sizeof (wchar_t), L"[%lx:%lx] %s",
+//				(long) GetCurrentProcessId(),
+//				(long) GetCurrentThreadId(), lpszMessage);
+//		achMessage [5020] = L'\0';
+
+//		WriteFile(hMailSlot, achMessage,  sizeof (wchar_t) * wcslen(achMessage), &dwWritten,
+//				NULL);
+		WriteFile(hMailSlot, lpszMessage,  sizeof (wchar_t) * wcslen(lpszMessage), &dwWritten,
+						NULL);
+	}
+}
+
+static void SetLowLabelToMailslot(HANDLE hKernelObj) {
+	// The LABEL_SECURITY_INFORMATION SDDL SACL to be set for low integrity
+	DWORD dwErr = ERROR_SUCCESS;
+	PSECURITY_DESCRIPTOR pSD = NULL;
+
+	PACL pSacl = NULL; // not allocated
+	BOOL fSaclPresent = FALSE;
+	BOOL fSaclDefaulted = FALSE;
+
+	if (ConvertStringSecurityDescriptorToSecurityDescriptorW(
+			L"S:(ML;;NW;;;LW)", SDDL_REVISION_1, &pSD, NULL)) {
+		if (GetSecurityDescriptorSacl(pSD, &fSaclPresent, &pSacl,
+				&fSaclDefaulted)) {
+			// Note that psidOwner, psidGroup, and pDacl are
+			// all NULL and set the new LABEL_SECURITY_INFORMATION
+			dwErr = SetSecurityInfo(hKernelObj, SE_KERNEL_OBJECT,
+					LABEL_SECURITY_INFORMATION, NULL, NULL, NULL, pSacl);
+			if (dwErr == ERROR_SUCCESS)
+			{
+			} else {
+			//	printf ("Error %ld (%lx)\n", (long)GetLastError(), (long) GetLastError());
+			}
+		}
+		LocalFree(pSD);
 	}
 }
 
 void sendDebugMessage(LPCWSTR lpszMessage) {
 	PMAZINGER_DATA pMazinger = MazingerEnv::getDefaulEnv()->getData();
-	if (pMazinger != NULL && pMazinger->debugLevel) {
+	if (pMazinger != NULL and pMazinger->debugLevel) {
 		if (achMailSlotName[0] == L'\0') {
 			WCHAR achUser[1024];
 			DWORD userSize = sizeof achUser;
@@ -55,11 +92,13 @@ void sendDebugMessage(LPCWSTR lpszMessage) {
 				FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0,
 				NULL);
 		if (hMailSlot != NULL) {
+			SetLowLabelToMailslot(hMailSlot);
 			sendMessage(hMailSlot, lpszMessage);
 			CloseHandle(hMailSlot);
 		}
 	}
 }
+
 
 void sendSpyMessage(LPCWSTR lpszMessage) {
 	PMAZINGER_DATA pMazinger = MazingerEnv::getDefaulEnv()->getData();
@@ -73,8 +112,12 @@ void sendSpyMessage(LPCWSTR lpszMessage) {
 		wsprintfW(ach, L"\\\\.\\mailslot\\MAZINGER_SPY_%s", achUser);
 		hSpyMailSlot = CreateFileW(ach, GENERIC_WRITE, FILE_SHARE_READ
 				| FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
-		sendMessage(hSpyMailSlot, lpszMessage);
-		CloseHandle(hSpyMailSlot);
+		if (hSpyMailSlot != NULL)
+		{
+			SetLowLabelToMailslot(hSpyMailSlot);
+			sendMessage(hSpyMailSlot, lpszMessage);
+			CloseHandle(hSpyMailSlot);
+		}
 	}
 }
 
@@ -85,7 +128,7 @@ void MZNSendDebugMessageW(LPCWSTR lpszMessage, ...) {
 
 		va_start(v, lpszMessage);
 		WCHAR achMessage[5001];
-		_vsnwprintf(achMessage, sizeof achMessage, lpszMessage, v);
+		_vsnwprintf(achMessage, sizeof achMessage / sizeof (wchar_t), lpszMessage, v);
 		va_end(v);
 		achMessage[5000] = L'\0';
 		sendDebugMessage(achMessage);
@@ -118,7 +161,7 @@ void MZNSendTraceMessageW(LPCWSTR lpszMessage,
 
 		va_start(v, lpszMessage);
 		WCHAR achMessage[5001];
-		_vsnwprintf(achMessage, sizeof achMessage, lpszMessage, v);
+		_vsnwprintf(achMessage, sizeof achMessage / sizeof (wchar_t), lpszMessage, v);
 		va_end(v);
 		achMessage[5000] = L'\0';
 		sendDebugMessage(achMessage);
@@ -150,7 +193,7 @@ void MZNSendSpyMessageW(LPCWSTR lpszMessage, ...) {
 
 		va_start(v, lpszMessage);
 		WCHAR achMessage[5001];
-		_vsnwprintf(achMessage, sizeof achMessage, lpszMessage, v);
+		_vsnwprintf(achMessage, sizeof achMessage / sizeof (wchar_t), lpszMessage, v);
 		va_end(v);
 		achMessage[5000] = L'\0';
 		sendSpyMessage(achMessage);
@@ -234,7 +277,7 @@ void sendMessage( int priority, const char* lpszMessage) {
 	if (achMessageFile[0] == '\0') {
 		sprintf (achMessageFile, "%s/.config/mazinger/debug", getenv ("HOME"));
 	}
-	printf ("[%s]: %s\n", achMessageFile, lpszMessage);
+//	fprintf (stderr, "[%s]: %s\n", achMessageFile, lpszMessage);
 	debugFile = fopen (achMessageFile, "a");
 	if (debugFile != NULL)
 	{
@@ -273,7 +316,7 @@ void MZNSendDebugMessageW(const wchar_t* lpszMessage, ...) {
 
 		va_start(v, lpszMessage);
 		wchar_t achMessage[5001];
-		vswprintf(achMessage, sizeof achMessage, lpszMessage, v);
+		vswprintf(achMessage, sizeof achMessage / sizeof (wchar_t), lpszMessage, v);
 		va_end(v);
 		achMessage[5000] = L'\0';
 		std::string sz = MZNC_wstrtostr(achMessage);
@@ -304,7 +347,7 @@ void MZNSendTraceMessageW(const wchar_t* lpszMessage,
 
 		va_start(v, lpszMessage);
 		wchar_t achMessage[5001];
-		vswprintf(achMessage, sizeof achMessage, lpszMessage, v);
+		vswprintf(achMessage, sizeof achMessage / sizeof (wchar_t), lpszMessage, v);
 		va_end(v);
 		achMessage[5000] = L'\0';
 		std::string sz = MZNC_wstrtostr(achMessage);
@@ -334,7 +377,7 @@ void MZNSendSpyMessageW(const wchar_t* lpszMessage, ...) {
 
 		va_start(v, lpszMessage);
 		wchar_t achMessage[5001];
-		vswprintf(achMessage, sizeof achMessage, lpszMessage, v);
+		vswprintf(achMessage, sizeof achMessage / sizeof (wchar_t), lpszMessage, v);
 		va_end(v);
 		achMessage[5000] = L'\0';
 		std::string sz = MZNC_wstrtostr(achMessage);

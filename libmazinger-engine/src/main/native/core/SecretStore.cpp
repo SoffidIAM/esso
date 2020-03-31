@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <SeyconServer.h>
 
 void SecretStore::applySeed(unsigned char const *lpszSeed, int size, unsigned char* achKey, int & k)
 {
@@ -41,7 +41,22 @@ SecretStore::SecretStore(const char *user) {
     AESExpandKey(achKey, m_expkey);
 }
 
+SecretStore::SecretStore(const char *user, const char *desktop) {
+//	MZNSendDebugMessageA("Opening secret store %s", user);
+    int k = 0;
+    unsigned char achKey [] = "TheKeyIsVeryWeak";
+    const char *szHostName = MZNC_getHostName ();
+    applySeed((unsigned char const *)szHostName, -1, achKey, k);
+
+    m_pEnv = MazingerEnv::getEnv(user, desktop);
+
+	m_expkey = (unsigned char*) malloc (EXPKEY_SIZE);
+    AESExpandKey(achKey, m_expkey);
+}
+
 SecretStore::~SecretStore() {
+	if (m_expkey != NULL)
+		free (m_expkey);
 }
 
 void SecretStore::dump ()
@@ -77,8 +92,8 @@ void SecretStore::dump (wchar_t *wchSecrets, int debugLevel)
 
 wchar_t * SecretStore::getSecret(const wchar_t * secret) {
 	wchar_t * result = getSecret (secret, true);
-	if (result [0] == L'\0') {
-		free (result);
+	if (result == NULL || result [0] == L'\0') {
+		freeSecret(result);
 		result = getSecret(secret, false);
 	}
 	return result;
@@ -105,10 +120,11 @@ wchar_t * SecretStore::getSecret(const wchar_t * secret, bool caseSensitive) {
 			return result;
 		}
 		else if ((caseSensitive && wcscmp  (achSecret, secret) == 0) ||
-				 (!caseSensitive && wcsicmp  (achSecret, secret) == 0) )
+				 (!caseSensitive && wcsicmp  (achSecret, secret) == 0))
 		{
 			freeSecret (achSecret);
-			return readString(pMazinger->achSecrets, counter);
+			wchar_t* result = readString(pMazinger->achSecrets, counter);
+			return result;
 		}
 		else
 		{
@@ -117,6 +133,81 @@ wchar_t * SecretStore::getSecret(const wchar_t * secret, bool caseSensitive) {
 		}
 	}
 	return NULL;
+}
+
+
+std::map<std::wstring, std::wstring> SecretStore::getSecretsByPrefix(const wchar_t * secret) {
+	std::map<std::wstring, std::wstring> secrets;
+	PMAZINGER_DATA pMazinger = m_pEnv->getData();
+	if (pMazinger == NULL) {
+		MZNSendDebugMessageA("*** FATAL ***");
+		MZNSendDebugMessageA("Cannot access secret store ");
+		wchar_t *result = (wchar_t*) malloc(sizeof (wchar_t));
+		result[0] = L'\0';
+		return secrets;
+	}
+
+	int counter = 0;
+	while(true) {
+		wchar_t *achSecret = readString(pMazinger->achSecrets, counter);
+		if (achSecret == NULL || achSecret[0] == '\0')
+		{
+			freeSecret(achSecret);
+			break;
+		}
+		else if ( wcsncmp  (achSecret, secret, wcslen (secret)) == 0 )
+		{
+			std::wstring tag = achSecret;
+			freeSecret (achSecret);
+			wchar_t *value = readString(pMazinger->achSecrets, counter);
+			secrets[tag] = std::wstring(value);
+			freeSecret(value);
+		}
+		else
+		{
+			freeSecret (achSecret);
+			skipString (pMazinger->achSecrets, counter);
+		}
+	}
+
+	return secrets;
+}
+
+std::vector<std::pair<std::wstring, std::wstring> > SecretStore::getSecretsByPrefix2(const wchar_t * secret) {
+	std::vector<std::pair<std::wstring, std::wstring> > secrets;
+	PMAZINGER_DATA pMazinger = m_pEnv->getData();
+	if (pMazinger == NULL) {
+		MZNSendDebugMessageA("*** FATAL ***");
+		MZNSendDebugMessageA("Cannot access secret store ");
+		wchar_t *result = (wchar_t*) malloc(sizeof (wchar_t));
+		result[0] = L'\0';
+		return secrets;
+	}
+
+	int counter = 0;
+	while(true) {
+		wchar_t *achSecret = readString(pMazinger->achSecrets, counter);
+		if (achSecret == NULL || achSecret[0] == '\0')
+		{
+			freeSecret(achSecret);
+			break;
+		}
+		else if ( wcsncmp  (achSecret, secret, wcslen (secret)) == 0 )
+		{
+			std::wstring tag = achSecret;
+			freeSecret (achSecret);
+			wchar_t *value = readString(pMazinger->achSecrets, counter);
+			secrets.push_back(std::pair<std::wstring,std::wstring>(tag, value));
+			freeSecret(value);
+		}
+		else
+		{
+			freeSecret (achSecret);
+			skipString (pMazinger->achSecrets, counter);
+		}
+	}
+
+	return secrets;
 }
 
 
@@ -139,7 +230,7 @@ std::vector<std::wstring> SecretStore::getSecrets(const wchar_t * secret) {
 			freeSecret(achSecret);
 			break;
 		}
-		else if ( wcscmp  (achSecret, secret) == 0 )
+		else if ( wcscmp  (achSecret, secret) == 0)
 		{
 			freeSecret (achSecret);
 			wchar_t *value = readString(pMazinger->achSecrets, counter);
@@ -199,19 +290,9 @@ void SecretStore::setSecrets(const wchar_t * secrets) {
 	int counter = 0;
 	int targetCounter = 0;
 	memset (pMazinger->achSecrets, 0,  sizeof pMazinger->achSecrets);
-#ifdef TRACE_AES
-	wprintf (L"Setting secrets\n");
-#endif
 	while ( secrets[counter] != L'\0')
 	{
-//		MZNSendDebugMessageW(L"Storing secret %ls", &secrets[counter]);
-#ifdef TRACE_AES
-		wprintf (L"Set secret at %d: %s\n", targetCounter, &secrets[counter]);
-#endif
 		putString(pMazinger->achSecrets, targetCounter, &secrets[counter]);
-#ifdef TRACE_AES
-		wprintf (L"Counter now at %d\n", targetCounter);
-#endif
 		counter += wcslen (&secrets[counter])+1;
 	}
 	putString(pMazinger->achSecrets, targetCounter, L"");
@@ -219,7 +300,7 @@ void SecretStore::setSecrets(const wchar_t * secrets) {
 
 
 wchar_t *SecretStore::readString (const wchar_t* buffer, int &index) {
-	short int size = (short int) buffer[index] ; // size in wchars
+	unsigned short int size = (short int) buffer[index] ; // size in wchars
 	if (size == 0)
 		return NULL;
 
@@ -233,26 +314,10 @@ wchar_t *SecretStore::readString (const wchar_t* buffer, int &index) {
 	unsigned char *out = (unsigned char*) malloc (bufferSizeBytes);
 
 	unsigned char b[AESCHUNK_SIZE];
-	for (int i = 0; i < bufferSizeBytes; i+=AESCHUNK_SIZE)
+	for (unsigned int i = 0; i < bufferSizeBytes; i+=AESCHUNK_SIZE)
 	{
 		memcpy (b, (unsigned char*) &buffer[index], AESCHUNK_SIZE);
-#ifdef TRACE_AES
-		printf ("Decrypting\n");
-		for (int j = 0; j < AESCHUNK_SIZE; j++)
-		{
-			printf ("%02x ", (unsigned int)b[j]);
-		}
-		printf("\n");
-#endif
 		AESDecrypt(b, m_expkey, &out[i]);
-#ifdef TRACE_AES
-		printf ("Descrypted\n");
-		for (int j = 0; j < AESCHUNK_SIZE; j++)
-		{
-			printf ("%02x ", (unsigned int)out[i+j]);
-		}
-		printf("\n");
-#endif
 		index += AESCHUNK_SIZE / sizeof (wchar_t);
 	}
 	wchar_t * wout = (wchar_t*) out;
@@ -298,7 +363,7 @@ void SecretStore::putString (wchar_t* buffer, int &index, const wchar_t *text) {
 
 	if (index + bufferSizeChars + 1 >= SECRETS_BUFFER_SIZE)
 	{
-		printf ("Secret store: Buffer overflow\n");
+		// printf ("Secret store: Buffer overflow\n");
 		return;
 	}
 
@@ -341,5 +406,69 @@ void SecretStore::freeSecret (wchar_t* buffer) {
 	}
 }
 
+void SecretStore::removeSecret(const wchar_t* secret, const wchar_t* value) {
+	PMAZINGER_DATA pMazinger = m_pEnv->getDataRW();
+	if (pMazinger == NULL)
+		return;
 
+	int sourceCounter = 0;
+	int targetCounter = 0;
+	while(true) {
+		wchar_t *achSecret = readString(pMazinger->achSecrets, sourceCounter);
+		if (achSecret == NULL || achSecret[0] == L'\0')
+		{
+			freeSecret(achSecret);
+			break;
+		}
+		else if (wcsicmp  (achSecret, secret) == 0)
+		{
+			wchar_t *achSecret2 = readString(pMazinger->achSecrets, sourceCounter);
+			if (wcsicmp (achSecret, value))
+			{
+				// Do not copy
+			}
+			else
+			{
+				putString(pMazinger->achSecrets, targetCounter, achSecret);
+				putString(pMazinger->achSecrets, targetCounter, achSecret2);
+			}
+			freeSecret (achSecret);
+			freeSecret (achSecret2);
+		}
+		else
+		{
+			putString(pMazinger->achSecrets, targetCounter, achSecret);
+			freeSecret (achSecret);
+			moveString(pMazinger->achSecrets, sourceCounter, targetCounter);
+		}
+	}
 
+	putString(pMazinger->achSecrets, targetCounter, L"");
+}
+
+void SecretStore::putSecret(const wchar_t* secret, const wchar_t* value) {
+	PMAZINGER_DATA pMazinger = m_pEnv->getDataRW();
+	if (pMazinger == NULL)
+		return;
+
+	int sourceCounter = 0;
+	int targetCounter = 0;
+	while(true) {
+		targetCounter = sourceCounter;
+		wchar_t *achSecret = readString(pMazinger->achSecrets, sourceCounter);
+		if (achSecret == NULL || achSecret[0] == L'\0')
+		{
+			freeSecret(achSecret);
+			break;
+		}
+		else
+		{
+			skipString(pMazinger->achSecrets, sourceCounter);
+			freeSecret (achSecret);
+		}
+	}
+
+	putString(pMazinger->achSecrets, targetCounter, secret);
+	putString(pMazinger->achSecrets, targetCounter, value);
+	putString(pMazinger->achSecrets, targetCounter, L"");
+}

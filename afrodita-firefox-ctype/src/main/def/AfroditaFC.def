@@ -4,5 +4,11 @@ LIBRARY SayakaIE
 EXPORTS
                 AFRsetHandler
                 AFRevaluate
+                AFRevaluate2
+                AFRevent
+                AFRdismiss
+                AFRsearch
+                AFRsearchLocal
+                AFRgetVersion
                 
                 

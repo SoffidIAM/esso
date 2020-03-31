@@ -2,7 +2,15 @@
 
 
 #ifdef __i386__
-#include <gdkconfig_i386.h>
+	#ifdef __bionic
+		#include <gdkconfig_i386_bionic.h>
+	#else
+		#include <gdkconfig_i386.h>
+	#endif
 #else
-#include <gdkconfig_x86_64.h>
+	#ifdef __bionic
+		#include <gdkconfig_x86_64_bionic.h>
+	#else
+		#include <gdkconfig_x86_64.h>
+	#endif
 #endif

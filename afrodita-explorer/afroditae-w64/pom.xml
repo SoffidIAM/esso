@@ -96,6 +96,7 @@
 						<linkerEndOption>-lmpr</linkerEndOption>
 						<linkerEndOption>-lwsock32</linkerEndOption>
 						<linkerEndOption>-lgdi32</linkerEndOption>
+						<linkerEndOption>-luuid</linkerEndOption>
 						<linkerEndOption>-lcrypt32</linkerEndOption>
 						<linkerEndOption>-lwinhttp</linkerEndOption>
 						<linkerEndOption>-static</linkerEndOption>

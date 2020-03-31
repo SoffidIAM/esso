@@ -8,6 +8,12 @@
 #include "AfroditaF.h"
 #include "FFWebApplication.h"
 #include <MazingerInternal.h>
+#include "EventHandler.h"
+#include <map>
+#include <SmartWebPage.h>
+#include "WebAddonHelper.h"
+#include <json/Encoder.h>
+#include "SeyconServer.h"
 
 #ifdef WIN32
 #include <windows.h>
@@ -50,12 +56,22 @@ extern "C" void AFRsetHandler (const char *id, void * handler) {
 			AfroditaHandler::handler.writeHandler = (WriteHandler) handler;
 	else if (strcmp (id, "WriteLn" ) == 0)
 			AfroditaHandler::handler.writeLnHandler = (WriteLnHandler) handler;
+	else if (strcmp (id, "GetProperty" ) == 0)
+			AfroditaHandler::handler.getPropertyHandler = (GetPropertyHandler) handler;
+	else if (strcmp (id, "SetProperty" ) == 0)
+			AfroditaHandler::handler.setPropertyHandler = (SetPropertyHandler) handler;
 	else if (strcmp (id, "GetAttribute" ) == 0)
 			AfroditaHandler::handler.getAttributeHandler = (GetAttributeHandler) handler;
+	else if (strcmp (id, "RemoveAttribute" ) == 0)
+			AfroditaHandler::handler.removeAttributeHandler = (RemoveAttributeHandler) handler;
+	else if (strcmp (id, "RemoveChild" ) == 0)
+			AfroditaHandler::handler.removeChildHandler = (RemoveChildHandler) handler;
 	else if (strcmp (id, "SetAttribute" ) == 0)
 			AfroditaHandler::handler.setAttributeHandler = (SetAttributeHandler) handler;
 	else if (strcmp (id, "GetParent" ) == 0)
 			AfroditaHandler::handler.getParentHandler = (GetParentHandler) handler;
+	else if (strcmp (id, "GetOffsetParent" ) == 0)
+			AfroditaHandler::handler.getOffsetParentHandler = (GetParentHandler) handler;
 	else if (strcmp (id, "GetChildren" ) == 0)
 			AfroditaHandler::handler.getChildrenHandler = (GetChildrenHandler) handler;
 	else if (strcmp (id, "GetTagName" ) == 0)
@@ -66,7 +82,26 @@ extern "C" void AFRsetHandler (const char *id, void * handler) {
 			AfroditaHandler::handler.blurHandler = (BlurHandler) handler;
 	else if (strcmp (id, "Focus" ) == 0)
 			AfroditaHandler::handler.focusHandler = (FocusHandler) handler;
-
+	else if (strcmp (id, "SubscribeEvent" ) == 0)
+			AfroditaHandler::handler.subscribeHandler = (SubscribeHandler) handler;
+	else if (strcmp (id, "UnsubscribeEvent" ) == 0)
+			AfroditaHandler::handler.unsubscribeHandler = (UnsubscribeHandler) handler;
+	else if (strcmp (id, "CreateElement" ) == 0)
+			AfroditaHandler::handler.createElementHandler = (CreateElementHandler) handler;
+	else if (strcmp (id, "InsertBefore" ) == 0)
+			AfroditaHandler::handler.insertBeforeHandler = (InsertBeforeHandler) handler;
+	else if (strcmp (id, "AppendChild" ) == 0)
+			AfroditaHandler::handler.appendChildHandler = (AppendChildHandler) handler;
+	else if (strcmp (id, "GetNextSibling" ) == 0)
+			AfroditaHandler::handler.getNextSiblingHandler = (GetNextSiblingHandler) handler;
+	else if (strcmp (id, "GetPreviousSibling" ) == 0)
+			AfroditaHandler::handler.getPreviousSiblingHandler = (GetPreviousSiblingHandler) handler;
+	else if (strcmp (id, "Alert" ) == 0)
+			AfroditaHandler::handler.alertHandler = (AlertHandler) handler;
+	else if (strcmp (id, "SetTextContent" ) == 0)
+			AfroditaHandler::handler.setTextContentHandler = (SetTextContentHandler) handler;
+	else if (strcmp (id, "GetComputedStyle" ) == 0)
+			AfroditaHandler::handler.getComputedStyleHandler = (GetComputedStyleHandler) handler;
 	else
 	{
 #ifdef WIN32
@@ -76,14 +111,144 @@ extern "C" void AFRsetHandler (const char *id, void * handler) {
 }
 
 
+static std::map<long,SmartWebPage*> status;
+
+
 extern "C" void AFRevaluate (long  id) {
 
 	//MZNC_waitMutex();
-	FFWebApplication app(id);
 
-	MZNWebMatch(&app);
+	FFWebApplication *app = new FFWebApplication(id);
 
+	std::map<long,SmartWebPage*>::iterator it = status.find(id);
+	if (it == status.end())
+	{
+		SmartWebPage * page = new SmartWebPage();
+		app->setPage(page);
+		status[id] = page;
+	} else {
+		it->second->lock();
+		app->setPage(it->second);
+	}
+
+	MZNWebMatch(app);
+
+	app->release();
 	//MZNC_endMutex();
+}
+
+extern "C" void AFRevaluate2 (long  id, const char *data) {
+
+	//MZNC_waitMutex();
+
+	FFWebApplication *app = new FFWebApplication(id);
+
+	MZNSendDebugMessageA("EVALUATE : %s", data);
+	app->pageData = new PageData();
+	app->pageData->loadJson(data);
+
+	std::map<long,SmartWebPage*>::iterator it = status.find(id);
+	if (it == status.end())
+	{
+		SmartWebPage * page = new SmartWebPage();
+		app->setPage(page);
+		page->lock();
+		status[id] = page;
+	} else {
+		SmartWebPage *page = it->second;
+		page->lock();
+		app->setPage(page);
+	}
+
+
+	MZNWebMatch(app);
+
+	app->release();
+	//MZNC_endMutex();
+}
+
+extern "C" void AFRdismiss (long  id) {
+	FFWebApplication *app = new FFWebApplication(id);
+	EventHandler::getInstance()->unregisterAllEvents(app);
+	app->release();
+	std::map<long,SmartWebPage*>::iterator it = status.find(id);
+	if (it != status.end())
+	{
+		it->second->release();
+		status.erase(it);
+	}
+}
+
+
+
+extern "C" void AFRevent (long  eventId) {
+	EventHandler::getInstance()->process (eventId);
+}
+
+extern "C" void AFRevent2 (long  eventId, long elementId) {
+	EventHandler::getInstance()->process (eventId, elementId);
+}
+
+
+#define QUOTE(name) #name
+#define STR(macro) QUOTE(macro)
+extern "C" char * AFRgetVersion () {
+	std::string link;
+	SeyconCommon::readProperty("AutoSSOURL", link);
+
+	std::string response = "{\"action\": \"version\", \"version\":\"" STR(VERSION) "\", \"url\":";
+	response += json::Encoder::encode(link.c_str());
+	response += "}";
+
+	return strdup(response.c_str());
+}
+
+extern "C" char * AFRsearch (const char *text) {
+	WebAddonHelper h;
+	std::vector<UrlStruct> result;
+	h.searchUrls (MZNC_utf8towstr(text), result);
+	std::string response = " [";
+	bool first = true;
+	for ( std::vector<UrlStruct>::iterator it = result.begin(); it != result.end (); it++)
+	{
+		UrlStruct s = *it;
+		if (first) first = false;
+		else response += ",";
+		response += "{\"url\":";
+		response += json::Encoder::encode (MZNC_wstrtoutf8(s.url.c_str()).c_str());
+		response += ",\"name\":";
+		response += json::Encoder::encode (MZNC_wstrtoutf8(s.description.c_str()).c_str());
+		response += "}";
+	}
+	response += "]";
+
+	return strdup (response.c_str());
+}
+
+extern "C" char * AFRsearchLocal (const char *url) {
+	WebAddonHelper h;
+	std::vector<UrlStruct> result;
+	h.searchUrlsForServer (MZNC_utf8towstr(url), result);
+	std::string response = " [";
+	bool first = true;
+	for ( std::vector<UrlStruct>::iterator it = result.begin(); it != result.end (); it++)
+	{
+		UrlStruct s = *it;
+		if (first) first = false;
+		else response += ",";
+		response += "{\"url\":";
+		response += json::Encoder::encode (MZNC_wstrtoutf8(s.url.c_str()).c_str());
+		response += ",\"name\":";
+		response += json::Encoder::encode (MZNC_wstrtoutf8(s.description.c_str()).c_str());
+		response += ",\"account\":";
+		response += json::Encoder::encode (MZNC_wstrtoutf8(s.name.c_str()).c_str());
+		response += ",\"system\":";
+		response += json::Encoder::encode (MZNC_wstrtoutf8(s.server.c_str()).c_str());
+		response += "}";
+	}
+	response += "]";
+
+	return strdup (response.c_str());
 }
 
 extern "C" void Test (const char *id) {

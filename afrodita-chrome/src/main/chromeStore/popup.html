@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Getting Started Extension's Popup</title>
+    <title>Soffid ESSO</title>
     <style>
       body {
         min-width: 357px;
@@ -15,15 +15,22 @@
   </head>
   <body>
     <p id="label">
-	Testing plugin status
+	Soffid ESSO extension for Chrome
     </p>
-    <p id="labelError" style="display: none; color: red;" >
-	Error testing Soffid plugin: <span id="textError">xxx</span>
+    <p id="labelError" style="color: red;" >
+		Desktop ESSO not installed: 
+		<a target="_new" href="http://www.soffid.com/downloads">Download</a>
     </p>
-    <p id="labelSuccess" style="display: none" >
-	Soffid plugin is well configured.
+    <div id="labelSuccess" style="display: none" >
+    	<p>Desktop ESSO version: <span id="labelVersion"/></p>
+    	<p>Search account: <input id="searchBox" autofocus></p>
+    	<div id="searchResults">
+    	</div>
+    </div>
+    <p >
+    	<a target="_blank" id="selfServiceLink" href="http://www.soffid.com">Self service portal</a>
+    	<a target="_blank" href="http://www.soffid.com">www.soffid.com</a>
     </p>
-    <embed type="application/soffid-sso-plugin" id="pluginId" style="visibility: hidden; width:1px; height: 1px;">
   </body>
 
 

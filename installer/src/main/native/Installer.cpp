@@ -39,9 +39,15 @@ static const char* DEF_DEFAULT_SERVERS = "";
 
 bool anyError = false;
 bool quiet = false;
+bool pam = true;
+bool updateConfigFlag = false;
 bool reboot = false;
 bool isUpdate = false;
 bool noGina = false;
+
+char *enableCloseSession = "false";
+char *forceStartupLogin = "true";
+char *loginType = "both";
 
 BOOL IsWow64()
 {
@@ -520,13 +526,89 @@ void registerFFHook()
 	//
 	//write the default value
 	//
-	wsprintf(szBuff, "%s\\FFExtension", getMazingerDir());
+
+	// EXTENSION FOR FF < 52
+	wsprintf(szBuff, "%s\\afroditaFf.xpi", getMazingerDir());
 
 	log("Registering Firefox extension");
 	HelperWriteKey(32, HKEY_LOCAL_MACHINE,
 			"Software\\Mozilla\\Firefox\\Extensions",
 			"{df382936-f24b-11df-96e1-9bf54f13e327}", REG_SZ, (void*) szBuff,
 			lstrlen(szBuff));
+
+	log("Registering Firefox extension 64 bits");
+	HelperWriteKey(64, HKEY_LOCAL_MACHINE,
+			"Software\\Mozilla\\Firefox\\Extensions",
+			"{df382936-f24b-11df-96e1-9bf54f13e327}", REG_SZ, (void*) szBuff,
+			lstrlen(szBuff));
+
+	// Extension for FF >= 52
+
+	// Register ff extension
+	wsprintf(szBuff, "%s\\afroditaFf2.xpi", getMazingerDir());
+
+	log("Registering Firefox extension");
+	HelperWriteKey(32, HKEY_LOCAL_MACHINE,
+			"Software\\Mozilla\\Firefox\\Extensions",
+			"esso@soffid.com", REG_SZ, (void*) szBuff,
+			lstrlen(szBuff));
+
+	log("Registering Firefox extension 64 bits");
+	HelperWriteKey(64, HKEY_LOCAL_MACHINE,
+			"Software\\Mozilla\\Firefox\\Extensions",
+			"esso@soffid.com", REG_SZ, (void*) szBuff,
+			lstrlen(szBuff));
+
+	// Register ff manifest
+	HKEY hKey;
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+			"SOFTWARE\\Mozilla\\NativeMessagingHosts",
+			0, (LPSTR) "", REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey,
+			NULL) == ERROR_SUCCESS)
+	{
+		RegCloseKey(hKey);
+
+	}
+
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+			"SOFTWARE\\Mozilla\\NativeMessagingHosts\\com.soffid.esso_chrome1",
+			0, (LPSTR) "", REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey,
+			NULL) == ERROR_SUCCESS)
+	{
+		RegCloseKey(hKey);
+	}
+
+	std::string dir = getMazingerDir();
+	dir += "\\afrodita-firefox.manifest";
+
+	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
+		"SOFTWARE\\Mozilla\\NativeMessagingHosts\\com.soffid.esso_chrome1",
+		NULL,
+		REG_SZ, dir.c_str(), dir.length());
+
+
+	// Create ff application manifest
+	LPCSTR mznDir = getMazingerDir();
+	std::string dir2 ;
+	for (int i = 0; mznDir[i]; i++)
+	{
+		if (mznDir[i] == '\\')
+			dir2 += '\\';
+		dir2 += mznDir[i];
+	}
+
+	FILE * f = fopen (dir.c_str(), "w");
+	fprintf (f, "{"
+				"\"name\": \"com.soffid.esso_chrome1\","
+				"\"description\": \"Soffid ESSO native host\","
+				"\"type\": \"stdio\","
+				"\"path\": \"%s\\\\afrodita-chrome.exe\","
+				"\"allowed_extensions\": [\"esso@soffid.com\"]"
+				"}",
+				dir2.c_str());
+	fclose (f);
+
+
 }
 
 void registerChromePlugin()
@@ -536,44 +618,56 @@ void registerChromePlugin()
 	//write the default value
 	//
 
-	log("Registering Firefox extension");
+	log("Registering Chrome extension");
+
+	std::string dir = getMazingerDir();
+	dir += "\\afrodita-chrome.manifest";
 
 	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
-			"Software\\MozillaPlugins",
-			NULL, REG_SZ, NULL, 0);
+			"Software\\Google\\Chrome\\NativeMessagingHosts\\com.soffid.esso_chrome1",
+			NULL, REG_SZ, (void*)dir.c_str(), -1);
 
-	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
-			"Software\\MozillaPlugins\\@soffid.com/SoffidPlugin",
-			"Description", REG_SZ, (void*) "Soffid ESSO Module", -1);
+	LPCSTR mznDir = getMazingerDir();
+	std::string dir2 ;
+	for (int i = 0; mznDir[i]; i++)
+	{
+		if (mznDir[i] == '\\')
+			dir2 += '\\';
+		dir2 += mznDir[i];
+	}
+	FILE * f = fopen (dir.c_str(), "w");
+	fprintf (f, "{\n"
+				"  \"name\": \"com.soffid.esso_chrome1\", \n"
+				"  \"description\": \"Soffid Chrome ESSO Handler\", \n"
+				"  \"path\": \"%s\\\\afrodita-chrome.exe\",\n"
+				"  \"type\": \"stdio\",\n"
+				"  \"allowed_origins\": [\n"
+				"    \"chrome-extension://gacgphonbajokjblndebfhakgcpbemdl/\"\n"
+				"  ]\n"
+				"}\n",
+				dir2.c_str());
+	fclose (f);
 
-	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
-			"Software\\MozillaPlugins\\@soffid.com/SoffidPlugin",
-			"ProductName", REG_SZ, (void*) "Soffid ESSO", -1);
 
-	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
-			"Software\\MozillaPlugins\\@soffid.com/SoffidPlugin",
-			"Vendor", REG_SZ, (void*) "Soffid", -1);
-
-	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
-			"Software\\MozillaPlugins\\@soffid.com/SoffidPlugin",
-			"Version", REG_SZ, (void*) MAZINGER_VERSION_STR, -1);
-
-	// Register DLL
-
-	wsprintf(szBuff, "%s\\AfroditaC.dll", getMazingerDir());
-	HelperWriteKey(32, HKEY_LOCAL_MACHINE,
-			"Software\\MozillaPlugins\\@soffid.com/SoffidPlugin",
-			"Path", REG_SZ, (void*) szBuff, -1);
-
-	wsprintf(szBuff, "%s\\AfroditaC64.dll", getMazingerDir());
-
-	HelperWriteKey(64, HKEY_LOCAL_MACHINE,
-			"Software\\MozillaPlugins\\@soffid.com/SoffidPlugin",
-			"Path", REG_SZ, (void*) szBuff, -1);
 	// Register extension
-		HelperWriteKey(0, HKEY_LOCAL_MACHINE,
-			"Software\\Google\\Chrome\\Extensions\\gmipnihabpcggdnlbbncgleblgjapgkm",
+	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
+			"Software\\Google\\Chrome\\Extensions\\gacgphonbajokjblndebfhakgcpbemdl",
 			"update_url", REG_SZ, (void*) "https://clients2.google.com/service/update2/crx", -1);
+
+
+	// Register extension
+	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
+			"Software\\Policies\\Google\\Chrome\\ExtensionInstallForcelist",
+			"1", REG_SZ, (void*) "gacgphonbajokjblndebfhakgcpbemdl;https://clients2.google.com/service/update2/crx", -1);
+
+	HKEY hKey;
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+			"Software\\Google\\Chrome\\Extensions", 0,
+			KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
+	{
+		RegDeleteKey(hKey, "ecdihhgdjciiabklgobilokhejhecjbm");
+		RegCloseKey(hKey);
+	}
 
 }
 
@@ -618,7 +712,7 @@ void registerJetScrander()
 	//
 	//write the .jsm entry
 	//
-	wsprintf(szDescriptionVal, "%s", ".jsm");
+	wsprintf(szDescriptionVal, "%s", ".mzn");
 	wsprintf(szBuff, "%s", szProgId);
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szDescriptionVal, NULL, //write to the "default" value
 			REG_SZ, (void*) szBuff, lstrlen(szBuff));
@@ -1271,7 +1365,7 @@ void updateConfig()
 		if (RegQueryValueEx(hKey, "LocalCardSupport", NULL, &dwType, (LPBYTE) ach,
 				&dw) == ERROR_FILE_NOT_FOUND)
 		{
-			dw = 2;
+			dw = 3;
 			RegSetValueEx(hKey, "LocalCardSupport", 0, REG_DWORD, (LPBYTE) &dw,
 					sizeof dw);
 		}
@@ -1287,29 +1381,51 @@ void updateConfig()
 		if (RegQueryValueEx(hKey, "RemoteCardSupport", NULL, &dwType,
 				(LPBYTE) ach, &dw) == ERROR_FILE_NOT_FOUND)
 		{
-			dw = 1;
+			dw = 3;
 			RegSetValueEx(hKey, "RemoteCardSupport", 0, REG_DWORD, (LPBYTE) &dw,
 					sizeof dw);
 		}
 
-		dw = 0;
-		RegSetValueEx(hKey, "RemoteOfflineAllowed", 0, REG_DWORD, (LPBYTE) &dw,
-				sizeof dw);
-
-		sprintf(ach, "760");
-		RegSetValueEx(hKey, "seycon.https.port", 0, REG_SZ, (LPBYTE) ach,
-				strlen(ach));
-
-		// Check previous version installed
-		if (RegQueryValueEx(hKey, "MazingerVersion", NULL, &dwType, (LPBYTE) ach,
-				&dw) == ERROR_FILE_NOT_FOUND)
+		if (RegQueryValueEx(hKey, "RemoteOfflineAllowed", NULL, NULL, NULL,
+				NULL) == ERROR_FILE_NOT_FOUND)
 		{
-			strcpy(ach, MAZINGER_VERSION_STR);
-			RegSetValueEx(hKey, "MazingerVersion", 0, REG_SZ, (LPBYTE) ach,
+			dw = 1;
+			RegSetValueEx(hKey, "RemoteOfflineAllowed", 0, REG_DWORD, (LPBYTE) &dw,
+					sizeof dw);
+		}
+
+		if (RegQueryValueEx(hKey, "seycon.https.port", NULL, NULL, NULL,
+				NULL) == ERROR_FILE_NOT_FOUND)
+		{
+			sprintf(ach, "760");
+			RegSetValueEx(hKey, "seycon.https.port", 0, REG_SZ, (LPBYTE) ach,
 					strlen(ach));
 		}
 
-		else
+		if (RegQueryValueEx(hKey, "enableCloseSession", NULL, NULL, NULL,
+				NULL) == ERROR_FILE_NOT_FOUND)
+		{
+			RegSetValueEx(hKey, "enableCloseSession", 0, REG_SZ, (LPBYTE) enableCloseSession,
+					strlen(enableCloseSession));
+		}
+
+		if (RegQueryValueEx(hKey, "ForceStartupLogin", NULL, NULL, NULL,
+				NULL) == ERROR_FILE_NOT_FOUND)
+		{
+			RegSetValueEx(hKey, "ForceStartupLogin", 0, REG_SZ, (LPBYTE) forceStartupLogin,
+					strlen(forceStartupLogin));
+		}
+
+		if (RegQueryValueEx(hKey, "LoginType", NULL, NULL, NULL,
+				NULL) == ERROR_FILE_NOT_FOUND)
+		{
+			RegSetValueEx(hKey, "LoginType", 0, REG_SZ, (LPBYTE) loginType,
+					strlen(loginType));
+		}
+
+		// Check previous version installed
+		dw = sizeof ach;
+		if (RegQueryValueEx(hKey, "MazingerVersion", NULL, &dwType, (LPBYTE) ach, &dw) == ERROR_SUCCESS)
 		{
 			isUpdate = true;
 		}
@@ -1450,6 +1566,37 @@ void updateConfig()
 		registerBoss();
 }
 
+static bool needsUpdate ()
+{
+	HKEY hKey;
+	char ach[4096];
+	DWORD dw;
+	DWORD dwType;
+
+	DWORD dwResult;
+	bool needsUpdate = false;
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+				DEF_REGISTRY_FOLDER.c_str(), 0, Wow64Key(KEY_READ),
+				&hKey) == ERROR_SUCCESS)
+	{
+
+		dw = sizeof ach;
+		if (RegQueryValueEx(hKey, "MazingerVersion", NULL, &dwType, (LPBYTE) ach, &dw) == ERROR_SUCCESS)
+		{
+			ach[dw] = '\0';
+			if (strcmp(ach, MAZINGER_VERSION_STR) != 0)
+				needsUpdate = true;
+		}
+		else
+			needsUpdate = true;
+		RegCloseKey(hKey);
+	}
+	else
+		needsUpdate = true;
+
+	return needsUpdate;
+
+}
 void updateUserInit(const char *quitar, const char*poner)
 {
 	HKEY hKey;
@@ -1605,27 +1752,34 @@ void installCP(const char *file)
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, "ThreadingModel", REG_SZ,
 			(void*) szValue, strlen(szValue));
 
-	const char *shiroClsid = "{e30dee24-e1aa-4880-a0ca-4a02e74f78f2}";
 
-	// SHIRO CREDENTIAL PROVIDER
-	sprintf(szKey, "Software\\Microsoft\\Windows\\"
-			"CurrentVersion\\Authentication\\Credential Providers\\%s",
-			shiroClsid);
-	strcpy(szValue, "ShiroKabuto Credential Provider");
-	HelperWriteKey(0, HKEY_LOCAL_MACHINE, szKey, NULL, REG_SZ, (void*) szValue,
-			strlen(szValue));
+	if (pam)
+	{
+		const char *shiroClsid = "{e30dee24-e1aa-4880-a0ca-4a02e74f78f2}";
 
-	// SHIRO CLSID
-	sprintf(szKey, "CLSID\\%s", shiroClsid);
-	strcpy(szValue, "Shiro Kabuto Credential Provider");
-	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
-			strlen(szValue));
+		// SHIRO CREDENTIAL PROVIDER
+		sprintf(szKey, "Software\\Microsoft\\Windows\\"
+				"CurrentVersion\\Authentication\\Credential Providers\\%s",
+				shiroClsid);
+		strcpy(szValue, "ShiroKabuto Credential Provider");
+		HelperWriteKey(0, HKEY_LOCAL_MACHINE, szKey, NULL, REG_SZ, (void*) szValue,
+				strlen(szValue));
 
-	// SHIRO CLSID / Inprocserver32
-	sprintf(szKey, "CLSID\\%s\\InprocServer32", shiroClsid);
-	strcpy(szValue, file);
-	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
-			strlen(szValue));
+		// SHIRO CLSID
+		sprintf(szKey, "CLSID\\%s", shiroClsid);
+		strcpy(szValue, "Shiro Kabuto Credential Provider");
+		HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
+				strlen(szValue));
+
+		// SHIRO CLSID / Inprocserver32
+		sprintf(szKey, "CLSID\\%s\\InprocServer32", shiroClsid);
+		strcpy(szValue, file);
+		HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
+				strlen(szValue));
+		strcpy(szValue, "Apartment");
+		HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, "ThreadingModel", REG_SZ,
+				(void*) szValue, strlen(szValue));
+	}
 
 	const char *recoverClsid = "{e046f8f0-7ca2-4c83-8e6b-a273f4911a48}";
 	// Recover CREDENTIAL PROVIDER
@@ -1730,11 +1884,14 @@ void registerKojiKabuto()
 		installCP(achNewPath);
 	}
 
-	if (!anyError)
+	if (pam)
 	{
-		strcpy(achNewPath, getMazingerDir());
-		strcat(achNewPath, "\\ShiroKabuto.exe");
-		installShiroKabuto(achNewPath);
+		if (!anyError)
+		{
+			strcpy(achNewPath, getMazingerDir());
+			strcat(achNewPath, "\\ShiroKabuto.exe");
+			installShiroKabuto(achNewPath);
+		}
 	}
 }
 
@@ -1805,6 +1962,11 @@ bool extractResource(LPCSTR resource, const char *lpszFileName)
 	{
 		log(">> Missing resource %s", resource);
 		printf("ERROR. Missing resource %s for %s\n", resource, lpszFileName);
+		if (!quiet)
+		{
+			disableProgressWindow();
+			MessageBox (NULL, "Installer file is corrupt", "Soffid ESSO installer", MB_OK|MB_ICONWARNING);
+		}
 		exit(2);
 	}
 
@@ -1890,7 +2052,7 @@ bool extractResource(LPCSTR resource, const char *lpszFileName)
 
 				case BZ_DATA_ERROR_MAGIC:
 					log(">> BZIP ERROR: Compression error");
-					printf("Error de compresi\F3n\n");
+					printf("Compression error\n");
 					return false;
 
 				case BZ_MEM_ERROR:
@@ -1916,8 +2078,22 @@ bool extractResource(LPCSTR resource, const char *lpszFileName)
 	}
 }
 
+/**
+ *
+ * @param lpszTargetDir
+ * @param lpszResourceName
+ * @param lpszFileName
+ * @param replaceAction => SOFT_REPLACE tries to delete
+ *                         HARD_REPLACE tries to delete or rename
+ *                         NO_REPLACE never replaces
+ * @return true if the installation succeeds
+ */
+
+int SOFT_REPLACE = 0;
+int HARD_REPLACE = 1;
+int NO_REPLACE = 2;
 bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
-		const char *lpszFileName, bool hardReplace)
+		const char *lpszFileName, int replaceAction)
 {
 	std::string dirPath;	// Installation dir path
 	std::string filePath;	// Installation file path
@@ -1996,7 +2172,7 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 			fclose(f);
 
 		// Si no existe o puedo borrarlo => Generar el fichero
-		if (f == NULL || unlink(filePath.c_str()) == 0)
+		if (f == NULL || (replaceAction != NO_REPLACE && unlink(filePath.c_str()) == 0))
 		{
 			if (MoveFileEx(tempFilePath.c_str(), filePath.c_str(),
 					MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
@@ -2007,9 +2183,31 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 			else
 				log("> FAILED to create file %s ", filePath.c_str());
 		}
-
 		// Si no puedo borrarlo, intento renombrarlo ahora
-		else if (hardReplace
+		else if (noGina && IsWindowsXP())
+		{
+			reboot = true;
+			if (MoveFileEx(filePath.c_str(), NULL, MOVEFILE_DELAY_UNTIL_REBOOT))
+			{
+				log("> Old file %s will be deleted on reboot",
+						oldFile.c_str());
+			}
+
+			// Despu\E9s de renombrar, puedo sustituir el fichero nuevo
+			if (MoveFileEx(tempFilePath.c_str(), filePath.c_str(),
+					MOVEFILE_DELAY_UNTIL_REBOOT))
+			{
+				log("> New file %s will be replaced on reboot",
+						tempFilePath.c_str());
+				success = true;
+			}
+
+			else
+				log("> FAILED to replace file %s with %s", filePath.c_str(),
+						tempFilePath.c_str());
+		}
+		// Si no puedo borrarlo, intento renombrarlo ahora
+		else if (replaceAction == HARD_REPLACE
 				&& MoveFileEx(filePath.c_str(), oldFile.c_str(),
 						MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
 		{
@@ -2074,16 +2272,28 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 	return success;
 }
 
-void installResource(const char *lpszTargetDir, const char *lpszFileName,
+bool installResource(const char *lpszTargetDir, const char *lpszFileName,
 		const char *lpszTargetName)
 {
-	installResource(lpszTargetDir, lpszFileName, lpszTargetName, true);
+	return installResource(lpszTargetDir, lpszFileName, lpszTargetName, HARD_REPLACE);
 }
 
-void installResource(const char *lpszTargetDir, const char *lpszFileName)
+bool installResource(const char *lpszTargetDir, const char *lpszFileName, int replaceAction)
 {
-	installResource(lpszTargetDir, lpszFileName, lpszFileName, true);
+	return installResource(lpszTargetDir, lpszFileName, lpszFileName, replaceAction);
 }
+
+/**
+ *
+ * @param lpszTargetDir
+ * @param lpszFileName
+ * @return true if the installation succeeds
+ */
+bool installResource(const char *lpszTargetDir, const char *lpszFileName)
+{
+	return installResource(lpszTargetDir, lpszFileName, HARD_REPLACE);
+}
+
 
 struct Files
 {
@@ -2197,19 +2407,21 @@ int install(int full)
 	if (IsWow64())
 	{
 		installResource(NULL, "Mazinger64.exe", "Mazinger.exe");
-		installResource(NULL, "MazingerHook64.dll", "MazingerHook.dll", false);
-		installResource(NULL, "MazingerHook.dll", "MazingerHook32.dll", false);
+		installResource(NULL, "MazingerHook64.dll", "MazingerHook.dll", SOFT_REPLACE);
+		installResource(NULL, "MazingerHook.dll", "MazingerHook32.dll", SOFT_REPLACE);
 		installResource(NULL, "KojiKabuto64.exe", "KojiKabuto.exe");
 		installResource(NULL, "KojiHook64.dll", "KojiHook.dll");
 
-//		installResource(NULL, "AfroditaFC64.dll", "AfroditaFC.dll");
-		installResource(NULL, "AfroditaFC.dll", "AfroditaFC.dll");
-		installResource(NULL, "AfroditaFC.dll", "AfroditaFC32.dll");
-		installResource(NULL, "AfroditaC64.dll", "AfroditaC64.dll");
-		installResource(NULL, "AfroditaC.dll", "AfroditaC.dll");
+		/* Browser extensions should not be replaced if a reboot is needed
+		 *
+		 */
+		int replaceAction = reboot ? NO_REPLACE : HARD_REPLACE;
+		installResource(NULL, "AfroditaFC64.dll", "AfroditaFC.dll", replaceAction);
+		installResource(NULL, "AfroditaFC32.dll", "AfroditaFC32.dll", replaceAction);
+		installResource(NULL, "AfroditaC64.exe", "Afrodita-chrome.exe", replaceAction);
 
-		installResource(NULL, "AfroditaE64.dll", "AfroditaE.dll");
-		installResource(NULL, "AfroditaE.dll", "AfroditaE32.dll");
+		installResource(NULL, "AfroditaE64.dll", "AfroditaE.dll", replaceAction);
+		installResource(NULL, "AfroditaE.dll", "AfroditaE32.dll", replaceAction);
 		installResource(NULL, "JetScrander.exe");
 		installResource(NULL, "SayakaCP64.dll", "SayakaCP.dll");
 
@@ -2222,9 +2434,10 @@ int install(int full)
 		installResource(NULL, "KojiKabuto.exe");
 		installResource(NULL, "KojiHook.dll");
 
-		installResource(NULL, "AfroditaE.dll");
-		installResource(NULL, "AfroditaFC.dll");
-		installResource(NULL, "AfroditaC.dll");
+		int replaceAction = reboot ? NO_REPLACE : HARD_REPLACE;
+		installResource(NULL, "AfroditaE.dll", replaceAction);
+		installResource(NULL, "AfroditaFC32.dll", "AfroditaFC.dll", replaceAction);
+		installResource(NULL, "AfroditaC.exe", "Afrodita-chrome.exe", replaceAction);
 		installResource(NULL, "JetScrander.exe");
 		installResource(NULL, "SayakaCP.dll");
 
@@ -2234,16 +2447,13 @@ int install(int full)
 	std::string system = getenv("SystemRoot");
 	if (IsWow64())
 	{
-		std::string sys1 = system + "\\System32";
+		std::string sys1 = system + "\\Sysnative";
 		installResource (sys1.c_str(), "libwinpthread-1-64.dll", "libwinpthread-1.dll");
 		std::string sys2 = system + "\\SysWOW64";
 		installResource (sys2.c_str(), "libwinpthread-1-32.dll", "libwinpthread-1.dll");
-//		installResource (NULL, "libwinpthread-1-64.dll", "libwinpthread-1.dll");
 	}
 	else
 	{
-//		std::string sys1 = system + "\\System32";
-//		installResource (sys1.c_str(), "Winpthread-1-32.dll", "WINPTHREAD-1.DLL");
 		installResource (NULL, "libwinpthread-1-32.dll", "libwinpthread-1.dll");
 	}
 
@@ -2256,23 +2466,14 @@ int install(int full)
 	installResource(NULL, "ShiroKabuto.exe");
 	installResource(NULL, "Nossori.exe");
 
-	installResource(NULL, "seycon.cer");
+//	installResource(NULL, "seycon.cer");
 	installResource(NULL, "logon.tcl");
 	installResource(NULL, "uninstall.exe");
 	installResource(NULL, "sewashi.exe");
+	installResource(NULL, "sewbr.dll");
 	installResource(NULL, "profyumi.jar");
-	installResource("FFExtension\\modules", "afrodita.jsm");
-	installResource("FFExtension\\chrome\\content", "about.xul");
-	installResource("FFExtension\\chrome\\content", "ff-overlay.xul");
-	installResource("FFExtension\\chrome\\content", "overlay.js");
-	installResource("FFExtension\\chrome\\locale\\en-US", "about.dtd");
-	installResource("FFExtension\\chrome\\locale\\en-US", "overlay.properties");
-	installResource("FFExtension\\default\\preferences", "prefs.js");
-	installResource("FFExtension", "chrome.manifest");
-	installResource("FFExtension", "install.rdf");
-	uninstallResource("FFExtension\\components\\AfroditaF.dll");
-	uninstallResource("FFExtension\\components\\AfroditaF5.dll");
-	uninstallResource("FFExtension\\components\\AfroditaF.xpt");
+	installResource(NULL, "afroditaFf.xpi");
+	installResource(NULL, "afroditaFf2.xpi");
 
 
 //	installTCL();
@@ -2386,20 +2587,35 @@ extern "C" int main(int argc, char **argv)
 {
 	const char* serverName = NULL;
 	bool checkPending = true;
-	int ibsalut = 0;
+	bool uninstall = false;
+	bool smartUpdate = false;
 
 	// Read call arguments
 	for (int i = 0; i < argc; i++)
 	{
-		if (strcmp(argv[i], "/ibsalut") == 0 || strcmp(argv[i], "-ibsalut") == 0)
+		if (stricmp(argv[i], "/smartupdate") == 0 || stricmp(argv[i], "-smartupdate") == 0)
 		{
-			ibsalut = 1;
+			smartUpdate = true;
+		}
+		if (strcmp(argv[i], "/u") == 0 || strcmp(argv[i], "-u") == 0)
+		{
+			uninstall = true;
+		}
+		if (strcmp(argv[i], "/nopam") == 0 || strcmp(argv[i], "-nopam") == 0)
+		{
+			pam = false;
 		}
 
 		// Check quiet install method
 		if (strcmp(argv[i], "/q") == 0 || strcmp(argv[i], "-q") == 0)
 		{
 			quiet = true;
+		}
+
+		// Check quiet install method
+		if (strcmp(argv[i], "/updateconfig") == 0 || strcmp(argv[i], "-updateconfig") == 0)
+		{
+			updateConfigFlag = true;
 		}
 
 		// Check server install method
@@ -2414,6 +2630,34 @@ extern "C" int main(int argc, char **argv)
 			}
 		}
 
+		if (strcmp(argv[i], "/loginType") == 0 || strcmp(argv[i], "-loginType") == 0)
+		{
+			i++;
+			if (i < argc)
+			{
+				loginType = argv[i];
+			}
+		}
+
+		if (strcmp(argv[i], "/enableCloseSession") == 0 || strcmp(argv[i], "-enableCloseSession") == 0)
+		{
+			i++;
+			if (i < argc)
+			{
+				enableCloseSession = argv[i];
+			}
+		}
+
+		if (strcmp(argv[i], "/forceStartupLogin") == 0 || strcmp(argv[i], "-forceStartupLogin") == 0)
+		{
+			i++;
+			if (i < argc)
+			{
+				forceStartupLogin = argv[i];
+			}
+		}
+
+
 		if (strcmp(argv[i], "/force") == 0 || strcmp(argv[i], "-force") == 0)
 			checkPending = false;
 
@@ -2425,85 +2669,105 @@ extern "C" int main(int argc, char **argv)
 		}
 	}
 
-	log("Preparing install %s", ibsalut ? "/ibsalut" : "");
-	log("Configured server %s", serverName);
 
-	// Check pending operations
-	if (checkPending)
+	int result;
+
+	if (uninstall)
 	{
-		bool pendingOperations = notifyPendingRenames();
+		RunProgram((char *)"uninstall.exe", (char *)getMazingerDir());
+		result = 0;
+	}
+	else if ( !smartUpdate || needsUpdate() )
+	{
+		log("Preparing install");
+		log("Configured server %s", serverName);
 
-		if (pendingOperations)
+		// Check pending operations
+		if (checkPending)
 		{
-			log("Installation aborted due to pending changes to apply");
+			bool pendingOperations = notifyPendingRenames();
+
+			if (pendingOperations)
+			{
+				log("Installation aborted due to pending changes to apply");
+				printf(
+						"\n\nERROR. A prior installation needed to reboot the system.\nReboot prior to install\n\n");
+
+				if (!quiet)
+				{
+					MessageBoxA(NULL,
+							"A prior installation needed to reboot the system.\nReboot prior to install",
+							"Soffid ESSO", MB_OK | MB_ICONEXCLAMATION);
+				}
+
+				exit(-1);
+			}
+		}
+
+		result = install(true);
+
+		if (noGina)
+		{
+			SetOriginalWinlogon();
+		}
+
+		if (result == 0 && serverName != NULL)
+		{
+			if (isUpdate && ! updateConfigFlag)
+			{
+				// Skip configuration
+				setProgressMessage("Skipping server configuration");
+			} else {
+				setProgressMessage("Connecting to %s", serverName);
+
+				if (!configure(getMazingerDir(), serverName))
+					!quiet ? result = 1 : result = 3;
+			}
+		}
+
+		disableProgressWindow();
+
+		if (result)
+		{
+			if (!quiet)
+			{
+				MessageBoxA(NULL, "Installation has failed. Please, look at log file", "Soffid ESSO",
+						MB_OK | MB_ICONEXCLAMATION);
+			}
+		}
+
+		else if (reboot)
+		{
 			printf(
-					"\n\nERROR. A prior installation needed to reboot the system.\nReboot prior to install\n\n");
+					"\n\n\nWARNING: Reboot is needed in order to complete setup\n\n\n");
 
 			if (!quiet)
 			{
-				MessageBoxA(NULL,
-						"A prior installation needed to reboot the system.\nReboot prior to install",
+				MessageBoxA(NULL, "Reboot is needed in order to complete setup",
 						"Soffid ESSO", MB_OK | MB_ICONEXCLAMATION);
+
+				if (!isUpdate)
+				{
+					RunConfigurationTool();
+				}
 			}
-
-			exit(-1);
 		}
-	}
 
-	int result = install(!ibsalut);
-
-	if (noGina)
-	{
-		SetOriginalWinlogon();
-	}
-
-	if (result == 0 && serverName != NULL)
-	{
-		setProgressMessage("Connecting to %s", serverName);
-
-		if (!configure(getMazingerDir(), serverName))
-			!quiet ? result = 1 : result = 3;
-	}
-
-	disableProgressWindow();
-
-	if (result)
-	{
-		if (!quiet)
+		else
 		{
-			MessageBoxA(NULL, "Installation has failed. Please, look at log file", "Soffid ESSO",
-					MB_OK | MB_ICONEXCLAMATION);
-		}
-	}
-
-	else if (reboot)
-	{
-		printf(
-				"\n\n\nWARNING: Reboot is needed in order to complete setup\n\n\n");
-
-		if (!quiet)
-		{
-			MessageBoxA(NULL, "Reboot is needed in order to complete setup",
-					"Soffid ESSO", MB_OK | MB_ICONEXCLAMATION);
-
-			RunConfigurationTool();
-		}
-	}
-
-	else
-	{
-		if (!quiet)
-		{
-			MessageBoxA(NULL, "Installation complete", "Soffid ESSO",
-					MB_OK | MB_ICONEXCLAMATION);
-
-			// Check update installation process
-			if (!isUpdate)
+			if (!quiet)
 			{
-				RunConfigurationTool();
+				MessageBoxA(NULL, "Installation complete", "Soffid ESSO",
+						MB_OK | MB_ICONEXCLAMATION);
+
+				// Check update installation process
+				if (!isUpdate)
+				{
+					RunConfigurationTool();
+				}
 			}
 		}
 	}
-
+	ExitProcess ( result );
 	return result;
 }

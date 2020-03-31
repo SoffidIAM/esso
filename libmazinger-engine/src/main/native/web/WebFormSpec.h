@@ -27,6 +27,9 @@ public:
 	virtual const char* getTag() ;
 	virtual void dump ();
 
+	virtual bool matches (AbstractWebApplication *app, FormData &form);
+	virtual bool matches (AbstractWebApplication *app, InputData &input);
+
 private:
 	void findChildren (AbstractWebElement *childElement);
 };

@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.soffid.iam.esso.w64</groupId>
 	<artifactId>afrodita-chrome</artifactId>
-	<packaging>dll</packaging>
+	<packaging>exe</packaging>
 	<name>Plugin to inject credentials on Chrome (Windows 64)</name>
 	<parent>
 		<artifactId>afrodita-chrome</artifactId>
@@ -57,22 +57,19 @@
 						<compilerMiddleOption>-D_WIN32_WINNT=0x0500</compilerMiddleOption>
 						<compilerMiddleOption>-DWIN32</compilerMiddleOption>
 						<compilerMiddleOption>-DXP_WIN</compilerMiddleOption>
-						<compilerMiddleOption>-DFF_VERSION=4</compilerMiddleOption>
+						<compilerMiddleOption>-DVERSION=${pom.version}</compilerMiddleOption>
 					</compilerMiddleOptions>
 					<linkerMiddleOptions>
-						<linkerMiddleOption>../src/main/def/afroditaf64.def</linkerMiddleOption>
-						<linkerMiddleOption>-s</linkerMiddleOption>
 						<linkerMiddleOption>-Xlinker</linkerMiddleOption>
 						<linkerMiddleOption>--strip-all</linkerMiddleOption>
-						<linkerMiddleOption>-shared</linkerMiddleOption>
 						<linkerMiddleOption>-L../src/main/lib-deps/w32</linkerMiddleOption>
 						<linkerMiddleOption>target/objs/resources.o</linkerMiddleOption>
-						<linkerMiddleOption>-shared</linkerMiddleOption>
 					</linkerMiddleOptions>
 					<linkerEndOptions>
 						<linkerMiddleOption>-lpcreposix</linkerMiddleOption>
 						<linkerMiddleOption>-lwsock32</linkerMiddleOption>
 						<linkerMiddleOption>-lsee</linkerMiddleOption>
+						<linkerMiddleOption>-ldbghelp</linkerMiddleOption>
 						<linkerMiddleOption>-lmpr</linkerMiddleOption>
 						<linkerMiddleOption>-lgdi32</linkerMiddleOption>
 						<linkerMiddleOption>-lcrypt32</linkerMiddleOption>

@@ -14,6 +14,8 @@
 #include <dlfcn.h>
 #include <string.h>
 #endif
+#include <time.h>
+#include <MazingerEnv.h>
 
 void executeActions(JNIEnv *env, jobject focus);
 
@@ -27,6 +29,15 @@ extern "C" {
 
 JNICALL void Java_es_caib_seycon_sso_windows_Hook_notifyFocus(
 		JNIEnv *env, jobject hook, jobject window, jobject focus) {
+	MazingerEnv *pEnv = MazingerEnv::getDefaulEnv ();
+	MAZINGER_DATA *data = pEnv->getDataRW();
+	if (data != NULL)
+	{
+		time_t t;
+		time(& t);
+		data->lastUpdate = t;
+	}
+
 	if (focus != NULL) {
 		JavaVirtualMachine::setCurrent(env, hook);
 		//		sendJavaFocusDebugInformation(env, focus);

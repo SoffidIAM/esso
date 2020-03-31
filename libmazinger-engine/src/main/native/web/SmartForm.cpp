@@ -247,47 +247,46 @@ void SmartForm::findInputs (AbstractWebApplication* app, AbstractWebElement *for
 	std::vector<AbstractWebElement*> inputs2;
 	app->sanityCheck();
 	std::map<std::string, bool> visibility;
-	MZNSendDebugMessageA("Finding form inputs");
 	app->getElementsByTagName("input", inputs2 );
-	for (std::vector<AbstractWebElement*>::iterator it = inputs2.begin () ; it!= inputs2.end(); it++)
+	if (inputs2.size() <= 100)
 	{
-		AbstractWebElement *element = *it;
-		MZNSendDebugMessageA("Checking element %s", element->toString().c_str());
-		bool member = formlessMode || checkFormMembership(element, form, visibility);
-		MZNSendDebugMessage ("                 %s status = %d", element->toString().c_str(), (int) member);
-		if (member)
+		for (std::vector<AbstractWebElement*>::iterator it = inputs2.begin () ; it!= inputs2.end(); it++)
 		{
-			bool visible = element->isVisible();
-			MZNSendDebugMessageA("Adding element %s", element->toString().c_str());
-			InputDescriptor *id = new InputDescriptor();
-			id->hasInputData = false;
-			id->input = element;
-			inputs.push_back(id);
-			if( ! visible || id->getClientHeight() < 8)
+			AbstractWebElement *element = *it;
+			bool member = formlessMode || checkFormMembership(element, form, visibility);
+			if (member)
 			{
-				std::string soft;
-				element->getProperty("soffidOnFocusTrigger", soft);
-				if (soft != "true")
+				bool visible = element->isVisible();
+				InputDescriptor *id = new InputDescriptor();
+				id->hasInputData = false;
+				id->input = element;
+				inputs.push_back(id);
+				if( ! visible || id->getClientHeight() < 8)
 				{
-					if (soft != "false")
-						element->subscribe("focus", onHiddenElementFocusListener);
-					element->setProperty("soffidOnFocusTrigger", "true");
+					std::string soft;
+					element->getProperty("soffidOnFocusTrigger", soft);
+					if (soft != "true")
+					{
+						if (soft != "false")
+							element->subscribe("focus", onHiddenElementFocusListener);
+						element->setProperty("soffidOnFocusTrigger", "true");
+					}
 				}
-			}
-			else
-			{
-				std::string soft;
-				element->getProperty("soffidOnFocusTrigger", soft);
-				if (soft == "true")
+				else
 				{
-					element->setProperty("soffidOnFocusTrigger", "false");
+					std::string soft;
+					element->getProperty("soffidOnFocusTrigger", soft);
+					if (soft == "true")
+					{
+						element->setProperty("soffidOnFocusTrigger", "false");
+					}
 				}
+			} else {
+				element->release();
 			}
-		} else {
-			element->release();
 		}
+		inputs2.clear();
 	}
-	inputs2.clear();
 }
 
 void SmartForm::findInputs (std::vector<InputData> *inputDatae, std::vector<InputDescriptor*> &inputs)

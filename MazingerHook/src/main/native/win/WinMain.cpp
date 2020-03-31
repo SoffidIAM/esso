@@ -18,12 +18,28 @@ LRESULT CALLBACK CBTProc(int nCode, WPARAM wParam, LPARAM lParam);
 LPCWSTR MAZINGER_EVENT_NAME = L"Local\\Mazinger-Stop-Event";
 
 static std::wstring getStopSemaphoreName(const char *user) {
-
+	// Base name
 	std::wstring semName = MAZINGER_EVENT_NAME;
+
+	// Append user name
 	if (user == NULL)
 		user = MZNC_getUserName();
 
 	semName.append(MZNC_strtowstr(user));
+
+	// Append desktop name
+
+	HANDLE hd = GetThreadDesktop (GetCurrentThreadId());
+	wchar_t desktopName[1024];
+
+	wcscpy (desktopName, L"Default");
+
+	GetUserObjectInformationW (hd,
+		UOI_NAME,
+		desktopName, sizeof desktopName,
+		NULL);
+
+	semName.append(desktopName);
 	return semName;
 
 }
@@ -185,7 +201,7 @@ static void createMapFile(PMAZINGER_DATA pData, DWORD dwSize, HANDLE hFile) {
 	swprintf(wchBuffer, L"MAZINGER_RULES_%ld_%ld", (long) GetCurrentProcessId(),
 			(long) t);
 	HANDLE hMapFile = CreateFileMappingW((HANDLE) - 1, // Current file handle.
-	NULL, // Default security.
+			NULL, // Default security.
 			PAGE_READWRITE, // Read/write permission.
 			0, dwSize, // Size of hFile.
 			wchBuffer); // Name of mapping object.
@@ -201,13 +217,13 @@ static void createMapFile(PMAZINGER_DATA pData, DWORD dwSize, HANDLE hFile) {
 			pData->dwRulesSize = dwSize;
 		} else {
 			pData->achRulesFile[0] = '\0';
-			printf(
+			MZNSendDebugMessageA(
 					"ERROR reading shared memory: Expected to read %d bytes. Read %d\n",
 					(int) dwSize, (int) dwRead);
 		}
 		UnmapViewOfFile(gRules);
 	} else {
-		printf("Unable to open map file %ls\n", wchBuffer);
+		MZNSendDebugMessageA("Unable to open map file %ls\n", wchBuffer);
 	}
 }
 
@@ -223,7 +239,9 @@ extern "C" __declspec(dllexport) bool MZNLoadConfiguration(const char *user,
 		return TRUE;
 	} else {
 		TRACE;
+		time_t t;
 
+		MZNSendDebugMessageA("Previous config = %ls", pData->achRulesFile);
 		HANDLE hFile = CreateFileW(szFile, GENERIC_READ, 0, 0, OPEN_EXISTING,
 				FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -235,10 +253,12 @@ extern "C" __declspec(dllexport) bool MZNLoadConfiguration(const char *user,
 		DWORD size = GetFileSize(hFile, NULL);
 		createMapFile(pData, size, hFile);
 		CloseHandle(hFile);
-		MZNSendDebugMessageA("TESTING configuration (v3)\n");
+		MZNSendDebugMessageA("TESTING configuration (%ls)\n", pData->achRulesFile);
 		ConfigReader *currentConfig = new ConfigReader(pData);
 		currentConfig->testConfiguration();
 		MZNSendDebugMessageA("CONFIGURATION TESTED  !!!\n");
+		time(& t);
+		pData->lastUpdate = t;
 		return TRUE;
 	}
 }

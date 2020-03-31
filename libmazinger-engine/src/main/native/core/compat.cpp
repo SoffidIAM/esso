@@ -10,7 +10,7 @@
 
 #ifdef WIN32
 
-HANDLE hMutex;
+HANDLE hMutex = NULL;
 static HANDLE getMutex() {
 	if (hMutex == NULL)
 	{
@@ -27,7 +27,9 @@ bool MZNC_waitMutex () {
 	{
 		DWORD dwResult = WaitForSingleObject (hMutex, INFINITE);
 		if (dwResult == WAIT_OBJECT_0)
+		{
 			return true;
+		}
 	}
 	return false;
 }
@@ -42,6 +44,86 @@ void MZNC_endMutex () {
 
 void MZNC_destroyMutex () {
 	HANDLE hMutex = getMutex();
+	if (hMutex != NULL)
+	{
+		CloseHandle (hMutex);
+	}
+}
+
+HANDLE hMutex2 = NULL;
+static HANDLE getMutex2() {
+	if (hMutex2 == NULL)
+	{
+		hMutex2 = CreateMutexA(NULL, FALSE, NULL);
+
+	}
+	return hMutex2;
+}
+
+
+bool MZNC_waitMutex2 () {
+	HANDLE hMutex = getMutex2();
+	if (hMutex != NULL)
+	{
+		DWORD dwResult = WaitForSingleObject (hMutex, INFINITE);
+		if (dwResult == WAIT_OBJECT_0)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void MZNC_endMutex2 () {
+	HANDLE hMutex = getMutex2();
+	if (hMutex != NULL)
+	{
+		ReleaseMutex (hMutex);
+	}
+}
+
+void MZNC_destroyMutex2 () {
+	HANDLE hMutex = getMutex2();
+	if (hMutex != NULL)
+	{
+		CloseHandle (hMutex);
+	}
+}
+
+HANDLE hMutex3 = NULL;
+static HANDLE getMutex3() {
+	if (hMutex3 == NULL)
+	{
+		hMutex3 = CreateMutexA(NULL, FALSE, NULL);
+
+	}
+	return hMutex3;
+}
+
+
+bool MZNC_waitMutex3 () {
+	HANDLE hMutex = getMutex3();
+	if (hMutex != NULL)
+	{
+		DWORD dwResult = WaitForSingleObject (hMutex, INFINITE);
+		if (dwResult == WAIT_OBJECT_0)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void MZNC_endMutex3 () {
+	HANDLE hMutex = getMutex3();
+	if (hMutex != NULL)
+	{
+		ReleaseMutex (hMutex);
+	}
+}
+
+void MZNC_destroyMutex3 () {
+	HANDLE hMutex = getMutex3();
 	if (hMutex != NULL)
 	{
 		CloseHandle (hMutex);
@@ -193,17 +275,19 @@ const char * MZNC_getUserName ( ) {
 
 
 const char *MZNC_getHostName () {
-    static char achHostName[1024] = "";
+    static char achHostName[ 4096 ] = "";
 
     std::string s;
 
 	DWORD dwSize = sizeof achHostName;
     if ( SeyconCommon::readProperty("soffid.hostname.format", s) && s == "short")
     {
-		GetComputerName(achHostName, &dwSize);
+		GetComputerNameA(achHostName, &dwSize);
     }
     else
     {
+		GetComputerNameA(achHostName, &dwSize);
+        dwSize = sizeof achHostName;
 		GetComputerNameExA(ComputerNameDnsFullyQualified, achHostName, &dwSize);
     }
 	for (int i = 0; achHostName[i]; i++)
@@ -227,7 +311,7 @@ const char *MZNC_getHostName () {
 #include <locale.h>
 
 const char *MZNC_getCommandLine() {
-	static char *cmdLine = NULL;
+	static char *cmdLine = "";
 	if (cmdLine == NULL)
 	{
 		FILE *f =fopen ("/proc/self/cmdline", "r");
@@ -286,13 +370,13 @@ static char * convert (const char *pszString, const char *fromCharset, const cha
 	iconv_t ict = iconv_open (toCharset == NULL? nl_langinfo(CODESET): toCharset,
 			fromCharset == NULL? nl_langinfo(CODESET): fromCharset);
 	if (ict == (iconv_t) -1 ) {
-		printf ("Unable to transform to charset %s from charset %s\n",
+		fprintf (stderr, "Unable to transform to charset %s from charset %s\n",
 				fromCharset, toCharset);
 		exit(1);
 	}
 	char *oldLocale = NULL;
 	if (fromCharset == NULL || toCharset == NULL) {
-		oldLocale = setlocale(LC_CTYPE, "");
+//		oldLocale = setlocale(LC_CTYPE, "");
 	}
 	size_t inSize = len;
 	size_t outSize = inSize;
@@ -320,8 +404,8 @@ static char * convert (const char *pszString, const char *fromCharset, const cha
 	iconv (ict, NULL, NULL, &out, &outSize);
 	iconv_close (ict);
 
-	if (oldLocale != NULL)
-		setlocale(LC_CTYPE, oldLocale);
+//	if (oldLocale != NULL)
+//		setlocale(LC_CTYPE, oldLocale);
 	return result;
 }
 
@@ -372,7 +456,7 @@ static char *s_username = NULL;
 void MZNC_setUserName (const char *username ) {
 	if (s_username != NULL)
 		free (s_username);
-	if (username == NULL)
+	if (username == NULL || username[0] == '\0')
 		s_username = NULL;
 	else
 		s_username = strdup (username);
@@ -382,7 +466,7 @@ const char * MZNC_getUserName ( ) {
 	if (s_username != NULL)
 		return s_username;
 	const char * logName = getenv ("LOGNAME");
-	return logName == NULL ? "": logName;
+	return logName == NULL ? "nobody": logName;
 }
 
 const char *MZNC_getHostName () {
@@ -423,6 +507,62 @@ void MZNC_destroyMutex () {
 	sem_destroy(s);
 }
 
+static sem_t semaphore2;
+static bool initialized2 = false;
+sem_t* getSemaphore2 () {
+	if (! initialized2)
+		sem_init ( &semaphore2, true, 1);
+
+	return &semaphore2;
+}
+
+bool MZNC_waitMutex2 () {
+	sem_t* s = getSemaphore2();
+	if (s != NULL && sem_wait(s) >= 0)
+			return true;
+	return false;
+}
+
+void MZNC_endMutex2 () {
+	sem_t* s = getSemaphore2();
+	if (s != NULL)
+		sem_post(s);
+}
+
+
+void MZNC_destroyMutex2 () {
+	sem_t* s = getSemaphore2();
+	sem_destroy(s);
+}
+
+static sem_t semaphore3;
+static bool initialized3 = false;
+sem_t* getSemaphore3 () {
+	if (! initialized)
+		sem_init ( &semaphore, true, 1);
+
+	return &semaphore;
+}
+
+
+bool MZNC_waitMutex3 () {
+	sem_t* s = getSemaphore();
+	if (s != NULL && sem_wait(s) >= 0)
+			return true;
+	return false;
+}
+
+void MZNC_endMutex3 () {
+	sem_t* s = getSemaphore();
+	if (s != NULL)
+		sem_post(s);
+}
+
+
+void MZNC_destroyMutex3 () {
+	sem_t* s = getSemaphore();
+	sem_destroy(s);
+}
 
 #endif
 

@@ -150,33 +150,36 @@ void SmartWebPage::parse(AbstractWebApplication* app, PageData *data, bool forml
 		app->getForms(forms);
 
 		int i = 0;
-		for (std::vector<AbstractWebElement*>::iterator it = forms.begin(); it != forms.end(); it++)
+		if (forms.size() <= 50)
 		{
-			MZNSendDebugMessageA("* Parsing form %d", i);
-			i ++ ;
-			AbstractWebElement *element = *it;
-			std::string action;
-			element->getAttribute("action", action);
-			bool found = false;
-			for (std::vector<SmartForm*>::iterator it2 = this->forms.begin(); it2 != this->forms.end(); it2++)
+			for (std::vector<AbstractWebElement*>::iterator it = forms.begin(); it != forms.end(); it++)
 			{
-				SmartForm *form2 = *it2;
-				if (form2->getRootElement() != NULL && form2->getRootElement()->equals(element))
+				MZNSendDebugMessageA("* Parsing form %d", i);
+				i ++ ;
+				AbstractWebElement *element = *it;
+				std::string action;
+				element->getAttribute("action", action);
+				bool found = false;
+				for (std::vector<SmartForm*>::iterator it2 = this->forms.begin(); it2 != this->forms.end(); it2++)
 				{
-					form2->reparse(NULL);
-					MZNSendDebugMessageA("* Reparsed form %d", i);
-					found = true;
-					break;
+					SmartForm *form2 = *it2;
+					if (form2->getRootElement() != NULL && form2->getRootElement()->equals(element))
+					{
+						form2->reparse(NULL);
+						MZNSendDebugMessageA("* Reparsed form %d", i);
+						found = true;
+						break;
+					}
 				}
+				if (! found)
+				{
+					SmartForm *form = new SmartForm(this);
+					this->forms.push_back(form);
+					form->parse ( app, element, NULL);
+					MZNSendDebugMessageA("* Parsed form %d", i);
+				}
+				element->release();
 			}
-			if (! found)
-			{
-				SmartForm *form = new SmartForm(this);
-				this->forms.push_back(form);
-				form->parse ( app, element, NULL);
-				MZNSendDebugMessageA("* Parsed form %d", i);
-			}
-			element->release();
 		}
 	}
 
@@ -505,11 +508,11 @@ static std::string storeSecret(AccountStruct &as, const char *tag, const char *v
 
 	if (! found)
 	{
-		char ach[20];
-		sprintf (ach, "%d", counter);
-		secretName += MZNC_strtowstr(ach);
+		wchar_t ach[20];
+		swprintf (ach, 20, L"%d", counter);
+		secretName += ach;
 		s.putSecret(secretName.c_str(), encodedSecret.c_str());
-		attributeNumber = ach;
+		attributeNumber = MZNC_wstrtostr(ach);
 	}
 	return attributeNumber;
 }

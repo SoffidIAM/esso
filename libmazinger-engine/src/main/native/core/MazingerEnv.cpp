@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <MazingerInternal.h>
+#include <SeyconServer.h>
 
 MazingerEnv::MazingerEnv() {
 #ifdef WIN32
@@ -45,14 +46,19 @@ MazingerEnv::~MazingerEnv() {
 	if (pDefaultEnv == this)
 		pDefaultEnv = NULL;
 
-	for (std::vector<MazingerEnv*>::iterator it = environments.begin ();
-			it != environments.end(); it++)
+	if (MZNC_waitMutex3())
 	{
-		MazingerEnv* env = *it;
-		if (env == this) {
-			environments.erase(it);
-			return;
+		for (std::vector<MazingerEnv*>::iterator it = environments.begin ();
+				it != environments.end(); it++)
+		{
+			MazingerEnv* env = *it;
+			if (env == this) {
+				environments.erase(it);
+				MZNC_endMutex3();
+				return;
+			}
 		}
+		MZNC_endMutex3();
 	}
 }
 
@@ -60,29 +66,67 @@ MazingerEnv *MazingerEnv::pDefaultEnv = NULL;
 std::vector<MazingerEnv*> MazingerEnv::environments;
 
 
-MazingerEnv* MazingerEnv::getDefaulEnv() {
-	if (pDefaultEnv == NULL) {
-		pDefaultEnv = new MazingerEnv;
-		pDefaultEnv->user.assign (MZNC_getUserName());
-		environments.push_back(pDefaultEnv);
+static char *defaultDesktop = NULL;
+
+static char *getDefaultDesktop ()
+{
+	if (defaultDesktop == NULL)
+	{
+#ifdef WIN32_old_and_error
+		HANDLE hd = GetThreadDesktop (GetCurrentThreadId());
+		char desktopName[1024];
+
+		strcpy (desktopName, "Default");
+
+		GetUserObjectInformation (hd,
+			UOI_NAME,
+			desktopName, sizeof desktopName,
+			NULL);
+		defaultDesktop = strdup (desktopName);
+#else
+		defaultDesktop = "Default";
+#endif
 	}
-	return pDefaultEnv;
+	return defaultDesktop;
 }
 
+MazingerEnv* MazingerEnv::getDefaulEnv() {
+	return getEnv(MZNC_getUserName());
+}
+
+static char currentDesktop[1000] = "";
 MazingerEnv* MazingerEnv::getEnv(const char *user) {
-	if (user == NULL || strcmp(user, MZNC_getUserName()) == 0)
-		return getDefaulEnv();
-	for (std::vector<MazingerEnv*>::iterator it = environments.begin ();
-			it != environments.end(); it++)
+	return getEnv (user, getDefaultDesktop());
+}
+
+MazingerEnv* MazingerEnv::getEnv(const char *user, const char*desktop) {
+	if (! MZNC_waitMutex3())
 	{
-		MazingerEnv* env = *it;
-		if (env->user == user)
-			return env;
+		MazingerEnv *env = new MazingerEnv;
+		env->user = user;
+		env->desktop = desktop;
+		return env;
 	}
-	MazingerEnv *env = new MazingerEnv;
-	env->user.assign (user);
-	environments.push_back(env);
-	return env;
+	else
+	{
+		for (std::vector<MazingerEnv*>::iterator it = environments.begin ();
+				it != environments.end(); it++)
+		{
+			MazingerEnv* env = *it;
+			if (env->user == user && env->desktop == desktop)
+			{
+				MZNC_endMutex3();
+				return env;
+			}
+		}
+		MazingerEnv *env = new MazingerEnv;
+		env->user = user;
+		env->desktop = desktop;
+		environments.push_back(env);
+		MZNC_endMutex3();
+		return env;
+	}
+
 }
 
 const PMAZINGER_DATA MazingerEnv::getData () {
@@ -106,7 +150,7 @@ extern "C" BOOL WINAPI ConvertStringSecurityDescriptorToSecurityDescriptorW(
 
 
 #define MAZINGER_HEADER_SIZE (sizeof (MAZINGER_DATA)+10)
-#define MAZINGER_DATA_PREFIX L"MAZINGER_CONFIG_%s"
+#define MAZINGER_DATA_PREFIX L"MAZINGER_CONFIG_%hs_%hs"
 HINSTANCE hMazingerInstance;
 
 static void fatalError() {
@@ -155,7 +199,7 @@ static PSECURITY_DESCRIPTOR createSecurityDescriptor() {
 
 #define LOW_INTEGRITY_SDDL_SACL_W L"S:(ML;;NW;;;LW)"
 
-static void SetLowLabelToFile(LPWSTR lpszFileName) {
+static void SetLowLabelToFile(HANDLE h) {
 	// The LABEL_SECURITY_INFORMATION SDDL SACL to be set for low integrity
 	DWORD dwErr = ERROR_SUCCESS;
 	PSECURITY_DESCRIPTOR pSD = NULL;
@@ -170,7 +214,7 @@ static void SetLowLabelToFile(LPWSTR lpszFileName) {
 				&fSaclDefaulted)) {
 			// Note that psidOwner, psidGroup, and pDacl are
 			// all NULL and set the new LABEL_SECURITY_INFORMATION
-			dwErr = SetNamedSecurityInfoW(lpszFileName, SE_FILE_OBJECT,
+			dwErr = SetSecurityInfo(h, SE_KERNEL_OBJECT,
 					LABEL_SECURITY_INFORMATION, NULL, NULL, NULL, pSacl);
 		}
 		LocalFree(pSD);
@@ -178,13 +222,11 @@ static void SetLowLabelToFile(LPWSTR lpszFileName) {
 }
 
 PMAZINGER_DATA MazingerEnv::createMazingerData() {
-	WCHAR achUser[100];
 	WCHAR ach[200];
-	DWORD userSize = sizeof achUser;
 
-	GetUserNameW(achUser, &userSize);
-	CharLowerW(achUser);
-	wsprintfW(ach, MAZINGER_DATA_PREFIX, achUser);
+	wsprintfW(ach, MAZINGER_DATA_PREFIX, user.c_str(), desktop.c_str());
+
+	CharLowerW(ach);
 
 	SECURITY_ATTRIBUTES sa;
 	sa.nLength = sizeof sa;
@@ -205,7 +247,7 @@ PMAZINGER_DATA MazingerEnv::createMazingerData() {
 		return NULL;
 	}
 
-	SetLowLabelToFile (ach);
+	SetLowLabelToFile (hMapFile);
 	hMapFileRW = true;
 
 
@@ -227,15 +269,19 @@ PMAZINGER_DATA MazingerEnv::createMazingerData() {
 static MAZINGER_DATA nullMazingerData;
 
 PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
+
 	if (pMazingerData != NULL && hMapFile != NULL && (readOnly || hMapFileRW)) {
 		return pMazingerData;
 	}
 
-	WCHAR achUser[100];
-	WCHAR ach[200];
-	DWORD userSize = sizeof achUser;
 
-	if (! MZNC_waitMutex()) {
+	WCHAR ach[200];
+
+	const char* lpszCmdLine2 = MZNC_getCommandLine();
+	bool iexplore = (strstr( lpszCmdLine2, "iexplore") != NULL);
+
+
+	if (!iexplore && ! MZNC_waitMutex()) {
 		return NULL;
 	}
 
@@ -251,10 +297,9 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 
 
 	if (hMapFile == NULL) {
-		GetUserNameW(achUser, &userSize);
-		CharLowerW(achUser);
-		wsprintfW(ach, MAZINGER_DATA_PREFIX, achUser);
-		hMapFile = OpenFileMappingW(readOnly ? FILE_MAP_READ : FILE_MAP_WRITE, // Read/write permission.
+		wsprintfW(ach, MAZINGER_DATA_PREFIX, user.c_str(), desktop.c_str());
+		CharLowerW(ach);
+			hMapFile = OpenFileMappingW(readOnly ? FILE_MAP_READ : FILE_MAP_WRITE, // Read/write permission.
 				FALSE, // Max. object size.
 				ach); // Name of mapping object.
 		if (hMapFile != NULL) {
@@ -281,7 +326,9 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 				0, 0, 0);
 	}
 
-	MZNC_endMutex ();
+
+	if (! iexplore)
+		MZNC_endMutex ();
 	return pMazingerData;
 }
 
@@ -298,21 +345,25 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 	if (pMazingerData != NULL && ( readOnly || ! openReadOnly))
 		return pMazingerData;
 
-	if (shm < 0 || ( readOnly && ! openReadOnly)) {
-		if (shm < 0)
+	if (shm < 0 || ( ! readOnly && openReadOnly)) {
+		if (shm >= 0)
 			::close (shm);
 		if (shmName.size() == 0) {
 			shmName.assign ("/MazingerData-");
 			shmName.append (user);
+			SeyconCommon::debug ("Setting file name for %p (%s) = %s\n", this, user.c_str(), shmName.c_str());
 		}
+		SeyconCommon::debug ("Opening %s\n", shmName.c_str());
 		shm = shm_open (shmName.c_str(), readOnly ? O_RDONLY : O_RDWR, 0600);
 		if (shm < 0) {
+			SeyconCommon::debug ("CANNOT OPEN SHM");
 			if (readOnly) return NULL;
 
 			shm = shm_open (shmName.c_str(), O_RDWR|O_CREAT, 0600);
 			if (shm < 0) {
+				SeyconCommon::debug ("CANNOT CREATE SHM");
 				if (! readOnly) {
-					printf ("Unable to create shared memory %s", shmName.c_str());
+					fprintf (stderr, "Unable to create shared memory %s", shmName.c_str());
 					perror ("Error: ");
 				}
 				return NULL;
@@ -333,7 +384,10 @@ PMAZINGER_DATA MazingerEnv::open (bool readOnly) {
 			readOnly ? PROT_READ: PROT_READ|PROT_WRITE, MAP_SHARED, shm, 0);
 	if (pMazingerData == MAP_FAILED) {
 		pMazingerData = NULL;
+		SeyconCommon::debug ("Cannot map %s\n", shmName.c_str());
 	}
+	else
+		SeyconCommon::debug ("Opened %s\n", shmName.c_str());
 	openReadOnly = readOnly;
 
 	return pMazingerData;
@@ -351,16 +405,21 @@ void MazingerEnv::close () {
 #endif
 
 ConfigReader * MazingerEnv::getConfigReader () {
-	MZNC_waitMutex();
-	if (reader == NULL) {
-		PMAZINGER_DATA pData = getData();
-		if (pData == NULL)
-			return NULL;
-		reader = new ConfigReader (open(true));
-		MZNSendDebugMessageA("Parsing Mazinger data");
-		reader->parse();
-		MZNSendDebugMessageA("END Parsing Mazinger data");
+	if (MZNC_waitMutex())
+	{
+		if (reader == NULL) {
+			PMAZINGER_DATA pData = getData();
+			if (pData == NULL)
+			{
+				MZNC_endMutex();
+				return NULL;
+			}
+			reader = new ConfigReader (open(true));
+			MZNSendDebugMessageA("Parsing Mazinger data");
+			reader->parse();
+			MZNSendDebugMessageA("END Parsing Mazinger data");
+		}
+		MZNC_endMutex();
 	}
-	MZNC_endMutex();
 	return reader;
 }

@@ -6,15 +6,20 @@
 #include "ExplorerWebApplication.h"
 #include <MazingerInternal.h>
 #include "Utils.h"
-
+#include <mshtml.h>
 
 CExplorerEventHandler::CExplorerEventHandler ()
 {
+	m_app = NULL;
+	m_nRefCount = 0;
 }
 
 
 void  CExplorerEventHandler::connect(IWebBrowser2 *pBrowser)
 {
+	if (m_app != NULL)
+		m_app->release();
+	m_app = NULL;
 	m_pBrowser = pBrowser;
 	m_pBrowser->AddRef();
 	IConnectionPointContainer* pCPC = NULL;
@@ -37,12 +42,7 @@ void  CExplorerEventHandler::connect(IWebBrowser2 *pBrowser)
 		  pCP -> Release ();
 		  pCPC -> Release ();
 	}
-
-
 }
-
-
-
 
 
 HRESULT __stdcall CExplorerEventHandler::QueryInterface(REFIID riid, void **ppObj) {
@@ -103,28 +103,66 @@ HRESULT __stdcall CExplorerEventHandler::GetIDsOfNames(REFIID ID,LPOLESTR* bstr,
 
 void CExplorerEventHandler::onLoad(IWebBrowser2 *pBrowser, const char *url)
 {
-	ExplorerWebApplication app (pBrowser == NULL ? m_pBrowser: pBrowser, NULL, url);
-	MZNWebMatch(&app);
+	if (m_app != NULL)
+		m_app->release();
+	m_app = new ExplorerWebApplication(pBrowser == NULL ? m_pBrowser: pBrowser, NULL, url);
+	MZNWebMatch(m_app);
+}
+
+
+static DWORD WINAPI documentThreadProc(
+  LPVOID arg
+)
+{
+	IDispatch *pDispatch = (IDispatch*) arg;
+	MZNSendDebugMessageA("pDispatch = %p", pDispatch);
+	ExplorerWebApplication *app = new ExplorerWebApplication(NULL, pDispatch, NULL);
+	std::string url;
+	std::string url2;
+	MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+	app->getUrl(url);
+	MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+	do
+	{
+		MZNSendDebugMessage("URL = %s", url.c_str());
+		MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+		MZNWebMatch(app);
+		MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+		Sleep(3000);
+		MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+		app->getUrl(url2);
+		MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+	} while (url == url2);
+	MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+	app->release();
+	MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+	pDispatch->Release();
+	MZNSendDebugMessage ("%s:%d", __FILE__, __LINE__);
+	return 0;
 }
 
 HRESULT __stdcall CExplorerEventHandler::Invoke(DISPID dispIdMember,REFIID riid,LCID lcid,WORD wFlags,DISPPARAMS *pDispParams,VARIANT *pVarResult,EXCEPINFO *pExcepInfo,UINT *puArgErr) {
 	if(!IsEqualIID(riid,IID_NULL)) return DISP_E_UNKNOWNINTERFACE; // riid should always be IID_NULL
 
-
-
 	if(dispIdMember==DISPID_DOCUMENTCOMPLETE) { // Handle the BeforeNavigate2 event
-		IWebBrowser2 *pBrowser = NULL;
+//		MZNSendDebugMessageA("OnDocumentComplete");
+		IDispatch *pDispatch = NULL;
+
 		std::string url;
 
 		if (pDispParams != NULL && pDispParams->cArgs > 1
 				&& (pDispParams->rgvarg[1].vt & VT_TYPEMASK)== VT_DISPATCH)
 		{
+			IWebBrowser2 *pBrowser = NULL;
 			IDispatch *doc = pDispParams->rgvarg[1].pdispVal;
 
 		    // Is this the DocumentComplete event for the top frame window?
 		    // Check COM identity: compare IUnknown interface pointers.
-		    if (S_OK != doc->QueryInterface(IID_IWebBrowser2, (void**)&pBrowser))
-		    	pBrowser = NULL;
+		    if (S_OK == doc->QueryInterface(IID_IWebBrowser2, (void**)&pBrowser))
+		    {
+    		    pBrowser->get_Document(&pDispatch);
+    		    pBrowser->Release();
+		    }
 		}
 		if (pDispParams != NULL && pDispParams->cArgs > 0)
 		{
@@ -132,14 +170,24 @@ HRESULT __stdcall CExplorerEventHandler::Invoke(DISPID dispIdMember,REFIID riid,
 			VariantInit (&dest);
 			if ( S_OK == VariantChangeType (&dest, &pDispParams->rgvarg[0], 0, VT_BSTR))
 			{
-				//sprintf (ach, "args[1] = %d", pDispParams->rgvarg[1].vt & VT_TYPEMASK);
-				//MessageBox(NULL, ach, "AFRODITA E3", MB_OK);
 				Utils::bstr2str (url, dest.bstrVal);
-				//MessageBox(NULL, v.c_str(), "AFRODITA E", MB_OK);
 				VariantClear (&dest);
 			}
 		}
-		onLoad(pBrowser, url.c_str());
+		if (pDispatch != NULL)
+		{
+			ExplorerWebApplication *app = new ExplorerWebApplication(NULL, pDispatch, NULL);
+
+			app->installLoadListener(); // Delay to allow onLoad to be executed
+		}
+	} else if (dispIdMember == DISPID_PROGRESSCHANGE){
+
+//		MZNSendDebugMessageA("Progress Change %ld / %ld" , pDispParams->rgvarg[0].lVal,
+//				pDispParams->rgvarg[1].lVal) ;
+	} else if (dispIdMember == DISPID_NAVIGATECOMPLETE2){
+	} else if (dispIdMember == DISPID_NAVIGATECOMPLETE){
+	} else {
+//		MZNSendDebugMessageA("Ignoreing dispatcher %d", (int) dispIdMember) ;
 	}
 	return S_OK;
 }

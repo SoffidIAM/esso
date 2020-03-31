@@ -19,7 +19,7 @@
 
 #include <errno.h>
 #include "ConfigFile.h"
-
+#include <syslog.h>
 #endif
 
 
@@ -31,6 +31,7 @@
 #include <SeyconServer.h>
 #include <stdlib.h>
 #include <MZNcompat.h>
+#include <time.h>
 int SeyconCommon::seyconDebugLevel = 0;
 
 __attribute__((constructor))
@@ -43,6 +44,7 @@ static void initDebugLevel () {
 }
 
 #ifdef WIN32
+
 static HINSTANCE hWTSAPI;
 typedef struct _MY_WTS_CLIENT_ADDRESS {
     DWORD AddressFamily;  // AF_INET, AF_IPX, AF_NETBIOS, AF_UNSPEC
@@ -86,6 +88,39 @@ void freeCitrixMemory(PVOID pMemory) {
 		return;
 	}
 	(*pWTSFreeMemory)(pMemory);
+}
+
+void SeyconCommon::getCitrixInitialProgram(std::string &name) {
+	char* lpszBytes;
+	DWORD dwBytes = 0;
+	BOOL bOK = FALSE;
+	name.clear ();
+
+	/*
+	 *  Get handle to WTSAPI.DLL
+	 */
+	if (hWTSAPI == NULL && (hWTSAPI = LoadLibrary("WTSAPI32")) == NULL) {
+		return;
+	}
+
+	/*
+	 *  Get entry point for WTSEnumerateServers
+	 */
+	if (pWTSQuerySessionInformation == NULL)
+		pWTSQuerySessionInformation
+				= (typeWTSQuerySessionInformation) GetProcAddress(hWTSAPI,
+						"WTSQuerySessionInformationA");
+	if (pWTSQuerySessionInformation == NULL) {
+		name.clear ();
+		return;
+	}
+	bOK = (*pWTSQuerySessionInformation)(WTS_CURRENT_SERVER_HANDLE,
+			WTS_CURRENT_SESSION, WTSInitialProgram, &lpszBytes, &dwBytes);
+	if (bOK) {
+		name.assign (lpszBytes);
+		freeCitrixMemory(lpszBytes);
+	} else
+		name.clear ();
 }
 
 void SeyconCommon::getCitrixClientName(std::string &name) {
@@ -169,12 +204,16 @@ void SeyconCommon::getCitrixClientIP(std::string &ip) {
 
 void notifyError() {
 
-	printf("***************\n");
-	printf("    ERROR      \n");
-	printf("\n");
+	fprintf(stderr, "***************\n");
+	fprintf(stderr, "    ERROR      \n");
+	fprintf(stderr, "\n");
 	perror("");
-	printf("\n");
-	printf("***************\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "***************\n");
+}
+
+void SeyconCommon::getCitrixInitialProgram(std::string &name) {
+	name.clear();
 }
 
 void SeyconCommon::getCitrixClientName(std::string &name) {
@@ -253,7 +292,7 @@ bool SeyconCommon::readProperty(const char* property, std::string &value) {
 		configFile->load ("/etc/mazinger/config");
 	}
 	const char *data = configFile->getValue(property);
-	if (data == NULL) {
+	if (data == NULL || data[0] == '\0') {
 		value.clear ();
 		return false;
 	}
@@ -415,19 +454,25 @@ void SeyconCommon::info (const char *szFormat, ...) {
 	    ReportEvent(getEventLog(),
 	    		EVENTLOG_AUDIT_SUCCESS, MC_MAZINGER, MC_MAZINGER_INFO,
 	    		NULL, 1, 0, &params, NULL);
+#else
+		va_list v2;
+		va_start(v2, szFormat);
+		openlog ("soffid-session", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
+		vsyslog (LOG_INFO, szFormat, v2);
+		closelog ();
 #endif
 		time_t t;
 		time(&t);
 		struct tm *tm = localtime (&t);
-		fprintf (stdout, "%d-%02d-%04d %02d:%02d:%02d INFO ",
+		fprintf (stderr, "%d-%02d-%04d %02d:%02d:%02d INFO ",
 				tm->tm_mday, tm->tm_mon+1, tm->tm_year+1900, tm->tm_hour, tm->tm_min, tm->tm_sec);
 		va_list v;
 		va_start(v, szFormat);
 		vprintf(szFormat, v);
 		va_end(v);
 		if (szFormat[strlen(szFormat)-1] != '\n')
-			printf ("\n");
-		fflush (stdout);
+			fprintf (stderr, "\n");
+		fflush (stderr);
 	}
 }
 
@@ -442,6 +487,12 @@ void SeyconCommon::warn (const char *szFormat, ...) {
 	    ReportEvent(getEventLog(),
 	    		EVENTLOG_WARNING_TYPE, MC_MAZINGER, MC_MAZINGER_WARN,
 	    		NULL, 1, 0, &params, NULL);
+#else
+		va_list v2;
+		va_start(v2, szFormat);
+		openlog ("soffid-session", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
+		vsyslog (LOG_WARNING, szFormat, v2);
+		closelog ();
 #endif
 	va_list v;
 	va_start(v, szFormat);
@@ -453,8 +504,8 @@ void SeyconCommon::warn (const char *szFormat, ...) {
 	vfprintf(stderr, szFormat, v);
 	va_end(v);
 	if (szFormat[strlen(szFormat)-1] != '\n')
-		printf ("\n");
-	fflush (stdout);
+		fprintf (stderr, "\n");
+	fflush (stderr);
 }
 
 void SeyconCommon::debug (const char *szFormat, ...) {
@@ -470,19 +521,26 @@ void SeyconCommon::debug (const char *szFormat, ...) {
 	    ReportEvent(getEventLog(),
 	    		EVENTLOG_INFORMATION_TYPE, MC_MAZINGER, MC_MAZINGER_DEBUG,
 	    		NULL, 1, 0, &params, NULL);
+#else
+		va_list v2;
+		va_start(v2, szFormat);
+		setlogmask (LOG_UPTO (LOG_DEBUG));
+		openlog ("soffid-session", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
+		vsyslog (LOG_DEBUG, szFormat, v2);
+		closelog ();
 #endif
 		time_t t;
 		time(&t);
 		struct tm *tm = localtime (&t);
-		fprintf (stdout, "%d-%02d-%04d %02d:%02d:%02d DEBUG ",
+		fprintf (stderr, "%d-%02d-%04d %02d:%02d:%02d DEBUG ",
 				tm->tm_mday, tm->tm_mon+1, tm->tm_year+1900, tm->tm_hour, tm->tm_min, tm->tm_sec);
 		va_list v;
 		va_start(v, szFormat);
-		vprintf(szFormat, v);
+		vfprintf(stderr, szFormat, v);
 		va_end(v);
 		if (szFormat[strlen(szFormat)-1] != '\n')
-			printf ("\n");
-		fflush (stdout);
+			fprintf (stderr,"\n");
+		fflush (stderr);
 	}
 
 }
@@ -498,6 +556,11 @@ void SeyconCommon::wipe (std::wstring &str) {
 }
 
 void SeyconCommon::updateHostAddress () {
+	std::string disable;
+	SeyconCommon::readProperty("registerHostAddress", disable);
+	if (disable == "false")
+		return;
+
 	std::string serialNumber;
 	SeyconCommon::readProperty("serialNumber", serialNumber);
 	if (serialNumber.size() == 0) {
@@ -532,11 +595,98 @@ void SeyconCommon::updateHostAddress () {
 	}
 
 	SeyconService service ;
-	SeyconResponse*response= service.sendUrlMessage(L"/updateHostAddress?name=%hs&serial=%hs",
-			MZNC_getHostName(), serialNumber.c_str());
-	if (response != NULL && response->getResult() != NULL)  {
-		if (response->getToken(0) == "ERROR") {
-			SeyconCommon::warn ("Error updating host address: %hs", response->getToken(1).c_str());
+	time_t start;
+	time_t now;
+	time (&start);
+	do {
+		SeyconCommon::info ("Connecting to sync server to update host address %hs", MZNC_getHostName());
+		SeyconResponse*response= service.sendUrlMessage(L"/updateHostAddress?name=%hs&serial=%hs",
+				MZNC_getHostName(), serialNumber.c_str());
+		if (response != NULL && response->getResult() != NULL)  {
+			if (response->getToken(0) == "ERROR") {
+				SeyconCommon::warn ("Error updating host %hs: %hs", MZNC_getHostName(), response->getToken(1).c_str());
+			}
+			break;
+		}
+		time (&now);
+	} while (now - start < 30);
+}
+
+
+
+int hextoint (char ch)
+{
+	if (ch >= '0' && ch <= '9')
+		return ch - '0';
+	else if (ch >= 'a' && ch <= 'f')
+		return ch - 'a' + 10;
+	else if (ch >= 'A' && ch <= 'F')
+		return ch - 'A' + 10;
+	else
+		return -1;
+}
+
+char inttohex (int i)
+{
+	if (i < 10)
+		return '0' + i;
+	else
+		return 'a' + i - 10;
+}
+
+std::wstring SeyconCommon::urlDecode (const char* str) {
+	std::string result;
+	const unsigned char *sz = (const unsigned char*) str;
+	int i = 0;
+	while (sz[i])
+	{
+		if (sz[i] == '%')
+		{
+			int hex1 = hextoint (sz[++i]);
+			if (hex1 >= 0)
+			{
+				int hex2 = hextoint (sz[++i]);
+				if (hex2 >= 0)
+				{
+					i++;
+					result += (char) (hex1 << 4 | hex2);
+				}
+			}
+		}
+		else if (sz[i] == '+')
+		{
+			result += ' ';
+			i++;
+		}
+		else
+		{
+			result += sz[i++];
 		}
 	}
+	return MZNC_utf8towstr(result.c_str());
+}
+
+std::string SeyconCommon::urlEncode  (const wchar_t* str)
+{
+	std::string utf8 = MZNC_wstrtoutf8(str);
+	const unsigned char* sz = (const unsigned char*) utf8.c_str();
+	std::string result;
+	int i = 0;
+	while (sz[i])
+	{
+		if (sz[i] == ' ')
+			result += "+";
+		else if (sz[i] < '0' || sz[i] > '9' && sz[i] < 'A' || (sz[i] > 'Z' && sz[i] < 'a') || sz[i] > 'z' )
+		{
+			int s = (int) sz[i];
+			if (s < 0) s += 256;
+			result += "%";
+			result += inttohex ( s / 16);
+			result += inttohex ( s % 16);
+		}
+		else
+			result += sz[i];
+		i++;
+	}
+	return result;
 }
