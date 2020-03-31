@@ -1,1 +1,9 @@
 target
+Linux
+Windows
+.project
+.classpath
+.settings
+Debug
+Release
+.cproject
