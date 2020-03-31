@@ -80,7 +80,7 @@ static void SetLowLabelToMailslot(HANDLE hKernelObj) {
 
 void sendDebugMessage(LPCWSTR lpszMessage) {
 	PMAZINGER_DATA pMazinger = MazingerEnv::getDefaulEnv()->getData();
-	if (pMazinger != NULL && pMazinger->debugLevel) {
+	if (pMazinger != NULL and pMazinger->debugLevel) {
 		if (achMailSlotName[0] == L'\0') {
 			WCHAR achUser[1024];
 			DWORD userSize = sizeof achUser;

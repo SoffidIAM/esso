@@ -52,7 +52,7 @@ public:
 			std::vector<std::string> &names,
 			AbstractWebElement *element,
 			WebListener *listener);
-
+	virtual void execute (const char *script) = 0;
 	virtual SmartWebPage* getWebPage () = 0;
 };
 #endif /* WEBAPPLICATION_H_ */
