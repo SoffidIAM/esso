@@ -56,6 +56,9 @@ static void MZN_document_write(struct SEE_interpreter *interp,
 static void MZN_document_writeln(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res);
+static void MZN_document_eval(struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res);
 static void MZN_document_autofill (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res);
@@ -147,6 +150,7 @@ static struct SEE_string *STR(getElementById);
 static struct SEE_string *STR(getElementsByTagName);
 static struct SEE_string *STR(write);
 static struct SEE_string *STR(writeln);
+static struct SEE_string *STR(eval);
 static struct SEE_string *STR(length);
 static struct SEE_string *STR(item);
 static struct SEE_string *STR(namedItem);
@@ -269,6 +273,7 @@ static int Web_mod_init() {
 	STR(getElementsByTagName)=SEE_intern_global("getElementsByTagName");
 	STR(write)=SEE_intern_global("write");
 	STR(writeln)=SEE_intern_global("writeln");
+	STR(eval)=SEE_intern_global("eval");
 	STR(length)=SEE_intern_global("length");
 	STR(item)=SEE_intern_global("item");
 	STR(namedItem)=SEE_intern_global("namedItem");
@@ -358,6 +363,7 @@ static void Web_init(struct SEE_interpreter *interp) {
 	PUTFUNC(proto, MZN_document, getElementsByTagName, 1)
 	PUTFUNC(proto, MZN_document, write, 1)
 	PUTFUNC(proto, MZN_document, writeln, 1)
+	PUTFUNC(proto, MZN_document, eval, 1)
 	PUTFUNC(proto, MZN_document, autofill, 1)
 	PUTFUNC(proto, MZN_document, autofillFormless, 1)
 	PRIVATE(interp)->documentPrototype = &proto->object;
@@ -667,6 +673,25 @@ static void MZN_document_writeln(struct SEE_interpreter *interp,
 	if (s != NULL)
 	{
 		pObj->spec->writeln(s);
+	}
+	SEE_SET_UNDEFINED(res);
+
+}
+
+static void MZN_document_eval(struct SEE_interpreter *interp,
+		struct SEE_object *self, struct SEE_object *thisobj, int argc,
+		struct SEE_value **argv, struct SEE_value *res)
+{
+
+	char* s = NULL;
+
+	MZN_document_object *pObj = (MZN_document_object*) thisobj;
+
+	SEE_parse_args(interp, argc, argv, "A", &s);
+	if (s != NULL)
+	{
+		MZNSendDebugMessageA("Executing %s", s);
+		pObj->spec->execute(s);
 	}
 	SEE_SET_UNDEFINED(res);
 
