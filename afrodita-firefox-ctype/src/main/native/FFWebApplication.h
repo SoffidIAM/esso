@@ -45,6 +45,7 @@ public:
 			AbstractWebElement *element,
 			WebListener *listener);
 
+	virtual void execute (const char *script);
 	virtual SmartWebPage* getWebPage ();
 	virtual std::string toString () ;
 

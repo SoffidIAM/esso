@@ -114,6 +114,7 @@
         <module>libmazinger-engine</module>
         <module>afrodita-explorer</module>
         <module>afrodita-chrome</module>
+        <module>afrodita-firefox-ctype</module>
         <module>javahook</module>
         <module>sewashi</module>
         <module>sewbr</module>
