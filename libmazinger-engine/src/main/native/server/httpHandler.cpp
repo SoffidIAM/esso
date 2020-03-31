@@ -337,56 +337,71 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* hostName, s
 				NULL);
 	}
 
-	char num[10];
-	sprintf (num, "%d", dwPort);
+	bool repeat;
+	int retries = 0;
+	do
+	{
+		repeat = false;
+		char num[10];
+		sprintf (num, "%d", dwPort);
 
-	std::string szUri = MZNC_wstrtostr(path);
-	std::string szUrl = "https://";
-	szUrl += hostName;
-	szUrl += ":";
-	szUrl += num;
-	szUrl += szUri;
+		std::string szUri = MZNC_wstrtostr(path);
+		std::string szUrl = "https://";
+		szUrl += hostName;
+		szUrl += ":";
+		szUrl += num;
+		szUrl += szUri;
 
-	char *path2 = strdup (szUrl.c_str());
-	char *query = strstr(path2, "?");
-	if (query != NULL)
-		*query = L'\0';
-
-	SeyconCommon::debug("Performing request %s....", path2);
-
-	free (path2);
-
-	SoupMessage *msg = soup_message_new ("GET", szUrl.c_str());
-
-	SeyconCommon::wipe(szUri);
-	SeyconCommon::wipe(szUrl);
+		char *path2 = strdup (szUrl.c_str());
+		SeyconCommon::debug("Performing request %s....", path2);
+		char *query = strstr(path2, "?");
+		if (query != NULL)
+			*query = L'\0';
 
 
-	if (msg != NULL) {
-		guint status = soup_session_send_message(pSession, msg);
-		if (status == 204) // HTTP-NO-DATA
-		{
-			SeyconCommon::debug ("Success HTTP/204 (No data)", status);
-			g_object_unref(msg);
-			msg = NULL;
-			return SIR_ERROR;
-		} else if (status != 200) // HTTP-OK
-		{
-			SeyconCommon::debug ("Error HTTP/%d at host: %s:%d: %s", status, hostName, dwPort,
-					msg->reason_phrase);
-			g_object_unref(msg);
-			msg = NULL;
-			return SIR_RETRY;
+		free (path2);
+
+		SoupMessage *msg = soup_message_new ("GET", szUrl.c_str());
+
+		SeyconCommon::wipe(szUri);
+		SeyconCommon::wipe(szUrl);
+
+
+		if (msg != NULL) {
+			guint status = soup_session_send_message(pSession, msg);
+			if (status == 204) // HTTP-NO-DATA
+			{
+				SeyconCommon::debug ("Success HTTP/204 (No data)", status);
+				g_object_unref(msg);
+				msg = NULL;
+				return SIR_ERROR;
+			}
+			else if (status == 7 && retries < 2) // Ćonnexion closed
+			{
+				SeyconCommon::debug ("Error HTTP/%d at host: %s:%d: %s. Retrying", status, hostName, dwPort,
+						msg->reason_phrase);
+				retries ++;
+				repeat = true;
+				sleep(3);
+			}
+			else if (status != 200) // HTTP-OK
+			{
+				SeyconCommon::debug ("Error HTTP/%d at host: %s:%d: %s", status, hostName, dwPort,
+						msg->reason_phrase);
+				g_object_unref(msg);
+				msg = NULL;
+				return SIR_RETRY;
+			} else {
+				SoupBuffer *buffer = soup_message_body_flatten(msg->response_body);
+				result = new SeyconResponse ((char*) buffer->data, buffer->length);
+				g_object_unref(msg);
+				return SIR_SUCCESS;
+			}
 		} else {
-			SoupBuffer *buffer = soup_message_body_flatten(msg->response_body);
-			result = new SeyconResponse ((char*) buffer->data, buffer->length);
-			g_object_unref(msg);
-			return SIR_SUCCESS;
+			SeyconCommon::warn("Unable to create soup message\n");
+			return SIR_ERROR;
 		}
-	} else {
-		SeyconCommon::warn("Unable to create soup message\n");
-		return SIR_ERROR;
-	}
+	} while (repeat);
 
 }
 
