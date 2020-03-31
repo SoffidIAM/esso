@@ -170,23 +170,15 @@ HRESULT __stdcall CExplorerEventHandler::Invoke(DISPID dispIdMember,REFIID riid,
 			VariantInit (&dest);
 			if ( S_OK == VariantChangeType (&dest, &pDispParams->rgvarg[0], 0, VT_BSTR))
 			{
-				//sprintf (ach, "args[1] = %d", pDispParams->rgvarg[1].vt & VT_TYPEMASK);
-				//MessageBox(NULL, ach, "AFRODITA E3", MB_OK);
 				Utils::bstr2str (url, dest.bstrVal);
-				//MessageBox(NULL, v.c_str(), "AFRODITA E", MB_OK);
 				VariantClear (&dest);
 			}
 		}
 		if (pDispatch != NULL)
 		{
 			ExplorerWebApplication *app = new ExplorerWebApplication(NULL, pDispatch, NULL);
-			bool found = MZNWebMatch(app, false);
-			IHTMLWindow2 *w;
-			if ( ! found )
-			{
-				MZNSendDebugMessageA("web match failed. Retry in 2 seconds");
-				app->installIntervalListener();
-			}
+
+			app->installLoadListener(); // Delay to allow onLoad to be executed
 		}
 	} else if (dispIdMember == DISPID_PROGRESSCHANGE){
 

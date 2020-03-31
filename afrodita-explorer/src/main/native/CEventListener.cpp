@@ -24,6 +24,8 @@ CEventListener::CEventListener ()
 	m_eventID = ++eventCounter;
 	m_nRefCount = 0;
 	disabled = false;
+	loadEvent = false;
+	loops = 0;
 //	MZNSendDebugMessage("Created EventListener %d", m_eventID);
 }
 
@@ -274,9 +276,9 @@ HRESULT CEventListener::GetNameSpaceParent(IUnknown** ppunk) {
 }
 
 void CEventListener::execute(DISPPARAMS* pDispParams) {
-//	MZNSendDebugMessageA("Executing eventListener %d", m_eventID);
 	if (m_pElement != NULL && m_listener != NULL)
 	{
+		MZNSendDebugMessageA("Executing ELEMENT eventListener %d", m_eventID);
 		AbstractWebElement *pElement = m_pElement;
 		bool releaseElement = false;
 
@@ -336,12 +338,30 @@ void CEventListener::execute(DISPPARAMS* pDispParams) {
 //		MZNSendDebugMessageA("m_pApplication != null");
 		if (!preventLoop && !disabled)
 		{
-			disabled = true;
 			preventLoop = true;
 			std::string url;
 			m_pApplication->getUrl(url);
 //			MZNSendDebugMessage("Invoked refresh event %p; %s", m_pApplication, url.c_str());
-			MZNWebMatch(m_pApplication);
+			if (loadEvent)
+			{
+				bool found = MZNWebMatch(m_pApplication, false);
+				IHTMLWindow2 *w;
+				if ( ! found )
+				{
+					MZNSendDebugMessageA("web match failed. Retry in 2 seconds");
+					m_pApplication->installIntervalListener();
+				}
+			} else {
+				int l = ++ loops;
+				MZNSendDebugMessageA("Loop instance %d", loops);
+				while (l > 0 && (l & 1) == 0)
+					l = l >> 1;
+				if (l == 1)
+				{
+					MZNSendDebugMessageA("Processing loop");
+					MZNWebMatch(m_pApplication);
+				}
+			}
 			preventLoop = false;
 		}
 	}
@@ -360,6 +380,72 @@ void CEventListener::connectRefresh (ExplorerWebApplication *app)
 	VARIANT va;
 	va.vt = VT_DISPATCH;
 	va.pdispVal  = this;
+
+	MZNSendDebugMessageA("Installing refresh listener %d", m_eventID);
+
+	IHTMLWindow2 *w = NULL;
+	IHTMLDocument2* pDoc = app->getHTMLDocument2();
+	if (pDoc != NULL && S_OK == pDoc->get_parentWindow(&w) && w != NULL)
+	{
+		DISPID dispId;
+		IDispatchEx *pDispatchEx = NULL;
+		IID IDispatchEx_CLSID = { 0xa6ef9860, 0xc720, 0x11d0, {0x93, 0x37, 0x00,0xa0,0xc9,0x0d,0xca,0xa9}};
+
+		if (S_OK == w->QueryInterface(IDispatchEx_CLSID, reinterpret_cast<void**>(&pDispatchEx)))
+		{
+			if (FAILED (pDispatchEx->GetDispID(bstr, fdexNameEnsure, &dispId)))
+			{
+				MZNSendDebugMessage("Unable to create property %ls", bstr);
+			}
+			else
+			{
+				DISPPARAMS dp;
+				dp.cArgs = 1;
+				dp.cNamedArgs = 0;
+				dp.rgvarg = &va;
+				VARIANT result ;
+				result.vt = VT_NULL;
+				UINT error;
+				HRESULT hr = pDispatchEx->InvokeEx(dispId, LOCALE_SYSTEM_DEFAULT, DISPATCH_PROPERTYPUTREF, &dp, &result, NULL, NULL);
+
+				if ( !FAILED(hr))
+				{
+					MZNSendDebugMessageA("Success !!");
+					BSTR b = Utils::str2bstr("window.soffidRefresh();");
+					BSTR b2 = Utils::str2bstr("javascript");
+					VARIANT v;
+					long timer;
+					v.vt = VT_BSTR;
+					v.bstrVal = b2;
+					w->setTimeout(b, 5000, &v, &timer);
+					SysFreeString(b);
+					SysFreeString(b2);
+				}
+
+			}
+			pDispatchEx -> Release();
+		}
+		else
+		{
+//			MZNSendDebugMessage("Cannot get IDispatchEx");
+		}
+		w->Release();
+	}
+
+	SysFreeString(bstr);
+
+}
+
+void CEventListener::connectLoad (ExplorerWebApplication *app)
+{
+	m_pApplication = app;
+	m_pApplication -> lock();
+	BSTR bstr = Utils::str2bstr("soffidLoad");
+	VARIANT va;
+	va.vt = VT_DISPATCH;
+	va.pdispVal  = this;
+
+	loadEvent = true;
 
 //	MZNSendDebugMessageA("Installing refresh listener %d", m_eventID);
 
@@ -391,13 +477,13 @@ void CEventListener::connectRefresh (ExplorerWebApplication *app)
 				if ( !FAILED(hr))
 				{
 //					MZNSendDebugMessageA("Success !!");
-					BSTR b = Utils::str2bstr("window.soffidRefresh();");
+					BSTR b = Utils::str2bstr("window.soffidLoad();");
 					BSTR b2 = Utils::str2bstr("javascript");
 					VARIANT v;
 					long timer;
 					v.vt = VT_BSTR;
 					v.bstrVal = b2;
-					w->setInterval(b, 2000, &v, &timer);
+					w->setTimeout(b, 100, &v, &timer);
 					SysFreeString(b);
 					SysFreeString(b2);
 				}
@@ -417,5 +503,4 @@ void CEventListener::connectRefresh (ExplorerWebApplication *app)
 	SysFreeString(bstr);
 
 }
-
 

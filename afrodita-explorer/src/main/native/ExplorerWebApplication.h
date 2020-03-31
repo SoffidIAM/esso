@@ -49,6 +49,7 @@ public:
 	virtual void subscribe ( const char *eventName, WebListener *listener) ;
 	virtual void unSubscribe ( const char *eventName, WebListener *listener);
 	virtual std::string toString() ;
+	virtual void execute (const char* script);
 
 	virtual SmartWebPage* getWebPage ();
 
@@ -61,8 +62,9 @@ public:
 	IHTMLDocument4 * getHTMLDocument4 ();
 	IDocumentEvent * getDocumentEvent ();
 	void installIntervalListener ();
+	void installLoadListener ();
 private:
-
+	CEventListener *pLoadListener;
 	CEventListener *pIntervalListener;
 	IWebBrowser2* m_pBrowser;
 	std::string m_url;

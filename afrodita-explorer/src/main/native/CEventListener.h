@@ -77,6 +77,7 @@ class CEventListener :
 	virtual ~CEventListener ();
 	void connect (ExplorerElement *pElement, const char*event, WebListener *listener);
 	void connectRefresh (ExplorerWebApplication *app);
+	void connectLoad (ExplorerWebApplication *app);
 
 	std::string m_event;
 	WebListener *m_listener;
@@ -89,9 +90,10 @@ private:
 	DWORD m_dwCookie;
 	LONG m_nRefCount;   //for managing the reference count
 
+	bool loadEvent;
 	bool preventLoop;
 	bool disabled;
-
+	int loops;
 };
 
 ///////////////////////////////////////////////////////////

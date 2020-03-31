@@ -37,6 +37,8 @@ ExplorerWebApplication::~ExplorerWebApplication() {
 	}
 	if (pIntervalListener != NULL)
 		pIntervalListener->Release();
+	if (pLoadListener != NULL)
+		pLoadListener->Release();
 }
 
 ExplorerWebApplication::ExplorerWebApplication(IWebBrowser2 *pBrowser, IDispatch *pDispatch, const char *url)
@@ -60,6 +62,7 @@ ExplorerWebApplication::ExplorerWebApplication(IWebBrowser2 *pBrowser, IDispatch
 	m_pHtmlDoc4 = NULL;
 	m_pDocumentEvent = NULL;
 	pIntervalListener = NULL;
+	pLoadListener = NULL;
 	smartWebPage = new SmartWebPage();
 }
 
@@ -493,6 +496,14 @@ void ExplorerWebApplication::installIntervalListener() {
 	}
 }
 
+void ExplorerWebApplication::installLoadListener() {
+	if (pLoadListener == NULL)
+	{
+		pLoadListener = new CEventListener();
+		pLoadListener->connectLoad(this);
+	}
+}
+
 bool ExplorerWebApplication::supportsPageData() {
 	return false;
 }
@@ -504,4 +515,25 @@ PageData* ExplorerWebApplication::getPageData() {
 AbstractWebElement* ExplorerWebApplication::getElementBySoffidId(
 		const char* id) {
 	return NULL;
+}
+
+void ExplorerWebApplication::execute (const char* script)
+{
+	lock();
+
+	IHTMLWindow2 *w = NULL;
+	IHTMLDocument2* pDoc = getHTMLDocument2();
+	if (pDoc != NULL && S_OK == pDoc->get_parentWindow(&w) && w != NULL)
+	{
+		MZNSendDebugMessageA("Executing SCRIPT %s", script);
+		BSTR b = Utils::str2bstr(script);
+		BSTR b2 = Utils::str2bstr("javascript");
+		VARIANT v;
+		long timer;
+		v.vt = VT_NULL;
+		w->execScript(b, b2, &v);
+		SysFreeString(b);
+		SysFreeString(b2);
+		w->Release();
+	}
 }
