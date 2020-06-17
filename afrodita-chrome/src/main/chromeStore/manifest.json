@@ -17,6 +17,7 @@
       "128": "soffid.png",
       "32": "icon.png"
    },
+   "author": "Soffid IAM, S.L.",
    "manifest_version": 2,
    "name": "Soffid ESSO v2.9.0",
    "permissions": [ "*://*/", "tabs", "nativeMessaging" ],
