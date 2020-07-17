@@ -288,7 +288,9 @@ const char *MZNC_getHostName () {
     {
 		GetComputerNameA(achHostName, &dwSize);
         dwSize = sizeof achHostName;
-		GetComputerNameExA(ComputerNameDnsFullyQualified, achHostName, &dwSize);
+		if ( GetComputerNameExA(ComputerNameDnsFullyQualified, achHostName, &dwSize) != 0 ||
+				strlen(achHostName) == 0)
+			GetComputerNameA(achHostName, &dwSize);
     }
 	for (int i = 0; achHostName[i]; i++)
 		achHostName[i] = tolower(achHostName[i]);
