@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+  <Product Name='Soffid Enterprise Single Sign-on v2' 
+	Id='*' 
+	UpgradeCode='80824bb8-41f1-11e7-8767-230eeca72bbe'
+    Language='1033' Codepage='1252' Version='${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}' Manufacturer='Soffid ESSO'>
+
+
+    <Package Id='*' Keywords='Installer' Description="Soffid ESSO ${project.version} Installer"
+      Comments='Soffid ESSO' Manufacturer='Soffid IAM SL'
+      InstallerVersion='100' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
+
+	<MajorUpgrade	
+		DowngradeErrorMessage="Sorry. Downgrades are not allowed"
+		AllowDowngrades="no" 
+		/>
+
+	<Media Id='1' Cabinet='Sample.cab' EmbedCab='yes' DiskPrompt="CD-ROM #1" />
+    <Property Id='DiskPrompt' Value="Soffid ESSO Installation [1]" />
+    <Property Id='done' Value="Installing" />
+    <Property Id='PARAM' Secure="yes" />
+
+    <Directory Id='TARGETDIR' Name='SourceDir'>
+      <Directory Id='ProgramFilesFolder' Name='PFiles'>
+        <Directory Id='SoffidESSO' Name='SoffidESSO'>
+            <Component Id='MainExecutable' Guid='cfb31f14-41f1-11e7-ae49-5fd31ff7b344'>
+              <File Id='SoffidESSOInstaller' Name='setup.exe' DiskId='1' 
+				Source='..\..\..\target\MazingerInstaller.exe' KeyPath='yes'
+				System='yes'/>
+            </Component>
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <CustomAction Id="RunMainApp"          
+          ExeCommand='[PARAM]'
+		  FileKey='SoffidESSOInstaller'
+		  Execute="deferred" 
+		  Impersonate="no"
+		  HideTarget='no'
+          Return="check"/>
+    <CustomAction Id="Uninstall"
+		  FileKey='SoffidESSOInstaller'
+          ExeCommand='/u'
+		  Execute="deferred" 
+		  Impersonate="no"
+		  HideTarget='no'
+          Return="ignore"/>
+	
+    <Feature Id='Complete' Level='1'>
+      <ComponentRef Id='MainExecutable' />
+    </Feature>
+
+	<InstallExecuteSequence> 
+
+     <Custom Action="RunMainApp" Before="InstallFinalize" ><![CDATA[
+	     (NOT UPGRADINGPRODUCTCODE) AND (REMOVE<>"ALL")
+	  ]]></Custom>
+      <Custom Action="Uninstall" Before="InstallFinalize" >
+		(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")
+	   </Custom>
+    </InstallExecuteSequence>
+  </Product>
+</Wix>
