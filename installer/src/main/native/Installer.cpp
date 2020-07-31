@@ -659,14 +659,14 @@ void registerChromePlugin()
 			"Software\\Policies\\Google\\Chrome\\ExtensionInstallForcelist",
 			"1", REG_SZ, (void*) "gacgphonbajokjblndebfhakgcpbemdl;https://clients2.google.com/service/update2/crx", -1);
 
-	// Register EDG extension
+	// Register EDGE extension
 	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
 			"Software\\Microsoft\\Edge\\Extensions\\ggafmbddcpnehaegkbfleodcbjnllmbc",
 			"update_url", REG_SZ, (void*) "https://edge.microsoft.com/extensionwebstorebase/v1/crx", -1);
 
 
 	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
-			"Software\\Policies\\Google\\Chrome\\ExtensionInstallForcelist",
+			"Software\\Policies\\Microsoft\\Edge\\ExtensionInstallForcelist",
 			"1", REG_SZ, (void*) "ggafmbddcpnehaegkbfleodcbjnllmbc;https://edge.microsoft.com/extensionwebstorebase/v1/crx", -1);
 
 	HKEY hKey;
