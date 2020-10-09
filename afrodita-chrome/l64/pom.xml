@@ -41,6 +41,7 @@
 						<compilerMiddleOption>-I../src/main/include-deps</compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/lib/glib-2.0/include</compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/include/cairo</compilerMiddleOption>
+						<compilerMiddleOption>-I/usr/include/harfbuzz</compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/include/glib-2.0</compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/include/pango-1.0</compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/lib/gtk-3.0/include</compilerMiddleOption>

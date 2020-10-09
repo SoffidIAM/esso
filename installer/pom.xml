@@ -109,7 +109,6 @@
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.KojiKabuto.exe" destfile="target/resources/com.soffid.iam.esso.w32.KojiKabuto.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.MazingerUnInstaller.exe" destfile="target/resources/com.soffid.iam.esso.w32.MazingerUnInstaller.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.afrodita-explorer.dll" destfile="target/resources/com.soffid.iam.esso.w32.afrodita-explorer.dll.bzip" />
-								<bzip2 src="target/resources/com.soffid.iam.esso.w32.afrodita-firefox-ctype.dll" destfile="target/resources/com.soffid.iam.esso.w32.afrodita-firefox-ctype.dll.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.afrodita-chrome.exe" destfile="target/resources/com.soffid.iam.esso.w32.afrodita-chrome.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.JetScrander.exe" destfile="target/resources/com.soffid.iam.esso.w32.JetScrander.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.ShiroKabuto.exe" destfile="target/resources/com.soffid.iam.esso.w32.ShiroKabuto.exe.bzip" />
@@ -130,7 +129,6 @@
 								<bzip2 src="target/resources/com.soffid.iam.esso.w64.afrodita-explorer.dll" destfile="target/resources/com.soffid.iam.esso.w64.afrodita-explorer.dll.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w64.JetScrander.exe" destfile="target/resources/com.soffid.iam.esso.w64.JetScrander.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w64.sayaka-cp.dll" destfile="target/resources/com.soffid.iam.esso.w64.sayaka-cp.dll.bzip" />
-								<bzip2 src="target/resources/com.soffid.iam.esso.w64.afrodita-firefox-ctype.dll" destfile="target/resources/com.soffid.iam.esso.w64.afrodita-firefox-ctype.dll.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w64.afrodita-chrome.exe" destfile="target/resources/com.soffid.iam.esso.w64.afrodita-chrome.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w64.SoffidConfig.exe" destfile="target/resources/com.soffid.iam.esso.w64.SoffidConfig.exe.bzip" />
 
@@ -284,18 +282,6 @@
 		<dependency>
 			<groupId>com.soffid.iam.esso.w64</groupId>
 			<artifactId>afrodita-explorer</artifactId>
-			<version>${pom.version}</version>
-			<type>${architecture.dll}</type>
-		</dependency>
-		<dependency>
-			<groupId>com.soffid.iam.esso.w32</groupId>
-			<artifactId>afrodita-firefox-ctype</artifactId>
-			<version>${pom.version}</version>
-			<type>${architecture.dll}</type>
-		</dependency>
-		<dependency>
-			<groupId>com.soffid.iam.esso.w64</groupId>
-			<artifactId>afrodita-firefox-ctype</artifactId>
 			<version>${pom.version}</version>
 			<type>${architecture.dll}</type>
 		</dependency>

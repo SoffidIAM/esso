@@ -82,13 +82,6 @@
 								</artifactItem>
 								<artifactItem>
 									<groupId>com.soffid.iam.esso.${architecture}</groupId>
-									<artifactId>${architecture.libPrefix}afrodita-firefox-ctype</artifactId>
-									<version>${pom.version}</version>
-									<type>${architecture.dll}</type>
-									<destFileName>/usr/lib/libafroditafc.so</destFileName>
-								</artifactItem>
-								<artifactItem>
-									<groupId>com.soffid.iam.esso.${architecture}</groupId>
 									<artifactId>pam_sayaka</artifactId>
 									<version>${pom.version}</version>
 									<type>${architecture.dll}</type>
