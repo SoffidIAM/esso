@@ -197,7 +197,7 @@ std::string MZNC_utf8tostr (const char *pszString) {
 
 std::wstring MZNC_strtowstr (const char *pszString) {
 	std::wstring result;
-	if (pszString == null)
+	if (pszString == NULL)
 		return result;
 	// Convertir de UTF-8 al joc de caracters nadiu, primer en widechar i despres en char
 	int cWideCharsNeeded = 1+MultiByteToWideChar(CP_ACP,
