@@ -791,7 +791,7 @@ static void MZN_collection_namedItem(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res)
 {
-	SEE_string *s;
+	SEE_string *s = NULL;
 	MZN_collection_object *pObj = (MZN_collection_object*) thisobj;
 	if (argc != 1)
 	{
@@ -925,19 +925,21 @@ static void MZN_element_setAttribute (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res)
 {
-	SEE_string *s1;
-	SEE_string *s2;
+	SEE_string *s1 = NULL;
+	SEE_string *s2 = NULL;
 	MZN_element_object *pObj = (MZN_element_object*) thisobj;
 	SEE_SET_UNDEFINED(res);
 	if (argc == 2)
 	{
 		SEE_parse_args(interp, argc, argv, "s|s", &s1, &s2);
-		std::string ach1 = SEE_StringToUTF8(interp, s1);
-		std::string ach2 = SEE_StringToUTF8(interp, s2);
-		pObj->spec->setAttribute(ach1.c_str(), ach2.c_str());
-		if (ach1 == "value")
-		{
-			pObj->spec->setProperty(ach1.c_str(), ach2.c_str());
+		if (s1 != null && s2 != null) {
+			std::string ach1 = SEE_StringToUTF8(interp, s1);
+			std::string ach2 = SEE_StringToUTF8(interp, s2);
+			pObj->spec->setAttribute(ach1.c_str(), ach2.c_str());
+			if (ach1 == "value")
+			{
+				pObj->spec->setProperty(ach1.c_str(), ach2.c_str());
+			}
 		}
 	}
 }
@@ -946,8 +948,8 @@ static void MZN_element_setProperty (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res)
 {
-	SEE_string *s1;
-	SEE_string *s2;
+	SEE_string *s1 = NULL;
+	SEE_string *s2 = NULL;
 	MZN_element_object *pObj = (MZN_element_object*) thisobj;
 	SEE_SET_UNDEFINED(res);
 	if (argc == 2)
@@ -987,7 +989,7 @@ static void MZN_element_getElementsByTagName (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res)
 {
-	SEE_string *s1;
+	SEE_string *s1 = NULL;
 	MZN_element_object *pObj = (MZN_element_object*) thisobj;
 	SEE_SET_UNDEFINED(res);
 	if (argc == 1)
@@ -1004,7 +1006,7 @@ static void MZN_element_removeAttribute (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res)
 {
-	SEE_string *s1;
+	SEE_string *s1 = NULL;
 	MZN_element_object *pObj = (MZN_element_object*) thisobj;
 	SEE_SET_UNDEFINED(res);
 	if (argc == 1)
@@ -1027,8 +1029,8 @@ static void MZN_element_getAttribute (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res)
 {
-	SEE_string *s1;
-	SEE_string *s2;
+	SEE_string *s1 = NULL;
+	SEE_string *s2 = NULL;
 	MZN_element_object *pObj = (MZN_element_object*) thisobj;
 	SEE_SET_UNDEFINED(res);
 	if (argc > 0)
@@ -1049,8 +1051,8 @@ static void MZN_element_getProperty (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res)
 {
-	SEE_string *s1;
-	SEE_string *s2;
+	SEE_string *s1 = NULL;
+	SEE_string *s2 = NULL;
 	MZN_element_object *pObj = (MZN_element_object*) thisobj;
 	SEE_SET_UNDEFINED(res);
 	if (argc > 0)

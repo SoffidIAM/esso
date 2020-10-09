@@ -401,7 +401,7 @@ static void MZNECMA_debug(struct SEE_interpreter *interp,
 static void MZNECMA_sleep(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res) {
-	SEE_uint32_t millis;
+	SEE_uint32_t millis = 0;
 
 	SEE_parse_args(interp, argc, argv, "i", &millis);
 	if (millis > 0)
@@ -425,7 +425,7 @@ static void MZNECMA_env(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res) {
 
-	struct SEE_string *message;
+	struct SEE_string *message = NULL;
 
 	SEE_parse_args(interp, argc, argv, "s", &message);
 	if (message == NULL)
@@ -463,7 +463,7 @@ static void MZNECMA_exec(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res) {
 
-	struct SEE_string *message;
+	struct SEE_string *message = NULL;
 
 	SEE_parse_args(interp, argc, argv, "s", &message);
 	if (message == NULL)
@@ -523,7 +523,7 @@ static void MZNECMA_execWait(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res) {
 
-	struct SEE_string *message;
+	struct SEE_string *message = NULL;
 
 	SEE_parse_args(interp, argc, argv, "s", &message);
 	if (message == NULL)
@@ -589,7 +589,7 @@ static void MZNECMA_execWait(struct SEE_interpreter *interp,
 static void MZNECMA_getSecret(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res) {
-	struct SEE_string *message;
+	struct SEE_string *message = NULL;
 
 	SEE_parse_args(interp, argc, argv, "s", &message);
 	if (message == NULL)
@@ -675,7 +675,7 @@ static void MZNECMA_setSecret(struct SEE_interpreter *interp,
 static void MZNECMA_getAccounts(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res) {
-	struct SEE_string *message;
+	struct SEE_string *message = NULL;
 
 	SEE_parse_args(interp, argc, argv, "s", &message);
 	if (message == NULL)
@@ -726,7 +726,7 @@ static void MZNECMA_getAccounts(struct SEE_interpreter *interp,
 static void MZNECMA_getAccount(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res) {
-	struct SEE_string *message;
+	struct SEE_string *message = NULL;
 
 	SEE_parse_args(interp, argc, argv, "s", &message);
 	if (message == NULL)
@@ -1100,7 +1100,7 @@ static void MZNECMA_getText(struct SEE_interpreter *interp,
 static void MZNECMA_setText(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res) {
-	SEE_string *message;
+	SEE_string *message = NULL;
 
 	MZN_window_object *obj = towindow(interp, thisobj);
 	if (obj != NULL ||
@@ -1205,7 +1205,7 @@ static void MZNECMA_sendKeys(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res) {
 
-	SEE_string *s;
+	SEE_string *s = NULL;
 
 	SEE_parse_args(interp, argc, argv, "s", &s);
 	if (s == NULL)
@@ -1229,7 +1229,7 @@ static void MZNECMA_sendText(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res) {
 
-	SEE_string *s;
+	SEE_string *s = NULL;
 
 	SEE_parse_args(interp, argc, argv, "s", &s);
 	if (s == NULL)

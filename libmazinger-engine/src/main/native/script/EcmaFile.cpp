@@ -507,7 +507,7 @@ static void file_construct(struct SEE_interpreter *interp,
 	char *mode = (char *) "r";
 	FILE *file;
 	struct SEE_object *newobj;
-	struct SEE_string *pathString;
+	struct SEE_string *pathString = NULL;
 
 	SEE_parse_args(interp, argc, argv, "s|Z", &pathString, &mode);
 	if (!pathString)

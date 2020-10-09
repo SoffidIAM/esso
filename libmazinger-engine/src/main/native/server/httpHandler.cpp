@@ -456,10 +456,11 @@ SeyconResponse* SeyconService::sendUrlMessage(const wchar_t* url, ...) {
 	va_list v;
 	va_start (v, url);
 	wchar_t wch[32000];
+	wch[0] = wch[31999] = '\0';
 #ifdef WIN32
-	vsnwprintf(wch, 31999, url, v);
+	vsnwprintf(wch, 31998, url, v);
 #else
-	vswprintf(wch, 31999, url, v);
+	vswprintf(wch, 31998, url, v);
 #endif
 	va_end (v);
 	SeyconURLServiceIterator it;
