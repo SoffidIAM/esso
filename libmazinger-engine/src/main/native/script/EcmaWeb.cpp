@@ -932,7 +932,7 @@ static void MZN_element_setAttribute (struct SEE_interpreter *interp,
 	if (argc == 2)
 	{
 		SEE_parse_args(interp, argc, argv, "s|s", &s1, &s2);
-		if (s1 != null && s2 != null) {
+		if (s1 != NULL && s2 != NULL) {
 			std::string ach1 = SEE_StringToUTF8(interp, s1);
 			std::string ach2 = SEE_StringToUTF8(interp, s2);
 			pObj->spec->setAttribute(ach1.c_str(), ach2.c_str());
