@@ -931,8 +931,15 @@ static void MZN_element_setAttribute (struct SEE_interpreter *interp,
 	SEE_SET_UNDEFINED(res);
 	if (argc == 2)
 	{
-		SEE_parse_args(interp, argc, argv, "s|s", &s1, &s2);
-		if (s1 != NULL && s2 != NULL) {
+		SEE_parse_args(interp, argc, argv, "ss", &s1, &s2);
+		if (s1 == NULL) {
+			MZNSendDebugMessageA("Cannot set attribute. Missing attribute name");
+		}
+		else if (s2 == NULL ){
+			MZNSendDebugMessageA("Cannot set attribute. Missing attribute value");
+		}
+		else
+		{
 			std::string ach1 = SEE_StringToUTF8(interp, s1);
 			std::string ach2 = SEE_StringToUTF8(interp, s2);
 			pObj->spec->setAttribute(ach1.c_str(), ach2.c_str());
@@ -954,10 +961,19 @@ static void MZN_element_setProperty (struct SEE_interpreter *interp,
 	SEE_SET_UNDEFINED(res);
 	if (argc == 2)
 	{
-		SEE_parse_args(interp, argc, argv, "s|s", &s1, &s2);
-		std::string ach1 = SEE_StringToUTF8(interp, s1);
-		std::string ach2 = SEE_StringToUTF8(interp, s2);
-		pObj->spec->setProperty(ach1.c_str(), ach2.c_str());
+		SEE_parse_args(interp, argc, argv, "ss", &s1, &s2);
+		if (s1 == NULL) {
+			MZNSendDebugMessageA("Cannot set attribute. Missing attribute name");
+		}
+		else if (s2 == NULL ){
+			MZNSendDebugMessageA("Cannot set attribute. Missing attribute value");
+		}
+		else
+		{
+      std::string ach1 = SEE_StringToUTF8(interp, s1);
+      std::string ach2 = SEE_StringToUTF8(interp, s2);
+      pObj->spec->setProperty(ach1.c_str(), ach2.c_str());
+    }
 	}
 }
 
