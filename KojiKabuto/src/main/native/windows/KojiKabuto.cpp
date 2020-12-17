@@ -2,6 +2,8 @@
 #include <userenv.h>
 
 #include <MazingerEnv.h>
+#include "SoffidDirHandler.h"
+#include "ProcessDetector.h"
 
 HINSTANCE hKojiInstance;
 SeyconSession *KojiKabuto::session = NULL;
@@ -95,6 +97,8 @@ void KojiKabuto::consumeMessages() {
 }
 
 void KojiKabuto::createProgressWindow(HINSTANCE hInstance) {
+	if (hwndLogon != NULL)
+		destroyProgressWindow();
 	hwndLogon = createKojiWindow(hInstance);
 	HDESK hd = GetThreadDesktop(GetCurrentThreadId());
 	SwitchDesktop(hd);
@@ -108,6 +112,7 @@ void KojiKabuto::destroyProgressWindow() {
 		consumeMessages();
 		ShowWindow(hwndLogon, SW_HIDE);
 		consumeMessages();
+		DestroyWindow(hwndLogon);
 		hwndLogon = NULL;
 	}
 }
@@ -380,6 +385,25 @@ int KojiKabuto::StartManualLogin() {
 	return manualLoginResult;
 }
 
+// Start manual login
+int KojiKabuto::StartSoffidLogin() {
+	SoffidDirHandler handler;
+
+	SeyconCommon::warn("Trying soffid dir login");
+
+	std::string user = MZNC_getUserName();
+	SeyconCommon::warn("Trying soffid dir login. User %s", user.c_str());
+
+	std::wstring wuser = MZNC_strtowstr(user.c_str());
+	std::wstring pass = handler.getPassword(wuser);
+	SeyconCommon::warn("Trying soffid dir login. Pass %ls", pass.c_str());
+
+	int loginResult = session->passwordSessionStartup(user.c_str(), pass.c_str());
+
+	return loginResult;
+}
+
+
 // Start kerberos login
 int KojiKabuto::StartKerberosLogin() {
 	return session->kerberosSessionStartup();
@@ -401,11 +425,18 @@ int KojiKabuto::StartLoginProcess() {
 
 	// Check unrecognized login type
 	if ((loginType != "kerberos") && (loginType != "manual")
-			&& (loginType != "both")) {
+			&& (loginType != "both") &&
+			loginType != "soffid")  {
 		loginType = "both";
 	}
 
+	SeyconCommon::debug("Login type: %s", loginType.c_str());
 	// Check login type
+	if (! desktopSession && loginType == "soffid") {
+		result = StartSoffidLogin();
+		usedKerberos = false;
+	}
+
 	if (!desktopSession
 			&& ((loginType == "kerberos") || (loginType == "both"))) {
 		result = StartKerberosLogin();
@@ -414,7 +445,7 @@ int KojiKabuto::StartLoginProcess() {
 
 	// Check login status
 	if (result != LOGIN_SUCCESS) {
-		if (desktopSession || loginType == "manual" || loginType == "both") {
+		if (desktopSession || loginType == "manual" || loginType == "both" || loginType == "soffid") {
 			result = StartManualLogin();
 			usedKerberos = false;
 		}
@@ -560,7 +591,15 @@ DWORD WINAPI KojiKabuto::mainLoop(LPVOID param) {
 		if (desktopSession || forceLogin == "true") {
 			KojiKabuto::StartUserInit();
 		}
+
+
+		ProcessDetector pd;
+		std::string m = pd.getProcessList();
+		if ( initialProgram.length() > 0) {
+			CreateThread(NULL, 0, ProcessDetector::mainLoop, NULL, 0, NULL);
+		}
 	}
+
 
 	startingSession = false;
 
@@ -849,7 +888,12 @@ extern "C" int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hInst2,
 	}
 
 	KojiKabuto::createProgressWindow(hInstance);
-	createSystrayWindow(hInstance);
+	std::string app;
+	SeyconCommon::getCitrixInitialProgram(app);
+	if (app.length() == 0)
+		createSystrayWindow(hInstance);
+
+//	GetActiveWindow()
 
 	HDESK hdesk = GetThreadDesktop(GetCurrentThreadId());
 

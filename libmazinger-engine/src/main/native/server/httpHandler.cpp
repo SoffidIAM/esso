@@ -57,7 +57,6 @@ SeyconServiceIterator::~SeyconServiceIterator () {
 
 
 static PCCERT_CONTEXT pSeyconRootCert = NULL;
-static HINTERNET hSession = NULL;
 
 ////////////////////////////////////////////////////////////////////////
 static void
@@ -99,11 +98,12 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 
 		repeat = false;
 
-		if (hSession == NULL)
-			hSession = WinHttpOpen(L"Mazinger Agent/1.0",
+		HINTERNET hSession = WinHttpOpen(L"Mazinger Agent/1.1",
 					WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME,
 					WINHTTP_NO_PROXY_BYPASS, 0);
 
+		if (hSession == NULL)
+			return SIR_ERROR;
 
 		WinHttpSetStatusCallback(hSession, asyncCallback,
 				WINHTTP_CALLBACK_FLAG_SECURE_FAILURE, 0);
@@ -612,6 +612,10 @@ std::wstring SeyconService:: escapeString(const wchar_t* lpszSource) {
 	int i = 0;
 	while (i < len) {
 		if (lpszSource[i] == L'%') {
+			target.append (L"%25");
+		} else if (lpszSource[i] == L' ') {
+			target.append (L"+");
+		} else if (lpszSource[i] == L'%') {
 			target.append (L"%25");
 		} else if (lpszSource[i] == L'&') {
 			target.append (L"%26");

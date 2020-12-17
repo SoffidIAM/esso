@@ -167,6 +167,8 @@ static struct SEE_string *STR(sendText);
 static struct SEE_string *STR(sendKeys);
 static struct SEE_string *STR(askPassword);
 static struct SEE_string *STR(askText);
+static struct SEE_string *STR(document);
+static struct SEE_string *STR(URL);
 
 
 // Clase d'objectes per a finestres i components
@@ -266,6 +268,8 @@ static int Mazinger_mod_init() {
 	STR(sendKeys) = SEE_intern_global("sendKeys");
 	STR(askText) = SEE_intern_global("askText");
 	STR(askPassword) = SEE_intern_global("askPassword");
+	STR(document) = SEE_intern_global("document");
+	STR(URL) = SEE_intern_global("URL");
 	return 0;
 }
 
@@ -829,15 +833,22 @@ static void MZNECMA_getPassword(struct SEE_interpreter *interp,
 	if (str == NULL)
 		SEE_SET_UNDEFINED(res);
 	else {
-
+		std::wstring  cmdLine = MZNC_strtowstr( MZNC_getCommandLine() );
+		SEE_value vv;
+		SEE_OBJECT_GET(interp, interp->Global, STR(document), &vv);
+		if (vv._type == SEE_OBJECT) {
+			SEE_object *o = vv.u.object;
+			SEE_OBJECT_GET (interp, o, STR(URL), &vv);
+			if (vv._type == SEE_STRING) {
+				cmdLine = SEE_StringToWChars(interp, vv.u.string);
+			}
+		}
 		wchar_t *sessionKey = s.getSecret(L"sessionKey");
 		wchar_t *user = s.getSecret(L"user");
 		SeyconService ss;
 		SeyconResponse *response = ss.sendUrlMessage(L"/auditPassword?user=%ls&key=%ls&system=%ls&account=%ls&application=%ls",
 				user, sessionKey, systemStr.c_str(), accountStr.c_str(),
-				ss.escapeString(MZNC_getCommandLine()).c_str());
-
-
+				ss.escapeString(cmdLine.c_str()).c_str());
 
 		struct SEE_string *buf = SEE_WCharsToString(interp, str);
 		SEE_SET_STRING(res, buf);

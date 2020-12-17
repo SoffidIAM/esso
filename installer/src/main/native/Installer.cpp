@@ -16,6 +16,8 @@
 #include "Installer.h"
 #include "resource.h"
 #include "bz/bzlib.h"
+#include <sddl.h>
+#include <stdio.h>
 
 void disableProgressWindow();
 void setProgressMessage(const char *lpszMessage, ...);
@@ -244,34 +246,25 @@ BOOL HelperWriteKey(int bits, HKEY roothk, const char *lpSubKey, LPCTSTR val_nam
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void notifyError()
+void notifyError(DWORD lastError)
 {
 	LPSTR pstr;
 	char errorMsg[255];
-	DWORD lastError = GetLastError();
 
 	int fm = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
 			FORMAT_MESSAGE_FROM_SYSTEM, 	NULL, lastError, 0, (LPSTR) &pstr, 0, NULL);
-
-	printf("***************\n");
-	printf("    ERROR      \n");
-	printf("\n");
 
 	// Format message failure
 	if (fm == 0)
 	{
 		sprintf(errorMsg, "Unknown error: %d\n", lastError);
-		printf(errorMsg);
 		log(">> %s", errorMsg);
 	}
 
 	else
 	{
-		printf("%s\n", pstr);
 		log(">> %s", pstr);
 	}
-
-	printf("***************\n");
 
 	if (!quiet)
 	{
@@ -280,6 +273,10 @@ void notifyError()
 	}
 
 	LocalFree(pstr);
+}
+
+void notifyError() {
+	notifyError(GetLastError());
 }
 
 bool replaceOnReboot(const char *szTarget, const char *szSource)
@@ -308,7 +305,6 @@ bool replaceOnReboot(const char *szTarget, const char *szSource)
 					!= RegQueryValueEx(hKey, entryName, NULL, &dwType,
 							(LPBYTE) buffer, &size))
 			{
-				printf("..ERROR\n", __LINE__);
 				log("Error accessing to %s", entryName);
 				notifyError();
 				free(buffer);
@@ -380,7 +376,7 @@ PSECURITY_DESCRIPTOR createSecurityDescriptor(DWORD everyOnePermission)
 	if (!AllocateAndInitializeSid(&SIDAuthWorld, 1, SECURITY_WORLD_RID, 0, 0, 0,
 			0, 0, 0, 0, &pEveryoneSID))
 	{
-		printf("AllocateAndInitializeSid Error %d\n", (int) GetLastError());
+		log("AllocateAndInitializeSid Error %d\n", (int) GetLastError());
 		goto Cleanup;
 	}
 
@@ -1267,7 +1263,7 @@ char * GetPreviousGinaPath()
 	// Check previous GINA dll not obtained
 	if (getDLLresult != ERROR_SUCCESS)
 	{
-		printf("\nUnable get previous GINA, stored default (msginal.dll)\n");
+		log("\nUnable get previous GINA, stored default (msginal.dll)\n");
 
 		strcpy(ginaPath, DEF_WINLOGON_DLL.c_str());
 	}
@@ -1279,6 +1275,332 @@ char * GetPreviousGinaPath()
 	}
 
 	return ginaPath;
+}
+
+DWORD getCurrentUserSid(PSID* pSid) {
+	HANDLE hToken;
+	OpenProcessToken( GetCurrentProcess(), TOKEN_QUERY, &hToken ) ;
+	//
+	// Get the size of the memory buffer needed for the SID
+	//
+	DWORD dwBufferSize = 0;
+	PTOKEN_USER token = NULL;
+	while (true) {
+		if (GetTokenInformation( hToken, TokenUser, (void*)token, dwBufferSize, &dwBufferSize ))
+			break;
+		if (GetLastError() == ERROR_INSUFFICIENT_BUFFER ) {
+			if (token != NULL)
+				free (token);
+			token =(PTOKEN_USER) malloc(dwBufferSize);
+		} else {
+			return GetLastError();
+		}
+	}
+	*pSid = token->User.Sid;
+	return ERROR_SUCCESS;
+}
+
+BOOL SetPrivilege(
+    HANDLE hToken,          // access token handle
+    LPCTSTR lpszPrivilege,  // name of privilege to enable/disable
+    BOOL bEnablePrivilege   // to enable or disable privilege
+    )
+{
+    TOKEN_PRIVILEGES tp;
+    LUID luid;
+
+    if ( !LookupPrivilegeValue(
+            NULL,            // lookup privilege on local system
+            lpszPrivilege,   // privilege to lookup
+            &luid ) )        // receives LUID of privilege
+    {
+        log("LookupPrivilegeValue error: %u\n", GetLastError() );
+        return FALSE;
+    }
+
+    tp.PrivilegeCount = 1;
+    tp.Privileges[0].Luid = luid;
+    if (bEnablePrivilege)
+        tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+    else
+        tp.Privileges[0].Attributes = 0;
+
+    // Enable the privilege or disable all privileges.
+
+    if ( !AdjustTokenPrivileges(
+           hToken,
+           FALSE,
+           &tp,
+           sizeof(TOKEN_PRIVILEGES),
+           (PTOKEN_PRIVILEGES) NULL,
+           (PDWORD) NULL) )
+    {
+          log("AdjustTokenPrivileges error: %u\n", GetLastError() );
+          return FALSE;
+    }
+
+    if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
+
+    {
+          log("The token does not have the specified privilege. \n");
+          return FALSE;
+    }
+
+    return TRUE;
+}
+
+DWORD getRegistryAcl (LPCSTR registryKey, PACL *pAcl) {
+	HKEY hKey;
+	DWORD r;
+	log("Getting registry ACL");
+	// {25CBB996-92ED-457e-B28C-4774084BD562}
+	r = RegOpenKeyEx(HKEY_CLASSES_ROOT,
+			registryKey, 0,
+			KEY_READ|READ_CONTROL, &hKey);
+	if (r != ERROR_SUCCESS) {
+		notifyError();
+		log("Error opening key");
+		return r;
+	}
+
+	SECURITY_INFORMATION si;
+	PSECURITY_DESCRIPTOR pSecurityDescriptor = NULL;
+	DWORD lpcbSecurityDescriptor = 0;
+	while (ERROR_INSUFFICIENT_BUFFER == (r = RegGetKeySecurity(hKey, OWNER_SECURITY_INFORMATION| DACL_SECURITY_INFORMATION,
+		(LPVOID) pSecurityDescriptor, &lpcbSecurityDescriptor)))
+	{
+		if (pSecurityDescriptor != NULL)
+			free(pSecurityDescriptor);
+		pSecurityDescriptor = malloc (lpcbSecurityDescriptor);
+
+	}
+
+	if (r != ERROR_SUCCESS) {
+		log("Error: Cannot get registry ACL");
+		return r;
+	}
+	if (!IsValidSecurityDescriptor(pSecurityDescriptor)) {
+		log("Error: Security descriptor is not valid");
+		return r;
+	}
+
+	PACL dacl = NULL;
+	BOOL daclPresent;
+	BOOL daclDefault;
+	if (!GetSecurityDescriptorDacl(pSecurityDescriptor, &daclPresent, &dacl, &daclDefault))
+		return GetLastError();
+
+	RegCloseKey(hKey);
+	*pAcl = dacl;
+	return ERROR_SUCCESS;
+}
+
+DWORD changeOwnership (LPCSTR lpszRegistryKey) {
+	BOOL bRetval = FALSE;
+
+	HANDLE hToken = NULL;
+	PSID pSIDAdmin = NULL;
+	PSID pSIDEveryone = NULL;
+	PACL pACL = NULL;
+	SID_IDENTIFIER_AUTHORITY SIDAuthWorld =
+			SECURITY_WORLD_SID_AUTHORITY;
+	SID_IDENTIFIER_AUTHORITY SIDAuthNT = SECURITY_NT_AUTHORITY;
+	ULONG cEntries;
+	EXPLICIT_ACCESS *prevEa;
+	EXPLICIT_ACCESS *ea;
+	DWORD dwRes;
+
+	std::string reg = "CLASSES_ROOT\\";
+	reg += lpszRegistryKey;
+
+	log("Setting permissions for %s", reg.c_str());
+
+	PACL prevAcl = NULL;
+	dwRes = getRegistryAcl(lpszRegistryKey, &prevAcl);
+	if (dwRes != ERROR_SUCCESS) {
+		log("Cannot get registry ACL");
+		return dwRes;
+	}
+
+	if ( GetExplicitEntriesFromAcl(prevAcl, &cEntries, &prevEa) != ERROR_SUCCESS) {
+		notifyError();
+		goto Cleanup;
+	}
+
+	ea = (EXPLICIT_ACCESS*)malloc((1+cEntries) * sizeof (EXPLICIT_ACCESS) );
+	ZeroMemory(ea, (1+cEntries) * sizeof(EXPLICIT_ACCESS));
+	for (int i = 0; i < cEntries; i++) {
+		ea[i] = prevEa[i];
+		if (ea[i].Trustee.TrusteeForm == TRUSTEE_IS_SID) {
+			LPSTR str = NULL;
+			ConvertSidToStringSid(ea[i].Trustee.ptstrName, &str);
+			log ("ACL %d = %s", i, str);
+		}
+		else
+			log ("ACL %d = %s", i, ea[i].Trustee.ptstrName);
+	}
+	// Set full control for myself.
+	PSID myself;
+	if (getCurrentUserSid(&myself) != ERROR_SUCCESS) {
+		notifyError();
+		goto Cleanup;
+	}
+	ea[cEntries].grfAccessPermissions = GENERIC_ALL;
+	ea[cEntries].grfAccessMode = SET_ACCESS;
+	ea[cEntries].grfInheritance = SUB_CONTAINERS_AND_OBJECTS_INHERIT;
+	ea[cEntries].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+	ea[cEntries].Trustee.TrusteeType = TRUSTEE_IS_USER;
+	ea[cEntries].Trustee.ptstrName = (LPTSTR) myself;
+
+	if (ERROR_SUCCESS != SetEntriesInAcl(cEntries+1,
+										 ea,
+										 NULL,
+										 &pACL))
+	{
+		log("Failed SetEntriesInAcl\n");
+		goto Cleanup;
+	}
+
+	// Try to modify the object's DACL.
+	log("Registry %s. acl %p", reg.c_str(), pACL);
+	dwRes = SetNamedSecurityInfo(
+		(LPSTR) reg.c_str(),                 // name of the object
+		SE_REGISTRY_KEY,              // type of object
+		DACL_SECURITY_INFORMATION,   // change only the object's DACL
+		NULL, NULL,                  // do not change owner or group
+		pACL,                        // DACL specified
+		NULL);                       // do not change SACL
+
+	if (ERROR_SUCCESS == dwRes)
+	{
+		log("Successfully changed DACL\n");
+		// No more processing needed.
+		goto Cleanup;
+	}
+	if (dwRes != ERROR_ACCESS_DENIED)
+	{
+		notifyError(dwRes);
+		log("First SetNamedSecurityInfo call failed: %u\n",
+				dwRes);
+		goto Cleanup;
+	}
+
+	// If the preceding call failed because access was denied,
+	// enable the SE_TAKE_OWNERSHIP_NAME privilege, create a SID for
+	// the Administrators group, take ownership of the object, and
+	// disable the privilege. Then try again to set the object's DACL.
+
+	// Open a handle to the access token for the calling process.
+	if (!OpenProcessToken(GetCurrentProcess(),
+						  TOKEN_ADJUST_PRIVILEGES,
+						  &hToken))
+	{
+		dwRes = GetLastError();
+		log("OpenProcessToken failed: %u\n", GetLastError());
+		goto Cleanup;
+	}
+
+	// Enable the SE_TAKE_OWNERSHIP_NAME privilege.
+	if (!SetPrivilege(hToken, SE_TAKE_OWNERSHIP_NAME, TRUE))
+	{
+		dwRes = GetLastError();
+		log("You must be logged on as Administrator.\n");
+		goto Cleanup;
+	}
+
+	// Set the owner in the object's security descriptor.
+	dwRes = SetNamedSecurityInfo(
+		(LPSTR) reg.c_str(),                 // name of the object
+		SE_REGISTRY_KEY,              // type of object
+		OWNER_SECURITY_INFORMATION,  // change only the object's owner
+		myself,                   // SID of Administrator group
+		NULL,
+		NULL,
+		NULL);
+
+	if (dwRes != ERROR_SUCCESS)
+	{
+		dwRes = GetLastError();
+		log("Could not set owner. Error: %u\n", dwRes);
+		goto Cleanup;
+	}
+
+	// Disable the SE_TAKE_OWNERSHIP_NAME privilege.
+	if (!SetPrivilege(hToken, SE_TAKE_OWNERSHIP_NAME, FALSE))
+	{
+		dwRes = GetLastError();
+		log("Failed SetPrivilege call unexpectedly.\n");
+		goto Cleanup;
+	}
+
+	// Try again to modify the object's DACL,
+	// now that we are the owner.
+	dwRes = SetNamedSecurityInfo(
+		(LPSTR) reg.c_str(),                 // name of the object
+		SE_REGISTRY_KEY,              // type of object
+		DACL_SECURITY_INFORMATION,   // change only the object's DACL
+		NULL, NULL,                  // do not change owner or group
+		pACL,                        // DACL specified
+		NULL);                       // do not change SACL
+
+	if (dwRes == ERROR_SUCCESS)
+	{
+		log("Successfully changed DACL\n");
+	}
+	else
+	{
+		log("Second SetNamedSecurityInfo call failed: %u\n",
+				dwRes);
+	}
+
+Cleanup:
+
+	if (pSIDAdmin)
+		FreeSid(pSIDAdmin);
+
+	if (pSIDEveryone)
+		FreeSid(pSIDEveryone);
+
+	if (pACL)
+	   LocalFree(pACL);
+
+	if (hToken)
+	   CloseHandle(hToken);
+
+	return dwRes;
+
+}
+void updateBasicCredentialProvider () {
+	HKEY hKey;
+	DWORD r;
+	log("Registering basic credential provider");
+	r = RegOpenKeyEx(HKEY_CLASSES_ROOT,
+				"Clsid\\{25CBB996-92ED-457e-B28C-4774084BD562}", 0,
+				KEY_ALL_ACCESS, &hKey);
+	if (r != ERROR_SUCCESS) {
+		r = changeOwnership("Clsid\\{25CBB996-92ED-457e-B28C-4774084BD562}");
+		if ( r != ERROR_SUCCESS)
+		{
+			log("Error setting ownership key");
+			return;
+		}
+		r = RegOpenKeyEx(HKEY_CLASSES_ROOT,
+					"Clsid\\{25CBB996-92ED-457e-B28C-4774084BD562}", 0,
+					KEY_ALL_ACCESS, &hKey);
+	}
+
+	if (r == ERROR_SUCCESS)
+	{
+		HKEY hKey2;
+		r = RegCreateKeyA(hKey, "TreatAs", &hKey2);
+		if (r != ERROR_SUCCESS) {
+			log("Error create registry key");
+			notifyError(r);
+			return;
+		}
+		std::string target = "{44ee45c8-529b-4542-98ed-cfeceab1d4cc}";
+		RegSetValueA(hKey, "TreatAs", REG_SZ, target.c_str(), target.length());
+	}
 }
 
 void updateConfig()
@@ -1297,7 +1619,6 @@ void updateConfig()
 	sa.lpSecurityDescriptor = psd;
 	sa.bInheritHandle = FALSE;
 
-	printf("Configuring registry ....");
 	fflush(stdout);
 
 	if (!quiet)
@@ -1312,7 +1633,7 @@ void updateConfig()
 		if (dw != ERROR_SUCCESS)
 		{
 			anyError = true;
-			printf("Error setting registry permissions\n");
+			log("Error setting registry permissions\n");
 		}
 
 		if (RegQueryValueEx(hKey, "CertificateFile", NULL, NULL, NULL,
@@ -1489,14 +1810,12 @@ void updateConfig()
 
 		RegCloseKey(hKey);
 
-		printf("Configured\n");
 		log("REGISTRY HKLM\\Software\\Soffid\\esso configured");
 	}
 
 	else
 	{
 		anyError = true;
-		printf("Unable to create registry KEY\n");
 		notifyError();
 		log("Cannot configure registry HKLM\\Software\\Soffid\\esso");
 	}
@@ -1506,7 +1825,6 @@ void updateConfig()
 			NULL, REG_OPTION_NON_VOLATILE, Wow64Key(KEY_ALL_ACCESS), NULL,
 			&hKey, &dwResult) == ERROR_SUCCESS)
 	{
-		printf("Registering uninstaller ....");
 		fflush(stdout);
 
 		if (!quiet)
@@ -1547,14 +1865,12 @@ void updateConfig()
 
 		RegCloseKey(hKey);
 
-		printf("Registered\n");
 		log("Registered uninstall");
 	}
 
 	else
 	{
 		anyError = true;
-		printf("Unable to create registry KEY\n");
 	}
 
 	registerIEHook();
@@ -1638,14 +1954,13 @@ void updateUserInit(const char *quitar, const char*poner)
 			token = strtok(NULL, ",");
 		}
 
-		DWORD result = RegSetValueEx(hKey, "Userinit", NULL, REG_SZ,
+		DWORD result = RegSetValueEx(hKey, "Userinit", 0, REG_SZ,
 				(LPBYTE) achNewPath, strlen(achNewPath));
 
 		if (result != ERROR_SUCCESS)
 		{
 			anyError = true;
 			log("> ERROR: Cannot set registry entry userinit");
-			printf("Error setting registry value \n");
 		}
 
 		RegCloseKey(hKey);
@@ -1655,7 +1970,6 @@ void updateUserInit(const char *quitar, const char*poner)
 	else
 	{
 		anyError = true;
-		printf("Unable to register SoffidESSO\n");
 		log("Cannot configure winlogon");
 	}
 
@@ -1669,7 +1983,7 @@ void updateUserInit(const char *quitar, const char*poner)
 
 	else
 	{
-		printf("Unable to register SoffidESSO\n");
+		log("Unable to register SoffidESSO\n");
 	}
 }
 
@@ -1686,13 +2000,12 @@ void updateGina(const char *file)
 			"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", 0,
 			KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
 	{
-		DWORD result = RegSetValueEx(hKey, "GinaDll", NULL, REG_SZ, (LPBYTE) file,
+		DWORD result = RegSetValueEx(hKey, "GinaDll", 0, REG_SZ, (LPBYTE) file,
 				strlen(file));
 
 		if (result != ERROR_SUCCESS)
 		{
 			anyError = true;
-			printf("Error setting registry value GinaDll \n");
 			log("Cannot configure ginadll");
 		}
 
@@ -1702,7 +2015,6 @@ void updateGina(const char *file)
 	else
 	{
 		anyError = true;
-		printf("Unable to deregister SoffidESSO\n");
 		log(
 				"Cannot open HKLM\\software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon");
 	}
@@ -1813,6 +2125,55 @@ void installCP(const char *file)
 	strcpy(szValue, "Apartment");
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, "ThreadingModel", REG_SZ,
 			(void*) szValue, strlen(szValue));
+
+	// IE Basic / NTLM authenticator
+	const char *ssoClsid = "{9fe842aa-b8c4-4c93-a6b3-a957c0dd3037}";
+
+	// SSO CREDENTIAL PROVIDER
+	sprintf(szKey, "Software\\Microsoft\\Windows\\"
+			"CurrentVersion\\Authentication\\Credential Providers\\%s",
+			ssoClsid);
+	strcpy(szValue, "Soffid basices Credential Provider");
+	HelperWriteKey(0, HKEY_LOCAL_MACHINE, szKey, NULL, REG_SZ, (void*) szValue,
+			strlen(szValue));
+
+	// SHIRO CLSID
+	sprintf(szKey, "CLSID\\%s", ssoClsid);
+	strcpy(szValue, "Soffid basic Credential Provider");
+	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
+			strlen(szValue));
+
+	// SHIRO CLSID / Inprocserver32
+	sprintf(szKey, "CLSID\\%s\\InprocServer32", ssoClsid);
+	strcpy(szValue, file);
+	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
+			strlen(szValue));
+	strcpy(szValue, "Apartment");
+	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, "ThreadingModel", REG_SZ,
+			(void*) szValue, strlen(szValue));
+
+	const char * soffidClsid = "{31543d94-5f56-4a1e-ab09-576e680203ee}";
+
+	// SOFFID DIRECTORY CREDENTIAL PROVIDER
+	sprintf(szKey, "Software\\Microsoft\\Windows\\"
+			"CurrentVersion\\Authentication\\Credential Providers\\%s",
+			soffidClsid);
+	strcpy(szValue, "Soffid directory Credential Provider");
+	HelperWriteKey(0, HKEY_LOCAL_MACHINE, szKey, NULL, REG_SZ, (void*) szValue,
+			strlen(szValue));
+
+	sprintf(szKey, "CLSID\\%s", soffidClsid);
+	strcpy(szValue, "Soffid directory Credential Provider");
+	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
+			strlen(szValue));
+
+	sprintf(szKey, "CLSID\\%s\\InprocServer32", soffidClsid);
+	strcpy(szValue, file);
+	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
+			strlen(szValue));
+	strcpy(szValue, "Apartment");
+	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, "ThreadingModel", REG_SZ,
+			(void*) szValue, strlen(szValue));
 }
 
 bool installShiroKabuto(char *achShiroPath)
@@ -1841,7 +2202,6 @@ bool installShiroKabuto(char *achShiroPath)
 		{
 			if (GetLastError() != ERROR_SERVICE_EXISTS)
 			{
-				printf("WARNING !! Cannot create ShiroKabuto service\n");
 				notifyError();
 				anyError = true;
 				log("Cannot register shirokabuto");
@@ -1855,7 +2215,6 @@ bool installShiroKabuto(char *achShiroPath)
 	else
 	{
 		anyError = true;
-		printf("WARNING !! Cannot register ShiroKabuto service\n");
 	}
 
 	CloseServiceHandle(sch);
@@ -1917,14 +2276,11 @@ void uninstallFile(LPCSTR achFilePath)
 	{
 		fclose(f);
 
-		printf("Removing %s ...", achFilePath);
-
 		DWORD result = MoveFileEx(achFilePath, NULL, MOVEFILE_WRITE_THROUGH);
 
 		if (result != 0)
 		{
 			log("> Removed");
-			printf("Removed\n");
 		}
 
 		else
@@ -1934,13 +2290,11 @@ void uninstallFile(LPCSTR achFilePath)
 			if (result)
 			{
 				log("> Remove scheduled");
-				printf("Delayed\n");
 			}
 
 			else
 			{
 				log("> Remove failed");
-				printf("Failed\n");
 				anyError = true;
 			}
 		}
@@ -1970,7 +2324,6 @@ bool extractResource(LPCSTR resource, const char *lpszFileName)
 	if (hRsrc == NULL)
 	{
 		log(">> Missing resource %s", resource);
-		printf("ERROR. Missing resource %s for %s\n", resource, lpszFileName);
 		if (!quiet)
 		{
 			disableProgressWindow();
@@ -1984,7 +2337,6 @@ bool extractResource(LPCSTR resource, const char *lpszFileName)
 	if (dwSize <= 0)
 	{
 		log(">> Wrong resource size %d", dwSize);
-		printf("ERROR. Missing resource %s for %s\n", resource, lpszFileName);
 		notifyError();
 		exit(2);
 	}
@@ -1994,7 +2346,6 @@ bool extractResource(LPCSTR resource, const char *lpszFileName)
 	if (hGlobal == NULL)
 	{
 		log(">> Cannot load resource %s", resource);
-		printf("ERROR. Missing resource %s for %s\n", resource, lpszFileName);
 		notifyError();
 		exit(2);
 	}
@@ -2003,7 +2354,6 @@ bool extractResource(LPCSTR resource, const char *lpszFileName)
 
 	if (lpVoid == NULL)
 	{
-		printf("ERROR. Missing resource %s for %s\n", resource, lpszFileName);
 		log(">> Cannot lock resource %s", resource);
 		notifyError();
 		exit(2);
@@ -2013,7 +2363,6 @@ bool extractResource(LPCSTR resource, const char *lpszFileName)
 	if (f == NULL)
 	{
 		log(">> Cannot create file %s", lpszFileName);
-		printf("ERROR: Cannot create file %s\n", lpszFileName);
 
 		return false;
 	}
@@ -2051,22 +2400,18 @@ bool extractResource(LPCSTR resource, const char *lpszFileName)
 			{
 				case BZ_PARAM_ERROR:
 					log(">> BZIP ERROR: Error de parametro");
-					printf("BZIP: Error de parametro\n");
 					return false;
 
 				case BZ_DATA_ERROR:
 					log(">> BZIP ERROR: Corrupt resource");
-					printf("Archivo corrupto\n");
 					return false;
 
 				case BZ_DATA_ERROR_MAGIC:
 					log(">> BZIP ERROR: Compression error");
-					printf("Compression error\n");
 					return false;
 
 				case BZ_MEM_ERROR:
 					log(">> BZIP ERROR: Out of memory");
-					printf("Error de memoria\n");
 					return false;
 			}
 		}
@@ -2076,7 +2421,6 @@ bool extractResource(LPCSTR resource, const char *lpszFileName)
 			if (fwrite(lpVoid, dwSize, 1, f) != dwSize)
 			{
 				log(">> BZIP ERROR: Cannot write file");
-				printf("Error de escritura en disco");
 				return false;
 			}
 		}
@@ -2136,8 +2480,6 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 	filePath += lpszFileName;
 
 	log("Installing %s to %s", lpszResourceName, filePath.c_str());
-
-	printf("%s ...", filePath.c_str());
 
 	// En cualquier caso, planificar repetir la acci\F3n al reiniciar
 	std::string tempFilePath = filePath;
@@ -2266,13 +2608,11 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 
 	if (success)
 	{
-		printf("OK\n");
 		log("> Success");
 	}
 
 	else
 	{
-		printf("ERROR\n");
 		anyError = true;
 	}
 
@@ -2389,7 +2729,6 @@ int install(int full)
 
 	if (lpszDir == NULL)
 	{
-		printf("ERROR. Unable to generate installationDir\n");
 		anyError = true;
 		return (-1);
 	}
@@ -2410,7 +2749,6 @@ int install(int full)
 
 	createCacheDir();
 
-	printf("Installing MAZINGER %s into %s\n", MAZINGER_VERSION_STR, lpszDir);
 	log("Installing MAZINGER %s into %s\n", MAZINGER_VERSION_STR, lpszDir);
 
 	if (IsWow64())
@@ -2425,8 +2763,8 @@ int install(int full)
 		 *
 		 */
 		int replaceAction = reboot ? NO_REPLACE : HARD_REPLACE;
-		installResource(NULL, "AfroditaFC64.dll", "AfroditaFC.dll", replaceAction);
-		installResource(NULL, "AfroditaFC32.dll", "AfroditaFC32.dll", replaceAction);
+//		installResource(NULL, "AfroditaFC64.dll", "AfroditaFC.dll", replaceAction);
+//		installResource(NULL, "AfroditaFC32.dll", "AfroditaFC32.dll", replaceAction);
 		installResource(NULL, "AfroditaC64.exe", "Afrodita-chrome.exe", replaceAction);
 
 		installResource(NULL, "AfroditaE64.dll", "AfroditaE.dll", replaceAction);
@@ -2445,7 +2783,7 @@ int install(int full)
 
 		int replaceAction = reboot ? NO_REPLACE : HARD_REPLACE;
 		installResource(NULL, "AfroditaE.dll", replaceAction);
-		installResource(NULL, "AfroditaFC32.dll", "AfroditaFC.dll", replaceAction);
+//		installResource(NULL, "AfroditaFC32.dll", "AfroditaFC.dll", replaceAction);
 		installResource(NULL, "AfroditaC.exe", "Afrodita-chrome.exe", replaceAction);
 		installResource(NULL, "JetScrander.exe");
 		installResource(NULL, "SayakaCP.dll");
@@ -2554,7 +2892,6 @@ int RunProgram(char *achString, char *achDir)
 	char command[4096];				// Command to run program
 
 	sprintf(command, "%s\\%s", achDir, achString);
-	printf("Executing %s from dir: %s\n", achString, achDir);
 
 	memset(&sInfo, 0, sizeof sInfo);
 	sInfo.cb = sizeof sInfo;
@@ -2577,7 +2914,7 @@ int RunProgram(char *achString, char *achDir)
  * Implements the functionality to run the Soffid ESSO configuration tool.
  * @return Execution result.
  */
-int RunConfigurationTool()
+void RunConfigurationTool()
 {
 	char mznDir[4096];	// Store the 'Mazinger' dir path
 	int runResult = 0;		// Run program result
@@ -2602,6 +2939,10 @@ extern "C" int main(int argc, char **argv)
 	// Read call arguments
 	for (int i = 0; i < argc; i++)
 	{
+		if (stricmp(argv[i], "/sectest") == 0) {
+			updateBasicCredentialProvider();
+			return 0;
+		}
 		if (stricmp(argv[i], "/smartupdate") == 0 || stricmp(argv[i], "-smartupdate") == 0)
 		{
 			smartUpdate = true;
@@ -2699,9 +3040,6 @@ extern "C" int main(int argc, char **argv)
 			if (pendingOperations)
 			{
 				log("Installation aborted due to pending changes to apply");
-				printf(
-						"\n\nERROR. A prior installation needed to reboot the system.\nReboot prior to install\n\n");
-
 				if (!quiet)
 				{
 					MessageBoxA(NULL,
@@ -2747,9 +3085,6 @@ extern "C" int main(int argc, char **argv)
 
 		else if (reboot)
 		{
-			printf(
-					"\n\n\nWARNING: Reboot is needed in order to complete setup\n\n\n");
-
 			if (!quiet)
 			{
 				MessageBoxA(NULL, "Reboot is needed in order to complete setup",

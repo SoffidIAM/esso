@@ -18,6 +18,8 @@
 #include "json/Encoder.h"
 #include <exception>
 #include "WebAddonHelper.h"
+#include <WebTransport.h>
+#include <SecretStore.h>
 
 #ifndef WIN32
 #include <pthread.h>
@@ -395,8 +397,10 @@ void CommunicationManager::mainLoop() {
 		JsonValue* pageId = dynamic_cast<JsonValue*>(jsonMap->getObject("pageId"));
 		JsonMap *jsonPageData = dynamic_cast<JsonMap*>(jsonMap->getObject("pageData"));
 
-//		MZNSendDebugMessage("RECEIVED MSG**********************");
-//		MZNSendDebugMessage("Received %s", t.c_str());
+		MZNSendDebugMessage("RECEIVED MSG**********************");
+		std::string t;
+		message->write(t, 3);
+		MZNSendDebugMessage("Received %s", t.c_str());
 		if (messageName != NULL && messageName->value == "onLoad" && pageId != NULL)
 		{
 			JsonValue* title = dynamic_cast<JsonValue*>(jsonMap->getObject("title"));
@@ -565,6 +569,57 @@ void CommunicationManager::mainLoop() {
 					deleteMap = false;
 				}
 			}
+		}
+		else if (messageName != NULL && messageName->value == "transport")
+		{
+			SecretStore s (MZNC_getUserName()) ;
+			std::vector<std::wstring> accounts;
+			std::vector<WebTransport*> rules = MZNWebTransportMatch () ;
+			std::string response = "{\"message\":\"setTransportAuthentications\",\"data\":[";
+			bool first = true;
+			MZNSendDebugMessage("Check rules");
+			for (std::vector<WebTransport*>::iterator it = rules.begin(); it != rules.end(); it++) {
+				WebTransport *wt = *it;
+
+				MZNSendDebugMessage("Check rule %ls", wt->url.c_str());
+
+				std::wstring secret = L"account.";
+				secret += wt->system;
+				MZNSendDebugMessage("Check secret %ls", secret.c_str());
+				accounts = s.getSecrets(secret.c_str());
+				for (std::vector<std::wstring>::iterator it = accounts.begin(); it != accounts.end(); it ++) {
+					secret = L"pass.";
+					secret += wt->system;
+					secret += L".";
+					secret += *it;
+					wchar_t *str = s.getSecret(secret.c_str());
+					if (str != NULL) {
+						if (first) first = false;
+						else response += ",";
+						response += "{\"url\":";
+						response += Encoder::encode(MZNC_wstrtoutf8(wt->url.c_str()).c_str());
+						response += ",\"system\":";
+						response += Encoder::encode(MZNC_wstrtoutf8(wt->system.c_str()).c_str());
+						response += ",\"userName\":";
+						std::wstring userName;
+						if (! wt->domain.empty()) {
+							userName = wt->domain;
+							userName += L"\\";
+						}
+						userName += *it;
+						response += Encoder::encode(MZNC_wstrtoutf8(userName.c_str()).c_str());
+						response += ",\"password\":";
+						response += Encoder::encode(MZNC_wstrtoutf8(str).c_str());
+						response += "}";
+						s.freeSecret(str);
+					}
+				}
+
+			}
+			response += "]}";
+			writeMessage(response);
+			MZNSendDebugMessage("TRANSPORT RESULT **********************");
+			MZNSendDebugMessage("Send %s", response.c_str());
 		}
 		if (deleteMap)
 		{

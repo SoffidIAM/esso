@@ -5,10 +5,9 @@
  *      Author: u07286
  */
 
+#include "../cert/Pkcs11Configuration.h"
+
 #include "sayaka.h"
-#include "Pkcs11Configuration.h"
-#include "Pkcs11Handler.h"
-#include "CertificateHandler.h"
 #include <credentialprovider.h>
 #include <ssoclient.h>
 #include "TokenHandler.h"
@@ -16,6 +15,8 @@
 #include <windows.h>
 #include <winscard.h>
 
+#include "../cert/CertificateHandler.h"
+#include "../cert/Pkcs11Handler.h"
 # include "Utils.h"
 
 static DWORD __stdcall changeNotifier(LPVOID param) {

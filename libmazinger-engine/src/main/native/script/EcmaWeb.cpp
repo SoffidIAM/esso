@@ -602,16 +602,14 @@ static void MZN_document_getElementById(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res)
 {
-	char* s = NULL;
-
 	MZN_document_object *pObj = (MZN_document_object*) thisobj;
 
-	SEE_parse_args(interp, argc, argv, "A", &s);
-	if (s == NULL)
+	if (argc == 1)
 	{
-		SEE_SET_UNDEFINED(res);
-	} else {
-		AbstractWebElement *pEl = pObj->spec->getElementById(s);
+		SEE_value v1;
+		SEE_ToString(interp, argv[0], &v1);
+		std::string ach1 = SEE_StringToUTF8(interp, v1.u.string);
+		AbstractWebElement *pEl = pObj->spec->getElementById(ach1.c_str());
 		if (pEl == NULL)
 		{
 			SEE_SET_NULL(res);
@@ -925,29 +923,25 @@ static void MZN_element_setAttribute (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res)
 {
-	SEE_string *s1 = NULL;
-	SEE_string *s2 = NULL;
 	MZN_element_object *pObj = (MZN_element_object*) thisobj;
 	SEE_SET_UNDEFINED(res);
 	if (argc == 2)
 	{
-		SEE_parse_args(interp, argc, argv, "ss", &s1, &s2);
-		if (s1 == NULL) {
-			MZNSendDebugMessageA("Cannot set attribute. Missing attribute name");
-		}
-		else if (s2 == NULL ){
-			MZNSendDebugMessageA("Cannot set attribute. Missing attribute value");
-		}
-		else
+		SEE_value v1, v2;
+		SEE_ToString(interp, argv[0], &v1);
+		SEE_ToString(interp, argv[1], &v2);
+		if (pObj != NULL && pObj -> spec != NULL)
 		{
-			std::string ach1 = SEE_StringToUTF8(interp, s1);
-			std::string ach2 = SEE_StringToUTF8(interp, s2);
+			std::string ach1 = SEE_StringToUTF8(interp, v1.u.string);
+			std::string ach2 = SEE_StringToUTF8(interp, v2.u.string);
 			pObj->spec->setAttribute(ach1.c_str(), ach2.c_str());
 			if (ach1 == "value")
 			{
 				pObj->spec->setProperty(ach1.c_str(), ach2.c_str());
 			}
 		}
+		SEE_SET_UNDEFINED(&v1);
+		SEE_SET_UNDEFINED(&v2);
 	}
 }
 
@@ -955,25 +949,18 @@ static void MZN_element_setProperty (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res)
 {
-	SEE_string *s1 = NULL;
-	SEE_string *s2 = NULL;
 	MZN_element_object *pObj = (MZN_element_object*) thisobj;
 	SEE_SET_UNDEFINED(res);
 	if (argc == 2)
 	{
-		SEE_parse_args(interp, argc, argv, "ss", &s1, &s2);
-		if (s1 == NULL) {
-			MZNSendDebugMessageA("Cannot set attribute. Missing attribute name");
-		}
-		else if (s2 == NULL ){
-			MZNSendDebugMessageA("Cannot set attribute. Missing attribute value");
-		}
-		else
-		{
-      std::string ach1 = SEE_StringToUTF8(interp, s1);
-      std::string ach2 = SEE_StringToUTF8(interp, s2);
-      pObj->spec->setProperty(ach1.c_str(), ach2.c_str());
-    }
+		SEE_value v1, v2;
+		SEE_ToString(interp, argv[0], &v1);
+		SEE_ToString(interp, argv[1], &v2);
+		std::string ach1 = SEE_StringToUTF8(interp, v1.u.string);
+		std::string ach2 = SEE_StringToUTF8(interp, v2.u.string);
+		pObj->spec->setProperty(ach1.c_str(), ach2.c_str());
+		SEE_SET_UNDEFINED(&v1);
+		SEE_SET_UNDEFINED(&v2);
 	}
 }
 
@@ -1010,11 +997,13 @@ static void MZN_element_getElementsByTagName (struct SEE_interpreter *interp,
 	SEE_SET_UNDEFINED(res);
 	if (argc == 1)
 	{
-		SEE_parse_args(interp, argc, argv, "s", &s1);
-		std::string wantedTag = SEE_StringToUTF8(interp, s1);
+		SEE_value v1;
+		SEE_ToString(interp, argv[0], &v1);
+		std::string wantedTag = SEE_StringToUTF8(interp, v1.u.string);
 		std::vector<AbstractWebElement *> v2;
 		findElementsByTagName(pObj->spec, wantedTag, v2);
 		SEE_SET_OBJECT(res, &createCollectionObject(v2, interp)->native.object);
+		SEE_SET_UNDEFINED(&v1);
 	}
 }
 
@@ -1027,9 +1016,11 @@ static void MZN_element_removeAttribute (struct SEE_interpreter *interp,
 	SEE_SET_UNDEFINED(res);
 	if (argc == 1)
 	{
-		SEE_parse_args(interp, argc, argv, "s", &s1);
-		std::string ach1 = SEE_StringToUTF8(interp, s1);
+		SEE_value v1;
+		SEE_ToString(interp, argv[0], &v1);
+		std::string ach1 = SEE_StringToUTF8(interp, v1.u.string);
 		pObj->spec->setAttribute(ach1.c_str(), "");
+		SEE_SET_UNDEFINED(&v1);
 	}
 }
 
@@ -1045,14 +1036,13 @@ static void MZN_element_getAttribute (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res)
 {
-	SEE_string *s1 = NULL;
-	SEE_string *s2 = NULL;
 	MZN_element_object *pObj = (MZN_element_object*) thisobj;
 	SEE_SET_UNDEFINED(res);
-	if (argc > 0)
+	if (argc == 1)
 	{
-		SEE_parse_args(interp, argc, argv, "s", &s1, &s2);
-		std::string ach1 = SEE_StringToUTF8(interp, s1);
+		SEE_value v1;
+		SEE_ToString(interp, argv[0], &v1);
+		std::string ach1 = SEE_StringToUTF8(interp, v1.u.string);
 		std::string v;
 		if (v == "value")
 			pObj->spec->getProperty(ach1.c_str(), v);
@@ -1067,14 +1057,13 @@ static void MZN_element_getProperty (struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res)
 {
-	SEE_string *s1 = NULL;
-	SEE_string *s2 = NULL;
 	MZN_element_object *pObj = (MZN_element_object*) thisobj;
 	SEE_SET_UNDEFINED(res);
 	if (argc > 0)
 	{
-		SEE_parse_args(interp, argc, argv, "s", &s1, &s2);
-		std::string ach1 = SEE_StringToUTF8(interp, s1);
+		SEE_value v1;
+		SEE_ToString(interp, argv[0], &v1);
+		std::string ach1 = SEE_StringToUTF8(interp, v1.u.string);
 		std::string v;
 		pObj->spec->getProperty(ach1.c_str(), v);
 		SEE_string *str = SEE_UTF8ToString(interp, v.c_str());

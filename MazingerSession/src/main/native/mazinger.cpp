@@ -144,7 +144,7 @@ void SeyconSession::downloadMazingerConfig (std::string &configFile)
     std::string version;
     SeyconCommon::readProperty("soffid.mazinger.version", version);
     if (version.empty())
-    	version = "3";
+    	version = "4";
 
     SeyconResponse *resp = service.sendUrlMessage(
 			L"/getmazingerconfig?user=%hs&version=%hs", soffidUser.c_str(), version.c_str());

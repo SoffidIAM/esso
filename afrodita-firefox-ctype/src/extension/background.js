@@ -1,11 +1,12 @@
 var version = "2.6.0";
-//alert ("Started 2");
 
 var currentSelectActionMessage = null;
 
 var mazingerBridge = {
+	transportAuthentications: [],
 	ports: [],
 	pageId: 0,
+	/** Connection from page content script **/
 	onConnect: function (port) {
 		  try {
 			var console = chrome.extension.getBackgroundPage().console;
@@ -24,32 +25,23 @@ var mazingerBridge = {
 	pageEventReceived: function (msg, port) {
 		var console = chrome.extension.getBackgroundPage().console;
 		var pageId = msg.pageId;
-//		console.log("Got message from "+pageId+": "+JSON.stringify(msg));
 		if (msg.message == "onUnload")
 		{
-//			console.log("UNLOAD 2 "+JSON.stringify(msg));
 			var p = mazingerBridge.ports[pageId];
 			if (p != null) 
 			{
-//				console.log("UNLOAD 2 a");
 				mazingerBridge.ports[pageId] = null;
-//				p.disconnect ();
 				try {
-//					console.log("UNLOAD 3");
 					mazingerBridge.port.postMessage({message: "onUnload2", pageId:pageId});
 				} catch (e ) {
 //					console.log("UNLOAD 3e "+e);
 //					mazingerBridge.port.disconnect();
 //					mazingerBridge.onDisconnect();
 				}
-			} else {
-//				console.log("UNLOAD 2 b ");
-				
 			}
 		}
 		else if (msg.message == "selectAction2")
 		{
-//			console.log(JSON.stringify(msg));
 			var hborder = (msg.window.outerWidth-msg.window.innerWidth)/2;
 			var vborder = (msg.window.outerHeight-msg.window.innerHeight-hborder);
 			var left = Math.round(msg.rect.left +
@@ -84,36 +76,40 @@ var mazingerBridge = {
 			}
 		}
 	},
+	/* Message from afrodita-chrome engine */
  	ssoEventReceived: function (request) {
  		try {
 			var console = chrome.extension.getBackgroundPage().console;
-			var result = "";
-			var pageId = parseInt(request.pageId);
-//			console.log("Got message  for "+pageId+"/"+request.pageId+":"+JSON.stringify(request));
-			var port = mazingerBridge.ports[pageId];
-			if (port == null) {
-				if ( request.requestId != null )
+			if (request.message == "setTransportAuthentications") {
+				mazingerBridge.transportAuthentications =  request.data;
+				chrome.webRequest.onAuthRequired.addListener(mazingerBridge.authenticationRequired, {urls: ["<all_urls>"] }, ["blocking"]);
+			} else {
+				var pageId = parseInt(request.pageId);
+				var port = mazingerBridge.ports[pageId];
+				if (port == null) {
+					if ( request.requestId != null )
+					{
+						mazingerBridge.port.postMessage({
+							"response": "error",
+							"requestId": request.requestId,
+							"pageId": request.pageId,
+							"message": "response",
+							error: true,
+							"exception": "Page already unloaded"
+						});
+					}
+				} 
+				else if (request.action == "selectAction")
 				{
-					mazingerBridge.port.postMessage({
-						"response": "error",
-						"requestId": request.requestId,
-						"pageId": request.pageId,
-						"message": "response",
-						error: true,
-						"exception": "Page already unloaded"
-					});
+					currentSelectActionMessage = request;
+					port.postMessage({action: "selectAction1", request: request});
+					// ACK 
+					mazingerBridge.port.postMessage({response: "", requestId: request.requestId, pageId: request.pageId});
 				}
-			} 
-			else if (request.action == "selectAction")
-			{
-				currentSelectActionMessage = request;
-				port.postMessage({action: "selectAction1", request: request});
-				// ACK 
-				mazingerBridge.port.postMessage({response: "", requestId: request.requestId, pageId: request.pageId});
-			}
-			else
-			{
-				port.postMessage(request);
+				else
+				{   // Forward to content page
+					port.postMessage(request);
+				}
 			}
  		} catch (error) {
 //			console.log("Error generating message: "+error.message);
@@ -126,11 +122,26 @@ var mazingerBridge = {
 			});
  		}
 	},
+	/* Recconnect afrodita-chrome engine */
 	onDisconnect:  function (port) {
 		// Reconnect on failure
 		mazingerBridge.port = chrome.runtime.connectNative ("com.soffid.esso_chrome1");
 		mazingerBridge.port.onMessage.addListener(mazingerBridge.ssoEventReceived);
 		mazingerBridge.port.onDisconnect.addListener (mazingerBridge.onDisconnect);
+		mazingerBridge.port.postMessage({
+			"message": "transport"
+		});
+	},
+	/* Authentication required */
+	authenticationRequired(details, callback) {
+		var console = chrome.extension.getBackgroundPage().console;
+		var ta = mazingerBridge.transportAuthentications;
+		for (var i = 0; i < ta.length; i++) {
+			if (details.url.startsWith(ta[i].url)) {
+				return {authCredentials: {"username":ta[i].userName, "password": ta[i].password}};						
+			}
+		}
+		return {cancel: false};		
 	}
 };
 

@@ -44,6 +44,30 @@
 			<type>inczip</type>
 			<version>${pom.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.soffid.iam.esso.${architecture}</groupId>
+			<artifactId>libmazinger-engine</artifactId>
+			<type>${architecture.lib}</type>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.soffid.iam.esso.${architecture}</groupId>
+			<artifactId>libmazinger-engine</artifactId>
+			<type>${architecture.lib}</type>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.soffid.iam.esso.${architecture}</groupId>
+			<artifactId>MazingerHook</artifactId>
+			<version>${pom.version}</version>
+			<type>dll</type>
+		</dependency>
+		<dependency>
+			<groupId>com.soffid.iam.esso.${architecture}</groupId>
+			<artifactId>MazingerHook</artifactId>
+			<version>${pom.version}</version>
+			<type>inczip</type>
+		</dependency>
 	</dependencies>
 	<profiles>
 		<profile>
@@ -94,23 +118,28 @@
 							<linkerProvider>generic</linkerProvider>
 							<linkerExecutable>${cpp.32w}</linkerExecutable>
 							<linkerMiddleOptions>
+								<linkerMiddleOption>-mconsole</linkerMiddleOption>
 								<linkerMiddleOption>target/objs/resources.o</linkerMiddleOption>
+								<linkerStartOption>src/main/def/mazinger.def</linkerStartOption>
 								<linkerMiddleOption>-Xlinker</linkerMiddleOption>
 								<linkerMiddleOption>--strip-all</linkerMiddleOption>
-								<linkerStartOption>src/main/def/mazinger.def</linkerStartOption>
 								<linkerMiddleOption>-lmazinger-session</linkerMiddleOption>
+								<linkerMiddleOption>-lmazinger-engine</linkerMiddleOption>
 								<linkerMiddleOption>-lnetapi32</linkerMiddleOption>
 								<linkerMiddleOption>-static-libgcc</linkerMiddleOption>
-						<linkerMiddleOption>-static-libgcc</linkerMiddleOption>
-						<linkerMiddleOption>-static-libstdc++</linkerMiddleOption>
+								<linkerMiddleOption>-static-libstdc++</linkerMiddleOption>
+								<linkerMiddleOption>-luuid</linkerMiddleOption>
+								<linkerMiddleOption>-lole32</linkerMiddleOption>
 							</linkerMiddleOptions>
 							<linkerEndOptions>
+								<linkerEndOption>-lMazingerHook</linkerEndOption>
 								<linkerEndOption>-lwsock32</linkerEndOption>
 								<linkerEndOption>-ladvapi32</linkerEndOption>
 								<linkerEndOption>-lsecur32</linkerEndOption>
 								<linkerEndOption>-lmpr</linkerEndOption>
 								<linkerEndOption>-lgdi32</linkerEndOption>
-								<linkerEndOption>-static</linkerEndOption>
+								<linkerEndOption>-luserenv</linkerEndOption>
+								<linkerEndOption>-lwinmm</linkerEndOption>
 							</linkerEndOptions>
 							<sources>
 								<source>

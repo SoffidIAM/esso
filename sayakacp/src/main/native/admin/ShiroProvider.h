@@ -1,19 +1,15 @@
-#ifndef CRecoverPROVIDER_H_
-#define CRecoverPROVIDER_H_
+#ifndef SHIROPROVIDER_H_
+#define SHIROPROVIDER_H_
 
 #include <credentialprovider.h>
 #include "Log.h"
 #include <vector>
-#include "Pkcs11Configuration.h"
-
-class Pkcs11Configuration;
-class CertificateHandler;
 
 extern long g_nComObjsInUse;
 
-class RecoverCredential;
+class ShiroCredential;
 
-class RecoverProvider: public ICredentialProvider {
+class ShiroProvider: public ICredentialProvider {
 public:
 	//IUnknown interface
 	HRESULT __stdcall QueryInterface(REFIID riid, void **ppObj);
@@ -50,38 +46,42 @@ public:
         /* [out] */ ICredentialProviderCredential **ppcpc) ;
 
 
-	RecoverProvider();
-	virtual ~RecoverProvider ();
+	ShiroProvider();
+	~ShiroProvider ();
+	void notifySlotEvent ();
+	void waitForSlot ();
 
 private:
 
-	static RecoverProvider* s_handler;
+	static ShiroProvider* s_handler;
+	HRESULT enumerateTokens ();
+
 
 	static HWND getRootHwnd();
 	long m_nRefCount;
 	Log m_log;
 
-	RecoverCredential *cred;
-	ICredentialProviderEvents *m_credentialProviderEvents;
 	UINT_PTR m_upAdviseContext;
-	bool m_bRefresh;
 	CREDENTIAL_PROVIDER_USAGE_SCENARIO m_cpus;
+
+	ShiroCredential * m_pCredential;
+    ICredentialProviderEvents* m_credentialProviderEvents;
+
 };
 
-enum Recover_FIELD_ID
+
+enum SHIRO_FIELD_ID
 {
-    REC_IMAGE           			= 0,
-    REC_TITLE						= 1,
-    REC_USER						= 2,
-    REC_QUESTION             		= 3,
-    REC_ANSWER          			= 4,
-    REC_SUBMIT_BUTTON				= 5,
-    REC_CHANGE_MSG      			= 6,
-    REC_NEW_PASSWORD    			= 7,
-    REC_NEW_PASSWORD2    			= 8,
-    REC_NUM_FIELDS      			= 9,
-    // Note: if new fields are added, keep NUM_FIELDS last.  This is used as a count of the number of fields
+    SHI_IMAGE           = 0,
+    SHI_TITLE			= 1,
+    SHI_USER            = 2,
+    SHI_PASSWORD        = 3,
+    SHI_SUBMIT_BUTTON   = 4,
+    SHI_MESSAGE         = 5,
+    SHI_NUM_FIELDS      = 6,  // Note: if new fields are added, keep NUM_FIELDS last.  This is used as a count of the number of fields
 };
+
+
 
 ///////////////////////////////////////////////////////////
 

@@ -1,6 +1,5 @@
 #include "sayaka.h"
 
-#include "SayakaProvider.h"
 #include "ShiroCredential.h"
 #include "Utils.h"
 #include <security.h>
@@ -12,7 +11,6 @@
 #include <SayakaGuid.h>
 #include <credentialprovider.h>
 
-#include "TokenHandler.h"
 #include "WaitDialog.h"
 #include <string.h>
 #include <stdlib.h>
@@ -47,7 +45,7 @@ ShiroCredential::ShiroCredential () :
 	Utils::duplicateString(m_rgFieldStrings[SHI_IMAGE],
 			MZNC_strtowstr(Utils::LoadResourcesString(31).c_str()).c_str());
 	Utils::duplicateString(m_rgFieldStrings[SHI_TITLE],
-			MZNC_strtowstr(Utils::LoadResourcesString(32).c_str()).c_str());
+			MZNC_strtowstr(Utils::LoadResourcesString(54).c_str()).c_str());
 	Utils::duplicateString(m_rgFieldStrings[SHI_USER], L"");
 	Utils::duplicateString(m_rgFieldStrings[SHI_PASSWORD], L"");
 	Utils::duplicateString(m_rgFieldStrings[SHI_SUBMIT_BUTTON],
@@ -209,7 +207,7 @@ HRESULT ShiroCredential::GetBitmapValue (DWORD dwFieldID, HBITMAP* phbmp)
 	if (SHI_IMAGE == dwFieldID && phbmp)
 	{
 		HBITMAP hbmp;
-		hbmp = LoadBitmap(hSayakaInstance, "LOGO");
+		hbmp = LoadBitmap(hSayakaInstance, "ADMIN");
 
 		if (hbmp != NULL)
 		{
@@ -245,7 +243,7 @@ HRESULT ShiroCredential::GetSubmitButtonValue (DWORD dwFieldID,
 
 	m_log.info("Credential::GetSubmitButtonValue %d", dwFieldID);
 
-	if (SAY_SUBMIT_BUTTON == dwFieldID && pdwAdjacentTo)
+	if (SHI_SUBMIT_BUTTON == dwFieldID && pdwAdjacentTo)
 	{
 		// pdwAdjacentTo is a pointer to the fieldID you want the submit button to appear next to.
 		*pdwAdjacentTo = SHI_PASSWORD;

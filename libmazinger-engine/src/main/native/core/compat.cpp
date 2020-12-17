@@ -218,6 +218,7 @@ std::wstring MZNC_strtowstr (const char *pszString) {
 			lpwstr,
 			cWideCharsNeeded);
 
+	lpwstr[cWideCharsNeeded-1] = '\0';
 	if (len > 0)
 	{
 		result.assign (lpwstr);

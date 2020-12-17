@@ -77,6 +77,14 @@ class KojiKabuto
 		 */
 		static int StartManualLogin();
 
+		/** @brief Start manual login
+		 *
+		 * Method that implements the functionality to try login using
+		 * credentias from credential provider
+		 * @return Login using manual method result.
+		 */
+		static int StartSoffidLogin();
+
 		/** @brief Start kerberos login
 		 *
 		 * Method that implements the functionality to try login using kerberos protocol.

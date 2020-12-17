@@ -28,3 +28,4 @@
 #define IDC_RADIO_MANUAL                        1045
 #define IDC_RADIO_BOTH                          1046
 #define IDC_MSG_BOTH_INFO                       1047
+#define IDC_RADIO_SOFFID                        40000

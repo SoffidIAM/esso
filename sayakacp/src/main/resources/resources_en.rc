@@ -35,7 +35,7 @@ BEGIN
 	29,		"New password"
 	30,		"New password (repeat)"
 	31,		"Hello"
-	32,		"Intranet user authorization"
+	32,		"Soffid user"
 	33,		"Start session"
 	34,		"Validating user and password"
 	35,		"Recover Password"
@@ -48,6 +48,12 @@ BEGIN
 	46,		"User"
 	47,		"Password"
 	48,		"Validating credentials....."
+	49,		"Soffid user"
+	50,		"Please, change your password"
+	51,		"New passwords do not match"
+	52,		"Access denied"
+	53,		"The new password is not acceptable"
+	54,		"Soffid administrator"	
 END
 
 IDD_ENTERPIN DIALOG DISCARDABLE  0, 0, 280, 61

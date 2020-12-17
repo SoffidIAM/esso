@@ -6,12 +6,15 @@
  */
 
 #include "sayaka.h"
+
 #include "Pkcs11Handler.h"
-#include "CertificateHandler.h"
+
+#include "sayaka.h"
 #include <pkcs11.h>
 #include <stdio.h>
 #include <string.h>
 #include <credentialprovider.h>
+#include "../cert/CertificateHandler.h"
 #include "SayakaProvider.h"
 #include "TokenHandler.h"
 
