@@ -524,21 +524,6 @@ void registerFFHook()
 	//write the default value
 	//
 
-	// EXTENSION FOR FF < 52
-	wsprintf(szBuff, "%s\\afroditaFf.xpi", getMazingerDir());
-
-	log("Registering Firefox extension");
-	HelperWriteKey(32, HKEY_LOCAL_MACHINE,
-			"Software\\Mozilla\\Firefox\\Extensions",
-			"{df382936-f24b-11df-96e1-9bf54f13e327}", REG_SZ, (void*) szBuff,
-			lstrlen(szBuff));
-
-	log("Registering Firefox extension 64 bits");
-	HelperWriteKey(64, HKEY_LOCAL_MACHINE,
-			"Software\\Mozilla\\Firefox\\Extensions",
-			"{df382936-f24b-11df-96e1-9bf54f13e327}", REG_SZ, (void*) szBuff,
-			lstrlen(szBuff));
-
 	// Extension for FF >= 52
 
 	// Register ff extension
@@ -2845,7 +2830,7 @@ int install(int full)
 	installResource(NULL, "sewashi.exe");
 	installResource(NULL, "sewbr.dll");
 	installResource(NULL, "profyumi.jar");
-	installResource(NULL, "afroditaFf.xpi");
+//	installResource(NULL, "afroditaFf.xpi");
 	installResource(NULL, "afroditaFf2.xpi");
 
 
