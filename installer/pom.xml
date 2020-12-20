@@ -4,11 +4,11 @@
 	<artifactId>MazingerInstaller</artifactId>
 	<packaging>${architecture.exe}</packaging>
 	<name>Instal·lador de MAZINGER</name>
-	<version>1.6.0-SNAPSHOT</version>
+	<version>3.0.0-SNAPSHOT</version>
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.6.0-SNAPSHOT</version>
+		<version>3.0.0-SNAPSHOT</version>
 	</parent>
 	<issueManagement>
 		<system>RTIR</system>
@@ -150,6 +150,20 @@
 							</target>
 						</configuration>
 					</execution>
+					<execution>
+						<id>build-msi</id>
+						<phase>package</phase>
+						<configuration>
+							<tasks>
+								<exec executable="wixl" failonerror="true">
+									<arg value="target/esso.wxs" />
+								</exec>
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
 				</executions>
 			</plugin>
 			<plugin>
@@ -204,6 +218,30 @@
 				<configuration>
 					<preparationGoals>clean verify</preparationGoals>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+					<execution>
+						<id>attach-artifacts</id>
+						<phase>package</phase>
+						<goals>
+							<goal>attach-artifact</goal>
+						</goals>
+						<configuration>
+							<artifacts>
+								<artifact>
+									<file>
+										target/esso.msi
+									</file>
+									<type>msi</type>
+								</artifact>
+							</artifacts>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

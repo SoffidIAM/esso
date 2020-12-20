@@ -4,11 +4,11 @@
 	<artifactId>afrodita-chrome</artifactId>
 	<packaging>pom</packaging>
 	<name>Dll to inject users and passwords on Google Chrome</name>
-	<version>1.6.0-SNAPSHOT</version>
+	<version>3.0.0-SNAPSHOT</version>
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.6.0-SNAPSHOT</version>
+		<version>3.0.0-SNAPSHOT</version>
 	</parent>
 	<modules>
 		<module>w32</module>

@@ -1,64 +1,62 @@
 <?xml version='1.0' encoding='windows-1252'?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
-  <Product Name='Soffid Enterprise Single Sign-on v2' 
+  <Product Name='Soffid Enterprise Single Sign-on version ${project.version}' 
 	Id='*' 
-	UpgradeCode='80824bb8-41f1-11e7-8767-230eeca72bbe'
-    Language='1033' Codepage='1252' Version='${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}' Manufacturer='Soffid ESSO'>
-
+	UpgradeCode='80824BB8-41f1-11E7-8767-230EECA72BBE'
+    Language='1033' Codepage='1252' Version='${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}.${parsedVersion.buildNumber}' Manufacturer='Soffid ESSO'>
 
     <Package Id='*' Keywords='Installer' Description="Soffid ESSO ${project.version} Installer"
       Comments='Soffid ESSO' Manufacturer='Soffid IAM SL'
       InstallerVersion='100' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
 
-	<MajorUpgrade	
-		DowngradeErrorMessage="Sorry. Downgrades are not allowed"
-		AllowDowngrades="no" 
-		/>
+    <MajorUpgrade />
 
 	<Media Id='1' Cabinet='Sample.cab' EmbedCab='yes' DiskPrompt="CD-ROM #1" />
+	<Icon Id="icon.ico" SourceFile="src/main/resources/soffid.ico"/>
+	<Property Id="ARPPRODUCTICON" Value="icon.ico" />
     <Property Id='DiskPrompt' Value="Soffid ESSO Installation [1]" />
     <Property Id='done' Value="Installing" />
-    <Property Id='PARAM' Secure="yes" />
+    <Property Id='PARAM' />
 
     <Directory Id='TARGETDIR' Name='SourceDir'>
       <Directory Id='ProgramFilesFolder' Name='PFiles'>
         <Directory Id='SoffidESSO' Name='SoffidESSO'>
-            <Component Id='MainExecutable' Guid='cfb31f14-41f1-11e7-ae49-5fd31ff7b344'>
-              <File Id='SoffidESSOInstaller' Name='setup.exe' DiskId='1' 
-				Source='..\..\..\target\MazingerInstaller.exe' KeyPath='yes'
-				System='yes'/>
+            <Component Id='MainExecutable' Guid='*'>
+              <File Id='setup_exe' Name='setup.exe' DiskId='1' KeyPath="yes" 
+                DefaultVersion='${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}.${parsedVersion.buildNumber}'
+				Source='target/MazingerInstaller.exe'/>
             </Component>
         </Directory>
       </Directory>
     </Directory>
 
-    <CustomAction Id="RunMainApp"          
-          ExeCommand='[PARAM]'
-		  FileKey='SoffidESSOInstaller'
+    <CustomAction Id="SetupAction"          
+      ExeCommand='/msi [PARAM]'
+		  FileKey='setup_exe'
 		  Execute="deferred" 
 		  Impersonate="no"
-		  HideTarget='no'
-          Return="check"/>
-    <CustomAction Id="Uninstall"
-		  FileKey='SoffidESSOInstaller'
-          ExeCommand='/u'
+      Return="check"/>
+
+    <CustomAction Id="ZUninstall"
+		  FileKey='setup_exe'
+      ExeCommand='/u'
 		  Execute="deferred" 
 		  Impersonate="no"
-		  HideTarget='no'
-          Return="ignore"/>
-	
+		  Return="ignore"/>
+
     <Feature Id='Complete' Level='1'>
       <ComponentRef Id='MainExecutable' />
     </Feature>
 
-	<InstallExecuteSequence> 
-
-     <Custom Action="RunMainApp" Before="InstallFinalize" ><![CDATA[
-	     (NOT UPGRADINGPRODUCTCODE) AND (REMOVE<>"ALL")
-	  ]]></Custom>
-      <Custom Action="Uninstall" Before="InstallFinalize" >
-		(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")
-	   </Custom>
+    <InstallExecuteSequence> 
+     <LaunchConditions Sequence="100"/>
+     <RemoveExistingProducts After="InstallValidate" Sequence="1401"></RemoveExistingProducts>
+     <InstallInitialize Sequence="1500"></InstallInitialize>
+     <Custom Action="ZUninstall" Sequence="1540" >(REMOVE="ALL") AND NOT PREVIOUSFOUND</Custom>
+     <RemoveFiles Sequence="1550"></RemoveFiles>
+     <InstallFiles />
+     <Custom Action="SetupAction" Sequence="4001" >NOT (REMOVE="ALL")</Custom>
+     <InstallFinalize ></InstallFinalize>
     </InstallExecuteSequence>
   </Product>
 </Wix>

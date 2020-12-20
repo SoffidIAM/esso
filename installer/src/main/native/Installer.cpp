@@ -46,6 +46,7 @@ bool updateConfigFlag = false;
 bool reboot = false;
 bool isUpdate = false;
 bool noGina = false;
+bool msi = false;
 
 char *enableCloseSession = "false";
 char *forceStartupLogin = "true";
@@ -1820,57 +1821,59 @@ void updateConfig()
 		log("Cannot configure registry HKLM\\Software\\Soffid\\esso");
 	}
 
-	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
-			"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\SoffidESSO", 0,
-			NULL, REG_OPTION_NON_VOLATILE, Wow64Key(KEY_ALL_ACCESS), NULL,
-			&hKey, &dwResult) == ERROR_SUCCESS)
-	{
-		fflush(stdout);
+	if (!msi) {
 
-		if (!quiet)
-			setProgressMessage("Registering uninstalller...");
+		if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+				"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\SoffidESSO", 0,
+				NULL, REG_OPTION_NON_VOLATILE, Wow64Key(KEY_ALL_ACCESS), NULL,
+				&hKey, &dwResult) == ERROR_SUCCESS)
+		{
+			fflush(stdout);
 
-		char ach[4096];
-		DWORD dw;
+			if (!quiet)
+				setProgressMessage("Registering uninstalller...");
 
-		strcpy(ach, "Soffid Enterprise Single Sign-On");
-		RegSetValueEx(hKey, "DisplayName", 0, REG_SZ, (LPBYTE) ach, strlen(ach));
+			char ach[4096];
+			DWORD dw;
 
-		strcpy(ach, MAZINGER_VERSION_STR);
-		RegSetValueEx(hKey, "DisplayVersion", 0, REG_SZ, (LPBYTE) ach,
-				strlen(ach));
+			strcpy(ach, "Soffid Enterprise Single Sign-On");
+			RegSetValueEx(hKey, "DisplayName", 0, REG_SZ, (LPBYTE) ach, strlen(ach));
 
-		strcpy(ach, "Soffid");
-		RegSetValueEx(hKey, "Publisher", 0, REG_SZ, (LPBYTE) ach, strlen(ach));
+			strcpy(ach, MAZINGER_VERSION_STR);
+			RegSetValueEx(hKey, "DisplayVersion", 0, REG_SZ, (LPBYTE) ach,
+					strlen(ach));
 
-		sprintf(ach, "\"%s\\uninstall.exe\"", getMazingerDir());
-		RegSetValueEx(hKey, "UninstallString", 0, REG_SZ, (LPBYTE) ach,
-				strlen(ach));
+			strcpy(ach, "Soffid");
+			RegSetValueEx(hKey, "Publisher", 0, REG_SZ, (LPBYTE) ach, strlen(ach));
 
-		sprintf(ach, "\"%s\\mazinger.exe\"", getMazingerDir());
-		RegSetValueEx(hKey, "DisplayIcon", 0, REG_SZ, (LPBYTE) ach, strlen(ach));
+			sprintf(ach, "\"%s\\uninstall.exe\"", getMazingerDir());
+			RegSetValueEx(hKey, "UninstallString", 0, REG_SZ, (LPBYTE) ach,
+					strlen(ach));
 
-		time_t t;
-		t = time(NULL);
-		struct tm* tmp;
-		tmp = localtime(&t);
-		strftime(ach, sizeof ach, "%Y%m%d", tmp);
-		RegSetValueEx(hKey, "InstallDate", 0, REG_SZ, (LPBYTE) ach, strlen(ach));
+			sprintf(ach, "\"%s\\mazinger.exe\"", getMazingerDir());
+			RegSetValueEx(hKey, "DisplayIcon", 0, REG_SZ, (LPBYTE) ach, strlen(ach));
 
-		dw = 1;
-		RegSetValueEx(hKey, "NoModify", 0, REG_DWORD, (LPBYTE) &dw, sizeof dw);
+			time_t t;
+			t = time(NULL);
+			struct tm* tmp;
+			tmp = localtime(&t);
+			strftime(ach, sizeof ach, "%Y%m%d", tmp);
+			RegSetValueEx(hKey, "InstallDate", 0, REG_SZ, (LPBYTE) ach, strlen(ach));
 
-		dw = 1;
-		RegSetValueEx(hKey, "NoRepair", 0, REG_DWORD, (LPBYTE) &dw, sizeof dw);
+			dw = 1;
+			RegSetValueEx(hKey, "NoModify", 0, REG_DWORD, (LPBYTE) &dw, sizeof dw);
 
-		RegCloseKey(hKey);
+			dw = 1;
+			RegSetValueEx(hKey, "NoRepair", 0, REG_DWORD, (LPBYTE) &dw, sizeof dw);
 
-		log("Registered uninstall");
-	}
-
-	else
-	{
-		anyError = true;
+			RegCloseKey(hKey);
+			log("Registered uninstall");
+		}
+		else
+		{
+			log("> Cannot register uninstall");
+			anyError = true;
+		}
 	}
 
 	registerIEHook();
@@ -1884,8 +1887,6 @@ void updateConfig()
 		ConfigureFirewall();
 	else
 		ConfigureFirewallVista();
-
-
 
 	if (IsWindowsXP())
 		registerBoss();
@@ -1970,7 +1971,7 @@ void updateUserInit(const char *quitar, const char*poner)
 	else
 	{
 		anyError = true;
-		log("Cannot configure winlogon");
+		log("> Cannot configure winlogon");
 	}
 
 	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
@@ -2015,8 +2016,7 @@ void updateGina(const char *file)
 	else
 	{
 		anyError = true;
-		log(
-				"Cannot open HKLM\\software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon");
+		log("Cannot open HKLM\\software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon");
 	}
 }
 
@@ -2174,6 +2174,31 @@ void installCP(const char *file)
 	strcpy(szValue, "Apartment");
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, "ThreadingModel", REG_SZ,
 			(void*) szValue, strlen(szValue));
+
+	// SOFFID SSO BASIC 44ee45c8-529b-4542-98ed-cfeceab1d4cc
+	const char *basicClsid = "{44ee45c8-529b-4542-98ed-cfeceab1d4cc}";
+	sprintf(szKey, "Software\\Microsoft\\Windows\\"
+			"CurrentVersion\\Authentication\\Credential Providers\\%s",
+			basicClsid);
+	strcpy(szValue, "Soffid Basic SSO");
+	HelperWriteKey(0, HKEY_LOCAL_MACHINE, szKey, NULL, REG_SZ, (void*) szValue,
+			strlen(szValue));
+
+	sprintf(szKey, "CLSID\\%s", basicClsid);
+	strcpy(szValue, "Soffid Basic SSO");
+	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
+			strlen(szValue));
+
+	sprintf(szKey, "CLSID\\%s\\InprocServer32", basicClsid);
+	strcpy(szValue, file);
+	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
+			strlen(szValue));
+	strcpy(szValue, "Apartment");
+	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, "ThreadingModel", REG_SZ,
+			(void*) szValue, strlen(szValue));
+
+	updateBasicCredentialProvider();
+
 }
 
 bool installShiroKabuto(char *achShiroPath)
@@ -2214,6 +2239,7 @@ bool installShiroKabuto(char *achShiroPath)
 
 	else
 	{
+		log("Cannot register shiro kabuto service");
 		anyError = true;
 	}
 
@@ -2936,12 +2962,15 @@ extern "C" int main(int argc, char **argv)
 	bool uninstall = false;
 	bool smartUpdate = false;
 
+	log("Starting installer");
+	for (int i = 0; i < argc; i++)
+		log("Param %d: %s", i, argv[i]);
 	// Read call arguments
 	for (int i = 0; i < argc; i++)
 	{
-		if (stricmp(argv[i], "/sectest") == 0) {
-			updateBasicCredentialProvider();
-			return 0;
+		if (stricmp(argv[i], "/msi") == 0 )
+		{
+			msi = true;
 		}
 		if (stricmp(argv[i], "/smartupdate") == 0 || stricmp(argv[i], "-smartupdate") == 0)
 		{

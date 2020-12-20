@@ -2,7 +2,7 @@
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
   <assemblyIdentity type="win32"
                     name="SoffidInstaller"
-                    version="1.8.0.0"
+                    version="${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}.${parsedVersion.buildNumber}"
                     processorArchitecture="x86"/>
   <description>Soffid ESSO Installer</description>
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
