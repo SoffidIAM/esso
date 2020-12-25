@@ -512,7 +512,7 @@ static std::string storeSecret(AccountStruct &as, const char *tag, const char *v
 		swprintf (ach, 20, L"%d", counter);
 		secretName += ach;
 		s.putSecret(secretName.c_str(), encodedSecret.c_str());
-		attributeNumber = MZNC_wstrtostr(ach);
+		attributeNumber = ach;
 	}
 	return attributeNumber;
 }

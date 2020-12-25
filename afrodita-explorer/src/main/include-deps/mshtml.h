@@ -9738,6 +9738,20 @@ extern RPC_IF_HANDLE __MIDL_itf_mshtml_0000_0000_v0_0_s_ifspec;
 /* interface IHTMLFiltersCollection */
 /* [object][uuid][dual][oleautomation] */ 
 
+#define __RPC__inout
+#define __RPC__inout_opt
+#define __RPC__in
+#define __RPC__in_string
+#define __RPC__out_ecount_full(x)
+#define __RPC__in_ecount_full(x)
+#define __RPC__in_opt
+#define __RPC__deref_in_opt
+#define __RPC___out_opt
+#define __RPC__out
+#define __RPC__deref_out_opt
+#define _In_
+#define _In_opt_
+#define _Out_
 
 EXTERN_C const IID IID_IHTMLFiltersCollection;
 
