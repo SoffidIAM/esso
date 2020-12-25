@@ -197,6 +197,8 @@ std::string MZNC_utf8tostr (const char *pszString) {
 
 std::wstring MZNC_strtowstr (const char *pszString) {
 	std::wstring result;
+	if (pszString == NULL)
+		return result;
 	// Convertir de UTF-8 al joc de caracters nadiu, primer en widechar i despres en char
 	int cWideCharsNeeded = 1+MultiByteToWideChar(CP_ACP,
 			0,
@@ -216,6 +218,7 @@ std::wstring MZNC_strtowstr (const char *pszString) {
 			lpwstr,
 			cWideCharsNeeded);
 
+	lpwstr[cWideCharsNeeded-1] = '\0';
 	if (len > 0)
 	{
 		result.assign (lpwstr);
@@ -288,7 +291,9 @@ const char *MZNC_getHostName () {
     {
 		GetComputerNameA(achHostName, &dwSize);
         dwSize = sizeof achHostName;
-		GetComputerNameExA(ComputerNameDnsFullyQualified, achHostName, &dwSize);
+		if ( GetComputerNameExA(ComputerNameDnsFullyQualified, achHostName, &dwSize) != 0 ||
+				strlen(achHostName) == 0)
+			GetComputerNameA(achHostName, &dwSize);
     }
 	for (int i = 0; achHostName[i]; i++)
 		achHostName[i] = tolower(achHostName[i]);

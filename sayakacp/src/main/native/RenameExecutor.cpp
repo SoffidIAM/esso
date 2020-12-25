@@ -49,6 +49,14 @@ void RenameExecutor::execute()
 					{
 						fclose (f);
 						log.info("Renaming %s to %s", f2, f1);
+
+						std::string f3 = f1;
+						f3 += ".old";
+
+						if (! MoveFileEx(f1, f3.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) ) {
+							log.warn (">> Error moving away file %s", f2);
+							done = false;
+						}
 						if (! MoveFileEx(f2, f1, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) ) {
 							log.warn (">> Error moving file %s", f2);
 							done = false;

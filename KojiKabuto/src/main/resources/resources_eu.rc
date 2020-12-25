@@ -15,7 +15,7 @@ BEGIN
 	9,			"Ezin da exekutatu"
 	10,		"Zure ekipoak ez du blokeo automatikoa aktibatua\n\nEzaugarri hau beharrezkoa da abenduak 13ko 1720/2007 errege dekretuaren 91. artikulua betetzeko\n\nNahi ahal duzu blokeo automatikoa orain aktibatu?"
 	11,		"Intranet Korporatiboa"
-	12,		"Zure ekipoak 15 minutuko blokeo denbora ezarrita dauka\n\nAbenduak 13ko 1720/2007 errege dekretuaren 91. artikulua betetzeko,\nekipoa lanik egin gabe 10 minutu pasatu eta gero blokeatzea gomendatzen da\n\nNahi ahal duzu orain aktibatu 10 minuto eta geroko blokeoa?""
+	12,		"Zure ekipoak 15 minutuko blokeo denbora ezarrita dauka\n\nAbenduak 13ko 1720/2007 errege dekretuaren 91. artikulua betetzeko,\nekipoa lanik egin gabe 10 minutu pasatu eta gero blokeatzea gomendatzen da\n\nNahi ahal duzu orain aktibatu 10 minuto eta geroko blokeoa?"
 	13,		"Sarea lortuz ..."
 	14,		"Kongigurazioa eguneratuta"
 	15,		"Kaixo"

@@ -19,6 +19,7 @@
 #include <string.h>
 #include "../hll/HllPatternSpec.h"
 #include <stdlib.h>
+#include <WebTransport.h>
 
 #ifndef WIN32
 #include <unistd.h>
@@ -246,6 +247,61 @@ void ConfigReader::dumpStringAttribute(const char*name) {
 	char * s = readString(false);
 	MZNSendDebugMessageA("%s%s='%s'",getIndent(),name, s);
 	free(s);
+}
+
+void ConfigReader::readWebTransport() {
+	int skipOnly = m_bTesting || ! m_bWebTransport;
+
+	if (skipOnly) {
+		if (m_bTesting) {
+			MZNSendDebugMessageA("%s<WebTransport", getIndent());
+			indent();
+		}
+		for (char ch = readChar(); ch != '\0'; ch = readChar()) {
+			if (ch == 'U') {
+				if (m_bTesting)
+					dumpStringAttribute("url");
+				else
+					readString(true);
+			}
+			if (ch == 'S') {
+				if (m_bTesting)
+					dumpStringAttribute("system");
+				else
+					readString(true);
+			}
+			if (ch == 'D') {
+				if (m_bTesting)
+					dumpStringAttribute("domain");
+				else
+					readString(true);
+			}
+		}
+		if (m_bTesting) {
+			MZNSendDebugMessageA("%s/>", getIndent());
+			unindent();
+		}
+	} else {
+		WebTransport *t = new WebTransport();
+		m_webTransports.push_back(t);
+		for (char ch = readChar(); ch != '\0'; ch = readChar()) {
+			if (ch == 'U') {
+				char *s = readString(false);
+				if (s != NULL)
+					t->url =  MZNC_utf8towstr(s);
+			}
+			if (ch == 'S') {
+				char *s = readString(false);
+				if (s != NULL)
+					t->system = MZNC_utf8towstr(s);
+			}
+			if (ch == 'D') {
+				char *s = readString(false);
+				if (s != NULL)
+					t->domain = MZNC_utf8towstr(s);
+			}
+		}
+	}
 }
 
 void ConfigReader::dumpRegExpAttribute(const char*name) {
@@ -819,6 +875,13 @@ void ConfigReader::parseWeb() {
 	if (m_pointer != NULL)
 		doParse();
 }
+
+void ConfigReader::parseWebTransport() {
+	m_bWebTransport = true;
+	if (m_pointer != NULL)
+		doParse();
+}
+
 void ConfigReader::parseHll() {
 	m_bHll = true;
 	if (m_pointer != NULL)
@@ -829,6 +892,8 @@ void ConfigReader::doParse() {
 	const char* lpszCmdLine = MZNC_getCommandLine();
 	if (m_bWeb)
 		MZNSendDebugMessageA("Compiling WEB rules for %s", lpszCmdLine);
+	else if (m_bWebTransport)
+		MZNSendDebugMessageA("Compiling WEB transport rules for %s", lpszCmdLine);
 	else if (m_bHll)
 		MZNSendDebugMessageA("Compiling HLL API rules", lpszCmdLine);
 	else
@@ -860,6 +925,8 @@ void ConfigReader::doParse() {
 			readHllPattern ();
 		} else if (achType == 'A') {
 			readGlobalAction ();
+		} else if (achType == 'T') {
+			readWebTransport();
 		} else {
 			return;
 		}
@@ -889,6 +956,8 @@ void ConfigReader::testConfiguration() {
 				readDomainPassword ();
 			} else if (achType == 'A') {
 				readGlobalAction ();
+			} else if (achType == 'T') {
+				readWebTransport ();
 			} else {
 				MZNSendDebugMessageA("Invalid rule type %c on rule %d", achType, i);
 				return;
@@ -936,3 +1005,8 @@ std::vector<WebApplicationSpec*>& ConfigReader::getWebApplicationSpecs () {
 std::vector<HllPatternSpec*>& ConfigReader::getHllPatternSpecs () {
 	return m_hllPatterns;
 }
+
+std::vector<WebTransport*>& ConfigReader::getWebTransports() {
+	return m_webTransports;
+}
+

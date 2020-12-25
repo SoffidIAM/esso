@@ -19,6 +19,7 @@ class AbstractWebApplication;
 class DomainPasswordCheck;
 class HllMatcher;
 class HllApplication;
+class WebTransport;
 struct SEE_string;
 
 #define APPLICATION_TYPE_WIN32 0
@@ -35,6 +36,7 @@ bool MZNWebMatch (AbstractWebApplication *app) ;
 bool MZNWebMatch (AbstractWebApplication *app, bool defaultRule) ;
 void MZNWebMatchRefresh (AbstractWebApplication *app) ;
 void MZNHllMatch (HllApplication *app) ;
+std::vector<WebTransport*> MZNWebTransportMatch () ;
 
 void MZNEvaluateJSMatch(ComponentMatcher &match, const char *script) ;
 void MZNEvaluateJSMatch(HllMatcher &match, const char *script) ;

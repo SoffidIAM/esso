@@ -8,10 +8,11 @@
 #ifndef PKCS11CONFIGURATION_H_
 #define PKCS11CONFIGURATION_H_
 
-#include "Pkcs11Handler.h"
-#include "CertificateHandler.h"
 #include "Log.h"
 #include <vector>
+
+#include "../cert/CertificateHandler.h"
+#include "../cert/Pkcs11Handler.h"
 class SayakaProvider;
 class TokenHandler;
 

@@ -35,7 +35,7 @@ BEGIN
 	29,		"Nova Contrassenya"
 	30,		"Nova Contrassenya (repetició)"
 	31,		"Hola"
-	32,		"Autorizació per a usuari d'Intranet"
+	32,		"Usuari Soffid"
 	33,		"Iniciar sesió"
 	34,		"Validant usuari i contrasenya"
 	35,		"Recuperar contrasenya"
@@ -48,8 +48,12 @@ BEGIN
 	46,		"Usuari"
 	47,		"Contrasenya"
 	48,		"Validant credencials....."
-
-	
+	49,		"Usuari Soffid"
+	50,		"Ha de canviar la contrasenya"
+	51,		"Les contrasenyes no coincideixen"
+	52,		"Accés denegat"
+	53,		"La nova contrasenya no és apropiada"
+	54,		"Administrador Soffid"	
 END
 
 IDD_ENTERPIN DIALOG DISCARDABLE  0, 0, 280, 61

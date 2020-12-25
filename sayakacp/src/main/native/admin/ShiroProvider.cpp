@@ -9,6 +9,15 @@
 #include <MZNcompat.h>
 
 ShiroProvider* ShiroProvider::s_handler;
+static CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgShiroFieldDescriptors[] =
+{
+    { SHI_IMAGE, CPFT_TILE_IMAGE, (wchar_t*) L"Image" },
+    { SHI_TITLE, CPFT_LARGE_TEXT, (wchar_t*) L"Start as administrator" },
+    { SHI_USER,  CPFT_EDIT_TEXT, (wchar_t*) L"User" },
+    { SHI_PASSWORD, CPFT_PASSWORD_TEXT, (wchar_t*) L"Password" },
+    { SHI_MESSAGE, CPFT_LARGE_TEXT, (wchar_t*) L"Validating credentials...."},
+    { SHI_SUBMIT_BUTTON, CPFT_SUBMIT_BUTTON, (wchar_t*) L"Start" },
+};
 
 ShiroProvider::ShiroProvider (): m_log ("ShiroProvider")
 {

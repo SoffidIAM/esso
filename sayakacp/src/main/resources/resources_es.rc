@@ -35,7 +35,7 @@ BEGIN
 	29,		"Nueva contraseña"
 	30,		"Nueva contraseña (repetición)"
 	31,		"Hola"
-	32,		"Autorización para usuario de Intranet"
+	32,		"Usuario Soffid"
 	33,		"Iniciar sesión"
 	34,		"Validando usuario y contraseña"
 	35,		"Recuperar contraseña"
@@ -48,6 +48,12 @@ BEGIN
 	46,		"Usuario"
 	47,		"Contraseña"
 	48,		"Validando credenciales....."
+	49,		"Usuario Soffid"
+	50,		"Debe cambiar la contraseña"
+	51,		"Las contraseñas no coinciden"
+	52,		"Acceso denegado"
+	53,		"La nueva contraseña no es apropiada"
+	54,		"Administrador Soffid"	
 END
 
 IDD_ENTERPIN DIALOG DISCARDABLE  0, 0, 280, 61

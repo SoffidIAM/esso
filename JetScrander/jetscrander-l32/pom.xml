@@ -8,7 +8,7 @@
 	<parent>
 		<artifactId>JetScrander</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.6.0-SNAPSHOT</version>
+		<version>3.0.0-SNAPSHOT</version>
 	</parent>
 	<dependencies>
 		<dependency>
@@ -39,6 +39,7 @@
 						<compilerMiddleOption>-I/usr/include/cairo</compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/include/glib-2.0</compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/include/pango-1.0</compilerMiddleOption>
+						<compilerMiddleOption>-I/usr/include/harfbuzz</compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/lib/gtk-2.0/include</compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/include/atk-1.0 </compilerMiddleOption>
 						<compilerMiddleOption>-I/usr/include/gtk-2.0</compilerMiddleOption>

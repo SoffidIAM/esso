@@ -527,8 +527,9 @@ void SeyconCommon::debug (const char *szFormat, ...) {
 		setlogmask (LOG_UPTO (LOG_DEBUG));
 		openlog ("soffid-session", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
 		vsyslog (LOG_DEBUG, szFormat, v2);
+		va_end(v2);
 		closelog ();
-#endif
+
 		time_t t;
 		time(&t);
 		struct tm *tm = localtime (&t);
@@ -541,6 +542,7 @@ void SeyconCommon::debug (const char *szFormat, ...) {
 		if (szFormat[strlen(szFormat)-1] != '\n')
 			fprintf (stderr,"\n");
 		fflush (stderr);
+#endif
 	}
 
 }

@@ -1,16 +1,13 @@
-#ifndef CRecoverCREDENTIAL_H_
-#define CRecoverCREDENTIAL_H_
+#ifndef SSOOCREDENTIAL_H_
+#define SSOCREDENTIAL_H_
 
 #include <credentialprovider.h>
-#include "RecoverProvider.h"
-#include "CertificateHandler.h"
+#include "SSOProvider.h"
 #include "Log.h"
 
-class ConfigReader;
 
-extern long g_nComObjsInUse;
 
-class RecoverCredential: public ICredentialProviderCredential {
+class SSOCredential: public ICredentialProviderCredential {
 public:
 
 	//IUnknown interface
@@ -89,49 +86,38 @@ public:
 
 
 
-	RecoverCredential(const std::wstring &domain);
+	SSOCredential();
 
-	virtual ~RecoverCredential ();
+	std::wstring szUser;
+	std::wstring szPassword;
+	bool autoLogin;
 
-	void setUsage ( CREDENTIAL_PROVIDER_USAGE_SCENARIO usage) {
-		m_usage = usage;
-	}
-
+	void updateLabel();
 private:
+	bool ObtainCredentials (
+		CREDENTIAL_PROVIDER_GET_SERIALIZATION_RESPONSE* pcpgsr,
+		CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION* pcpcs,
+		PWSTR* ppwzOptionalStatusText,
+		CREDENTIAL_PROVIDER_STATUS_ICON* pcpsiOptionalStatusIcon);
+
 	HRESULT GenerateLoginSerialization(
 		CREDENTIAL_PROVIDER_GET_SERIALIZATION_RESPONSE* pcpgsr,
 		CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION* pcpcs,
 		PWSTR* ppwzOptionalStatusText,
 		CREDENTIAL_PROVIDER_STATUS_ICON* pcpsiOptionalStatusIcon);
 
-	long m_nRefCount;
-	Log m_log;
     ICredentialProviderCredentialEvents* m_pCredProvCredentialEvents;
 
-    CREDENTIAL_PROVIDER_FIELD_STATE 	  m_cpfs [REC_NUM_FIELDS];
-    CREDENTIAL_PROVIDER_FIELD_INTERACTIVE_STATE m_cpfis[REC_NUM_FIELDS];
-    CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR  m_rgCredProvFieldDescriptors[REC_NUM_FIELDS];
-    wchar_t*                              m_rgFieldStrings[REC_NUM_FIELDS];
+    CREDENTIAL_PROVIDER_FIELD_STATE 	  m_cpfs [SHI_NUM_FIELDS];
+    CREDENTIAL_PROVIDER_FIELD_INTERACTIVE_STATE m_cpfis[SHI_NUM_FIELDS];
+    CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR  m_rgCredProvFieldDescriptors[SHI_NUM_FIELDS];
+    wchar_t*                              m_rgFieldStrings[SHI_NUM_FIELDS];
+	long m_nRefCount;
+	Log m_log;
+	void displayMessage();
+	void hideMessage();
 
 
-    std::wstring requestId;
-    std::wstring user;
-    std::wstring domain;
-    std::wstring windowsDomain;
-    CREDENTIAL_PROVIDER_USAGE_SCENARIO m_usage;
-
-    std::vector<std::wstring> m_questions;
-    std::vector<std::wstring> m_answers;
-
-    int currentQuestion;
-    std::wstring desiredPassword1;
-    std::wstring desiredPassword2;
-
-    boolean performRequest ();
-    boolean responseChallenge ();
-    boolean resetPassword ();
-
-    void updateInterface ();
 };
 
 

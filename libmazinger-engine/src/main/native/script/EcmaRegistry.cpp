@@ -380,7 +380,7 @@ static void registry_construct(struct SEE_interpreter *interp,
 		struct SEE_object *self, struct SEE_object *thisobj, int argc,
 		struct SEE_value **argv, struct SEE_value *res) {
 	struct SEE_object *newobj;
-	struct SEE_string *pathString;
+	struct SEE_string *pathString = NULL;
 
 	SEE_parse_args(interp, argc, argv, "s", &pathString);
 	if (!pathString)

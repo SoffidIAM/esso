@@ -4,11 +4,11 @@
 	<artifactId>MazingerInstaller</artifactId>
 	<packaging>${architecture.exe}</packaging>
 	<name>Instal·lador de MAZINGER</name>
-	<version>1.6.0-SNAPSHOT</version>
+	<version>3.0.0-SNAPSHOT</version>
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
-		<version>1.6.0-SNAPSHOT</version>
+		<version>3.0.0-SNAPSHOT</version>
 	</parent>
 	<issueManagement>
 		<system>RTIR</system>
@@ -26,9 +26,27 @@
 				<filtering>true</filtering>
 				<targetPath>../resources</targetPath>
 			</resource>
+			<resource>
+				<directory>src/main/wix</directory>
+				<filtering>true</filtering>
+				<targetPath>..</targetPath>
+			</resource>
 		</resources>
 
 		<plugins>
+			<plugin>
+			    <groupId>org.codehaus.mojo</groupId>
+			    <artifactId>build-helper-maven-plugin</artifactId>
+			    <version>1.8</version>
+			    <executions>
+			      <execution>
+			        <id>parse-version</id>
+			        <goals>
+			          <goal>parse-version</goal>
+			        </goals>
+			      </execution>
+			    </executions>
+			</plugin>
 			<plugin>
 				<artifactId>maven-resources-plugin</artifactId>
 				<executions>
@@ -91,7 +109,6 @@
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.KojiKabuto.exe" destfile="target/resources/com.soffid.iam.esso.w32.KojiKabuto.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.MazingerUnInstaller.exe" destfile="target/resources/com.soffid.iam.esso.w32.MazingerUnInstaller.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.afrodita-explorer.dll" destfile="target/resources/com.soffid.iam.esso.w32.afrodita-explorer.dll.bzip" />
-								<bzip2 src="target/resources/com.soffid.iam.esso.w32.afrodita-firefox-ctype.dll" destfile="target/resources/com.soffid.iam.esso.w32.afrodita-firefox-ctype.dll.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.afrodita-chrome.exe" destfile="target/resources/com.soffid.iam.esso.w32.afrodita-chrome.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.JetScrander.exe" destfile="target/resources/com.soffid.iam.esso.w32.JetScrander.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w32.ShiroKabuto.exe" destfile="target/resources/com.soffid.iam.esso.w32.ShiroKabuto.exe.bzip" />
@@ -112,7 +129,6 @@
 								<bzip2 src="target/resources/com.soffid.iam.esso.w64.afrodita-explorer.dll" destfile="target/resources/com.soffid.iam.esso.w64.afrodita-explorer.dll.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w64.JetScrander.exe" destfile="target/resources/com.soffid.iam.esso.w64.JetScrander.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w64.sayaka-cp.dll" destfile="target/resources/com.soffid.iam.esso.w64.sayaka-cp.dll.bzip" />
-								<bzip2 src="target/resources/com.soffid.iam.esso.w64.afrodita-firefox-ctype.dll" destfile="target/resources/com.soffid.iam.esso.w64.afrodita-firefox-ctype.dll.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w64.afrodita-chrome.exe" destfile="target/resources/com.soffid.iam.esso.w64.afrodita-chrome.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w64.SoffidConfig.exe" destfile="target/resources/com.soffid.iam.esso.w64.SoffidConfig.exe.bzip" />
 
@@ -133,6 +149,20 @@
 								</exec>
 							</target>
 						</configuration>
+					</execution>
+					<execution>
+						<id>build-msi</id>
+						<phase>package</phase>
+						<configuration>
+							<tasks>
+								<exec executable="wixl" failonerror="true">
+									<arg value="target/esso.wxs" />
+								</exec>
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>
@@ -188,6 +218,31 @@
 				<configuration>
 					<preparationGoals>clean verify</preparationGoals>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+					<execution>
+						<id>attach-artifacts</id>
+						<phase>package</phase>
+						<goals>
+							<goal>attach-artifact</goal>
+						</goals>
+						<configuration>
+							<artifacts>
+								<artifact>
+									<file>
+										target/esso.msi
+									</file>
+									<type>msi</type>
+									<classifier>msi</classifier>
+								</artifact>
+							</artifacts>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
@@ -266,18 +321,6 @@
 		<dependency>
 			<groupId>com.soffid.iam.esso.w64</groupId>
 			<artifactId>afrodita-explorer</artifactId>
-			<version>${pom.version}</version>
-			<type>${architecture.dll}</type>
-		</dependency>
-		<dependency>
-			<groupId>com.soffid.iam.esso.w32</groupId>
-			<artifactId>afrodita-firefox-ctype</artifactId>
-			<version>${pom.version}</version>
-			<type>${architecture.dll}</type>
-		</dependency>
-		<dependency>
-			<groupId>com.soffid.iam.esso.w64</groupId>
-			<artifactId>afrodita-firefox-ctype</artifactId>
 			<version>${pom.version}</version>
 			<type>${architecture.dll}</type>
 		</dependency>

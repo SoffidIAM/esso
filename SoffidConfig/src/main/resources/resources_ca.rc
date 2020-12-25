@@ -60,10 +60,9 @@ FONT 8, "Ms Shell Dlg"
 	GROUPBOX					"Tipus d'accés", IDC_GROUPBOX_LOGIN_TYPE, 227, 130, 198, 65
 	LTEXT							"Seleccioneu el tipus de connexió per a l'accés",
 										IDC_MSG_LOGIN_TYPE_INFO, 237, 140, 180, 20, SS_LEFT
-	AUTORADIOBUTTON	"Login amb Kerberos", IDC_RADIO_KERBEROS, 237, 168, 80, 8,
+	AUTORADIOBUTTON	"Primer kerberos, després manual", IDC_RADIO_BOTH, 237, 153, 80, 8,
 										WS_GROUP
+	AUTORADIOBUTTON	"Login amb Kerberos", IDC_RADIO_KERBEROS, 237, 168, 80, 8,
 	AUTORADIOBUTTON	"Login manual", IDC_RADIO_MANUAL, 237, 181, 80, 8
-	AUTORADIOBUTTON	"Ambdós*", IDC_RADIO_BOTH, 237, 153, 80, 8
-	LTEXT							"*Intenta la identificació amb Kerberos. Si no és possible es sol·licita usuari i contrasenya",
-										 IDC_MSG_BOTH_INFO, 325, 153, 95, 35, SS_LEFT
+	AUTORADIOBUTTON	"Directori Soffid", IDC_RADIO_SOFFID, 237, 181, 80, 8
 }

@@ -1,27 +1,43 @@
 #include "sayaka.h"
 #include <psapi.h>
 
-#include "SayakaFactory.h"
-#include "ShiroFactory.h"
-#include "RecoverFactory.h"
+#include "cert/SayakaFactory.h"
+#include "admin/ShiroFactory.h"
+#include "recover/RecoverFactory.h"
+#include "sso/SSOFactory.h"
+#include "soffid/SoffidFactory.h"
 
 #include <SayakaGuid.h>
+#include "RenameExecutor.h"
+
+#include "Log.h"
 
 long g_nComObjsInUse = 0;
 
 HINSTANCE hSayakaInstance;
 
-IID IID_ICredentialProviderCredential = { 0x63913a93, 0x40c1, 0x481a, { 0x81,
-		0x8d, 0x40, 0x72, 0xff, 0x8c, 0x70, 0xcc } };
+IID IID_ICredentialProviderCredential = { 0x63913a93, 0x40c1, 0x481a, { 0x81, 0x8d, 0x40, 0x72, 0xff, 0x8c, 0x70, 0xcc } };
+
+IID IID_IConnectableCredentialProviderCredential = { 0x9387928b, 0xac75, 0x4bf9, {0x8a, 0xb2, 0x2b, 0x93, 0xc4, 0xa5, 0x52, 0x90}};
 
 IID IID_ICredentialProvider = { 0xd27c3481, 0x5a1c, 0x45b2, { 0x8a, 0xaa, 0xc2,
 		0x0e, 0xbb, 0xe8, 0x22, 0x9e } };
+
+// Generic credential provider {25CBB996-92ED-457e-B28C-4774084BD562}
+IID CLSID_GenericCredentialProvider = { 0x25CBB996, 0x92ED, 0x457e, {0xB2, 0x8C, 0x47, 0x74, 0x08, 0x4B, 0xD5, 0x62}};
 
 extern "C" {
 LPSTR getMazingerDll();
 
 HRESULT __stdcall DllGetClassObject(const CLSID & clsid, const IID & iid,
 		void **ppv) {
+
+	Log log("exports");
+	wchar_t ach[128];
+
+	StringFromGUID2(clsid, ach, sizeof ach);
+	log.info ("Query Class %ls", ach);
+
 	if (clsid == CLSID_Sayaka) {
 		SayakaFactory *pAddFact = new SayakaFactory;
 		if (pAddFact == NULL)
@@ -39,6 +55,29 @@ HRESULT __stdcall DllGetClassObject(const CLSID & clsid, const IID & iid,
 
 	} else if (clsid == CLSID_Recover) {
 		RecoverFactory *pAddFact = new RecoverFactory;
+		if (pAddFact == NULL)
+			return E_OUTOFMEMORY;
+		else {
+			return pAddFact->QueryInterface(iid, ppv);
+		}
+	} else if (clsid == CLSID_SSO ) {
+		SSOFactory *pAddFact = new SSOFactory;
+		pAddFact -> basic = false;
+		if (pAddFact == NULL)
+			return E_OUTOFMEMORY;
+		else {
+			return pAddFact->QueryInterface(iid, ppv);
+		}
+	} else if (clsid == CLSID_SSO_BASIC ) {
+		SSOFactory *pAddFact = new SSOFactory;
+		pAddFact -> basic = true;
+		if (pAddFact == NULL)
+			return E_OUTOFMEMORY;
+		else {
+			return pAddFact->QueryInterface(iid, ppv);
+		}
+	} else if (clsid == CLSID_Soffid) {
+		SoffidFactory *pAddFact = new SoffidFactory;
 		if (pAddFact == NULL)
 			return E_OUTOFMEMORY;
 		else {
@@ -92,6 +131,8 @@ BOOL __stdcall DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved) {
 		Log l("DllMain");
 		l.info ("*******\n\n\n");
 		l.info ("Started\n\n\n");
+    	RenameExecutor e;
+    	e.execute ();
 	}
 	if (dwReason == DLL_PROCESS_DETACH) {
 		Log l("DllMain");

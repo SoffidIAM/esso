@@ -763,6 +763,7 @@ extern "C" int main (int argc, char **argv)
 	if (argc > 1)
 	{
 		CreateUserDaemon cud;
+		cud.debug = true;
 		cud.startDaemon();
 		printf ("Press enter to stop\n");
 		char ach[89];

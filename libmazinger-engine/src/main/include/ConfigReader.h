@@ -21,6 +21,7 @@ class WebInputSpec;
 class WebFormSpec;
 class HllPatternSpec;
 class HllRowPatternSpec;
+class WebTransport;
 
 class ConfigReader {
 public:
@@ -37,14 +38,17 @@ public:
 	std::vector<WebApplicationSpec*>& getWebApplicationSpecs ();
 	std::vector<HllPatternSpec*>& getHllPatternSpecs ();
 	std::vector<Action*>& getGlobalActions ();
+	std::vector<WebTransport*>& getWebTransports ();
 	void parse ();
 	void parseWeb ();
+	void parseWebTransport ();
 	void parseHll ();
 	void testConfiguration();
 
 private:
 	void readApplication (int iApplicationId);
 	void readWebApplication ();
+	void readWebTransport();
 	void readHllPattern ();
 	ComponentSpec *readComponent (int skipOnly);
 	HllRowPatternSpec *readHllRowPatternSpec (int skipOnly);
@@ -65,6 +69,7 @@ private:
 	int m_size;
 	int m_position;
 	int m_bWeb; // Web Configuration
+	int m_bWebTransport; // Web transport configuration
 	int m_bHll; // Hll Configuration
 #ifdef _WIN32_WINNT
 	HANDLE m_hMapFile;
@@ -86,6 +91,7 @@ private:
 	std::vector<DomainPasswordCheck*> m_domainPasswordChecks;
 	std::vector<Action*> m_globalActions;
 	std::vector<HllPatternSpec* >m_hllPatterns;
+	std::vector<WebTransport* >m_webTransports;
 };
 
 #endif /* CONFIGREADER_H_ */

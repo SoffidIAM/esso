@@ -212,6 +212,10 @@ AbstractWebElement* FFWebApplication::createElement(const char* tagName) {
 		return NULL;
 }
 
+void FFWebApplication::execute (const char *script) {
+	// Not supported
+}
+
 SmartWebPage* FFWebApplication::getWebPage() {
 	return page;
 }

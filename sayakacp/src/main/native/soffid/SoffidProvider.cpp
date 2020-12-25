@@ -1,65 +1,50 @@
 #include "sayaka.h"
 
-#include "RecoverCredential.h"
-#include "RecoverProvider.h"
+
+#include "SoffidProvider.h"
+#include "SoffidCredential.h"
 #include "Utils.h"
-#include "CertificateHandler.h"
-#include "Pkcs11Configuration.h"
 #include <ssoclient.h>
-#include "RenameExecutor.h"
-#include <lm.h>
 
 #include <MZNcompat.h>
+#include <combaseapi.h>
 
-RecoverProvider* RecoverProvider::s_handler;
-
-static CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgCredProvFieldDescriptors[] =
+SoffidProvider* SoffidProvider::s_handler;
+static CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgSoffidFieldDescriptors[] =
 {
-    {REC_IMAGE, CPFT_TILE_IMAGE, (wchar_t*) L"Image" },
-    {REC_TITLE, CPFT_LARGE_TEXT, (wchar_t*) L"Recover password" },
-    {REC_USER, CPFT_EDIT_TEXT, (wchar_t*) L"User" },
-	{ REC_QUESTION, CPFT_LARGE_TEXT, (wchar_t*) L"Question" },
-	{ REC_ANSWER, CPFT_PASSWORD_TEXT, (wchar_t*) L"Answer" },
-	{ REC_SUBMIT_BUTTON, CPFT_SUBMIT_BUTTON, (wchar_t*) L"Submit" },
-	{ REC_CHANGE_MSG, CPFT_SMALL_TEXT, (wchar_t*) L"" },
-	{ REC_NEW_PASSWORD, CPFT_PASSWORD_TEXT, (wchar_t*) L"Password"},
-	{ REC_NEW_PASSWORD2, CPFT_PASSWORD_TEXT, (wchar_t*) L"Password" }
+    { SOF_IMAGE, CPFT_TILE_IMAGE, (wchar_t*) L"Image" },
+    { SOF_TITLE, CPFT_LARGE_TEXT, (wchar_t*) L"Start as administrator" },
+    { SOF_USER,  CPFT_EDIT_TEXT, (wchar_t*) L"User" },
+    { SOF_PASSWORD, CPFT_PASSWORD_TEXT, (wchar_t*) L"Password" },
+    { SOF_NEW_PASSWORD1, CPFT_PASSWORD_TEXT, (wchar_t*) L"New password" },
+    { SOF_NEW_PASSWORD2, CPFT_PASSWORD_TEXT, (wchar_t*) L"Repeat password" },
+    { SOF_SUBMIT_BUTTON, CPFT_SUBMIT_BUTTON, (wchar_t*) L"Start" },
+    { SOF_MESSAGE, CPFT_LARGE_TEXT, (wchar_t*) L"Validating credentials...."},
+    { SOF_WARNING, CPFT_LARGE_TEXT, (wchar_t*) L""},
 };
 
-
-RecoverProvider::RecoverProvider (): m_log ("RecoverProvider")
+SoffidProvider::SoffidProvider (): m_log ("SoffidProvider")
 {
 	m_credentialProviderEvents = NULL;
 	s_handler = this;
-	m_log.info("Creating RecoverProvider");
-	m_bRefresh = true;
-
-	LPWSTR buffer = NULL;
-	NETSETUP_JOIN_STATUS dwJoinStatus = NetSetupUnknownStatus;
-	NetGetJoinInformation (NULL, &buffer, &dwJoinStatus);
-	std::wstring domain;
-	if (dwJoinStatus == NetSetupDomainName && buffer != NULL)
-	{
-		domain = buffer;
-	}
-	if (buffer != NULL)
-		NetApiBufferFree (buffer);
-
-	if (domain.empty())
-		cred = NULL;
-	else
-		cred = new RecoverCredential (domain);
+	m_log.info("Creating SoffidProvider ********* 2");
+	m_pCredential = new SoffidCredential ();
+	m_pCredential->AddRef();
 }
 
 
-HRESULT __stdcall RecoverProvider::QueryInterface(REFIID riid, void **ppObj) {
+HRESULT __stdcall SoffidProvider::QueryInterface(REFIID riid, void **ppObj) {
+	m_log.info ("Soffid: Query Interface ");
+	wchar_t ach[128];
+	StringFromGUID2(riid, ach, sizeof ach);
+	m_log.info ("Soffid: Query Interface %ls", ach);
 	if (riid == IID_IUnknown) {
 		*ppObj = static_cast<void*> (this);
 		AddRef();
 		return S_OK;
 	}
 	else if (riid == IID_ICredentialProvider) {
-		m_log.info ("Query Interface iid_icredentialprovider");
+		m_log.info ("Soffid: Query Interface iid_icredentialprovider");
 		*ppObj = static_cast<void*> (this);
 		AddRef();
 		return S_OK;
@@ -67,58 +52,71 @@ HRESULT __stdcall RecoverProvider::QueryInterface(REFIID riid, void **ppObj) {
 
 	wchar_t *lpwszClsid;
 	StringFromCLSID(riid, &lpwszClsid);
-	m_log.info (L"Query Interface Unknown %ls", lpwszClsid);
+	m_log.info (L"Soffid: Query Interface Unknown %s", lpwszClsid);
 
 	*ppObj = NULL;
 	return E_NOINTERFACE;
 }
 
-ULONG __stdcall RecoverProvider::AddRef()
+
+
+
+
+ULONG __stdcall SoffidProvider::AddRef()
 {
+	m_log.info ("Soffid: addref");
 	return InterlockedIncrement(&m_nRefCount) ;
 }
 
 
-ULONG __stdcall RecoverProvider::Release()
+ULONG __stdcall SoffidProvider::Release()
 {
+	m_log.info ("Soffid: release");
 	long nRefCount=0;
 	nRefCount=InterlockedDecrement(&m_nRefCount) ;
-	if (nRefCount == 0) delete this;
+	if (nRefCount == 0) {
+		if (s_handler == this)
+			s_handler = NULL;
+		delete this;
+	}
 	return nRefCount;
 }
 
 
 
-HRESULT RecoverProvider::SetUsageScenario(
+HRESULT __stdcall SoffidProvider::SetUsageScenario(
     CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
     DWORD dwFlags
     )
 {
-    UNREFERENCED_PARAMETER(dwFlags);
     HRESULT hr;
 
     m_log.info("Provider::SetUsageScenario %d", cpus);
 
+    std::string type;
+    SeyconCommon::readProperty("LoginType", type);
+
     m_cpus = cpus;
-    if (cred != NULL)
-    	cred->setUsage( cpus );
 
     switch (cpus)
     {
     case CPUS_LOGON:
-    case CPUS_UNLOCK_WORKSTATION:
-    	s_rgCredProvFieldDescriptors[REC_TITLE].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(35).c_str()).c_str() );
-    	s_rgCredProvFieldDescriptors[REC_USER].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(36).c_str()).c_str() );
-    	s_rgCredProvFieldDescriptors[REC_NEW_PASSWORD].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(29).c_str()).c_str() );
-    	s_rgCredProvFieldDescriptors[REC_NEW_PASSWORD2].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(30).c_str()).c_str() );
-    	s_rgCredProvFieldDescriptors[REC_ANSWER].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(30).c_str()).c_str() );
-    	hr = S_OK;
+    	s_rgSoffidFieldDescriptors[SOF_TITLE].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(45).c_str()).c_str() );
+    	s_rgSoffidFieldDescriptors[SOF_USER].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(46).c_str()).c_str() );
+    	s_rgSoffidFieldDescriptors[SOF_PASSWORD].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(47).c_str()).c_str() );
+    	s_rgSoffidFieldDescriptors[SOF_MESSAGE].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(48).c_str()).c_str() );
+    	if (type == "soffid")
+    		hr = S_OK;
+    	else
+            hr = E_NOTIMPL;
         break;
 
+    case CPUS_UNLOCK_WORKSTATION:
     case CPUS_CHANGE_PASSWORD:
     case CPUS_CREDUI:
         hr = E_NOTIMPL;
         break;
+
 
     default:
         hr = E_INVALIDARG;
@@ -143,20 +141,22 @@ HRESULT RecoverProvider::SetUsageScenario(
 // SetSerialization is currently optional, which is why it's not implemented in this sample.
 // If that changes in the future, we will update the sample.
 //
-STDMETHODIMP RecoverProvider::SetSerialization(
+HRESULT __stdcall SoffidProvider::SetSerialization(
     const CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION* pcpcs
     )
 {
-    m_log.info("Provider::SetSerialization");
+    m_log.info("Provider::SetSerialization VVVVVVVV");
+//    if (pcpcs != NULL)
+//    	m_log.info("Provider::SetSerialization : %ld", pcpcs->ulAuthenticationPackage);
     UNREFERENCED_PARAMETER(pcpcs);
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 //
 // Called by LogonUI to give you a callback.  Providers often use the callback if they
 // some event would cause them to need to change the set of tiles that they enumerated
 //
-HRESULT RecoverProvider::Advise(
+HRESULT __stdcall SoffidProvider::Advise(
     ICredentialProviderEvents* pcpe,
     UINT_PTR upAdviseContext
     )
@@ -166,20 +166,29 @@ HRESULT RecoverProvider::Advise(
     m_upAdviseContext = upAdviseContext;
     pcpe->AddRef ();
 
+    if ( m_pCredential != NULL) {
+    	m_pCredential -> m_credentialProviderEvents = pcpe;
+    	m_pCredential -> m_upAdviseContext = upAdviseContext;
+    }
+
     return S_OK;
 }
 
 //
 // Called by LogonUI when the ICredentialProviderEvents callback is no longer valid.
 //
-HRESULT RecoverProvider::UnAdvise()
+HRESULT __stdcall SoffidProvider::UnAdvise()
 {
+    m_log.info("Provider::Unadvise");
 	if (m_credentialProviderEvents == NULL)
 	{
 		return E_INVALIDARG;
 	} else {
 		m_credentialProviderEvents->Release();
 		m_credentialProviderEvents = NULL;
+	    if ( m_pCredential != NULL) {
+	    	m_pCredential -> m_credentialProviderEvents = NULL;
+	    }
 	    return S_OK;
 	}
 }
@@ -192,11 +201,11 @@ HRESULT RecoverProvider::UnAdvise()
 // scenario you must include them all in this count and then hide/show them as desired
 // using the field descriptors.
 //
-HRESULT RecoverProvider::GetFieldDescriptorCount(
+HRESULT __stdcall SoffidProvider::GetFieldDescriptorCount(
     DWORD* pdwCount
     )
 {
-    *pdwCount = REC_NUM_FIELDS;
+    *pdwCount = SOF_NUM_FIELDS;
     m_log.info("Provider::GetFieldDescriptorCount");
     return S_OK;
 }
@@ -204,7 +213,7 @@ HRESULT RecoverProvider::GetFieldDescriptorCount(
 //
 // Gets the field descriptor for a particular field
 //
-HRESULT RecoverProvider::GetFieldDescriptorAt(
+HRESULT __stdcall SoffidProvider::GetFieldDescriptorAt(
     DWORD dwIndex,
     CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR** ppcpfd
     )
@@ -214,9 +223,9 @@ HRESULT RecoverProvider::GetFieldDescriptorAt(
     m_log.info ("Provider::GetFieldDescriptorAt %d", dwIndex);
 
     // Verify dwIndex is a valid field.
-    if (dwIndex < REC_NUM_FIELDS && ppcpfd)
+    if (dwIndex < SOF_NUM_FIELDS && ppcpfd)
     {
-        hr = Utils::FieldDescriptorCoAllocCopy(s_rgCredProvFieldDescriptors[dwIndex], ppcpfd);
+        hr = Utils::FieldDescriptorCoAllocCopy(s_rgSoffidFieldDescriptors[dwIndex], ppcpfd);
     }
     else
     {
@@ -235,35 +244,32 @@ HRESULT RecoverProvider::GetFieldDescriptorAt(
 // on the credential you've specified as the default and will submit that credential
 // for authentication without showing any further UI.
 //
-HRESULT RecoverProvider::GetCredentialCount(
+HRESULT __stdcall SoffidProvider::GetCredentialCount(
     DWORD* pdwCount,
     DWORD* pdwDefault,
     BOOL* pbAutoLogonWithDefault
     )
 {
-    m_log.info("Provider::GetCredentialCount");
-
-
-    std::string v;
-    if (!SeyconCommon::readProperty("addon.retrieve-password.right_number", v) ||
-    		v.empty())
-		SeyconCommon::updateConfig("addon.retrieve-password.right_number");
-    if (cred == NULL ||
-    		!SeyconCommon::readProperty("addon.retrieve-password.right_number", v) ||
-    		v.empty())
-    	*pdwCount = 0;
-    else
-    	*pdwCount = 1;
-	*pdwDefault = CREDENTIAL_PROVIDER_NO_DEFAULT;
+	std::string type;
+	SeyconCommon::readProperty("LoginType", type);
+	if (type == "soffid") {
+		*pdwCount = 1;
+		*pdwDefault = 0;
+	}
+	else {
+		*pdwCount = 0;
+		*pdwDefault = 0;
+	}
 	*pbAutoLogonWithDefault = false;
+    m_log.info("Provider::GetCredentialCount");
     return S_OK;
 }
 
 //
-// Returns the credential at the index specified by dwIndex. This function is called by logonUI to enumerate
+// Returns the credential at the index specified by dwIndex. This function is called by logonUI to enumerateoue
 // the tiles.
 //
-HRESULT RecoverProvider::GetCredentialAt(
+HRESULT __stdcall SoffidProvider::GetCredentialAt(
     DWORD dwIndex,
     ICredentialProviderCredential** ppcpc
     )
@@ -272,9 +278,9 @@ HRESULT RecoverProvider::GetCredentialAt(
 
     m_log.info ("Provider::GetCredentialAt %d", dwIndex);
 
-    if(dwIndex == 0 && cred != NULL)
+    if(dwIndex == 0 && ppcpc )
     {
-        hr = cred->QueryInterface(IID_ICredentialProviderCredential, reinterpret_cast<void**>(ppcpc));
+        hr = m_pCredential->QueryInterface(IID_ICredentialProviderCredential, reinterpret_cast<void**>(ppcpc));
     }
     else
     {
@@ -285,9 +291,8 @@ HRESULT RecoverProvider::GetCredentialAt(
 }
 
 
-RecoverProvider::~RecoverProvider () {
-	if (cred != NULL)
-	{
-		cred->Release();
-	}
+SoffidProvider::~SoffidProvider () {
+	m_pCredential->Release();
 }
+
+

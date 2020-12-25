@@ -12,13 +12,14 @@
       "js": [ "content.js" ],
       "matches": [ "*://*/*" ]
    } ],
-   "description": "Soffid Enterprise Single Sign-On extension (version 2.9.0). Injects and store user credentials in Soffid password vault",
+   "description": "Soffid Enterprise Single Sign-On extension (version 3.0.0). Injects and store user credentials in Soffid password vault",
    "icons": {
       "128": "soffid.png",
       "32": "icon.png"
    },
+   "author": "Soffid IAM, S.L.",
    "manifest_version": 2,
-   "name": "Soffid ESSO v2.9.0",
-   "permissions": [ "*://*/", "tabs", "nativeMessaging" ],
-   "version": "2.9.0"
+   "name": "Soffid ESSO v3.0.0",
+   "permissions": [ "*://*/", "tabs", "nativeMessaging", "webRequest", "webRequestBlocking" ],
+   "version": "3.0.0"
 }

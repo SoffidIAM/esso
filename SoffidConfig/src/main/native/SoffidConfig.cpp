@@ -51,9 +51,9 @@ bool RetrieveCertificate (SoffidEssoManager &manager)
 	// Save URL Server
 	std::wstring wServerUrl = MZNC_strtowstr(manager.getServerUrl().c_str());
 	size_t size;
-
+	std::string url = manager.GetFormatedURLServer();
 	// Check obtain certificate
-	if (manager.SaveURLServer(manager.GetFormatedURLServer().c_str()))
+	if (manager.SaveURLServer(url.c_str()))
 	{
 		MessageBox(NULL, Utils::LoadResourcesString(1).c_str(),
 				Utils::LoadResourcesString(1000).c_str(), MB_OK | MB_ICONINFORMATION);
@@ -257,6 +257,11 @@ void SaveLoginType (SoffidEssoManager &pManager)
 		loginType = "both";
 	}
 
+	if (IsDlgButtonChecked(hWindDlg, IDC_RADIO_SOFFID))
+	{
+		loginType = "soffid";
+	}
+
 	// Check configuration changed
 	if (loginType.compare(pManager.getLoginType()) != 0)
 	{
@@ -354,18 +359,20 @@ void SetConfigOnDlg (SoffidEssoManager manager)
 		CheckDlgButton(hWindDlg, IDC_RADIO_KERBEROS, BST_CHECKED);
 	}
 
+	// Check manual login
+	else if (manager.getLoginType().compare("manual") == 0)
+	{
+		CheckDlgButton(hWindDlg, IDC_RADIO_MANUAL, BST_CHECKED);
+	}
+
+	else if (manager.getLoginType().compare("soffid") == 0)
+	{
+		CheckDlgButton(hWindDlg, IDC_RADIO_SOFFID, BST_CHECKED);
+	}
+
 	else
 	{
-		// Check manual login
-		if (manager.getLoginType().compare("manual") == 0)
-		{
-			CheckDlgButton(hWindDlg, IDC_RADIO_MANUAL, BST_CHECKED);
-		}
-
-		else
-		{
-			CheckDlgButton(hWindDlg, IDC_RADIO_BOTH, BST_CHECKED);
-		}
+		CheckDlgButton(hWindDlg, IDC_RADIO_BOTH, BST_CHECKED);
 	}
 
 	// ESSO server URL

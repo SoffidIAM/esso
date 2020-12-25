@@ -32,6 +32,7 @@ TARJA    BITMAP  DISCARDABLE	"tarja.bmp"
 LOGO     BITMAP  DISCARDABLE    "logotipo_Soffid.bmp"
 LIFERING BITMAP  DISCARDABLE    "lifering.bmp"
 DNIE     BITMAP  DISCARDABLE    "dnie.bmp"
+ADMIN    BITMAP  DISCARDABLE    "admin.bmp"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //

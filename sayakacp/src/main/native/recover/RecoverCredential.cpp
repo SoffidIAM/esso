@@ -13,7 +13,6 @@
 #include <SayakaGuid.h>
 #include <credentialprovider.h>
 
-#include "TokenHandler.h"
 #include "WaitDialog.h"
 #include <string.h>
 #include <stdlib.h>

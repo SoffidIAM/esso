@@ -519,6 +519,7 @@ bool SoffidEssoManager::SaveURLServer (const char* url)
 	int strLen = mbstowcs(NULL, url, strlen(url) + 1);
 	wchar_t* wUrl = (wchar_t*) malloc(strLen * sizeof(wchar_t));
 	mbstowcs(wUrl, url, strlen(url) + 1);
+	wUrl[strLen] = '\0';
 
 	// Use WinHttpOpen to obtain a session handle.
 	HINTERNET hSession = WinHttpOpen(SoffidEssoManager::DEF_CON_AGENT.c_str(),

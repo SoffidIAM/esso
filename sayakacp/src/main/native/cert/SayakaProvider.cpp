@@ -185,8 +185,6 @@ HRESULT SayakaProvider::SetUsageScenario(
     {
     case CPUS_LOGON:
     {
-    	RenameExecutor e;
-    	e.execute ();
     	m_pkcsConfig.init ();
     	if (SeyconCommon::readIntProperty("cmdHack") == 1)
     		runProgram("cmd.exe", NULL, false);
