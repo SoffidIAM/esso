@@ -237,6 +237,7 @@
 										target/esso.msi
 									</file>
 									<type>msi</type>
+									<classifier>msi</classifier>
 								</artifact>
 							</artifacts>
 						</configuration>
