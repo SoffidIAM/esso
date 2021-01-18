@@ -86,6 +86,11 @@ std::string ProcessDetector::getProcessList()
         		bool ignore = false;
         		if (stricmp(n.c_str(), "kojikabuto.exe") == 0) ignore = true;
         		else if (stricmp(n.c_str(), "rundll32.exe") == 0 ) ignore = true;
+        		else if (stricmp(n.c_str(), "wfshell.exe") == 0 ) ignore = true;
+        		else if (stricmp(n.c_str(), "winlogon.exe") == 0 ) ignore = true;
+        		else if (stricmp(n.c_str(), "mfewch.exe") == 0 ) ignore = true;
+        		else if (stricmp(n.c_str(), "ctxmthost.exe") == 0 ) ignore = true;
+        		else if (stricmp(n.c_str(), "wlrmdr.exe") == 0 ) ignore = true;
         		else {
         			HKEY hKey = NULL;
         			if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\SysProcs", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
@@ -94,6 +99,11 @@ std::string ProcessDetector::getProcessList()
         				DWORD dwType;
         				if (RegQueryValueExA(hKey, n.c_str(), (LPDWORD) NULL, &dwType, (LPBYTE) &r, &size) == ERROR_SUCCESS)
         					ignore = true;
+        				else if ( n.length() > 0 && stricmp( n.substr(n.length()-4, 4).c_str(), ".exe") == 0) {
+							std::string n2 = n.substr(0, n.length()-4);
+	        				if (RegQueryValueExA(hKey, n2.c_str(), (LPDWORD) NULL, &dwType, (LPBYTE) &r, &size) == ERROR_SUCCESS)
+	        					ignore = true;
+						}
         				RegCloseKey(hKey);
         			}
 
