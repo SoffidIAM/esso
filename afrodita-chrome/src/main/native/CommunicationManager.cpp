@@ -27,6 +27,9 @@
 
 #include <MazingerInternal.h>
 
+#define QUOTE(name) #name
+#define STR(macro) QUOTE(macro)
+
 using namespace json;
 
 // #undef DEBUG
@@ -144,6 +147,8 @@ std::string CommunicationManager::readMessage() {
 	{
 		if (messageSize < 1 || messageSize > 128000)
 		{
+			MZNSendDebugMessageA("Protocol error. Received message with size %d",
+					messageSize);
 			SeyconCommon::warn("Protocol error. Received message with size %d",
 					messageSize);
 #ifdef WIN32
@@ -362,7 +367,7 @@ static void* linuxThreadProc (void *arg)
 	ThreadStatus *ts = (ThreadStatus*) arg;
 //	MZNSendDebugMessage("Created THREAD [%s] %s", ts->pageId.c_str(), ts->url.c_str());
 	CommunicationManager::getInstance()->threadLoop(ts);
-//	MZNSendDebugMessage("Remvoed THREAD [%s] %s", ts->pageId.c_str(), ts->url.c_str());
+//	MZNSendDebugMessage("Removed THREAD [%s] %s", ts->pageId.c_str(), ts->url.c_str());
 	return NULL;
 }
 
@@ -378,12 +383,13 @@ static PageData * parsePageData (ThreadStatus *status, JsonMap* map)
 }
 
 void CommunicationManager::mainLoop() {
+	MZNSendDebugMessageA("Started afrodita-chrome " STR(VERSION));
 	do
 	{
-		DEBUG("Main loop");
 		JsonAbstractObject *message = getEventMessage();
 		if (message == NULL)
 		{
+//			MZNSendDebugMessageA("Protocol error. Received null message");
 #ifdef WIN32
 			ExitProcess(0);
 #else
@@ -397,10 +403,10 @@ void CommunicationManager::mainLoop() {
 		JsonValue* pageId = dynamic_cast<JsonValue*>(jsonMap->getObject("pageId"));
 		JsonMap *jsonPageData = dynamic_cast<JsonMap*>(jsonMap->getObject("pageData"));
 
-		MZNSendDebugMessage("RECEIVED MSG**********************");
+//		MZNSendDebugMessage("RECEIVED MSG**********************");
 		std::string t;
 		message->write(t, 3);
-		MZNSendDebugMessage("Received %s", t.c_str());
+//		MZNSendDebugMessage("Received %s", t.c_str());
 		if (messageName != NULL && messageName->value == "onLoad" && pageId != NULL)
 		{
 			JsonValue* title = dynamic_cast<JsonValue*>(jsonMap->getObject("title"));
@@ -551,8 +557,6 @@ void CommunicationManager::mainLoop() {
 			std::string link;
 			SeyconCommon::readProperty("AutoSSOURL", link);
 
-#define QUOTE(name) #name
-#define STR(macro) QUOTE(macro)
 			std::string response = "{\"action\": \"version\", \"version\":\"" STR(VERSION) "\", \"url\":";
 			response += Encoder::encode(link.c_str());
 			response += ",\"pageId\":\""+pageId->value +"\"}";
@@ -618,8 +622,6 @@ void CommunicationManager::mainLoop() {
 			}
 			response += "]}";
 			writeMessage(response);
-			MZNSendDebugMessage("TRANSPORT RESULT **********************");
-			MZNSendDebugMessage("Send %s", response.c_str());
 		}
 		if (deleteMap)
 		{
@@ -634,7 +636,7 @@ void CommunicationManager::threadLoop(ThreadStatus* threadStatus) {
 	std::string url;
 	cwa->getUrl(url);
 
-//	MZNSendDebugMessageA("Started thread for %s", url.c_str());
+	MZNSendDebugMessageA("Started thread for %s", url.c_str());
 	cwa->setPageData( threadStatus->pageData );
 	threadStatus->pageData = NULL;
 	threadStatus->refresh = false;

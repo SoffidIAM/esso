@@ -461,11 +461,11 @@ std::string SmartWebPage::getAccountURL(AccountStruct &as) {
 	return url;
 }
 
-static std::string storeSecret(AccountStruct &as, const char *tag, const char *value, std::wstring &encodedSecret)
+static std::wstring storeSecret(AccountStruct &as, const char *tag, const char *value, std::wstring &encodedSecret)
 {
 	SecretStore s (MZNC_getUserName()) ;
 
-	std::string attributeNumber;
+	std::wstring attributeNumber;
 
 	std::wstring secretName = L"sso.";
 	secretName += as.system;
@@ -490,8 +490,8 @@ static std::string storeSecret(AccountStruct &as, const char *tag, const char *v
 		int d = 0;
 		std::wstring sn = it->first;
 		std::wstring sv = it->second;
-		attributeNumber = MZNC_wstrtostr(sn.substr(secretName.length()).c_str());
-		sscanf (attributeNumber.c_str(), "%d", &d);
+		attributeNumber = sn.substr(secretName.length());
+		sscanf ( MZNC_wstrtostr(attributeNumber.c_str()).c_str(), "%d", &d);
 		if (d >= counter) counter = d+1;
 		size_t i = sv.find('=');
 		if ( i != std::string::npos)
@@ -577,9 +577,10 @@ bool SmartWebPage::updateAttributes (AccountStruct &account, std::map<std::strin
 	for (std::map<std::string,std::string>::iterator it = attributes.begin(); it != attributes.end(); it++)
 	{
 		std::wstring encodedSecret;
-		std::string attributeId = storeSecret(account, it->first.c_str(), it->second.c_str(), encodedSecret);
-		std::string encodedSecretUtf8 = MZNC_wstrtostr(encodedSecret.c_str());
-		if (! sendSecret(account, attributeId.c_str(), encodedSecretUtf8, errorMsg))
+		std::wstring attributeId = storeSecret(account, it->first.c_str(), it->second.c_str(), encodedSecret);
+		std::string encodedSecretUtf8 = MZNC_wstrtoutf8(encodedSecret.c_str());
+		std::string encodedAttributeUtf8 = MZNC_wstrtoutf8(attributeId.c_str());
+		if (! sendSecret(account, encodedAttributeUtf8.c_str(), encodedSecretUtf8, errorMsg))
 			return false;
 	}
 	if (getAccountURL(account).size() == 0)

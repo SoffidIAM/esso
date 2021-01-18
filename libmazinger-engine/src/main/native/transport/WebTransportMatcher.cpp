@@ -12,28 +12,11 @@
 #include <stdio.h>
 #include <WebTransport.h>
 
-#ifdef WIN32
-static DWORD dwTlsIndex = TLS_OUT_OF_INDEXES;
-#endif
-
 std::vector<WebTransport*> MZNWebTransportMatch () {
 	std::vector<WebTransport*> rules;
 	static ConfigReader *c = NULL;
 	if (MZNC_waitMutex())
 	{
-#ifdef WIN32
-		if (dwTlsIndex == TLS_OUT_OF_INDEXES)
-		{
-			if ((dwTlsIndex = TlsAlloc()) == TLS_OUT_OF_INDEXES)
-				return rules;
-		}
-		if (TlsGetValue (dwTlsIndex) != NULL)
-		{
-			MZNC_endMutex();
-			return rules;
-		}
-		TlsSetValue (dwTlsIndex, (LPVOID) 1);
-#endif
 		PMAZINGER_DATA pMazinger = MazingerEnv::getDefaulEnv()->getData();
 		if (pMazinger != NULL && pMazinger->started)
 		{
@@ -43,12 +26,8 @@ std::vector<WebTransport*> MZNWebTransportMatch () {
 				c->parseWebTransport();
 				rules = c->getWebTransports();
 			}
-		} else {
-			MZNC_endMutex();
 		}
-#ifdef WIN32
-		TlsSetValue (dwTlsIndex, NULL);
-#endif
+		MZNC_endMutex();
 	}
 
 	return rules;
