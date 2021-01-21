@@ -1335,14 +1335,14 @@ BOOL SetPrivilege(
     return TRUE;
 }
 
-DWORD getRegistryAcl (LPCSTR registryKey, PACL *pAcl) {
+DWORD getRegistryAcl (LPCSTR registryKey, PACL *pAcl, bool wow64) {
 	HKEY hKey;
 	DWORD r;
 	log("Getting registry ACL");
 	// {25CBB996-92ED-457e-B28C-4774084BD562}
 	r = RegOpenKeyEx(HKEY_CLASSES_ROOT,
 			registryKey, 0,
-			KEY_READ|READ_CONTROL, &hKey);
+			wow64 ? Wow64Key(KEY_READ|READ_CONTROL) : KEY_READ|READ_CONTROL, &hKey);
 	if (r != ERROR_SUCCESS) {
 		notifyError();
 		log("Error opening key");
@@ -1381,7 +1381,7 @@ DWORD getRegistryAcl (LPCSTR registryKey, PACL *pAcl) {
 	return ERROR_SUCCESS;
 }
 
-DWORD changeOwnership (LPCSTR lpszRegistryKey) {
+DWORD changeOwnership (LPCSTR lpszRegistryKey, bool wow64) {
 	BOOL bRetval = FALSE;
 
 	HANDLE hToken = NULL;
@@ -1402,7 +1402,7 @@ DWORD changeOwnership (LPCSTR lpszRegistryKey) {
 	log("Setting permissions for %s", reg.c_str());
 
 	PACL prevAcl = NULL;
-	dwRes = getRegistryAcl(lpszRegistryKey, &prevAcl);
+	dwRes = getRegistryAcl(lpszRegistryKey, &prevAcl, wow64);
 	if (dwRes != ERROR_SUCCESS) {
 		log("Cannot get registry ACL");
 		return dwRes;
@@ -1451,7 +1451,7 @@ DWORD changeOwnership (LPCSTR lpszRegistryKey) {
 	log("Registry %s. acl %p", reg.c_str(), pACL);
 	dwRes = SetNamedSecurityInfo(
 		(LPSTR) reg.c_str(),                 // name of the object
-		SE_REGISTRY_KEY,              // type of object
+		wow64 ? (SE_OBJECT_TYPE) (SE_REGISTRY_WOW64_32KEY + 1 ) : SE_REGISTRY_KEY,              // type of object
 		DACL_SECURITY_INFORMATION,   // change only the object's DACL
 		NULL, NULL,                  // do not change owner or group
 		pACL,                        // DACL specified
@@ -1497,7 +1497,7 @@ DWORD changeOwnership (LPCSTR lpszRegistryKey) {
 	// Set the owner in the object's security descriptor.
 	dwRes = SetNamedSecurityInfo(
 		(LPSTR) reg.c_str(),                 // name of the object
-		SE_REGISTRY_KEY,              // type of object
+		wow64 ? (SE_OBJECT_TYPE) (SE_REGISTRY_WOW64_32KEY + 1 ) : SE_REGISTRY_KEY,              // type of object
 		OWNER_SECURITY_INFORMATION,  // change only the object's owner
 		myself,                   // SID of Administrator group
 		NULL,
@@ -1523,7 +1523,7 @@ DWORD changeOwnership (LPCSTR lpszRegistryKey) {
 	// now that we are the owner.
 	dwRes = SetNamedSecurityInfo(
 		(LPSTR) reg.c_str(),                 // name of the object
-		SE_REGISTRY_KEY,              // type of object
+		wow64 ? (SE_OBJECT_TYPE) (SE_REGISTRY_WOW64_32KEY + 1 ) : SE_REGISTRY_KEY,              // type of object
 		DACL_SECURITY_INFORMATION,   // change only the object's DACL
 		NULL, NULL,                  // do not change owner or group
 		pACL,                        // DACL specified
@@ -1556,15 +1556,16 @@ Cleanup:
 	return dwRes;
 
 }
-void updateBasicCredentialProvider () {
+
+void updateBasicCredentialProvider (bool wow64) {
 	HKEY hKey;
 	DWORD r;
 	log("Registering basic credential provider");
 	r = RegOpenKeyEx(HKEY_CLASSES_ROOT,
 				"Clsid\\{25CBB996-92ED-457e-B28C-4774084BD562}", 0,
-				KEY_ALL_ACCESS, &hKey);
+				wow64 ?  Wow64Key(KEY_ALL_ACCESS):KEY_ALL_ACCESS, &hKey);
 	if (r != ERROR_SUCCESS) {
-		r = changeOwnership("Clsid\\{25CBB996-92ED-457e-B28C-4774084BD562}");
+		r = changeOwnership("Clsid\\{25CBB996-92ED-457e-B28C-4774084BD562}", wow64);
 		if ( r != ERROR_SUCCESS)
 		{
 			log("Error setting ownership key");
@@ -1572,13 +1573,15 @@ void updateBasicCredentialProvider () {
 		}
 		r = RegOpenKeyEx(HKEY_CLASSES_ROOT,
 					"Clsid\\{25CBB996-92ED-457e-B28C-4774084BD562}", 0,
-					KEY_ALL_ACCESS, &hKey);
+					wow64 ?  Wow64Key(KEY_ALL_ACCESS):KEY_ALL_ACCESS, &hKey);
 	}
 
 	if (r == ERROR_SUCCESS)
 	{
 		HKEY hKey2;
-		r = RegCreateKeyA(hKey, "TreatAs", &hKey2);
+		r = RegCreateKeyExA(hKey, "TreatAs", 0, (LPSTR) "",
+				REG_OPTION_NON_VOLATILE, Wow64Key(KEY_ALL_ACCESS), NULL,
+				&hKey2, NULL);
 		if (r != ERROR_SUCCESS) {
 			log("Error create registry key");
 			notifyError(r);
@@ -1586,6 +1589,8 @@ void updateBasicCredentialProvider () {
 		}
 		std::string target = "{44ee45c8-529b-4542-98ed-cfeceab1d4cc}";
 		RegSetValueA(hKey, "TreatAs", REG_SZ, target.c_str(), target.length());
+		RegCloseKey ( hKey2);
+		RegCloseKey ( hKey);
 	}
 }
 
@@ -2182,7 +2187,9 @@ void installCP(const char *file)
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, "ThreadingModel", REG_SZ,
 			(void*) szValue, strlen(szValue));
 
-	updateBasicCredentialProvider();
+	updateBasicCredentialProvider(false);
+	if ( IsWow64())
+		updateBasicCredentialProvider(true);
 
 }
 
