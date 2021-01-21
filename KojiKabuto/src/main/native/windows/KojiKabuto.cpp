@@ -685,6 +685,10 @@ static bool getUserAndPassword(std::wstring &user, std::wstring &password) {
 		return false;
 	}
 
+	const wchar_t* msg = L"LOCAL_USER\n";
+
+	send(socket_in, (char*) msg, wcslen(msg) * sizeof (wchar_t), 0);
+
 	wchar_t buffer[4096];
 	int read = recv(socket_in, (char*) buffer, sizeof buffer, 0);
 	if (read <= 0) {

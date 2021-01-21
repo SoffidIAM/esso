@@ -205,7 +205,6 @@ static void createDesktop ()
 	}
 	else
 	{
-
 		for (int i = 0; i < 49; i++)
 		{
 			char ach[20];
