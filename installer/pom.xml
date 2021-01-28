@@ -124,6 +124,7 @@
 
 								<bzip2 src="target/resources/com.soffid.iam.esso.w64.Mazinger.exe" destfile="target/resources/com.soffid.iam.esso.w64.Mazinger.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w64.MazingerHook.dll" destfile="target/resources/com.soffid.iam.esso.w64.MazingerHook.dll.bzip" />
+								<bzip2 src="target/resources/com.soffid.iam.esso.w64.ShiroKabuto.exe" destfile="target/resources/com.soffid.iam.esso.w64.ShiroKabuto.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w64.KojiHook.dll" destfile="target/resources/com.soffid.iam.esso.w64.KojiHook.dll.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w64.KojiKabuto.exe" destfile="target/resources/com.soffid.iam.esso.w64.KojiKabuto.exe.bzip" />
 								<bzip2 src="target/resources/com.soffid.iam.esso.w64.afrodita-explorer.dll" destfile="target/resources/com.soffid.iam.esso.w64.afrodita-explorer.dll.bzip" />
@@ -368,6 +369,12 @@
 		</dependency>
 		<dependency>
 			<groupId>com.soffid.iam.esso.w32</groupId>
+			<artifactId>ShiroKabuto</artifactId>
+			<version>${pom.version}</version>
+			<type>${architecture.exe}</type>
+		</dependency>
+		<dependency>
+			<groupId>com.soffid.iam.esso.w64</groupId>
 			<artifactId>ShiroKabuto</artifactId>
 			<version>${pom.version}</version>
 			<type>${architecture.exe}</type>
