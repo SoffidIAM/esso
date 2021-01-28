@@ -21,6 +21,7 @@
 
 void disableProgressWindow();
 void setProgressMessage(const char *lpszMessage, ...);
+int RunProgram(const char *achString, const char *achDir);
 
 #define QUOTEME(x) #x
 #define STR(macro) QUOTEME(macro)
@@ -51,6 +52,8 @@ bool msi = false;
 char *enableCloseSession = "false";
 char *forceStartupLogin = "true";
 char *loginType = "both";
+
+std::string credentialProviderName;
 
 BOOL IsWow64()
 {
@@ -1451,7 +1454,7 @@ DWORD changeOwnership (LPCSTR lpszRegistryKey, bool wow64) {
 	log("Registry %s. acl %p", reg.c_str(), pACL);
 	dwRes = SetNamedSecurityInfo(
 		(LPSTR) reg.c_str(),                 // name of the object
-		wow64 ? (SE_OBJECT_TYPE) (SE_REGISTRY_WOW64_32KEY + 1 ) : SE_REGISTRY_KEY,              // type of object
+		wow64 ? (SE_OBJECT_TYPE) (SE_REGISTRY_WOW64_32KEY  ) : SE_REGISTRY_KEY,              // type of object
 		DACL_SECURITY_INFORMATION,   // change only the object's DACL
 		NULL, NULL,                  // do not change owner or group
 		pACL,                        // DACL specified
@@ -1495,9 +1498,10 @@ DWORD changeOwnership (LPCSTR lpszRegistryKey, bool wow64) {
 	}
 
 	// Set the owner in the object's security descriptor.
+	log("Setting security info");
 	dwRes = SetNamedSecurityInfo(
 		(LPSTR) reg.c_str(),                 // name of the object
-		wow64 ? (SE_OBJECT_TYPE) (SE_REGISTRY_WOW64_32KEY + 1 ) : SE_REGISTRY_KEY,              // type of object
+		wow64 ? (SE_OBJECT_TYPE) (SE_REGISTRY_WOW64_32KEY ) : SE_REGISTRY_KEY,              // type of object
 		OWNER_SECURITY_INFORMATION,  // change only the object's owner
 		myself,                   // SID of Administrator group
 		NULL,
@@ -1523,7 +1527,7 @@ DWORD changeOwnership (LPCSTR lpszRegistryKey, bool wow64) {
 	// now that we are the owner.
 	dwRes = SetNamedSecurityInfo(
 		(LPSTR) reg.c_str(),                 // name of the object
-		wow64 ? (SE_OBJECT_TYPE) (SE_REGISTRY_WOW64_32KEY + 1 ) : SE_REGISTRY_KEY,              // type of object
+		wow64 ? (SE_OBJECT_TYPE) (SE_REGISTRY_WOW64_32KEY  ) : SE_REGISTRY_KEY,              // type of object
 		DACL_SECURITY_INFORMATION,   // change only the object's DACL
 		NULL, NULL,                  // do not change owner or group
 		pACL,                        // DACL specified
@@ -1560,7 +1564,11 @@ Cleanup:
 void updateBasicCredentialProvider (bool wow64) {
 	HKEY hKey;
 	DWORD r;
-	log("Registering basic credential provider");
+	if (wow64)
+		log("Registering basic credential provider (64bits)");
+	else
+		log("Registering basic credential provider (32bits)");
+
 	r = RegOpenKeyEx(HKEY_CLASSES_ROOT,
 				"Clsid\\{25CBB996-92ED-457e-B28C-4774084BD562}", 0,
 				wow64 ?  Wow64Key(KEY_ALL_ACCESS):KEY_ALL_ACCESS, &hKey);
@@ -1591,6 +1599,35 @@ void updateBasicCredentialProvider (bool wow64) {
 		RegSetValueA(hKey, "TreatAs", REG_SZ, target.c_str(), target.length());
 		RegCloseKey ( hKey2);
 		RegCloseKey ( hKey);
+	}
+}
+
+void updateBasicCredentialProvider2 () {
+	if (credentialProviderName.length() > 0) {
+		std::string s = "rundll32 \"";
+		s += credentialProviderName;
+		s += "\",Register";
+
+		PROCESS_INFORMATION pInfo;	// Process information
+		STARTUPINFO sInfo;					// Startup information
+		DWORD dwExitStatus;				// Process execution result
+		char command[4096];				// Command to run program
+
+		strcpy(command, s.c_str());
+
+		memset(&sInfo, 0, sizeof sInfo);
+		sInfo.cb = sizeof sInfo;
+		sInfo.wShowWindow = SW_NORMAL;
+
+	// Check execution process correctly
+		log("Executing %s", s.c_str());
+		if (!CreateProcess(NULL, command, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS,
+				NULL, NULL, &sInfo, &pInfo))
+		{
+			log("Error executing %s", s.c_str());
+			notifyError();
+
+		}
 	}
 }
 
@@ -2187,10 +2224,7 @@ void installCP(const char *file)
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, "ThreadingModel", REG_SZ,
 			(void*) szValue, strlen(szValue));
 
-	updateBasicCredentialProvider(false);
-	if ( IsWow64())
-		updateBasicCredentialProvider(true);
-
+	updateBasicCredentialProvider2();
 }
 
 bool installShiroKabuto(char *achShiroPath)
@@ -2466,6 +2500,8 @@ int NO_REPLACE = 2;
 bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 		const char *lpszFileName, int replaceAction)
 {
+	bool cp = strcmp(lpszFileName, "SayakaCP.dll") == 0;
+
 	std::string dirPath;	// Installation dir path
 	std::string filePath;	// Installation file path
 
@@ -2547,8 +2583,8 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 					MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
 			{
 				success = true;
+				if (cp) credentialProviderName = filePath;
 			}
-
 			else
 				log("> FAILED to create file %s ", filePath.c_str());
 		}
@@ -2569,8 +2605,8 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 				log("> New file %s will be replaced on reboot",
 						tempFilePath.c_str());
 				success = true;
+				if (cp) credentialProviderName = tempFilePath;
 			}
-
 			else
 				log("> FAILED to replace file %s with %s", filePath.c_str(),
 						tempFilePath.c_str());
@@ -2591,6 +2627,7 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 					MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
 			{
 				success = true;
+				if (cp) credentialProviderName = filePath.c_str();
 			}
 
 			else
@@ -2604,6 +2641,7 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 			log("> Scheduled substitution on reboot");
 			success = true;
 			reboot = true;
+			if (cp) credentialProviderName = tempFilePath.c_str();
 		}
 
 		else
@@ -2828,7 +2866,10 @@ int install(int full)
 	}
 
 	installResource(NULL, "SayakaGina.dll");
-	installResource(NULL, "ShiroKabuto.exe");
+	if (IsWow64())
+		installResource(NULL, "ShiroKabuto64.exe", "ShiroKabuto.exe");
+	else
+		installResource(NULL, "ShiroKabuto.exe");
 	installResource(NULL, "Nossori.exe");
 
 //	installResource(NULL, "seycon.cer");
@@ -2902,7 +2943,7 @@ void SetOriginalWinlogon()
  * @param achDir		Folder path of program.
  * @return					Execution result.
  */
-int RunProgram(char *achString, char *achDir)
+int RunProgram(const char *achString, const char *achDir)
 {
 	PROCESS_INFORMATION pInfo;	// Process information
 	STARTUPINFO sInfo;					// Startup information
