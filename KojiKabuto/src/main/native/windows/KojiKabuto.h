@@ -125,6 +125,7 @@ class KojiKabuto
 
 		static bool usedKerberos;
 		static bool desktopSession;
+		static bool windowLess;
 };
 
 

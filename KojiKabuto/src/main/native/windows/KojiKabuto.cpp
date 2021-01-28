@@ -14,6 +14,7 @@ extern bool startingSession;
 
 bool KojiKabuto::usedKerberos = false;
 bool KojiKabuto::desktopSession = false;
+bool KojiKabuto::windowLess = false;
 
 HWND createKojiWindow(HINSTANCE hinstance);
 void createSystrayWindow(HINSTANCE hInstance);
@@ -97,16 +98,18 @@ void KojiKabuto::consumeMessages() {
 }
 
 void KojiKabuto::createProgressWindow(HINSTANCE hInstance) {
-	if (hwndLogon != NULL)
-		destroyProgressWindow();
-	hwndLogon = createKojiWindow(hInstance);
-	HDESK hd = GetThreadDesktop(GetCurrentThreadId());
-	SwitchDesktop(hd);
-	return;
+	if ( ! KojiKabuto::windowLess) {
+		if (hwndLogon != NULL)
+			destroyProgressWindow();
+		hwndLogon = createKojiWindow(hInstance);
+		HDESK hd = GetThreadDesktop(GetCurrentThreadId());
+		SwitchDesktop(hd);
+		return;
+	}
 }
 
 void KojiKabuto::destroyProgressWindow() {
-	if (hwndLogon != NULL) {
+	if (! KojiKabuto::windowLess && hwndLogon != NULL) {
 		HDESK hd = GetThreadDesktop(GetCurrentThreadId());
 		SwitchDesktop(hd);
 		consumeMessages();
@@ -118,11 +121,13 @@ void KojiKabuto::destroyProgressWindow() {
 }
 
 void KojiKabuto::displayProgressMessage(LPCSTR achString) {
-	if (hwndLogon != NULL) {
-		consumeMessages();
-//		SetWindowTextA(hwndLogon, achString);
-		SetDlgItemText(hwndLogon, IDC_TEXT, achString);
-		consumeMessages();
+	if (! KojiKabuto::windowLess) {
+		if (hwndLogon != NULL) {
+			consumeMessages();
+	//		SetWindowTextA(hwndLogon, achString);
+			SetDlgItemText(hwndLogon, IDC_TEXT, achString);
+			consumeMessages();
+		}
 	}
 }
 
@@ -894,9 +899,12 @@ extern "C" int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hInst2,
 	KojiKabuto::createProgressWindow(hInstance);
 	std::string app;
 	SeyconCommon::getCitrixInitialProgram(app);
-	if (app.length() == 0)
+	if (app.length() == 0) {
+		KojiKabuto::windowLess = false;
 		createSystrayWindow(hInstance);
-
+	} else {
+		KojiKabuto::windowLess = true;
+	}
 //	GetActiveWindow()
 
 	HDESK hdesk = GetThreadDesktop(GetCurrentThreadId());
@@ -915,15 +923,18 @@ extern "C" int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hInst2,
 		}
 	}
 
-	CreateThread(NULL, 0, KojiKabuto::mainLoop, NULL, 0, NULL);
+	if ( KojiKabuto::windowLess) {
+		KojiKabuto::mainLoop(NULL);
+	} else {
+		CreateThread(NULL, 0, KojiKabuto::mainLoop, NULL, 0, NULL);
 
-	MSG msg;
-	while (GetMessageA(&msg, (HWND) NULL, 0, 0)) {
-		TranslateMessage(&msg);
-		DispatchMessageA(&msg);
+		MSG msg;
+		while (GetMessageA(&msg, (HWND) NULL, 0, 0)) {
+			TranslateMessage(&msg);
+			DispatchMessageA(&msg);
+		}
+
+		printf("End main loop\n");
 	}
-
-	printf("End main loop\n");
-
 	return 0;
 }
