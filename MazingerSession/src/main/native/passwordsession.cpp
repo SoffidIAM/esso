@@ -105,6 +105,9 @@ ServiceIteratorResult SeyconSession::tryPasswordLogin ( const char* host, size_t
     std::wstring wPass = service.escapeString ( password.c_str() );
     std::string domain;
     SeyconCommon::readProperty("SSOSoffidAgent", domain);
+    std::string serial;
+    SeyconCommon::readProperty("serialNumber", serial);
+    std::wstring wSerial = service.escapeString(serial.c_str());
     std::wstring wDomain = service.escapeString ( domain.c_str());
     std::string clientIP;
     SeyconCommon::getCitrixClientIP ( clientIP );
@@ -116,9 +119,10 @@ ServiceIteratorResult SeyconSession::tryPasswordLogin ( const char* host, size_t
         const wchar_t *action = prepareOnly ? L"prestart" : L"start";
         SeyconResponse *resp =
             service.sendUrlMessage ( host, port,
-                                     L"/passwordLogin?action=%ls&user=%ls&password=%ls&clientIP=%ls&cardSupport=%d&domain=%ls",
+                                     L"/passwordLogin?action=%ls&user=%ls&password=%ls&clientIP=%ls&cardSupport=%d&domain=%ls&serial=%ls",
                                      action, wUser.c_str(), wPass.c_str(), wClientIP.c_str(),
-                                     ( int ) SeyconCommon::getCardSupport(), wDomain.c_str() );
+                                     ( int ) SeyconCommon::getCardSupport(), wDomain.c_str(),
+									 wSerial.c_str());
         SeyconCommon::wipe ( wPass );
         if ( resp == NULL )
         {

@@ -178,7 +178,10 @@ void CertificateHandler::parseCert() {
 bool CertificateHandler::obtainCredentials() {
 	SeyconService service;
 
-	SeyconResponse *resp = service.sendUrlMessage(L"/certificateLogin?action=start");
+    std::string serial;
+    SeyconCommon::readProperty("serialNumber", serial);
+    std::wstring wSerial = service.escapeString(serial.c_str());
+	SeyconResponse *resp = service.sendUrlMessage(L"/certificateLogin?action=start&serial=%ls", wSerial.c_str());
 
 	unsigned char * pData;
 	unsigned long dwSize;
@@ -215,8 +218,12 @@ bool CertificateHandler::obtainCredentials() {
 			std::wstring data64 = service.escapeString(SeyconCommon::toBase64( pData, dwSize).c_str());
 			std::wstring cert64 = service.escapeString(SeyconCommon::toBase64(m_pvCert, m_ulCertLength).c_str());
 
-			SeyconResponse *resp = service.sendUrlMessage(L"/certificateLogin?action=continue&challengeId=%ls&cert=%ls&signature=%ls",
-					sessionId.c_str(), cert64.c_str(), data64.c_str());
+		    std::string serial;
+		    SeyconCommon::readProperty("serialNumber", serial);
+		    std::wstring wSerial = service.escapeString(serial.c_str());
+
+		    SeyconResponse *resp = service.sendUrlMessage(L"/certificateLogin?action=continue&challengeId=%ls&cert=%ls&signature=%ls&serial=%ls",
+					sessionId.c_str(), cert64.c_str(), data64.c_str(), wSerial.c_str());
 
 			if (resp == NULL)
 			{

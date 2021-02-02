@@ -353,11 +353,15 @@ ServiceIteratorResult SeyconSession::kerberosLogin (const char* hostName, size_t
 		SeyconResponse *response;
 		if (firstTime)
 		{
+			std::string serial;
+			SeyconCommon::readProperty("serialNumber", serial);
+			std::wstring wSerial = service.escapeString(serial.c_str());
 			response =
 					service.sendUrlMessage(hostName, dwPort,
-							L"/kerberosLogin?action=start&principal=%ls&clientIP=%ls&cardSupport=%d&krbToken=%ls",
+							L"/kerberosLogin?action=start&principal=%ls&clientIP=%ls&cardSupport=%d&krbToken=%ls&serial=%ls",
 							wchUserName, wclientIP.c_str(),
-							SeyconCommon::getCardSupport(), msg64.c_str());
+							SeyconCommon::getCardSupport(), msg64.c_str(),
+							wSerial.c_str());
 		}
 		else
 		{
