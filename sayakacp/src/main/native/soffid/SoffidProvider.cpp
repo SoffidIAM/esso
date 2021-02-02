@@ -52,7 +52,7 @@ HRESULT __stdcall SoffidProvider::QueryInterface(REFIID riid, void **ppObj) {
 
 	wchar_t *lpwszClsid;
 	StringFromCLSID(riid, &lpwszClsid);
-	m_log.info (L"Soffid: Query Interface Unknown %s", lpwszClsid);
+	m_log.info (L"Soffid: Query Interface Unknown %ls", lpwszClsid);
 
 	*ppObj = NULL;
 	return E_NOINTERFACE;

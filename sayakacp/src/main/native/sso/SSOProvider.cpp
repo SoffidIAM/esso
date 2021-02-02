@@ -55,7 +55,7 @@ HRESULT __stdcall SSOProvider::QueryInterface(REFIID riid, void **ppObj) {
 
 	wchar_t *lpwszClsid;
 	StringFromCLSID(riid, &lpwszClsid);
-	m_log.info (L"sso: Query Interface Unknown %s", lpwszClsid);
+	m_log.info (L"sso: Query Interface Unknown %ls", lpwszClsid);
 
 	*ppObj = NULL;
 	return E_NOINTERFACE;
