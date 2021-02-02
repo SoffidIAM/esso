@@ -53,8 +53,6 @@ char *enableCloseSession = "false";
 char *forceStartupLogin = "true";
 char *loginType = "both";
 
-std::string credentialProviderName;
-
 BOOL IsWow64()
 {
 	BOOL bIsWow64 = FALSE;
@@ -1602,32 +1600,38 @@ void updateBasicCredentialProvider (bool wow64) {
 	}
 }
 
-void updateBasicCredentialProvider2 () {
-	if (credentialProviderName.length() > 0) {
-		std::string s = "rundll32 \"";
-		s += credentialProviderName;
-		s += "\",Register";
+void updateBasicCredentialProvider2 ( bool wow64 ) {
+	std::string s = "rundll32 \"";
 
-		PROCESS_INFORMATION pInfo;	// Process information
-		STARTUPINFO sInfo;					// Startup information
-		DWORD dwExitStatus;				// Process execution result
-		char command[4096];				// Command to run program
+	s += getMazingerDir();
 
-		strcpy(command, s.c_str());
 
-		memset(&sInfo, 0, sizeof sInfo);
-		sInfo.cb = sizeof sInfo;
-		sInfo.wShowWindow = SW_NORMAL;
+	if (wow64) {
+		s += "\\sayakaCP32.dll";
+	} else {
+		s += "\\sayakaCP.dll";
+	}
+	s += "\",Register";
 
-	// Check execution process correctly
-		log("Executing %s", s.c_str());
-		if (!CreateProcess(NULL, command, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS,
-				NULL, NULL, &sInfo, &pInfo))
-		{
-			log("Error executing %s", s.c_str());
-			notifyError();
+	PROCESS_INFORMATION pInfo;	// Process information
+	STARTUPINFO sInfo;					// Startup information
+	DWORD dwExitStatus;				// Process execution result
+	char command[4096];				// Command to run program
 
-		}
+	strcpy(command, s.c_str());
+
+	memset(&sInfo, 0, sizeof sInfo);
+	sInfo.cb = sizeof sInfo;
+	sInfo.wShowWindow = SW_NORMAL;
+
+// Check execution process correctly
+	log("Executing %s", s.c_str());
+	if (!CreateProcess(NULL, command, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS,
+			NULL, NULL, &sInfo, &pInfo))
+	{
+		log("Error executing %s", s.c_str());
+		notifyError();
+
 	}
 }
 
@@ -2224,7 +2228,9 @@ void installCP(const char *file)
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, "ThreadingModel", REG_SZ,
 			(void*) szValue, strlen(szValue));
 
-	updateBasicCredentialProvider2();
+	updateBasicCredentialProvider2(false);
+	if (IsWow64())
+		updateBasicCredentialProvider2(true);
 }
 
 bool installShiroKabuto(char *achShiroPath)
@@ -2501,6 +2507,7 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 		const char *lpszFileName, int replaceAction)
 {
 	bool cp = strcmp(lpszFileName, "SayakaCP.dll") == 0;
+	bool cp32 = strcmp(lpszFileName, "SayakaCP32.dll") == 0;
 
 	std::string dirPath;	// Installation dir path
 	std::string filePath;	// Installation file path
@@ -2583,7 +2590,6 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 					MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
 			{
 				success = true;
-				if (cp) credentialProviderName = filePath;
 			}
 			else
 				log("> FAILED to create file %s ", filePath.c_str());
@@ -2605,7 +2611,6 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 				log("> New file %s will be replaced on reboot",
 						tempFilePath.c_str());
 				success = true;
-				if (cp) credentialProviderName = tempFilePath;
 			}
 			else
 				log("> FAILED to replace file %s with %s", filePath.c_str(),
@@ -2627,7 +2632,6 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 					MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
 			{
 				success = true;
-				if (cp) credentialProviderName = filePath.c_str();
 			}
 
 			else
@@ -2635,13 +2639,11 @@ bool installResource(const char *lpszTargetDir, const char *lpszResourceName,
 						tempFilePath.c_str());
 			// Si no puedo renombrarlo ahora, lo sustituir\E9 mas tarde
 		}
-
 		else if (replaceOnReboot(filePath.c_str(), tempFilePath.c_str()))
 		{
 			log("> Scheduled substitution on reboot");
 			success = true;
 			reboot = true;
-			if (cp) credentialProviderName = tempFilePath.c_str();
 		}
 
 		else
@@ -2819,14 +2821,13 @@ int install(int full)
 		 *
 		 */
 		int replaceAction = reboot ? NO_REPLACE : HARD_REPLACE;
-//		installResource(NULL, "AfroditaFC64.dll", "AfroditaFC.dll", replaceAction);
-//		installResource(NULL, "AfroditaFC32.dll", "AfroditaFC32.dll", replaceAction);
 		installResource(NULL, "AfroditaC64.exe", "Afrodita-chrome.exe", replaceAction);
 
 		installResource(NULL, "AfroditaE64.dll", "AfroditaE.dll", replaceAction);
 		installResource(NULL, "AfroditaE.dll", "AfroditaE32.dll", replaceAction);
 		installResource(NULL, "JetScrander.exe");
 		installResource(NULL, "SayakaCP64.dll", "SayakaCP.dll");
+		installResource(NULL, "SayakaCP.dll", "SayakaCP32.dll");
 
 		installResource(NULL, "SoffidConfig64.exe", "SoffidConfig.exe");
 	}
