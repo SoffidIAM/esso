@@ -453,18 +453,17 @@ void CreateUserDaemon::validatePassword(SOCKET socket,
 			i = pass.find(L" ");
 			if (i != std::wstring::npos) {
 				dlg.newPass = newpass = SeyconCommon::urlDecode(MZNC_wstrtostr(pass.substr(i+1).c_str()).c_str());
-				pass = pass.substr(0,i);
+				pass = SeyconCommon::urlDecode(MZNC_wstrtostr(pass.substr(0, i).c_str()).c_str());
 				printf ("Current password = %ls\n", pass.c_str());
 				printf ("New password = %ls\n", dlg.newPass.c_str());
 			} else {
 				printf ("Password = %ls\n", pass.c_str());
-				newpass = pass;
+				newpass = pass = SeyconCommon::urlDecode(MZNC_wstrtostr(pass.c_str()).c_str());
 			}
 			std::string user2 = MZNC_wstrtostr(user.c_str());
-			std::wstring pass2 = SeyconCommon::urlDecode(MZNC_wstrtostr(pass.c_str()).c_str());
 
 
-			int result = session.passwordSessionPrepare(user2.c_str(), pass2.c_str());
+			int result = session.passwordSessionPrepare(user2.c_str(), pass.c_str());
 			if (result == LOGIN_DENIED || result == LOGIN_UNKNOWNUSER) {
 				if (dlg.needsNewPassword)
 					writeLine(socket, L"EXPIRED");
