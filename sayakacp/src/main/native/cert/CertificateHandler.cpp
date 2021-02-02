@@ -138,8 +138,11 @@ bool CertificateHandler::obtainCredentials() {
 
 	service.resetServerStatus();
 
+    std::string serial;
+    SeyconCommon::readProperty("serialNumber", serial);
+    std::wstring wSerial = service.escapeString(serial.c_str());
 
-	SeyconResponse *response = service.sendUrlMessage( L"/certificateLogin?action=start");
+	SeyconResponse *response = service.sendUrlMessage( L"/certificateLogin?action=start&serial=%ls", wSerial.c_str());
 	unsigned char * pData;
 	unsigned long dwSize;
 
@@ -184,8 +187,12 @@ bool CertificateHandler::obtainCredentials() {
 			std::wstring wcert64 = service.escapeString(cert64.c_str());
 			delete response;
 
-			response = service.sendUrlMessage(L"/certificateLogin?action=continue&challengeId=%ls&cert=%ls&signature=%ls",
-					wsessionid.c_str(), wcert64.c_str(), wmsg64.c_str());
+		    std::string serial;
+		    SeyconCommon::readProperty("serialNumber", serial);
+		    std::wstring wSerial = service.escapeString(serial.c_str());
+
+		    response = service.sendUrlMessage(L"/certificateLogin?action=continue&challengeId=%ls&cert=%ls&signature=%ls&serial=%ls",
+					wsessionid.c_str(), wcert64.c_str(), wmsg64.c_str(), wSerial.c_str());
 			if (response == NULL)
 			{
 				m_errorMessage.assign (Utils::LoadResourcesString(5));
