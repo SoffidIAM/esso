@@ -403,6 +403,9 @@ int KojiKabuto::StartSoffidLogin() {
 	std::wstring pass = handler.getPassword(wuser);
 	SeyconCommon::warn("Trying soffid dir login. Pass %ls", pass.c_str());
 
+	if (pass.length() == 0)
+		return LOGIN_UNKNOWNUSER;
+
 	int loginResult = session->passwordSessionStartup(user.c_str(), pass.c_str());
 
 	return loginResult;
