@@ -42,7 +42,10 @@ RecoverProvider::RecoverProvider (): m_log ("RecoverProvider")
 	if (buffer != NULL)
 		NetApiBufferFree (buffer);
 
-	if (domain.empty())
+    std::string type;
+    SeyconCommon::readProperty("LoginType", type);
+
+    if (domain.empty() && type != "soffid")
 		cred = NULL;
 	else
 		cred = new RecoverCredential (domain);

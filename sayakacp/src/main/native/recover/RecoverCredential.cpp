@@ -19,6 +19,7 @@
 #include <ssoclient.h>
 
 # include <MZNcompat.h>
+#include "../soffid/SoffidDirHandler.h"
 
 RecoverCredential::RecoverCredential (const std::wstring& domain):
 	m_log ("RecoverCredential")
@@ -798,9 +799,25 @@ boolean RecoverCredential::resetPassword() {
     	std::string status = response->getToken(0);
     	if (status == "OK")
     	{
+    		std::string type;
+
     		m_answers.clear();
     		m_questions.clear();
         	delete response;
+
+            SeyconCommon::readProperty("LoginType", type);
+
+            if (type == "soffid") {
+            	SoffidDirHandler h;
+        		h.validate(user, desiredPassword1);
+        		if (! h.valid ) {
+
+            		m_pCredProvCredentialEvents->SetFieldString(this, REC_CHANGE_MSG, h.szErrorMessage.c_str());
+            		m_pCredProvCredentialEvents->SetFieldState(this, REC_CHANGE_MSG, CPFS_DISPLAY_IN_SELECTED_TILE);
+
+            		return false;
+        		}
+            }
     		return true;
     	} else if (status == "BADPASSWORD")
        	{
