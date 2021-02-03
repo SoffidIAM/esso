@@ -2085,13 +2085,13 @@ void installCP(const char *file)
 	sprintf(szKey, "Software\\Microsoft\\Windows\\"
 			"CurrentVersion\\Authentication\\Credential Providers\\%s",
 			sayakaClsid);
-	strcpy(szValue, "Sayaka Credential Provider");
+	strcpy(szValue, "Soffid smart card Credential Provider");
 	HelperWriteKey(0, HKEY_LOCAL_MACHINE, szKey, NULL, REG_SZ, (void*) szValue,
 			strlen(szValue));
 
 	// SAYAKA CLSID
 	sprintf(szKey, "CLSID\\%s", sayakaClsid);
-	strcpy(szValue, "Sayaka Credential Provider");
+	strcpy(szValue, "Soffid smart card Credential Provider");
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
 			strlen(szValue));
 
@@ -2113,13 +2113,13 @@ void installCP(const char *file)
 		sprintf(szKey, "Software\\Microsoft\\Windows\\"
 				"CurrentVersion\\Authentication\\Credential Providers\\%s",
 				shiroClsid);
-		strcpy(szValue, "ShiroKabuto Credential Provider");
+		strcpy(szValue, "Soffid PAM Credential Provider");
 		HelperWriteKey(0, HKEY_LOCAL_MACHINE, szKey, NULL, REG_SZ, (void*) szValue,
 				strlen(szValue));
 
 		// SHIRO CLSID
 		sprintf(szKey, "CLSID\\%s", shiroClsid);
-		strcpy(szValue, "Shiro Kabuto Credential Provider");
+		strcpy(szValue, "Soffid PAM Credential Provider");
 		HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
 				strlen(szValue));
 
@@ -2138,13 +2138,13 @@ void installCP(const char *file)
 	sprintf(szKey, "Software\\Microsoft\\Windows\\"
 			"CurrentVersion\\Authentication\\Credential Providers\\%s",
 			recoverClsid);
-	strcpy(szValue, "Sayaka Recover Credential Provider");
+	strcpy(szValue, "Soffid Recover Credential Provider");
 	HelperWriteKey(0, HKEY_LOCAL_MACHINE, szKey, NULL, REG_SZ, (void*) szValue,
 			strlen(szValue));
 
 	// Recover CLSID
 	sprintf(szKey, "CLSID\\%s", recoverClsid);
-	strcpy(szValue, "Sayaka Recover Credential Provider");
+	strcpy(szValue, "Soffid Recover Credential Provider");
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
 			strlen(szValue));
 
@@ -2164,13 +2164,13 @@ void installCP(const char *file)
 	sprintf(szKey, "Software\\Microsoft\\Windows\\"
 			"CurrentVersion\\Authentication\\Credential Providers\\%s",
 			ssoClsid);
-	strcpy(szValue, "Soffid basices Credential Provider");
+	strcpy(szValue, "Soffid Basic Credential Provider");
 	HelperWriteKey(0, HKEY_LOCAL_MACHINE, szKey, NULL, REG_SZ, (void*) szValue,
 			strlen(szValue));
 
 	// SHIRO CLSID
 	sprintf(szKey, "CLSID\\%s", ssoClsid);
-	strcpy(szValue, "Soffid basic Credential Provider");
+	strcpy(szValue, "Soffid Basic Credential Provider");
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
 			strlen(szValue));
 
@@ -2189,12 +2189,12 @@ void installCP(const char *file)
 	sprintf(szKey, "Software\\Microsoft\\Windows\\"
 			"CurrentVersion\\Authentication\\Credential Providers\\%s",
 			soffidClsid);
-	strcpy(szValue, "Soffid directory Credential Provider");
+	strcpy(szValue, "Soffid Directory Credential Provider");
 	HelperWriteKey(0, HKEY_LOCAL_MACHINE, szKey, NULL, REG_SZ, (void*) szValue,
 			strlen(szValue));
 
 	sprintf(szKey, "CLSID\\%s", soffidClsid);
-	strcpy(szValue, "Soffid directory Credential Provider");
+	strcpy(szValue, "Soffid Directory Credential Provider");
 	HelperWriteKey(0, HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, (void*) szValue,
 			strlen(szValue));
 

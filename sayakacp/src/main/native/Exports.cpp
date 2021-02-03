@@ -556,12 +556,12 @@ void overrideBasicCredentialProvider () {
 
 void __stdcall Register() {
 
-	registerClsid (CLSID_Sayaka, "Sayaka Credential Provider");
-	registerClsid (CLSID_ShiroKabuto, "Shiro Kabutgo Credential Provider");
-	registerClsid (CLSID_Recover, "Sayaka Recover Credential Provider");
-	registerClsid (CLSID_SSO, "Sayaka SSO Credential Provider");
-	registerClsid (CLSID_SSO_BASIC, "Sayaka SSO Basic Credential Provider");
-	registerClsid (CLSID_Soffid, "Sayaka Soffid Credential Provider");
+	registerClsid (CLSID_Sayaka, "Soffid smartcrad Credential Provider");
+	registerClsid (CLSID_ShiroKabuto, "Soffid PAM Credential Provider");
+	registerClsid (CLSID_Recover, "Soffid Recover Credential Provider");
+	registerClsid (CLSID_SSO, "Soffid SSO Credential Provider");
+	registerClsid (CLSID_SSO_BASIC, "Soffid SSO Basic Credential Provider");
+	registerClsid (CLSID_Soffid, "Soffid directory Credential Provider");
 	overrideBasicCredentialProvider();
 }
 
