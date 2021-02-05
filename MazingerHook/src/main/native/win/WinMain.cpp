@@ -83,9 +83,9 @@ DWORD WINAPI waitforstop(LPVOID data) {
 }
 
 
-
 extern "C" __declspec(dllexport) void MZNStart(const char*user) {
 	MazingerEnv *pEnv = MazingerEnv::getEnv(user);
+	int started = pEnv->getDataRW()->started;
 	pEnv->getDataRW()->started = 1;
 
 	MZNSendDebugMessage("Starting mzn for user %s", user);
@@ -102,7 +102,9 @@ extern "C" __declspec(dllexport) void MZNStart(const char*user) {
 	}
 #ifdef _WIN64
 	char achFileName[4096];
-	if (GetModuleFileName (hMazingerInstance, achFileName, sizeof achFileName) != 0) {
+	if (!started && GetModuleFileName (hMazingerInstance, achFileName, sizeof achFileName) != 0) {
+
+
 		std::string fileName32 = achFileName;
 		std::string::size_type len = fileName32.size();
 		std::string::size_type dot = fileName32.find_last_of('.');
@@ -110,9 +112,12 @@ extern "C" __declspec(dllexport) void MZNStart(const char*user) {
 			fileName32 = fileName32.substr(0, dot);
 		fileName32 += "32.dll";
 
-		std::string cmdLine = "RUNDLL32 \"";
+
+		std::string cmdLine = getenv("SystemRoot") ;
+		cmdLine += "\\SYSWOW64\\RUNDLL32 \"";
 		cmdLine += fileName32;
 		cmdLine += "\",StartWow64";
+
 		STARTUPINFO si;
 		memset(&si, 0, sizeof si);
 		si.cb = sizeof si;
@@ -135,7 +140,6 @@ extern "C" __declspec(dllexport) void MZNStart(const char*user) {
 }
 
 extern "C" __declspec(dllexport) void MZNStop(const char*user) {
-	MZNSendDebugMessage("Stoping mzn for user %s", user);
 	std::wstring semName = getStopSemaphoreName(user);
 	HANDLE ghSvcStopEvent = OpenEventW(EVENT_MODIFY_STATE, // default security attributes
 			FALSE, // not inherited
@@ -266,7 +270,6 @@ extern "C" __declspec(dllexport) bool MZNLoadConfiguration(const char *user,
 
 #ifndef _WIN64
 extern "C" __declspec(dllexport) void StartWow64() {
-
 	HHOOK hhk = SetWindowsHookEx(WH_CBT, (HOOKPROC) CBTProc, hMazingerInstance, NULL);
 
 	const char *user = MZNC_getUserName();
@@ -276,7 +279,15 @@ extern "C" __declspec(dllexport) void StartWow64() {
 			FALSE, // manual reset event
 			FALSE, // not signaled
 			semName.c_str());
-	WaitForSingleObject(ghSvcStopEvent, INFINITE);
+//	MessageBoxA(NULL, "TEXT",  "TEXT", MB_OK);
+	MSG msg;
+	do {
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) > 0) //Or use an if statement
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+	} while (WaitForSingleObject(ghSvcStopEvent, 500) != WAIT_OBJECT_0);
 	if (hhk != NULL)
 		UnhookWindowsHookEx(hhk);
 }

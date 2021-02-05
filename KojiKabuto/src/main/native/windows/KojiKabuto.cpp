@@ -821,11 +821,15 @@ extern "C" int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hInst2,
 	srand((int) t);
 	hKojiInstance = hInstance;
 
+	bool nowindow = false;
 	int numArgs = 0;
 	LPCWSTR wCmdLine = GetCommandLineW();
 	LPWSTR* args = CommandLineToArgvW(wCmdLine, &numArgs);
 
-	if (wcsicmp(wCmdLine, L"newDesktop") == 0
+	if (wcsicmp(wCmdLine, L"no-window") == 0
+			|| numArgs == 2 && wcsicmp(args[1], L"no-window") == 0) {
+		nowindow = true;
+	} else if (wcsicmp(wCmdLine, L"newDesktop") == 0
 			|| numArgs == 2 && wcsicmp(args[1], L"newDesktop") == 0) {
 		SwitchDesktop(GetThreadDesktop(GetCurrentThreadId()));
 		switchNewDesktop();
@@ -899,16 +903,16 @@ extern "C" int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hInst2,
 		SeyconCommon::setDebugLevel(0);
 	}
 
-	KojiKabuto::createProgressWindow(hInstance);
 	std::string app;
 	SeyconCommon::getCitrixInitialProgram(app);
-	if (app.length() == 0) {
+	if (! nowindow && app.length() == 0) {
 		KojiKabuto::windowLess = false;
+		KojiKabuto::createProgressWindow(hInstance);
 		createSystrayWindow(hInstance);
 	} else {
 		KojiKabuto::windowLess = true;
 	}
-//	GetActiveWindow()
+
 
 	HDESK hdesk = GetThreadDesktop(GetCurrentThreadId());
 
@@ -928,6 +932,7 @@ extern "C" int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hInst2,
 
 	if ( KojiKabuto::windowLess) {
 		KojiKabuto::mainLoop(NULL);
+		while (true) Sleep (60000);
 	} else {
 		CreateThread(NULL, 0, KojiKabuto::mainLoop, NULL, 0, NULL);
 
