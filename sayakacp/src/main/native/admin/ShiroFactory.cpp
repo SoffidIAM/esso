@@ -12,6 +12,7 @@
 
 ShiroFactory::ShiroFactory() :
 	m_log("ShiroFactory") {
+	m_nRefCount = 0;
 	m_log.info("Creating ShiroFactory");
 }
 

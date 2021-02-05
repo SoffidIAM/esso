@@ -12,6 +12,7 @@
 
 SoffidFactory::SoffidFactory() :
 	m_log("SoffidFactory") {
+	m_nRefCount = 0;
 	m_log.info("Creating SoffidFactory 2");
 }
 

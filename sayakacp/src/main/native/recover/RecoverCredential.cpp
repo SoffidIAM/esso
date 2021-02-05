@@ -24,6 +24,7 @@
 RecoverCredential::RecoverCredential (const std::wstring& domain):
 	m_log ("RecoverCredential")
 {
+	m_nRefCount = 0;
     m_log.info("RecoverCredential::RecoverCredential");
 
     this->windowsDomain = domain;

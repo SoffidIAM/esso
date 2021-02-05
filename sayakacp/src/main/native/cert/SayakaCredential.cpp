@@ -22,6 +22,7 @@
 SayakaCredential::SayakaCredential (TokenHandler *pToken, CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus):
 	m_log ("SayakaCredential")
 {
+	m_nRefCount = 0;
 	m_needsChangePassword = false;
 	m_bAutoLogon = false;
 	m_cpus = cpus;

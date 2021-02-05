@@ -12,6 +12,7 @@
 
 SSOFactory::SSOFactory() :
 	m_log("SSOFactory") {
+	m_nRefCount = 0;
 	m_log.info("Creating SSOFactory");
 }
 

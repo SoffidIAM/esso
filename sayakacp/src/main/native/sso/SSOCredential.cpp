@@ -21,6 +21,7 @@
 SSOCredential::SSOCredential () :
 		m_log("SSOCredential")
 {
+	m_nRefCount = 0;
 	m_log.info("SSOCredential::SSOCredential");
 
 	m_pCredProvCredentialEvents = NULL;

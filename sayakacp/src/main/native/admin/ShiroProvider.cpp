@@ -21,6 +21,7 @@ static CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgShiroFieldDescriptors[] =
 
 ShiroProvider::ShiroProvider (): m_log ("ShiroProvider")
 {
+	m_nRefCount = 0;
 	m_credentialProviderEvents = NULL;
 	s_handler = this;
 	m_log.info("Creating ShiroProvider");
@@ -30,13 +31,17 @@ ShiroProvider::ShiroProvider (): m_log ("ShiroProvider")
 
 
 HRESULT __stdcall ShiroProvider::QueryInterface(REFIID riid, void **ppObj) {
+	m_log.info ("Soffid: Query Interface ");
+	wchar_t ach[128];
+	StringFromGUID2(riid, ach, sizeof ach);
+	m_log.info ("Soffid: Query Interface %ls", ach);
 	if (riid == IID_IUnknown) {
 		*ppObj = static_cast<void*> (this);
 		AddRef();
 		return S_OK;
 	}
 	else if (riid == IID_ICredentialProvider) {
-		m_log.info ("Query Interface iid_icredentialprovider");
+		m_log.info ("Soffid: Query Interface iid_icredentialprovider");
 		*ppObj = static_cast<void*> (this);
 		AddRef();
 		return S_OK;
@@ -44,35 +49,31 @@ HRESULT __stdcall ShiroProvider::QueryInterface(REFIID riid, void **ppObj) {
 
 	wchar_t *lpwszClsid;
 	StringFromCLSID(riid, &lpwszClsid);
-	m_log.info (L"Query Interface Unknown %ls", lpwszClsid);
+	m_log.info (L"Soffid: Query Interface Unknown %ls", lpwszClsid);
 
 	*ppObj = NULL;
 	return E_NOINTERFACE;
 }
 
 
-
-
-
 ULONG __stdcall ShiroProvider::AddRef()
 {
+	m_log.info (" addref");
 	return InterlockedIncrement(&m_nRefCount) ;
 }
 
 
 ULONG __stdcall ShiroProvider::Release()
 {
+	m_log.info (" release");
 	long nRefCount=0;
 	nRefCount=InterlockedDecrement(&m_nRefCount) ;
 	if (nRefCount == 0) {
-		if (s_handler == this)
-			s_handler = NULL;
+		m_log.info ("Removing");
 		delete this;
 	}
 	return nRefCount;
 }
-
-
 
 HRESULT ShiroProvider::SetUsageScenario(
     CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,

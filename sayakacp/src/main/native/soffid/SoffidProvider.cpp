@@ -25,6 +25,7 @@ static CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgSoffidFieldDescriptors[] =
 
 SoffidProvider::SoffidProvider (): m_log ("SoffidProvider")
 {
+	m_nRefCount = 0;
 	m_credentialProviderEvents = NULL;
 	s_handler = this;
 	m_log.info("Creating SoffidProvider ********* 2");
@@ -59,29 +60,24 @@ HRESULT __stdcall SoffidProvider::QueryInterface(REFIID riid, void **ppObj) {
 }
 
 
-
-
-
 ULONG __stdcall SoffidProvider::AddRef()
 {
-	m_log.info ("Soffid: addref");
+	m_log.info (" addref");
 	return InterlockedIncrement(&m_nRefCount) ;
 }
 
 
 ULONG __stdcall SoffidProvider::Release()
 {
-	m_log.info ("Soffid: release");
+	m_log.info (" release");
 	long nRefCount=0;
 	nRefCount=InterlockedDecrement(&m_nRefCount) ;
 	if (nRefCount == 0) {
-		if (s_handler == this)
-			s_handler = NULL;
+		m_log.info ("Removing");
 		delete this;
 	}
 	return nRefCount;
 }
-
 
 
 HRESULT __stdcall SoffidProvider::SetUsageScenario(
@@ -251,6 +247,7 @@ HRESULT __stdcall SoffidProvider::GetCredentialCount(
     )
 {
 	std::string type;
+    m_log.info("Provider::GetCredentialCount");
 	SeyconCommon::readProperty("LoginType", type);
 	if (type == "soffid") {
 		*pdwCount = 1;
@@ -261,7 +258,6 @@ HRESULT __stdcall SoffidProvider::GetCredentialCount(
 		*pdwDefault = 0;
 	}
 	*pbAutoLogonWithDefault = false;
-    m_log.info("Provider::GetCredentialCount");
     return S_OK;
 }
 

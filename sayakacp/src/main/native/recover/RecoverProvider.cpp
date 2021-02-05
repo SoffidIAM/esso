@@ -26,6 +26,7 @@ static CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgCredProvFieldDescriptors[] =
 
 RecoverProvider::RecoverProvider (): m_log ("RecoverProvider")
 {
+	m_nRefCount = 0;
 	m_credentialProviderEvents = NULL;
 	s_handler = this;
 	m_log.info("Creating RecoverProvider");
@@ -53,13 +54,17 @@ RecoverProvider::RecoverProvider (): m_log ("RecoverProvider")
 
 
 HRESULT __stdcall RecoverProvider::QueryInterface(REFIID riid, void **ppObj) {
+	m_log.info ("Soffid: Query Interface ");
+	wchar_t ach[128];
+	StringFromGUID2(riid, ach, sizeof ach);
+	m_log.info ("Soffid: Query Interface %ls", ach);
 	if (riid == IID_IUnknown) {
 		*ppObj = static_cast<void*> (this);
 		AddRef();
 		return S_OK;
 	}
 	else if (riid == IID_ICredentialProvider) {
-		m_log.info ("Query Interface iid_icredentialprovider");
+		m_log.info ("Soffid: Query Interface iid_icredentialprovider");
 		*ppObj = static_cast<void*> (this);
 		AddRef();
 		return S_OK;
@@ -67,7 +72,7 @@ HRESULT __stdcall RecoverProvider::QueryInterface(REFIID riid, void **ppObj) {
 
 	wchar_t *lpwszClsid;
 	StringFromCLSID(riid, &lpwszClsid);
-	m_log.info (L"Query Interface Unknown %ls", lpwszClsid);
+	m_log.info (L"Soffid: Query Interface Unknown %ls", lpwszClsid);
 
 	*ppObj = NULL;
 	return E_NOINTERFACE;
@@ -75,17 +80,23 @@ HRESULT __stdcall RecoverProvider::QueryInterface(REFIID riid, void **ppObj) {
 
 ULONG __stdcall RecoverProvider::AddRef()
 {
+	m_log.info (" addref");
 	return InterlockedIncrement(&m_nRefCount) ;
 }
 
 
 ULONG __stdcall RecoverProvider::Release()
 {
+	m_log.info (" release");
 	long nRefCount=0;
 	nRefCount=InterlockedDecrement(&m_nRefCount) ;
-	if (nRefCount == 0) delete this;
+	if (nRefCount == 0) {
+		m_log.info ("Removing");
+		delete this;
+	}
 	return nRefCount;
 }
+
 
 
 

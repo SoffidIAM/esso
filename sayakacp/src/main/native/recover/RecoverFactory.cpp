@@ -12,6 +12,7 @@
 
 RecoverFactory::RecoverFactory() :
 	m_log("RecoverFactory") {
+	m_nRefCount = 0;
 	m_log.info("Creating RecoverFactory");
 }
 

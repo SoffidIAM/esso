@@ -28,6 +28,7 @@ static CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgSSOFieldDescriptors[] =
 
 SSOProvider::SSOProvider (): m_log ("SSOProvider")
 {
+	m_nRefCount = 0;
 	m_credentialProviderEvents = NULL;
 	m_log.info("Creating SSOProvider ********* 2");
 	m_pCredential = new SSOCredential ();
@@ -78,6 +79,7 @@ ULONG __stdcall SSOProvider::Release()
 	long nRefCount=0;
 	nRefCount=InterlockedDecrement(&m_nRefCount) ;
 	if (nRefCount == 0) {
+		m_log.info ("Removing");
 		delete this;
 	}
 	return nRefCount;

@@ -21,6 +21,7 @@
 ShiroCredential::ShiroCredential () :
 		m_log("ShiroCredential")
 {
+	m_nRefCount = 0;
 	m_log.info("ShiroCredential::ShiroCredential");
 
 	m_pCredProvCredentialEvents = NULL;

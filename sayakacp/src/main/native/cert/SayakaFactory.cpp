@@ -12,6 +12,7 @@
 
 SayakaFactory::SayakaFactory() :
 	m_log("SayakaFactory") {
+	m_nRefCount = 0;
 	m_log.info("Creating SayakaFactory");
 }
 

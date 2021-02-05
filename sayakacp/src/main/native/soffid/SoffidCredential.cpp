@@ -22,6 +22,7 @@
 SoffidCredential::SoffidCredential () :
 		m_log("SoffidCredential")
 {
+	m_nRefCount = 0;
 	m_log.info("SoffidCredential::SoffidCredential");
 
 	m_pCredProvCredentialEvents = NULL;
