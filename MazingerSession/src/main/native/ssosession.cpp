@@ -304,7 +304,7 @@ ServiceIteratorResult SeyconSession::kerberosLogin (const char* hostName, size_t
 				}
 				else
 				{
-					errorMessage = "Identity server does not accect the Kerberos credential: ";
+					errorMessage = "Identity server does not accept the Kerberos credential: ";
 					errorMessage += msg;
 					return SIR_RETRY;
 				}
