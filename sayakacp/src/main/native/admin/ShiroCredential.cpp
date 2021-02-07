@@ -73,7 +73,7 @@ HRESULT __stdcall ShiroCredential::QueryInterface (REFIID riid, void **ppObj)
 
 	wchar_t *lpwszClsid;
 	StringFromCLSID(riid, &lpwszClsid);
-	m_log.info (L"Query Interface Unknown %s", lpwszClsid);
+	m_log.info (L"Query Interface Unknown %ls", lpwszClsid);
 	//
 	//if control reaches here then , let the client know that
 	//we do not satisfy the required interface
@@ -265,7 +265,7 @@ HRESULT ShiroCredential::SetStringValue (DWORD dwFieldID, PCWSTR pwz)
 {
 	HRESULT hr;
 
-	m_log.info(L"Credential::SetStringValue %d = %s", dwFieldID, pwz);
+	m_log.info(L"Credential::SetStringValue %d = %ls", dwFieldID, pwz);
 	if (dwFieldID == SHI_USER || dwFieldID == SHI_PASSWORD)
 	{
 		Utils::duplicateString(m_rgFieldStrings[dwFieldID], pwz);
