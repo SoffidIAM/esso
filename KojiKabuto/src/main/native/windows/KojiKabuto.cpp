@@ -73,6 +73,37 @@ int KojiKabuto::runProgram(char *achString, char *achDir, int bWait) {
 	}
 }
 
+static void waitForDesktop () {
+	std::string loginType;	// Login type registry key value
+	SeyconCommon::readProperty("LoginType", loginType);
+
+	HDESK hdesk = GetThreadDesktop(GetCurrentThreadId());
+
+	if (loginType != "manual") {
+		DWORD size;
+		do {
+			DWORD dwIO = 0;
+			if (GetUserObjectInformationA( hdesk, 6 /*UOI_IO*/, &dwIO, sizeof dwIO, &size )) {
+				if (dwIO) break;
+			} else {
+				break;
+			}
+			Sleep(500);
+		} while (true);
+	}
+
+	if (hdesk == NULL) {
+		SeyconCommon::debug("Cannot open desktop Default");
+	} else {
+		if (SwitchDesktop(hdesk)) {
+			SeyconCommon::debug("Switch desktop Default SUCCESS");
+		}
+		else {
+			SeyconCommon::debug("Switch desktop Default FAILURE");
+		}
+	}
+}
+
 void KojiKabuto::runScript(LPCSTR lpszScript) {
 	char achCmdLine[2048];
 	sprintf(achCmdLine, "c:\\tcl\\bin\\wish80 \"%s\"", lpszScript);
@@ -541,8 +572,6 @@ void KojiKabuto::CloseSession() {
 
 // Start user login
 void KojiKabuto::StartUserInit() {
-	SeyconCommon::info("Starting userinit\n");
-
 	HDESK hd = GetThreadDesktop(GetCurrentThreadId());
 	SwitchDesktop(hd);
 
@@ -585,6 +614,7 @@ DWORD WINAPI KojiKabuto::mainLoop(LPVOID param) {
 			KojiKabuto::StartUserInit();
 		}
 
+		waitForDesktop();
 		do {
 			// Start login process
 			loginResult = KojiKabuto::StartLoginProcess();
@@ -913,22 +943,6 @@ extern "C" int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hInst2,
 		KojiKabuto::windowLess = true;
 	}
 
-
-	HDESK hdesk = GetThreadDesktop(GetCurrentThreadId());
-
-	if (hdesk == NULL) {
-		SeyconCommon::debug("Cannot open desktop Default");
-	}
-
-	else {
-		if (SwitchDesktop(hdesk)) {
-			SeyconCommon::debug("Switch desktop Default SUCCESS");
-		}
-
-		else {
-			SeyconCommon::debug("Switch desktop Default FAILURE");
-		}
-	}
 
 	if ( KojiKabuto::windowLess) {
 		KojiKabuto::mainLoop(NULL);
