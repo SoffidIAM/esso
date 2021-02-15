@@ -569,8 +569,22 @@ void registerFFHook()
 		NULL,
 		REG_SZ, dir.c_str(), dir.length());
 
+	char *szBuf2 = strdup (szBuff);
+	for  (int i = 0; szBuf2[i] ; i++)
+		if (szBuf2[i] == '\\')
+			szBuf2[i] = '/';
 
-	// Create ff application manifest
+	std::string policy = "{\"esso@soffid.com\": { \"installation_mode\": \"force_installed\", \"install_url\": \"file:///";
+	policy += szBuf2;
+	policy += "\" }}";
+	free (szBuf2);
+
+	HelperWriteKey(0, HKEY_LOCAL_MACHINE,
+				"SOFTWARE\\Policies\\Mozilla\\Firefox",
+				"ExtensionSettings",
+				REG_MULTI_SZ, policy.c_str(), policy.length());
+
+	// Create ff application manifestes
 	LPCSTR mznDir = getMazingerDir();
 	std::string dir2 ;
 	for (int i = 0; mznDir[i]; i++)
@@ -579,6 +593,8 @@ void registerFFHook()
 			dir2 += '\\';
 		dir2 += mznDir[i];
 	}
+
+
 
 	FILE * f = fopen (dir.c_str(), "w");
 	fprintf (f, "{"
