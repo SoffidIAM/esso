@@ -80,6 +80,7 @@ public:
 	bool isOpen() {return m_bOpen;}
 	SeyconDialog * getDialog() { return m_dialog;}
 	int restartSession ();
+	void runScript(const std::string entry, bool asRoot);
 
 private:
 	std::wstring getCardValue () ;

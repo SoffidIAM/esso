@@ -433,6 +433,9 @@ int SeyconSession::passwordSessionStartup ( const char* lpszUser, const wchar_t*
 int SeyconSession::changePassword ( const wchar_t *newpass )
 {
     SeyconService service;
+    std::string domain;
+    SeyconCommon::readProperty("SSOSoffidAgent", domain);
+    std::wstring wDomain = service.escapeString ( domain.c_str());
     std::wstring wUser = service.escapeString ( user.c_str() );
     std::wstring wPass = service.escapeString ( password.c_str() );
     std::wstring wNewPass;
@@ -448,8 +451,8 @@ int SeyconSession::changePassword ( const wchar_t *newpass )
         wNewPass = service.escapeString ( newPassword.c_str() );
         repeat = false;
         SeyconResponse *resp = service.sendUrlMessage (
-                                   L"/passwordLogin?action=changePass&user=%ls&password1=%ls&password2=%ls",
-                                   wUser.c_str(), wPass.c_str(), wNewPass.c_str() );
+                                   L"/passwordLogin?action=changePass&user=%ls&password1=%ls&password2=%ls&domain=%ls",
+                                   wUser.c_str(), wPass.c_str(), wNewPass.c_str(), wDomain.c_str() );
         if ( resp == NULL )
         {
             errorMessage = "Network error when trying to change password";

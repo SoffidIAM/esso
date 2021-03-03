@@ -59,7 +59,62 @@ void SeyconSession::parseAndStoreSecrets (SeyconResponse *resp)
 	free (wchComposedSecrets);
 }
 
+static std::string escape(const std::string s) {
+	std::string r;
+	const char* source = s.c_str();
+	for (int i = 0; source[i]; i++)
+		if (source[i] == '\'') r += "'\''";
+		else r += (source[i]);
+	return r;
+}
 
+void SeyconSession::runScript(const std::string entry, bool asRoot) {
+	SeyconService service;
+	std::wstring le = service.escapeString(entry.c_str());
+	SeyconResponse *response = service.sendUrlMessage(
+			L"/getapplication?user=%hs&key=%hs&codi=%ls", soffidUser.c_str(),
+			sessionKey.c_str(), le.c_str());
+	if (response != NULL)
+	{
+		std::string status = response->getToken(0);
+		if (status == "OK")
+		{
+			std::string type = response->getToken(1);
+			std::string content = response->getUtf8Tail(2);
+			if (type == "MZN")
+			{
+				SeyconCommon::debug("Executing script:\n"
+						"========================================\n"
+						"%s\n"
+						"=====================================\n", content.c_str());
+				std::string exception;
+				if (!MZNEvaluateJS(content.c_str(), exception))
+				{
+					ScriptDialog::getScriptDialog()->alert(exception.c_str());
+					SeyconCommon::debug("Error executing script: %s\n",
+							exception.c_str());
+				}
+			}
+			else
+			{
+				SeyconCommon::warn("Application type not supported for logon: %s",
+						type.c_str());
+			}
+		}
+		else
+		{
+			std::string details = response->getToken(1);
+			SeyconCommon::warn("Cannot open application with code %s\n%s: %s",
+					entry.c_str(), status.c_str(), details.c_str());
+		}
+		delete response;
+	}
+	else
+	{
+		SeyconCommon::warn("Cannot get application %s", entry.c_str());
+	}
+
+}
 void SeyconSession::startMazinger (SeyconResponse *resp, const char* configFile)
 {
 	MZNSetDebugLevel(MZNC_getUserName(), 0);
@@ -85,56 +140,28 @@ void SeyconSession::startMazinger (SeyconResponse *resp, const char* configFile)
 	SeyconCommon::debug("Passwords checked");
 	// Descargar script inicial
 	SeyconCommon::updateConfig("LogonEntry");
+#ifndef WIN32
+	SeyconCommon::updateConfig("LogonEntryRoot");
+#endif
 	std::string logonEntry;
 	SeyconCommon::readProperty("LogonEntry", logonEntry);
+	std::string logonEntryRoot;
+	SeyconCommon::readProperty("LogonEntryRoot", logonEntryRoot);
+#ifndef WIN32
+	if (getuid() == 0) {
+		if (logonEntryRoot.size() > 0)
+			runScript(logonEntryRoot, true);
+	} else {
+		if (logonEntry.size() > 0)
+			runScript(logonEntry, false);
+	}
+#else
 	if (logonEntry.size() > 0)
 	{
-		SeyconService service;
-		std::wstring le = service.escapeString(logonEntry.c_str());
-		SeyconResponse *response = service.sendUrlMessage(
-				L"/getapplication?user=%hs&key=%hs&codi=%ls", soffidUser.c_str(),
-				sessionKey.c_str(), le.c_str());
-		if (response != NULL)
-		{
-			std::string status = response->getToken(0);
-			if (status == "OK")
-			{
-				std::string type = response->getToken(1);
-				std::string content = response->getUtf8Tail(2);
-				if (type == "MZN")
-				{
-					SeyconCommon::debug("Executing script:\n"
-							"========================================\n"
-							"%s\n"
-							"=====================================\n", content.c_str());
-					std::string exception;
-					if (!MZNEvaluateJS(content.c_str(), exception))
-					{
-						ScriptDialog::getScriptDialog()->alert(exception.c_str());
-						SeyconCommon::debug("Error executing script: %s\n",
-								exception.c_str());
-					}
-				}
-				else
-				{
-					SeyconCommon::warn("Application type not supported for logon: %s",
-							type.c_str());
-				}
-			}
-			else
-			{
-				std::string details = response->getToken(1);
-				SeyconCommon::warn("Cannot open application with code %s\n%s: %s",
-						logonEntry.c_str(), status.c_str(), details.c_str());
-			}
-			delete response;
-		}
-		else
-		{
-			SeyconCommon::warn("Cannot get application %s", logonEntry.c_str());
-		}
-		saveOfflineScript();
+		runScript(logonEntry, false);
 	}
+#endif
+	saveOfflineScript();
 }
 
 void SeyconSession::downloadMazingerConfig (std::string &configFile)

@@ -17,6 +17,7 @@ typedef int socklen_t;
 #include <map>
 #include <time.h>
 #include "Tokenizer.h"
+#include <MazingerInternal.h>
 
 extern HANDLE hEventLog;
 extern const wchar_t* generatePassword();
@@ -515,6 +516,55 @@ void CreateUserDaemon::getCredentials(SOCKET socket,
 	}
 }
 
+
+static void runScript(const std::string entry, bool asRoot) {
+	SeyconService service;
+	std::wstring le = service.escapeString(entry.c_str());
+	SeyconResponse *response = service.sendUrlMessage(
+			L"/getapplication?codi=%ls", le.c_str());
+	if (response != NULL)
+	{
+		std::string status = response->getToken(0);
+		if (status == "OK")
+		{
+			std::string type = response->getToken(1);
+			std::string content = response->getUtf8Tail(2);
+			if (type == "MZN")
+			{
+				printf("Executing script:\n"
+						"========================================\n"
+						"%s\n"
+						"=====================================\n", content.c_str());
+				std::string exception;
+				printf("%s %d", __FILE__, __LINE__);
+				if (!MZNEvaluateJS(content.c_str(), exception))
+				{
+					printf("Error executing script: %s\n",
+							exception.c_str());
+				}
+				printf("Executed script");
+			}
+			else
+			{
+				printf("Application type not supported for logon: %s",
+						type.c_str());
+			}
+		}
+		else
+		{
+			std::string details = response->getToken(1);
+			printf("Cannot open application with code %s\n%s: %s",
+					entry.c_str(), status.c_str(), details.c_str());
+		}
+		delete response;
+	}
+	else
+	{
+		SeyconCommon::warn("Cannot get application %s", entry.c_str());
+	}
+
+}
+
 void CreateUserDaemon::storeCredentials(SOCKET socket,
 		const std::wstring &params) {
 	int i = params.find(L" ");
@@ -530,5 +580,15 @@ void CreateUserDaemon::storeCredentials(SOCKET socket,
 		printf("Storing %ls\n", decoded.c_str());
 		credentials [ user ] = decoded;
 		writeLine(socket, L"OK");
+
+		printf("Updating logonEntryRoot\n");
+		SeyconCommon::updateConfig("LogonEntryRoot");
+		std::string logonEntryRoot;
+		SeyconCommon::readProperty("LogonEntryRoot", logonEntryRoot);
+		SeyconSession session;
+		if (logonEntryRoot.size() > 0) {
+			printf("Executing [%s]\n", logonEntryRoot.c_str());
+			runScript(logonEntryRoot, true);
+		}
 	}
 }
