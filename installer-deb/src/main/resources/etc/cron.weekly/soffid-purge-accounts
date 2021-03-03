@@ -1,0 +1,61 @@
+#!/bin/bash
+function setPasswords() {
+  for user in "${users[@]}"
+  do
+    echo "Reseting password for user: $user"
+    echo "$user:$PASS" | chpasswd
+  done
+}
+
+localusers=$(fgrep localUsers: /etc/mazinger/config)
+if [ $? = 0 ] 
+then
+  localusers=$(cut -d: -f 2 <<< $localusers)
+  echo "Ignoring local users $localusers"
+  IFS=, read -a lua <<< "$localusers"
+  IFS=: 
+  declare -a users
+  users=(root)
+  lua+=(root)
+  while read user pass uid other 
+  do
+    if [ "${#pass}" -gt 5 ]
+    then
+       if [[ " ${lua[@]} " =~ " $user " ]]
+       then
+         echo "--> $user not processed"
+       else
+         echo "--> $user"
+         users+=($user)
+       fi
+    fi
+  done </etc/shadow
+  
+  PASS=$(head -c 18 /dev/urandom | base64)
+  serial=$(fgrep serialNumber: /etc/mazinger/config | cut -d: -f 2)
+  i=0
+  while [ $i -lt 24 ]
+  do
+    ssoservers=$(fgrep SSOServer: /etc/mazinger/config | cut -d: -f 2)
+    ssoport=$(fgrep seycon.https.port: /etc/mazinger/config | cut -d: -f 2)
+    certfile=$(fgrep CertificateFile: /etc/mazinger/config | cut -d: -f 2)
+    for server in $ssoservers
+    do
+      if R=$(wget -q -O - "https://$ssoservers:$ssoport/sethostadmin?host=$(hostname)&user=root&serial=$serial&pass=$PASS" -nv --ca-certificate $certfile)
+      then
+        if [[ "$R" = OK* ]] 
+        then
+          setPasswords
+          exit 0
+        else
+          echo "Error setting password: $R.\nRetrying in one hour"
+        fi
+      else
+        echo "Error setting password. Retrying"
+      fi
+    done
+    sleep 3601
+    let i=i+1
+  done  
+fi
+

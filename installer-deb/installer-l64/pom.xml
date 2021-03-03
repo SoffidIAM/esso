@@ -133,6 +133,7 @@
 									<arg value="${deb.dir}/DEBIAN/prerm" />
 									<arg value="${deb.dir}/DEBIAN/postrm" />
 									<arg value="${deb.dir}/usr/bin/configure_esso" />
+									<arg value="${deb.dir}/etc/cron.weekly/soffid-purge-accounts" />
 								</exec>
 								<exec executable="fakeroot">
 									<arg value="chmod" />
