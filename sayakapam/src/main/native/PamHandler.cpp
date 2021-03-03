@@ -91,6 +91,34 @@ void PamHandler::getPamUser () {
 
 }
 
+void PamHandler::registerLocalUser() {
+	std::string localUsers;
+	SeyconCommon::readProperty("localUsers", localUsers);
+	int pos = 0;
+	do {
+		std::string token;
+		int i = localUsers.find(',', pos);
+		if (i < 0) {
+			token = localUsers.substr(pos);
+			pos = localUsers.length();
+		} else {
+			token = localUsers.substr(pos, i - pos);
+			pos = i + 1 ;
+		}
+		while (token.length() > 0 && token[0] == ' ')
+			token = token.substr(1);
+		while (token.length() > 0 && token[token.length()-1] == ' ')
+			token = token.substr(0, token.length()-1);
+
+		if (token == user)
+			return; //User found
+	} while ( pos < localUsers.length());
+	if (localUsers.empty())
+		localUsers = user;
+	else
+		localUsers = localUsers + " , " + user;
+	SeyconCommon::writeProperty("localUsers", localUsers.c_str());
+}
 
 int PamHandler::conv (int num_msg, const struct pam_message **msg,
 	struct pam_response **resp, void *appdata_ptr) {
@@ -129,6 +157,7 @@ void PamHandler::storeLocalPassword()
 			notify("Unable to store password cache");
 		}
 		pam_close_session(pamh2, 0);
+		registerLocalUser();
 	}
 }
 
@@ -160,7 +189,7 @@ int PamHandler::authenticate()
 	if (m_pkcs11 && p11config.detectToken(this)) {
 		r = authenticatePkcs11 ();
 	} else {
-		r = authenticatePassword();
+		r = authenticatePassword(PAM_AUTHTOK);
 	}
 	if (r == PAM_SUCCESS) {
 		storeLocalPassword();
@@ -192,7 +221,7 @@ int PamHandler::authenticatePkcs11 () {
 					} else {
 						password = strdup (cert->getPassword());
 						pam_set_item(m_pamh, PAM_AUTHTOK, strdup(password));
-						int r = authenticatePassword();
+						int r = authenticatePassword(PAM_AUTHTOK);
 						if ( r == PAM_SUCCESS)
 							return PAM_SUCCESS;
 					}
@@ -204,7 +233,7 @@ int PamHandler::authenticatePkcs11 () {
 		}
 
 	}
-	return authenticatePassword ();
+	return authenticatePassword (PAM_AUTHTOK);
 }
 
 void PamHandler::notify(const char *message)
@@ -238,9 +267,11 @@ void PamHandler::progressMessage(const char *constChar)
 }
 
 
-int PamHandler::authenticatePassword()
+int PamHandler::authenticatePassword(int token)
 {
-	int rv = readPassword();
+	m_log.info("Reading token %d\n", token);
+
+	int rv = readPassword(token);
 	if (rv == PAM_SUCCESS) {
 		std::wstring wsz = MZNC_strtowstr(newpassword == NULL? password: newpassword);
 		int r = session.passwordSessionPrepare (user, wsz.c_str());
@@ -267,16 +298,20 @@ int PamHandler::authenticatePassword()
 	}
 }
 
-int PamHandler::readPassword(const char *prompt)
+int PamHandler::readPassword(int token, const char *prompt)
 {
 	if (password != NULL)
 	{
 		free (password);
 		password = NULL;
 	}
-	int rv = pam_get_item(m_pamh, PAM_AUTHTOK, (const void **)&password);
+	m_log.info("Reading token %d\n", token);
+	int rv = pam_get_item(m_pamh, token, (const void **)&password);
     if (rv == PAM_SUCCESS && password) {
+    	m_log.info("Got token %d=%s\n", token, password);
         password = strdup(password);
+    } else if (token == PAM_OLDAUTHTOK && getuid() == 0) {
+    	return PAM_AUTHINFO_UNAVAIL;
     } else {
     	if (prompt == NULL) {
     		char *service;
@@ -285,7 +320,8 @@ int PamHandler::readPassword(const char *prompt)
     	}
     	rv = readPasswordInternal(prompt, password);
 		if ( rv == PAM_SUCCESS ) {
-			pam_set_item(m_pamh, PAM_AUTHTOK, strdup(password));
+	    	m_log.info("Got token from input %s\n", password);
+			pam_set_item(m_pamh, token, strdup(password));
 		}
     }
 	return rv;
@@ -394,13 +430,14 @@ int PamHandler::closeSession()
 int PamHandler::readPasswordInternal(const char *prompt, char *& member)
 {
 	char *result = NULL;
+	m_log.info("Asking token\n");
 	int rv = pam_prompt (m_pamh, PAM_PROMPT_ECHO_OFF, &result, "%s", prompt);
+	m_log.info("Got token from input %s\n", result);
 	if (result == NULL)
 		return PAM_ABORT;
 	if (rv == PAM_SUCCESS)
 		member = result;
 	return rv;
-    return PAM_SUCCESS;
 }
 
 int PamHandler::genericQuestion (const char *prompt, std::string &result)
@@ -592,7 +629,7 @@ int PamHandler::changePassword () {
 	const char *loop = pam_getenv(m_pamh, MAZINGER_LOOP_INDICATOR);
 	if (loop != NULL && strcmp (loop, "1") == 0)
 	{
-		int r = readPasswordInternal("Nova contrasenya: ", newpassword);
+		int r = readPasswordInternal("New password: ", newpassword);
 		if (r == PAM_SUCCESS)
 			pam_set_item(m_pamh, PAM_AUTHTOK, newpassword);
 		return PAM_USER_UNKNOWN;
@@ -610,7 +647,7 @@ int PamHandler::changePassword () {
 	if (user == NULL)
 		return PAM_AUTH_ERR;
 
-	m_log.info("Change Password request for user \"%s\" (%s)\n",
+	m_log.info("Change Password request for user \"%s\" (service %s)\n",
 			user, service);
 
 	int r;
@@ -623,8 +660,12 @@ int PamHandler::changePassword () {
 	if (m_pkcs11 && p11config.detectToken(this)) {
 		r = authenticatePkcs11 ();
 	} else {
-		r = authenticatePassword();
+		r = authenticatePassword(PAM_OLDAUTHTOK);
 	}
+
+	m_log.info("password results = %d\n", r);
+	m_log.info("old password = %s\n", password);
+	m_log.info("new password = %s\n", newpassword);
 
 	MZNC_setUserName(NULL);
 
@@ -641,11 +682,13 @@ int PamHandler::changePassword () {
 			r = PAM_ABORT;
 		}
 	}
+	else if (r == PAM_USER_UNKNOWN)
+		r = PAM_AUTHINFO_UNAVAIL;
 	else if (r == PAM_AUTH_ERR)
 		r = PAM_ABORT;
 	else if (r == PAM_AUTHINFO_UNAVAIL) {
 		ensureNewPassword ();
-		notify ("Imposible contactar amb la xarxa. La contrasenya només es canviarà al sistema local");
+		notify ("Unable to get previous password. The password is being changed only in the local system");
 	} else if ( r == PAM_USER_UNKNOWN) {
 		ensureNewPassword ();
 	}
@@ -657,7 +700,7 @@ int PamHandler::changePassword () {
 
 void PamHandler::ensureNewPassword () {
 	char *p;
-	int rv = pam_get_item(m_pamh, PAM_OLDAUTHTOK, (const void **)&p);
+	int rv = pam_get_item(m_pamh, PAM_AUTHTOK, (const void **)&p);
     if (rv != PAM_SUCCESS || p == NULL) {
         readNewPassword(NULL);
     }

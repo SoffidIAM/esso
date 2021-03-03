@@ -30,7 +30,7 @@ public:
 	int changePassword ();
 	void progressMessage (const char*);
 	void notify (const char*);
-	int readPassword (const char *msg = NULL);
+	int readPassword (int token, const char *msg = NULL);
 	int readNewPassword (const char *msg = NULL);
 	int readCardValue (const char *msg);
 	int genericQuestion (const char *prompt, std::string &result);
@@ -62,7 +62,7 @@ private:
 	char *cardValue;
 	std::string fullName;
 	std::string group;
-	int authenticatePassword();
+	int authenticatePassword(int passwordToken);
 	int authenticatePkcs11();
 	int readPasswordInternal (const char *msg, char *&member);
 	void ensureNewPassword ();
@@ -78,6 +78,7 @@ private:
 	PamDialog *pamDialog;
 	SeyconSession session;
     void storeLocalPassword();
+    void registerLocalUser();
     void dialogThread ();
     void handleDialogRequest (int socket);
     int createSocket (const char *name);
