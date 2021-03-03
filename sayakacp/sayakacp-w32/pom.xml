@@ -104,7 +104,6 @@
 						<linkerMiddleOption>-Xlinker</linkerMiddleOption>
 						<linkerMiddleOption>--strip-all</linkerMiddleOption>
 						<linkerMiddleOption>-shared</linkerMiddleOption>
-						<linkerMiddleOption>-Lsrc/main/lib-deps</linkerMiddleOption>
 						<linkerMiddleOption>target/objs/resources.o</linkerMiddleOption>
 						<linkerMiddleOption>-lmazinger-engine</linkerMiddleOption>
 						<linkerMiddleOption>-lmazinger-session</linkerMiddleOption>
@@ -123,6 +122,7 @@
 						<linkerMiddleOption>-lws2_32</linkerMiddleOption>
 						<linkerMiddleOption>-lmpr</linkerMiddleOption>
 						<linkerMiddleOption>-lsecur32</linkerMiddleOption>
+						<linkerMiddleOption>../src/main/def/credui.dll</linkerMiddleOption>
 						<linkerEndOption>-static</linkerEndOption>
 					</linkerEndOptions>
 					<sources>

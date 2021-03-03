@@ -37,7 +37,7 @@ SSOCredential::SSOCredential () :
 
 	m_cpfis[SHI_TITLE] = CPFIS_NONE;
 	m_cpfis[SHI_USER] = CPFIS_FOCUSED;
-	m_cpfis[SHI_PASSWORD] = CPFIS_FOCUSED;
+	m_cpfis[SHI_PASSWORD] = CPFIS_NONE;
 	m_cpfis[SHI_IMAGE] = CPFIS_NONE;
 	m_cpfis[SHI_SUBMIT_BUTTON] = CPFIS_NONE;
 	m_cpfis[SHI_MESSAGE] = CPFIS_NONE;

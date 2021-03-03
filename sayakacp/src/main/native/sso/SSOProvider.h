@@ -64,6 +64,8 @@ private:
 	std::vector<SSOCredential *> m_autoCredentials;
     ICredentialProviderEvents* m_credentialProviderEvents;
 
+    void loadCredentials();
+
     std::wstring m_domain;
 };
 

@@ -1,8 +1,8 @@
 LIBRARY sayaka-cp.dll
 
-
 EXPORTS
 	DllGetClassObject PRIVATE
 	DllCanUnloadNow PRIVATE
 	DllMain PRIVATE
 	Register
+

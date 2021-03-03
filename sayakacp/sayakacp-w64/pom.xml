@@ -126,6 +126,7 @@
 						<linkerMiddleOption>-lws2_32</linkerMiddleOption>
 						<linkerMiddleOption>-lmpr</linkerMiddleOption>
 						<linkerMiddleOption>-lsecur32</linkerMiddleOption>
+						<linkerMiddleOption>-lcredui</linkerMiddleOption>
 						<linkerEndOption>-static</linkerEndOption>
 					</linkerEndOptions>
 					<sources>

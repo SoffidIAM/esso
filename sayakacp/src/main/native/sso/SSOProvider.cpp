@@ -14,7 +14,9 @@
 #include <combaseapi.h>
 #include <wincred.h>
 
-#define CREDUIWIN_ENUMERATE_ADMINS 0x100
+#include <sspi.h>
+#include "sspi-update.h"
+
 
 static CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgSSOFieldDescriptors[] =
 {
@@ -143,7 +145,12 @@ HRESULT __stdcall SSOProvider::SetSerialization(
     const CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION* pcpcs
     )
 {
-    m_log.info("Provider::SetSerialization VVVVVVVV");
+	wchar_t achFileName[4096];
+	GetModuleFileNameW(NULL, achFileName, sizeof achFileName-1);
+	PSEC_WINNT_CREDUI_CONTEXT pContext = NULL;
+
+    m_log.info("Provider::SetSerialization %ls", achFileName);
+
     std::wstring s = L"";
     for (int i=pcpcs->cbSerialization-2; i >=0; i-=2) {
     	wchar_t wch = * ((wchar_t*) &pcpcs->rgbSerialization[i]);
@@ -154,9 +161,25 @@ HRESULT __stdcall SSOProvider::SetSerialization(
     }
     m_log.info("Domain %ls", s.c_str());
 
-    m_domain = s;
+   	m_domain = s;
 
-    std::vector<WebTransport*> rules = MZNWebTransportMatch();
+   	if (wcslen(m_domain.c_str()) > 5)
+   		loadCredentials();
+
+   	if (m_autoCredentials.empty())
+   	{
+   		m_domain = achFileName;
+   		loadCredentials();
+   	}
+
+    UNREFERENCED_PARAMETER(pcpcs);
+    return S_OK;
+}
+
+
+void SSOProvider::loadCredentials() {
+	MZNSendDebugMessageA("Searching credentials for %ls", m_domain.c_str());
+	std::vector<WebTransport*> rules = MZNWebTransportMatch();
 
     SecretStore ss(MZNC_getUserName());
     for (std::vector<WebTransport*>::iterator it = rules.begin(); it != rules.end(); it++) {
@@ -164,6 +187,7 @@ HRESULT __stdcall SSOProvider::SetSerialization(
     	std::wstring url = wt->url;
     	int i = url.find(L"://");
         m_log.info("Checking url %ls", url.c_str());
+        bool match = false;
     	if ( i != url.npos) {
     		url = url.substr(i+3);
     		i = url.find(L"/");
@@ -172,39 +196,44 @@ HRESULT __stdcall SSOProvider::SetSerialization(
     		if (i != url.npos) url = url.substr(0, i);
             m_log.info("domain %ls", url.c_str());
     		if (url == m_domain) {
-                m_log.info("Loading rules");
-				std::wstring secret = L"account.";
-				secret += wt->system;
-				m_log.info("Check secret %ls", secret.c_str());
-				std::vector<std::wstring> accounts = ss.getSecrets(secret.c_str());
-				for (std::vector<std::wstring>::iterator it = accounts.begin(); it != accounts.end(); it ++) {
-					secret = L"pass.";
-					secret += wt->system;
-					secret += L".";
-					secret += *it;
-					m_log.info("Check secret %ls", secret.c_str());
-					wchar_t *str = ss.getSecret(secret.c_str());
-					if (str != NULL) {
-						SSOCredential *c = new SSOCredential;
-						std::wstring userName;
-						if (! wt->domain.empty()) {
-							userName = wt->domain;
-							userName += L"\\";
-						}
-						userName += *it;
-						c->szUser = userName;
-						c->szPassword = str;
-						c->autoLogin = true;
-						c->AddRef();
-						c->updateLabel();
-						m_autoCredentials.push_back(c);
-					}
-				}
+    			match = true;
     		}
     	}
+    	if (!match) {
+    		match = wcsicmp (url.c_str(), m_domain.c_str()) == 0;
+    	}
+
+    	if (match) {
+			m_log.info("Loading rules");
+			std::wstring secret = L"account.";
+			secret += wt->system;
+			m_log.info("Check secret %ls", secret.c_str());
+			std::vector<std::wstring> accounts = ss.getSecrets(secret.c_str());
+			for (std::vector<std::wstring>::iterator it = accounts.begin(); it != accounts.end(); it ++) {
+				secret = L"pass.";
+				secret += wt->system;
+				secret += L".";
+				secret += *it;
+				m_log.info("Check secret %ls", secret.c_str());
+				wchar_t *str = ss.getSecret(secret.c_str());
+				if (str != NULL) {
+					SSOCredential *c = new SSOCredential;
+					std::wstring userName;
+					if (! wt->domain.empty()) {
+						userName = wt->domain;
+						userName += L"\\";
+					}
+					userName += *it;
+					c->szUser = userName;
+					c->szPassword = str;
+					c->autoLogin = true;
+					c->AddRef();
+					c->updateLabel();
+					m_autoCredentials.push_back(c);
+				}
+			}
+    	}
     }
-    UNREFERENCED_PARAMETER(pcpcs);
-    return S_OK;
 }
 
 //
