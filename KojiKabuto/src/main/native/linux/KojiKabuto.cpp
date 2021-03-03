@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string>
 #include <MazingerHook.h>
+#include <MazingerInternal.h>
 #include <MZNcompat.h>
 #include <ssoclient.h>
 #include <pthread.h>
@@ -329,6 +330,57 @@ static GtkStatusIcon *create_tray_icon() {
 	return tray_icon;
 }
 
+static void runLogonScript() {
+	SeyconService service;
+
+	std::string entry;
+	SeyconCommon::readProperty("LogonEntry", entry);
+	if (entry.size() == 0)
+		return ;
+
+	std::wstring le = service.escapeString(entry.c_str());
+	SeyconResponse *response = service.sendUrlMessage(
+			L"/getapplication?codi=%ls", le.c_str());
+	if (response != NULL)
+	{
+		std::string status = response->getToken(0);
+		if (status == "OK")
+		{
+			std::string type = response->getToken(1);
+			std::string content = response->getUtf8Tail(2);
+			if (type == "MZN")
+			{
+				SeyconCommon::debug("Executing script:\n"
+						"========================================\n"
+						"%s\n"
+						"=====================================\n", content.c_str());
+				std::string exception;
+				if (!MZNEvaluateJS(content.c_str(), exception))
+				{
+					SeyconCommon::debug("Error executing script: %s\n",
+							exception.c_str());
+				}
+			}
+			else
+			{
+				SeyconCommon::warn("Application type not supported for logon: %s",
+						type.c_str());
+			}
+		}
+		else
+		{
+			std::string details = response->getToken(1);
+			SeyconCommon::warn("Cannot open application with code %s\n%s: %s",
+					entry.c_str(), status.c_str(), details.c_str());
+		}
+		delete response;
+	}
+	else
+	{
+		SeyconCommon::warn("Cannot get application %s", entry.c_str());
+	}
+}
+
 extern "C" int main(int argc, char **argv) {
 	static void   (*pg_thread_init)   (GThreadFunctions *vtable);
 
@@ -357,6 +409,9 @@ extern "C" int main(int argc, char **argv) {
 
 	if (!MZNIsStarted(szUser))
 		view_popup_menu_onLogin(NULL, NULL);
+	else {
+		runLogonScript();
+	}
 
 	gtk_main();
 
