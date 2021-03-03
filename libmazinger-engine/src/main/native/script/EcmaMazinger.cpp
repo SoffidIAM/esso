@@ -505,15 +505,23 @@ static void MZNECMA_exec(struct SEE_interpreter *interp,
 	}
 
 #else
-	if (fork() == 0)
-	{
+	std::string cmdLine = SEE_StringToChars(interp,message);
+//	if (fork() == 0)
+//	{
+//		if (lDir.size() > 0) {
+//			chdir (lDir.c_str());
+//		}
+//		close(0);
+//		close(1);
+//		close(2);
+////		execl ("/bin/bash", "/bin/bash", "-c", cmdLine.c_str(), NULL);
+//		exit(1);
+//	}
 		if (lDir.size() > 0) {
 			chdir (lDir.c_str());
 		}
-		std::string cmdLine = SEE_StringToChars(interp,message);
-		execlp ("/bin/bash", "-c", cmdLine.c_str(), NULL);
-		exit(1);
-	}
+		cmdLine += "&";
+		system(cmdLine.c_str());
 #endif
 	SEE_SET_UNDEFINED(res);
 }
