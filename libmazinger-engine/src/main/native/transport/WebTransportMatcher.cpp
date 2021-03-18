@@ -24,8 +24,8 @@ std::vector<WebTransport*> MZNWebTransportMatch () {
 			{
 				c = new ConfigReader(pMazinger);
 				c->parseWebTransport();
-				rules = c->getWebTransports();
 			}
+			rules = c->getWebTransports();
 		}
 		MZNC_endMutex();
 	}
