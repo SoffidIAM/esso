@@ -7,10 +7,13 @@ function setPasswords() {
   done
 }
 
-localusers=$(fgrep localUsers: /etc/mazinger/config)
+function getConfig() {
+  grep -i "^$1:" /etc/mazinger/config | head -n 1 | cut -d: -f 2
+}
+
+localusers=$(getConfig localUsers )
 if [ $? = 0 ] 
 then
-  localusers=$(cut -d: -f 2 <<< $localusers)
   echo "Ignoring local users $localusers"
   IFS=, read -a lua <<< "$localusers"
   IFS=: 
@@ -32,16 +35,17 @@ then
   done </etc/shadow
   
   PASS=$(head -c 18 /dev/urandom | base64)
-  serial=$(fgrep serialNumber: /etc/mazinger/config | cut -d: -f 2)
+  serial=$(getConfig serialNumber)
   i=0
   while [ $i -lt 24 ]
   do
-    ssoservers=$(fgrep SSOServer: /etc/mazinger/config | cut -d: -f 2)
-    ssoport=$(fgrep seycon.https.port: /etc/mazinger/config | cut -d: -f 2)
-    certfile=$(fgrep CertificateFile: /etc/mazinger/config | cut -d: -f 2)
+    ssoservers=$(getConfig SSOServer)
+    ssoport=$(getConfig seycon.https.port)
+    certfile=$(getConfig CertificateFile)
     for server in $ssoservers
     do
-      if R=$(wget -q -O - "https://$ssoservers:$ssoport/sethostadmin?host=$(hostname)&user=root&serial=$serial&pass=$PASS" -nv --ca-certificate $certfile)
+      echo "Connecting to $server:$ssoport"
+      if R=$(wget -O - "https://$ssoservers:$ssoport/sethostadmin?host=$(hostname)&user=root&serial=$serial&pass=$PASS" -nv --ca-certificate $certfile)
       then
         if [[ "$R" = OK* ]] 
         then
