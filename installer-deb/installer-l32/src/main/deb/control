@@ -5,4 +5,4 @@ Package: soffidesso
 Version: ${project.version}
 Architecture: i686
 Description: Soffid ESSO
-Depends:libsoup2.4-1, wget 
+Depends:libsoup2.4-1, wget, libpcsclite1
