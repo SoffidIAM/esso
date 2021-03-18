@@ -3,6 +3,6 @@ Priority: optional
 Maintainer: Soffid <contact@soffid.com>
 Package: soffidesso
 Version: ${project.version}
-Architecture: i686
+Architecture: amd64
 Description: Soffid ESSO
-Depends:libsoup2.4-1, wget, libpcsclite1, libc6 ( >= 2.31 )
+Depends:libsoup2.4-1, wget, libpcsclite1, libc6 ( >= 2.23 )
