@@ -57,3 +57,7 @@ fgrep -q /etc/mazinger/sudoers.d /etc/sudoers ||
 cp /etc/mazinger/config /etc/mazinger/config.dpkg.orig
 sed -e '1 a MazingerVersion:${pom.version}
 /^MazingerVersion:.*$/ D' </etc/mazinger/config.dpkg.orig >/etc/mazinger/config
+
+# Configure update path
+echo deb http://download.soffid.com/deb $(lsb_release -cs) soffid >/etc/apt/sources.list.d/soffid.list
+
