@@ -3,17 +3,13 @@
 	<groupId>com.soffid.iam.esso.w32</groupId>
 	<artifactId>sewashi</artifactId>
 	<packaging>${architecture.exe}</packaging>
-	<name>Executable per a injecció d'Usuaris i Passwords</name>
+	<name>Insert credentials in HLL applications</name>
 	<version>3.0.0-SNAPSHOT</version>
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.esso.pom</groupId>
 		<version>3.0.0-SNAPSHOT</version>
 	</parent>
-	<scm>
-		<connection>scm:cvs:ext:@cvs.gforge.caib.es:/cvsroot/seycon:mazinger/MazingerTester</connection>
-    <tag>esso-1.4.0</tag>
-  </scm>
 	<build>
 		<plugins>
 			<plugin>

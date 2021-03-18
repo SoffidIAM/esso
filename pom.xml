@@ -147,6 +147,7 @@
 		<groupId>org.codehaus.mojo</groupId>
 		<artifactId>native-maven-plugin</artifactId>
 		<version>1.0-alpha-8</version>
+    <extensions>true</extensions>
 	</plugin>
      </plugins>
   </build>
@@ -159,7 +160,7 @@
   <repositories>
     <repository>
       <id>central</id>
-      <url>http://repo1.maven.org/maven2</url>
+      <url>https://repo1.maven.org/maven2</url>
     </repository>
     <repository>
       <id>soffid-open</id>
