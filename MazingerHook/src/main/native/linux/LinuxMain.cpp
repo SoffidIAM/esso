@@ -49,7 +49,8 @@ static void * waitforstop (void * data) {
 	char *shmName = getStopSemaphoreName(user);
 	int shm = shm_open (shmName, O_RDWR|O_CREAT, 0600);
 	if (shm < 0) {
-		printf ("Unable to create semaphore %s\n", shmName);
+//		printf ("Unable to create semaphore %s\n", shmName);
+		return 0;
 	} else {
 		struct passwd *pw = getpwnam(user);
 		if ( pw != NULL) {
