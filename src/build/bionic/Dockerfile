@@ -14,6 +14,7 @@ RUN apt-get install -y openjdk-8-jdk
 RUN apt-get install -y libpam-dev libssl-dev libpcsclite-dev 
 RUN apt-get install -y libgtk2.0-dev
 RUN apt-get install -y lsb-release
+RUN apt-get install -y libkrb5-dev
 
 COPY bionic/pom.xml /root/pom.xml
 COPY install.sh /root/install.sh
