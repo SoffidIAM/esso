@@ -65,15 +65,12 @@ void ConfigFile::load (const char*file) {
 			}
 			char *igual = strstr(line, ":");
 			if (igual != NULL) {
-				ensureCapacity ();
 				int l = strlen(line);
 				while (l > 0 && line[l-1] == '\n') line [--l] = '\0';
 				*igual = '\0';
 				char *name = line;
 				char *value = igual+1;
-				properties[num].name = dupString(name);
-				properties[num].value = dupString(value);
-				num ++;
+				setValue(name, value);
 			}
 		}
 	}
