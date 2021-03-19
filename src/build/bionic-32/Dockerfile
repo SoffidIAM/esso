@@ -13,7 +13,7 @@ RUN apt-get install -y libpam-dev:i386 libssl-dev:i386 libpcsclite-dev:i386
 RUN apt-get install -y libgtk2.0-dev:i386
 RUN apt-get install -y lsb-release
 
-COPY pom.xml /root/pom.xml
+COPY bionic-32/pom.xml /root/pom.xml
 COPY install.sh /root/install.sh
 RUN chmod a+x /root/install.sh
 COPY settings.xml /root/.m2/settings.xml

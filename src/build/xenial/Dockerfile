@@ -16,7 +16,7 @@ RUN apt-get install -y libgtk2.0-dev
 RUN apt-get install -y libkrb5-dev
 RUN apt-get install -y lsb-release
 
-COPY xenial-32/pom.xml /root/pom.xml
+COPY xenial/pom.xml /root/pom.xml
 COPY install.sh /root/install.sh
 RUN chmod a+x /root/install.sh
 COPY settings.xml /root/.m2/settings.xml
