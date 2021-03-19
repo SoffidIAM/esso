@@ -16,8 +16,9 @@
 
 #include <sspi.h>
 #include "sspi-update.h"
+#include <time.h>
 
-
+static time_t lastLogin = 0;
 static CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgSSOFieldDescriptors[] =
 {
     { SHI_IMAGE, CPFT_TILE_IMAGE, (wchar_t*) L"Image" },
@@ -327,6 +328,8 @@ HRESULT __stdcall SSOProvider::GetCredentialCount(
     BOOL* pbAutoLogonWithDefault
     )
 {
+	time_t now;
+	time (&now);
 
     m_log.info("Provider::GetCredentialCount");
 	if (scenarioFlags & CREDUIWIN_ENUMERATE_ADMINS)
@@ -337,7 +340,8 @@ HRESULT __stdcall SSOProvider::GetCredentialCount(
 		*pdwCount = count;
 	}
 	*pdwDefault = 0;
-	*pbAutoLogonWithDefault = m_autoCredentials.size() == 1;
+	*pbAutoLogonWithDefault = m_autoCredentials.size() == 1 && now - lastLogin > 30;
+	lastLogin = now;
     return S_OK;
 }
 
