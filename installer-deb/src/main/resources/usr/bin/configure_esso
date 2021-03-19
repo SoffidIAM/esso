@@ -11,5 +11,5 @@ else
    echo "SSOServer:$SSOServer" >/etc/mazinger/config
    echo "seycon.https.port:$port" >>/etc/mazinger/config
    echo "CertificateFile:/etc/mazinger/seycon.pem" >>/etc/mazinger/config
-   cat /etc/mazinger/config.bak | fgrep -v SSOServer  | fgrep -v CertificateFile >> /etc/mazinger/config
+   cat /etc/mazinger/config.bak | fgrep -v SSOServer  | fgrep -v seycon.https.port | fgrep -v CertificateFile >> /etc/mazinger/config
 fi
