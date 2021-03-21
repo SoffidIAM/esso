@@ -12,6 +12,7 @@ RUN apt-get install -y libselinux1-dev:i386 libgtk-3-dev:i386 libffi-dev:i386
 RUN apt-get install -y libpam-dev:i386 libssl-dev:i386 libpcsclite-dev:i386
 RUN apt-get install -y libgtk2.0-dev:i386
 RUN apt-get install -y lsb-release
+RUN apt-get install -y libkrb5-dev:i386
 
 COPY bionic-32/pom.xml /root/pom.xml
 COPY install.sh /root/install.sh
