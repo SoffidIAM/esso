@@ -24,7 +24,7 @@ then
 fi
 if [ -r /root/build/installer-deb/installer-l32/src/main/deb/control-$codename ]
 then
-  cp /root/build/installer-deb/installer-l32/src/main/deb/control-$codename /root/build/installer-deb/installer-l64/src/main/deb/control
+  cp /root/build/installer-deb/installer-l32/src/main/deb/control-$codename /root/build/installer-deb/installer-l32/src/main/deb/control
 fi
 mvn -f /root/build/pom.xml clean install deploy
 cd /root/build
