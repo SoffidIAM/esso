@@ -255,12 +255,12 @@ ServiceIteratorResult SeyconSession::createSession ( const char* servletName,
                 }
                 else
                 {
-                    printf ( "Cannot create sudoers file\n" );
+//                    printf ( "Cannot create sudoers file\n" );
                 }
             }
             else
             {
-                printf ( "Denied sudoers %s\n", sudoersFile );
+//                printf ( "Denied sudoers %s\n", sudoersFile );
             }
 #endif
             m_daemon->sessionId = sessionId;
