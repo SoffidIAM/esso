@@ -59,6 +59,5 @@ sed -e '1 a MazingerVersion:${pom.version}
 /^MazingerVersion:.*$/ D' </etc/mazinger/config.dpkg.orig >/etc/mazinger/config
 
 # Configure update path
-apt-key add /etc/mazinger/public.gpg
 apt-add-repository "deb http://download.soffid.com/deb/ $(lsb_release -cs) soffid"
 
