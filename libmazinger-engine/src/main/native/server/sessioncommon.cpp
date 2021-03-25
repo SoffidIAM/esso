@@ -601,7 +601,7 @@ void SeyconCommon::updateHostAddress () {
 	time_t now;
 	time (&start);
 	do {
-		SeyconCommon::info ("Connecting to sync server to update host address %hs", MZNC_getHostName());
+		SeyconCommon::debug ("Connecting to sync server to update host address %hs", MZNC_getHostName());
 		SeyconResponse*response= service.sendUrlMessage(L"/updateHostAddress?name=%hs&serial=%hs",
 				MZNC_getHostName(), serialNumber.c_str());
 		if (response != NULL && response->getResult() != NULL)  {
