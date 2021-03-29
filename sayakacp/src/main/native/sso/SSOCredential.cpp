@@ -74,7 +74,7 @@ HRESULT __stdcall SSOCredential::QueryInterface (REFIID riid, void **ppObj)
 
 	wchar_t *lpwszClsid;
 	StringFromCLSID(riid, &lpwszClsid);
-	m_log.info (L"Query Interface Unknown %s", lpwszClsid);
+//	m_log.info (L"Query Interface Unknown %ls", lpwszClsid);
 	//
 	//if control reaches here then , let the client know that
 	//we do not satisfy the required interface
