@@ -110,7 +110,6 @@ HRESULT __stdcall SSOProvider::SetUsageScenario(
     case CPUS_CHANGE_PASSWORD:
         hr = E_NOTIMPL;
         break;
-
     case CPUS_CREDUI:
     	s_rgSSOFieldDescriptors[SHI_TITLE].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(45).c_str()).c_str() );
     	s_rgSSOFieldDescriptors[SHI_USER].pszLabel =  wcsdup ( MZNC_strtowstr(Utils::LoadResourcesString(46).c_str()).c_str() );
@@ -127,6 +126,59 @@ HRESULT __stdcall SSOProvider::SetUsageScenario(
     return hr;
 }
 
+static std::wstring dumpSerialization (
+		Log & log,
+	    const CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION* pcpcs
+	){
+	SEC_WINNT_CREDUI_CONTEXT* ctx = NULL;
+	ULONG headerSize = 0x34;
+	SspiUnmarshalCredUIContext(&pcpcs->rgbSerialization[headerSize], pcpcs->cbSerialization - headerSize, &ctx);
+
+	if (ctx == NULL) {
+		log.info ("Cannot get target name (error %x)", GetLastError());
+		for (int i = 0; i < pcpcs->cbSerialization; i+=16) {
+			std::string x;
+			std::string s;
+			char ach[4];
+			for (int j = i; j < pcpcs->cbSerialization && j < i + 16; j++)
+			{
+				sprintf (ach, "%02x ", pcpcs->rgbSerialization[j]);
+				x += ach;
+				if (pcpcs->rgbSerialization[j] > 32)
+					s += (char) pcpcs->rgbSerialization[j];
+				else
+					s += " ";
+			}
+			log.info ( "%04d   %s %s", i , x.c_str(), s.c_str());
+		}
+		return std::wstring();
+	}
+	else
+	{
+		log.info ("Target name %ls", ctx->TargetName->Buffer);
+		log.info ("Message %ls", ctx->UIInfo->pszMessageText);
+		return std::wstring(ctx->TargetName->Buffer);
+	}
+}
+
+bool checkAuthenticationPackage (const char *package, unsigned long id) {
+	ULONG authenticationPackage;
+	HANDLE lsaHandle;
+
+	LsaConnectUntrusted(&lsaHandle);
+
+	LSA_STRING packageName;
+	packageName.Buffer = (char*) package;
+	packageName.Length = strlen (package);
+	packageName.MaximumLength = packageName.Length + 1;
+	LsaLookupAuthenticationPackage( lsaHandle, &packageName, &authenticationPackage);
+
+	CloseHandle(lsaHandle);
+
+//    m_log.info("Provider::Checking package %ls %lx==%lx", package, id, authenticationPackage);
+
+    return authenticationPackage == id;
+}
 //
 // SetSerialization takes the kind of buffer that you would normally return to LogonUI for
 // an authentication attempt.  It's the opposite of ICredentialProviderCredential::GetSerialization.
@@ -146,26 +198,50 @@ HRESULT __stdcall SSOProvider::SetSerialization(
     const CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION* pcpcs
     )
 {
+	if (pcpcs == NULL)
+		return S_OK;
+
 	wchar_t achFileName[4096];
 	GetModuleFileNameW(NULL, achFileName, sizeof achFileName-1);
 	PSEC_WINNT_CREDUI_CONTEXT pContext = NULL;
 
-    m_log.info("Provider::SetSerialization %ls", achFileName);
+    m_log.info("Provider::SetSerialization");
 
-    std::wstring s = L"";
-    for (int i=pcpcs->cbSerialization-2; i >=0; i-=2) {
-    	wchar_t wch = * ((wchar_t*) &pcpcs->rgbSerialization[i]);
-    	if (wch == L'/') break;
-        std::wstring t;
-        t += wch;
-    	s = t + s;
+    if (! checkAuthenticationPackage(MSV1_0_PACKAGE_NAME, pcpcs->ulAuthenticationPackage) &&
+    		! checkAuthenticationPackage(MICROSOFT_KERBEROS_NAME_A, pcpcs->ulAuthenticationPackage) &&
+			! checkAuthenticationPackage(NEGOSSP_NAME_A, pcpcs->ulAuthenticationPackage))
+    {
+    	m_log.info("Ignoring unknown authentication packange %lx", pcpcs->ulAuthenticationPackage);
+    	ignore = true;
+    	return S_OK;
+    } else {
+    	ignore = false;
     }
-    m_log.info("Domain %ls", s.c_str());
 
-   	m_domain = s;
+    m_autoCredentials.clear();
 
-   	if (wcslen(m_domain.c_str()) > 5)
+    std::wstring target = dumpSerialization(m_log, pcpcs);
+    m_log.info ("target = %ls", target.c_str());
+    if (target.length() > 5 && target.substr(0, 5) == std::wstring(L"HTTP/")) {
+		m_domain =  target.substr(5).c_str() ;
    		loadCredentials();
+    }
+    if (target.length() > 7 && target.substr(0, 7) == std::wstring(L"http://")) {
+		m_domain =  target.substr(7).c_str() ;
+		int i = m_domain.find(L"/");
+		if (i != m_domain.npos) m_domain = m_domain.substr(0, i);
+		i = m_domain.find(L":");
+		if (i != m_domain.npos) m_domain = m_domain.substr(0, i);
+   		loadCredentials();
+    }
+    if (target.length() > 8 && target.substr(0, 8) == std::wstring(L"https://")) {
+		m_domain =  target.substr(8).c_str() ;
+		int i = m_domain.find(L"/");
+		if (i != m_domain.npos) m_domain = m_domain.substr(0, i);
+		i = m_domain.find(L":");
+		if (i != m_domain.npos) m_domain = m_domain.substr(0, i);
+   		loadCredentials();
+    }
 
    	if (m_autoCredentials.empty())
    	{
@@ -173,13 +249,13 @@ HRESULT __stdcall SSOProvider::SetSerialization(
    		loadCredentials();
    	}
 
-    UNREFERENCED_PARAMETER(pcpcs);
     return S_OK;
 }
 
 
 void SSOProvider::loadCredentials() {
-	MZNSendDebugMessageA("Searching credentials for %ls", m_domain.c_str());
+	MZNSendDebugMessageA("WebTransport: Searching credentials for %ls", m_domain.c_str());
+	m_log.info("Searching credentials for %ls", m_domain.c_str());
 	std::vector<WebTransport*> rules = MZNWebTransportMatch();
 
     SecretStore ss(MZNC_getUserName());
@@ -332,7 +408,13 @@ HRESULT __stdcall SSOProvider::GetCredentialCount(
 	time (&now);
 
     m_log.info("Provider::GetCredentialCount");
-	if (scenarioFlags & CREDUIWIN_ENUMERATE_ADMINS)
+    if (ignore) {
+    	*pdwCount = 0;
+    	*pbAutoLogonWithDefault = 0;
+        return S_OK;
+
+    }
+    else if (scenarioFlags & CREDUIWIN_ENUMERATE_ADMINS)
 	    *pdwCount = 0; // This provider always has the same number of credentials.
 	else {
 		int count = m_autoCredentials.size();

@@ -67,6 +67,7 @@ private:
     void loadCredentials();
 
     std::wstring m_domain;
+    bool ignore;
 };
 
 
