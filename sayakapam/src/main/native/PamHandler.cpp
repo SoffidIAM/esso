@@ -308,7 +308,7 @@ int PamHandler::readPassword(int token, const char *prompt)
 	m_log.info("Reading token %d\n", token);
 	int rv = pam_get_item(m_pamh, token, (const void **)&password);
     if (rv == PAM_SUCCESS && password) {
-    	m_log.info("Got token %d=%s\n", token, password);
+//    	m_log.info("Got token %d=%s\n", token, password);
         password = strdup(password);
     } else if (token == PAM_OLDAUTHTOK && getuid() == 0) {
     	return PAM_AUTHINFO_UNAVAIL;
@@ -320,7 +320,7 @@ int PamHandler::readPassword(int token, const char *prompt)
     	}
     	rv = readPasswordInternal(prompt, password);
 		if ( rv == PAM_SUCCESS ) {
-	    	m_log.info("Got token from input %s\n", password);
+//	    	m_log.info("Got token from input %s\n", password);
 			pam_set_item(m_pamh, token, strdup(password));
 		}
     }
@@ -432,7 +432,7 @@ int PamHandler::readPasswordInternal(const char *prompt, char *& member)
 	char *result = NULL;
 	m_log.info("Asking token\n");
 	int rv = pam_prompt (m_pamh, PAM_PROMPT_ECHO_OFF, &result, "%s", prompt);
-	m_log.info("Got token from input %s\n", result);
+//	m_log.info("Got token from input %s\n", result);
 	if (result == NULL)
 		return PAM_ABORT;
 	if (rv == PAM_SUCCESS)
