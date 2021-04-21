@@ -604,36 +604,46 @@ SeyconService::SeyconService() {
 }
 
 
-
-std::wstring SeyconService:: escapeString(const wchar_t* lpszSource) {
-
-	std::wstring target;
-	int len = wcslen (lpszSource);
+static std::wstring escape( const char *lpszSource) {
+	std::string target;
+	int len = strlen (lpszSource);
 	int i = 0;
 	while (i < len) {
-		if (lpszSource[i] == L'%') {
-			target.append (L"%25");
-		} else if (lpszSource[i] == L' ') {
-			target.append (L"+");
-		} else if (lpszSource[i] == L'%') {
-			target.append (L"%25");
-		} else if (lpszSource[i] == L'&') {
-			target.append (L"%26");
-		} else if (lpszSource[i] == L'?') {
-			target.append (L"%3F");
-		} else if (lpszSource[i] == L'+') {
-			target.append (L"%2B");
+		if (lpszSource[i] == '%') {
+			target.append ("%25");
+		} else if (lpszSource[i] == ' ') {
+			target.append ("+");
+		} else if (lpszSource[i] == '%') {
+			target.append ("%25");
+		} else if (lpszSource[i] == '&') {
+			target.append ("%26");
+		} else if (lpszSource[i] == '?') {
+			target.append ("%3F");
+		} else if (lpszSource[i] == '+') {
+			target.append ("%2B");
+		} else if (lpszSource[i] == '#') {
+			target.append ("%23");
+		} else if (lpszSource[i] >= 255 || lpszSource[i] < 32) {
+			target.append("%");
+			char ach[10];
+			sprintf(ach, "%02x", lpszSource[i] );
+			target.append (ach);
 		} else {
 			target.append (&lpszSource[i], 1);
 		}
 		i++;
 	}
-	return target;
+	return MZNC_strtowstr(target.c_str());
+}
+
+std::wstring SeyconService:: escapeString(const wchar_t* lpszSource) {
+	std::string s = MZNC_wstrtoutf8(lpszSource);
+	return escape(s.c_str());
 }
 
 std::wstring SeyconService::escapeString(const char* lpszSource) {
-	std::wstring target = escapeString (MZNC_strtowstr(lpszSource).c_str());
-	return target;
+	std::string s = MZNC_strtoutf8(lpszSource);
+	return escape(s.c_str());
 }
 
 
