@@ -50,7 +50,7 @@
 
     <InstallExecuteSequence> 
      <LaunchConditions Sequence="100"/>
-     <RemoveExistingProducts After="InstallValidate" Sequence="1401"></RemoveExistingProducts>
+     <RemoveExistingProducts After="InstallValidate" Sequence="1401">(REMOVE="ALL") AND NOT PREVIOUSFOUND</RemoveExistingProducts>
      <InstallInitialize Sequence="1500"></InstallInitialize>
      <Custom Action="ZUninstall" Sequence="1540" >(REMOVE="ALL") AND NOT PREVIOUSFOUND</Custom>
      <RemoveFiles Sequence="1550"></RemoveFiles>
