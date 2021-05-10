@@ -54,9 +54,14 @@ fgrep -q /etc/mazinger/sudoers.d /etc/sudoers ||
 (printf "\n# Added by Mazinger $(date)\n#includedir /etc/mazinger/sudoers.d\n" >>/etc/sudoers)
 
 # Configurar version
-cp /etc/mazinger/config /etc/mazinger/config.dpkg.orig
-sed -e '1 a MazingerVersion:${pom.version}
+if [[ -r /etc/mazinger/config ]]
+then
+   cp /etc/mazinger/config /etc/mazinger/config.dpkg.orig
+   sed -e '1 a MazingerVersion:${pom.version}
 /^MazingerVersion:.*$/ D' </etc/mazinger/config.dpkg.orig >/etc/mazinger/config
+else
+   echo 'MazingerVersion:${pom.version}' >/etc/mazinger/config
+fi
 
 # Configure update path
 apt-add-repository "deb http://download.soffid.com/deb/ $(lsb_release -cs) soffid" || true
