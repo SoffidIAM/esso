@@ -663,9 +663,9 @@ int PamHandler::changePassword () {
 		r = authenticatePassword(PAM_OLDAUTHTOK);
 	}
 
-	m_log.info("password results = %d\n", r);
-	m_log.info("old password = %s\n", password);
-	m_log.info("new password = %s\n", newpassword);
+//	m_log.info("password results = %d\n", r);
+//	m_log.info("old password = %s\n", password);
+//	m_log.info("new password = %s\n", newpassword);
 
 	MZNC_setUserName(NULL);
 
