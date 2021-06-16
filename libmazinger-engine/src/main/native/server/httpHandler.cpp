@@ -116,12 +116,12 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 		  120000 // 2 minuts   receive timeout
 		);
 
-		wchar_t *path2 = wcsdup (path);
-		wchar_t *query = wcsstr(path2, L"?");
-		if (query != NULL)
-			*query = L'\0';
+//		wchar_t *path2 = wcsdup (path);
+//		wchar_t *query = wcsstr(path2, L"?");
+//		if (query != NULL)
+//			*query = L'\0';
 //		SeyconCommon::debug("Performing request https://%hs:%d%ls...\n", host, port, path2);
-		free (path2);
+//		free (path2);
 
 		/*	WinHttpSetOption ( hSession, WINHTTP_OPTION_CLIENT_CERT_CONTEXT,
 		 WINHTTP_NO_CLIENT_CERT_CONTEXT,
@@ -285,6 +285,8 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 			WinHttpCloseHandle(hRequest);
 		if (hConnect)
 			WinHttpCloseHandle(hConnect);
+		if (hSession)
+			WinHttpCloseHandle(hSession);
 
 		SetLastError(dw);
 	} while (repeat);
