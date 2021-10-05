@@ -42,7 +42,7 @@
 						<linkerEndOption>-lrt</linkerEndOption>
 						<linkerEndOption>-lX11</linkerEndOption>
 						<linkerEndOption>-lglib-2.0</linkerEndOption>
-						<linkerEndOption>-lsoup-2.4</linkerEndOption>
+						<linkerEndOption>-lcurl-gnutls</linkerEndOption>
 						<linkerEndOption>-Wl,-Map=target/${pom.artifactId}-${pom.version}.mapfile.txt</linkerEndOption>
 					</linkerEndOptions>
 					<sources>

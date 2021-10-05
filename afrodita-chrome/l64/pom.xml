@@ -61,7 +61,6 @@
 						<linkerEndOption>-lsee</linkerEndOption>
 						<linkerEndOption>-lpcreposix</linkerEndOption>
 						<linkerEndOption>-ldl</linkerEndOption>
-						<linkerEndOption>-lsoup-2.4</linkerEndOption>
 						<linkerEndOption>-lpthread</linkerEndOption>
 						<linkerEndOption>-lX11</linkerEndOption>
                         <linkerEndOption>-lrt</linkerEndOption>
@@ -73,6 +72,7 @@
 						<linkerEndOption>-lgtk-3</linkerEndOption>
 						<linkerEndOption>-lgdk-3</linkerEndOption>
 						<linkerEndOption>-lglib-2.0</linkerEndOption>
+						<linkerEndOption>-lcurl-gnutls</linkerEndOption>
 					</linkerEndOptions>
 					<sources>
 						<source>

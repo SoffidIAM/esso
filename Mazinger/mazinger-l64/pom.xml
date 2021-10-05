@@ -67,7 +67,6 @@
 						<linkerEndOption>-lmazinger-session</linkerEndOption>
 						<linkerEndOption>-lmazinger-engine</linkerEndOption>
 						<linkerEndOption>-lpthread</linkerEndOption>
-						<linkerEndOption>-lsoup-2.4</linkerEndOption>
 						<linkerEndOption>-lglib-2.0</linkerEndOption>
 						<linkerEndOption>-lsee</linkerEndOption>
 						<linkerEndOption>-lpcreposix</linkerEndOption>
@@ -77,6 +76,7 @@
 						<linkerEndOption>-ldl</linkerEndOption>
 						<linkerEndOption>-lglib-2.0</linkerEndOption>
 						<linkerEndOption>-lffi</linkerEndOption>
+						<linkerEndOption>-lcurl-gnutls</linkerEndOption>
 					</linkerEndOptions>
 					<sources>
 						<source>

@@ -115,15 +115,18 @@ ServiceIteratorResult SeyconSession::tryPasswordLogin ( const char* host, size_t
     bool repeat = false;
     do
     {
-        repeat = false;
+    	repeat = false;
         const wchar_t *action = prepareOnly ? L"prestart" : L"start";
+
         SeyconResponse *resp =
             service.sendUrlMessage ( host, port,
                                      L"/passwordLogin?action=%ls&user=%ls&password=%ls&clientIP=%ls&cardSupport=%d&domain=%ls&serial=%ls",
                                      action, wUser.c_str(), wPass.c_str(), wClientIP.c_str(),
                                      ( int ) SeyconCommon::getCardSupport(), wDomain.c_str(),
 									 wSerial.c_str());
+
         SeyconCommon::wipe ( wPass );
+
         if ( resp == NULL )
         {
             return SIR_RETRY;
@@ -133,6 +136,7 @@ ServiceIteratorResult SeyconSession::tryPasswordLogin ( const char* host, size_t
         SeyconCommon::debug ( "Status = %s", statusMsg.c_str() );
         if ( statusMsg == "OK" )
         {
+        	status = LOGIN_SUCCESS;
             if ( !prepareOnly )
             {
                 resp->getToken ( 1, sessionKey );
@@ -147,6 +151,8 @@ ServiceIteratorResult SeyconSession::tryPasswordLogin ( const char* host, size_t
         }
     	std::string cause = resp->getToken(1);
         delete resp;
+
+
         if ( statusMsg == "EXPIRED" )
         {
             ServiceIteratorResult r = preauthChangePassword ( host, port );
@@ -155,8 +161,9 @@ ServiceIteratorResult SeyconSession::tryPasswordLogin ( const char* host, size_t
                 wPass = service.escapeString ( newPassword.c_str() );
                 repeat = true;
             }
-            else
+            else {
                 return r;
+            }
         }
         else if ( ( statusMsg == "es.caib.seycon.UnknownUserException" )
                   || ( statusMsg == "es.caib.seycon.ng.exception.UnknownUserException" ) )
@@ -170,7 +177,7 @@ ServiceIteratorResult SeyconSession::tryPasswordLogin ( const char* host, size_t
         {
             errorMessage = "Access denied: "+cause;
             status = LOGIN_DENIED;
-            return SIR_ERROR;
+            return SIR_SUCCESS;
         }
         else if ( statusMsg == "ERROR" )
         {
@@ -267,6 +274,7 @@ ServiceIteratorResult SeyconSession::createSession ( const char* servletName,
             DEBUG
             generateMenus();
             m_bOpen = true;
+            status = LOGIN_SUCCESS;
             return SIR_SUCCESS;
         }
         else if ( (tag == "es.caib.sso.TooManySessionsException"  ||
@@ -335,18 +343,20 @@ ServiceIteratorResult SeyconSession::iteratePassword ( const char* hostName,
         size_t dwPort, bool prepareOnly )
 {
     DEBUG
+
+	status = LOGIN_ERROR;
     ServiceIteratorResult sir = tryPasswordLogin ( hostName, dwPort, prepareOnly );
     DEBUG
     if ( !prepareOnly )
     {
         DEBUG
-        if ( sir == SIR_SUCCESS )
+        if ( sir == SIR_SUCCESS && status == LOGIN_SUCCESS)
         {
             DEBUG
             sir = createPasswordSession ( hostName, dwPort );
             DEBUG
         }
-        if ( sir == SIR_SUCCESS )
+        if ( sir == SIR_SUCCESS && status == LOGIN_SUCCESS)
         {
             DEBUG
             sir = launchMazinger ( hostName, dwPort, "passwordLogin" );
@@ -355,8 +365,6 @@ ServiceIteratorResult SeyconSession::iteratePassword ( const char* hostName,
         DEBUG
     }
     DEBUG
-    if ( sir == SIR_SUCCESS )
-        status = LOGIN_SUCCESS;
     return sir;
 }
 

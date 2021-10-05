@@ -107,7 +107,6 @@
 						<linkerEndOption>-lsee</linkerEndOption>
 						<linkerEndOption>-lpcreposix</linkerEndOption>
 						<linkerEndOption>-lpthread</linkerEndOption>
-						<linkerEndOption>-lsoup-2.4</linkerEndOption>
 						<linkerEndOption>-lgtk-3</linkerEndOption>
 						<linkerEndOption>-lgdk-3</linkerEndOption>
 						<linkerEndOption>-lglib-2.0</linkerEndOption>
@@ -121,6 +120,7 @@
 						<linkerEndOption>-lffi</linkerEndOption>
 						<linkerEndOption>-lselinux</linkerEndOption>
 						<linkerEndOption>-lresolv</linkerEndOption>
+						<linkerEndOption>-lcurl-gnutls</linkerEndOption>
 					</linkerEndOptions>
 					<sources>
 						<source>

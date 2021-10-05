@@ -531,29 +531,28 @@ static void runScript(const std::string entry, bool asRoot) {
 			std::string content = response->getUtf8Tail(2);
 			if (type == "MZN")
 			{
-				printf("Executing script:\n"
+				SeyconCommon::debug("Executing ROOT script:\n"
 						"========================================\n"
 						"%s\n"
 						"=====================================\n", content.c_str());
 				std::string exception;
-				printf("%s %d", __FILE__, __LINE__);
 				if (!MZNEvaluateJS(content.c_str(), exception))
 				{
-					printf("Error executing script: %s\n",
+						SeyconCommon::warn("Error executing root script: %s\n",
 							exception.c_str());
 				}
-				printf("Executed script");
+				SeyconCommon::debug("Executed root script");
 			}
 			else
 			{
-				printf("Application type not supported for logon: %s",
+				SeyconCommon::debug("SHIRO: Application type not supported for logon: %s",
 						type.c_str());
 			}
 		}
 		else
 		{
 			std::string details = response->getToken(1);
-			printf("Cannot open application with code %s\n%s: %s",
+			SeyconCommon::debug("SHIRO: Cannot open application with code %s\n%s: %s",
 					entry.c_str(), status.c_str(), details.c_str());
 		}
 		delete response;
@@ -567,12 +566,14 @@ static void runScript(const std::string entry, bool asRoot) {
 
 void CreateUserDaemon::storeCredentials(SOCKET socket,
 		const std::wstring &params) {
+	SeyconCommon::debug("SHIRO: Storing user credentials");
 	int i = params.find(L" ");
 	if ( i == std::wstring::npos)
 	{
 		writeLine(socket, L"ERROR");
 		return;
 	} else {
+		SeyconCommon::debug("SHIRO: Storing user credentials");
 		std::wstring user = params.substr(0, i);
 		std::wstring pass = params.substr(i+1);
 		printf("Pass %ls\n", pass.c_str());
@@ -581,13 +582,13 @@ void CreateUserDaemon::storeCredentials(SOCKET socket,
 		credentials [ user ] = decoded;
 		writeLine(socket, L"OK");
 
-		printf("Updating logonEntryRoot\n");
+		SeyconCommon::debug("SHIRO: Updating logonEntryRoot\n");
 		SeyconCommon::updateConfig("LogonEntryRoot");
 		std::string logonEntryRoot;
 		SeyconCommon::readProperty("LogonEntryRoot", logonEntryRoot);
 		SeyconSession session;
 		if (logonEntryRoot.size() > 0) {
-			printf("Executing [%s]\n", logonEntryRoot.c_str());
+			SeyconCommon::debug("SHIRO: Executing [%s]\n", logonEntryRoot.c_str());
 			runScript(logonEntryRoot, true);
 		}
 	}

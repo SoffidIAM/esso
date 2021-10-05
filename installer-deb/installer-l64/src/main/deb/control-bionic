@@ -6,5 +6,5 @@ Package: soffidesso
 Version: ${project.version}
 Architecture: amd64
 Description: Soffid ESSO
-Depends:libsoup2.4-1, wget, libpcsclite1, libc6 ( >= 2.27 )
+Depends:libsoup2.4-1, wget, libpcsclite1, libc6 ( >= 2.27 ), libcurl3-gnutls
 Distribution: bionic

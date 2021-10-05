@@ -403,7 +403,7 @@ void SeyconCommon::setDebugLevel(int newdebugLevel) {
 
 //////////////////////////////////////////////////////////
 void SeyconCommon::updateConfig(const char* lpszParam) {
-	debug ("Update %s param\n", lpszParam);
+//	debug ("Update %s param\n", lpszParam);
 
 	SeyconService service;
 

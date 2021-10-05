@@ -322,6 +322,7 @@ ServiceIteratorResult SeyconSession::kerberosLogin (const char* hostName, size_t
 			{
 				SeyconCommon::debug("Remote principal = %s\n", name.sUserName);
 				FreeContextBuffer(name.sUserName);
+				this->status = LOGIN_SUCCESS;
 			}
 			else
 			{
@@ -411,7 +412,7 @@ ServiceIteratorResult SeyconSession::kerberosLogin (const char* hostName, size_t
 			MessageBoxA(NULL, msg.c_str(), "Unable to start session", MB_OK | MB_ICONERROR);
 			errorMessage = "Unauthorized logon: ";
 			errorMessage += msg;
-			status = LOGIN_DENIED;
+			this->status = LOGIN_DENIED;
 			return SIR_ERROR;
 		}
 		else
@@ -422,7 +423,7 @@ ServiceIteratorResult SeyconSession::kerberosLogin (const char* hostName, size_t
 			errorMessage = "Authentication error: ";
 //			errorMessage.append(status.c_str());
 			errorMessage.append(msg);
-			status = LOGIN_DENIED;
+			this->status = LOGIN_DENIED;
 			return SIR_ERROR;
 		}
 		delete response;

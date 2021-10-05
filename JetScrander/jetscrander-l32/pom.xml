@@ -64,6 +64,7 @@
 						<linkerEndOption>-lpthread</linkerEndOption>
 						<linkerEndOption>-ldl</linkerEndOption>
 						<linkerEndOption>-lffi</linkerEndOption>
+						<linkerEndOption>-lcurl-gnutls</linkerEndOption>
 					</linkerEndOptions>
 					<sources>
 						<source>

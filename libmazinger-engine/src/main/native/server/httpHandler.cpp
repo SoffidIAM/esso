@@ -16,7 +16,6 @@
 
 #include <wchar.h>
 
-#include <libsoup/soup.h>
 #include <glib.h>
 #include <string>
 #include <stdlib.h>
@@ -24,9 +23,8 @@
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
-// #include <stdargs.h>
-#include <dlfcn.h>
-
+#include <curl/curl.h>
+#include <unistd.h>
 #endif
 
 
@@ -296,48 +294,49 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 
 #else
 
-static SoupSession *pSession = NULL;
-
 struct TempBuffer {
 	char *buffer;
 	int size;
 };
 
 
-
-ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* hostName, size_t dwPort) {
-	if (pSession == NULL)
+static size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata) {
+	struct TempBuffer *p = (struct TempBuffer*) userdata;
+	if (p->size == 0)
 	{
-		static void   (*pg_thread_init)   (GThreadFunctions *vtable) = NULL;
-		static void   (*pg_type_init)  () = NULL;
-
-		if (pg_thread_init == NULL) 
-			pg_thread_init = (void   (*)   (GThreadFunctions *vtable)) dlsym (RTLD_DEFAULT, "g_thread_init");
-		if (pg_thread_init != NULL)
-			pg_thread_init (NULL);
-		if (pg_type_init == NULL) 
-			pg_type_init = (void   (*)  ()) dlsym (RTLD_DEFAULT, "g_type_init");
-		if (pg_type_init != NULL) 
-			pg_type_init ();
-
-		std::string fileName;
-		SeyconCommon::readProperty("CertificateFile", fileName);
-
-		if (fileName.size() == 0) {
-			SeyconCommon::warn("Unknown certificate file. Please configure /etc/mazinger\n");
-			return SIR_ERROR;
-		}
-
-		std::string timeoutStr;
-		SeyconCommon::readProperty("Timeout", timeoutStr);
-		int timeout = 60;
-		sscanf ( timeoutStr.c_str(), "%d", &timeout);
-
-		pSession = soup_session_sync_new_with_options ( SOUP_SESSION_SSL_CA_FILE, fileName.c_str(),
-				SOUP_SESSION_IDLE_TIMEOUT, 3,
-				SOUP_SESSION_TIMEOUT, timeout,
-				NULL);
+		p->buffer = (char*) malloc (nmemb);
+		if (p->buffer == NULL) return 0;
+		memcpy (p->buffer, ptr, nmemb);
+		p->size = nmemb;
 	}
+	else
+	{
+		p->buffer = (char*) realloc (p->buffer, nmemb + p->size);
+		if (p->buffer == NULL) return 0;
+		memcpy(&p->buffer[p->size], ptr, nmemb);
+		p->size += nmemb;
+	}
+	return nmemb;
+}
+
+static bool init = false;
+ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* hostName, size_t dwPort) {
+	if (!init) {
+		init = true;
+	    curl_global_init(CURL_GLOBAL_ALL);
+	}
+	std::string fileName;
+	SeyconCommon::readProperty("CertificateFile", fileName);
+
+	if (fileName.size() == 0) {
+		SeyconCommon::warn("Unknown certificate file. Please configure /etc/mazinger\n");
+		return SIR_ERROR;
+	}
+
+	std::string timeoutStr;
+	SeyconCommon::readProperty("Timeout", timeoutStr);
+	static int timeout = 60;
+	sscanf ( timeoutStr.c_str(), "%d", &timeout);
 
 	bool repeat;
 	int retries = 0;
@@ -354,57 +353,67 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* hostName, s
 		szUrl += num;
 		szUrl += szUri;
 
-		char *path2 = strdup (szUrl.c_str());
-		SeyconCommon::debug("Performing request %s....", path2);
-		char *query = strstr(path2, "?");
-		if (query != NULL)
-			*query = L'\0';
+		SeyconCommon::debug("Performing request %s....", szUrl.c_str());
 
+		  // Sets return buffer
+		struct TempBuffer write_data;
+		write_data. size = 0;
+		write_data. buffer = NULL;
 
-		free (path2);
+		CURL *msg = curl_easy_init();
+		if (msg == NULL) {
+			SeyconCommon::warn("Unable to create curl message\n");
+			return SIR_ERROR;
+		}
+		curl_easy_setopt(msg, CURLOPT_VERBOSE, 0L);
+		curl_easy_setopt(msg, CURLOPT_HEADER, 0L);
+		curl_easy_setopt(msg, CURLOPT_NOPROGRESS, 1L);
+		curl_easy_setopt(msg, CURLOPT_NOSIGNAL, 1L);
+		//  curl_easy_setopt(ch, CURLOPT_SSLCERTTYPE, "PEM");
+		curl_easy_setopt(msg, CURLOPT_SSL_VERIFYPEER, 1L);
+		curl_easy_setopt(msg, CURLOPT_URL, szUrl.c_str());
+		curl_easy_setopt(msg, CURLOPT_CAINFO, fileName.c_str());
+		curl_easy_setopt(msg, CURLOPT_TIMEOUT, 30);
+		curl_easy_setopt(msg, CURLOPT_WRITEFUNCTION, write_callback);
+		curl_easy_setopt(msg, CURLOPT_WRITEDATA, &write_data);
 
-		SoupMessage *msg = soup_message_new ("GET", szUrl.c_str());
+		CURLcode rv = curl_easy_perform(msg);
 
 		SeyconCommon::wipe(szUri);
 		SeyconCommon::wipe(szUrl);
 
-
-		if (msg != NULL) {
-			guint status = soup_session_send_message(pSession, msg);
+		if (rv != CURLE_OK) {
+			curl_easy_cleanup(msg);
+			SeyconCommon::debug ("Error connecting to host: %s:%d: %s. Retrying", hostName, dwPort,
+					curl_easy_strerror(rv));
+			retries ++;
+			repeat = true;
+			sleep(3);
+		} else {
+			long status;
+		    curl_easy_getinfo(msg, CURLINFO_RESPONSE_CODE, &status);
+			curl_easy_cleanup(msg);
 			if (status == 204) // HTTP-NO-DATA
 			{
 				SeyconCommon::debug ("Success HTTP/204 (No data)", status);
-				g_object_unref(msg);
-				msg = NULL;
 				return SIR_ERROR;
 			}
 			else if (status == 7 && retries < 2) // Ćonnexion closed
 			{
-				SeyconCommon::debug ("Error HTTP/%d at host: %s:%d: %s. Retrying", status, hostName, dwPort,
-						msg->reason_phrase);
-				retries ++;
-				repeat = true;
-				sleep(3);
 			}
 			else if (status != 200) // HTTP-OK
 			{
 				SeyconCommon::debug ("Error HTTP/%d at host: %s:%d: %s", status, hostName, dwPort,
-						msg->reason_phrase);
-				g_object_unref(msg);
-				msg = NULL;
+						curl_easy_strerror(rv));
 				return SIR_RETRY;
 			} else {
-				SoupBuffer *buffer = soup_message_body_flatten(msg->response_body);
-				result = new SeyconResponse ((char*) buffer->data, buffer->length);
-				g_object_unref(msg);
+				result = new SeyconResponse ((char*) write_data.buffer, write_data.size);
 				return SIR_SUCCESS;
 			}
-		} else {
-			SeyconCommon::warn("Unable to create soup message\n");
-			return SIR_ERROR;
 		}
 	} while (repeat);
 
+	return SIR_ERROR;
 }
 
 #endif
