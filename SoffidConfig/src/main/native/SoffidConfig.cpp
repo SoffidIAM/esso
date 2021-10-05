@@ -28,6 +28,15 @@ void DisableConfigGINA ()
 	}
 }
 
+
+static void doDebug (const char*msg, int line) {
+	char ach[2000];
+	sprintf(ach, "%s [ %d ]", msg, line);
+	MessageBox(NULL, ach, "DEBUG", MB_OK | MB_ICONINFORMATION);
+}
+
+#define DEBUG(x) doDebug(x,__LINE__)
+
 /** @brief Retrieve certificate
  *
  * Method that implements the functionality for obtain the certificate from server
@@ -48,10 +57,12 @@ bool RetrieveCertificate (SoffidEssoManager &manager)
 {
 	bool retrieveOK = true;	// Retrieve certificate status
 
+//	DEBUG("start retrieve");
 	// Save URL Server
 	std::wstring wServerUrl = MZNC_strtowstr(manager.getServerUrl().c_str());
 	size_t size;
 	std::string url = manager.GetFormatedURLServer();
+//	DEBUG(url.c_str());
 	// Check obtain certificate
 	if (manager.SaveURLServer(url.c_str()))
 	{

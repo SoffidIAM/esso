@@ -42,6 +42,14 @@ typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 static LPFN_ISWOW64PROCESS fnIsWow64Process = NULL;
 static bool debug = true;
 
+static void doDebug (const char*msg, int line) {
+	char ach[2000];
+	sprintf(ach, "%s [ %d ]", msg, line);
+	MessageBox(NULL, ach, "DEBUG", MB_OK | MB_ICONINFORMATION);
+}
+
+#define DEBUG(x) doDebug(x,__LINE__)
+
 // Default constructor
 SoffidEssoManager::SoffidEssoManager ()
 {
@@ -501,6 +509,7 @@ CALLBACK asyncCallback(HINTERNET hInternet, DWORD_PTR dwContext,
 // Set URL
 bool SoffidEssoManager::SaveURLServer (const char* url)
 {
+//	DEBUG("save url");
 	URL_COMPONENTS urlComp;		// Initialize the URL_COMPONENTS structure.
 
 	// Set required component lengths to non-zero so that they are cracked.
@@ -516,16 +525,21 @@ bool SoffidEssoManager::SaveURLServer (const char* url)
 	urlComp.lpszUrlPath = szPath;
 	urlComp.dwUrlPathLength = 4095;
 
+//	DEBUG("save url");
+
 	int strLen = mbstowcs(NULL, url, strlen(url) + 1);
-	wchar_t* wUrl = (wchar_t*) malloc(strLen * sizeof(wchar_t));
+	wchar_t* wUrl = (wchar_t*) malloc((1+strLen) * sizeof(wchar_t));
 	mbstowcs(wUrl, url, strlen(url) + 1);
 	wUrl[strLen] = '\0';
 
+//	DEBUG("save url");
 	// Use WinHttpOpen to obtain a session handle.
 	HINTERNET hSession = WinHttpOpen(SoffidEssoManager::DEF_CON_AGENT.c_str(),
-			WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME,
+			WINHTTP_ACCESS_TYPE_NO_PROXY,
+			WINHTTP_NO_PROXY_NAME,
 			WINHTTP_NO_PROXY_BYPASS, 0);
 
+//	DEBUG("save url");
 	// Specify an HTTP server.
 	if (hSession)
 	{
@@ -542,6 +556,7 @@ bool SoffidEssoManager::SaveURLServer (const char* url)
 	else
 		return false;
 
+//	DEBUG("save url");
 	// Obtener la lista de host
 	size_t size;
 	if (debug)
@@ -556,6 +571,7 @@ bool SoffidEssoManager::SaveURLServer (const char* url)
 		return FALSE;
 	}
 
+//	DEBUG("save url");
 	std::string fileName = getMazingerDir();
 	fileName += SoffidEssoManager::DEF_CERTIFICATE_NAME;
 
@@ -573,6 +589,7 @@ bool SoffidEssoManager::SaveURLServer (const char* url)
 		fclose(f);
 	}
 
+//	DEBUG("save url");
 	// Write certificate
 	SeyconCommon::writeProperty("CertificateFile", fileName.c_str());
 
