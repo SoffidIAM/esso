@@ -386,11 +386,8 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* hostName, s
 
 		if (rv != CURLE_OK) {
 			curl_easy_cleanup(msg);
-			SeyconCommon::debug ("Error connecting to host: %s:%d: %s. Retrying", hostName, dwPort,
+			SeyconCommon::debug ("Error connecting to host: %s:%d: %s.", hostName, dwPort,
 					curl_easy_strerror(rv));
-			retries ++;
-			repeat = true;
-			sleep(3);
 		} else {
 			long status;
 		    curl_easy_getinfo(msg, CURLINFO_RESPONSE_CODE, &status);
@@ -402,6 +399,9 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* hostName, s
 			}
 			else if (status == 7 && retries < 2) // Ćonnexion closed
 			{
+				retries ++;
+				repeat = true;
+				sleep(3);
 			}
 			else if (status != 200) // HTTP-OK
 			{
