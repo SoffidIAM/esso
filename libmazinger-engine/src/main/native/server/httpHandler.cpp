@@ -373,7 +373,9 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* hostName, s
 		curl_easy_setopt(msg, CURLOPT_SSL_VERIFYPEER, 1L);
 		curl_easy_setopt(msg, CURLOPT_URL, szUrl.c_str());
 		curl_easy_setopt(msg, CURLOPT_CAINFO, fileName.c_str());
-		curl_easy_setopt(msg, CURLOPT_TIMEOUT, 30);
+		curl_easy_setopt(msg, CURLOPT_DNS_CACHE_TIMEOUT, 3);
+		curl_easy_setopt(msg, CURLOPT_CONNECTTIMEOUT, 3);
+		curl_easy_setopt(msg, CURLOPT_TIMEOUT, 10);
 		curl_easy_setopt(msg, CURLOPT_WRITEFUNCTION, write_callback);
 		curl_easy_setopt(msg, CURLOPT_WRITEDATA, &write_data);
 
