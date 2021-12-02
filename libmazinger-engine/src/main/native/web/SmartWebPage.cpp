@@ -628,9 +628,10 @@ bool SmartWebPage::createAccount (const  char *descr, std::string &errorMsg, Acc
 
 
 	SeyconService ss;
-	SeyconResponse *response = ss.sendUrlMessage(L"/setSecret?user=%ls&key=%ls&system=%hs&description=%ls",
-			user, sessionKey, ssoSystem.c_str(),
-			MZNC_strtowstr(descr).c_str());
+	SeyconResponse *response = ss.sendUrlMessage(L"/setSecret?user=%ls&key=%ls&system=%ls&description=%ls",
+			user, sessionKey,
+			ss.escapeString(ssoSystem.c_str()).c_str(),
+			ss.escapeString(MZNC_strtowstr(descr).c_str()).c_str());
 
 	s.freeSecret(sessionKey);
 	s.freeSecret(user);

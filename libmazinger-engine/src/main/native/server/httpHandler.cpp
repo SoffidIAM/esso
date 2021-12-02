@@ -344,7 +344,7 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* hostName, s
 	{
 		repeat = false;
 		char num[10];
-		sprintf (num, "%d", dwPort);
+		sprintf (num, "%d", (int) dwPort);
 
 		std::string szUri = MZNC_wstrtostr(path);
 		std::string szUrl = "https://";
@@ -386,7 +386,7 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* hostName, s
 
 		if (rv != CURLE_OK) {
 			curl_easy_cleanup(msg);
-			SeyconCommon::debug ("Error connecting to host: %s:%d: %s.", hostName, dwPort,
+			SeyconCommon::warn ("Error connecting to host: %s:%d: %s.", hostName, dwPort,
 					curl_easy_strerror(rv));
 		} else {
 			long status;
