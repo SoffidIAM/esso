@@ -32,7 +32,6 @@
 #include "passwordbank.h"
 #include "mazinger.h"
 #include "ssodaemon.h"
-#include "crypt.h"
 #include "sessioncommon.h"
 #include "httpHandler.h"
 #include "appmenu.h"
@@ -393,6 +392,7 @@ PasswordIterator::~PasswordIterator ()
 }
 
 void SeyconSession::updateConfiguration() {
+	SeyconCommon::loadCerts ();
 	SeyconCommon::updateHostAddress();
     // Actualitzar la configuraci�
     SeyconCommon::updateConfig ( "soffid.hostname.format" );

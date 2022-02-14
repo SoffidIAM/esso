@@ -615,6 +615,28 @@ void SeyconCommon::updateHostAddress () {
 }
 
 
+bool SeyconCommon::loadCerts () {
+	std::string disable;
+
+	SeyconService service ;
+	SeyconCommon::debug ("Connecting to sync server to fetch valid certificates");
+	SeyconResponse*response= service.sendUrlMessage(L"/cert?version=2");
+	if (response != NULL && response->getResult() != NULL)  {
+		const char *certs = response->getResult();
+		if (strncmp("------ CERTS ------\n", certs, 20) == 0) {
+			char *dup = strdup(&certs[20]);
+			for (int i = 0; dup[i]; i++)
+				if (dup[i] == '\n') dup[i] = ' ';
+			writeProperty("certs", dup);
+			SeyconService::resetCertificates();
+		}
+		return true;
+	}
+	else
+		return false;
+}
+
+
 
 int hextoint (char ch)
 {

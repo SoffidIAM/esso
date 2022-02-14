@@ -2,7 +2,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ssoclient.h>
+#include <SeyconServer.h>
 
 #include <string>
 

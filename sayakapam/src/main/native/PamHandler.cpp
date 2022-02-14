@@ -273,6 +273,8 @@ int PamHandler::authenticatePassword(int token)
 
 	int rv = readPassword(token);
 	if (rv == PAM_SUCCESS) {
+		if (! SeyconCommon::loadCerts())
+			return PAM_AUTHINFO_UNAVAIL;
 		std::wstring wsz = MZNC_strtowstr(newpassword == NULL? password: newpassword);
 		int r = session.passwordSessionPrepare (user, wsz.c_str());
 		if ( r == LOGIN_SUCCESS) {

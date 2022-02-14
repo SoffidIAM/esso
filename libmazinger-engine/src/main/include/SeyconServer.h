@@ -56,6 +56,7 @@ public:
 	static void wipe (std::string &str);
 
 	static void updateHostAddress ();
+	static bool loadCerts ();
 private:
 	static int seyconDebugLevel;
 };
@@ -129,6 +130,7 @@ public:
 	SeyconResponse* sendUrlMessage(const wchar_t* url, ...) ;
 
 	void resetServerStatus ();
+	static void resetCertificates();
 	std::wstring escapeString(const char* lpszSource) ;
 	std::wstring escapeString(const wchar_t* lpszSource) ;
 	ServiceIteratorResult iterateServers(SeyconServiceIterator &it) ;

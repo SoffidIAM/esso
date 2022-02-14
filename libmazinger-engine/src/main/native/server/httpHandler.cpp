@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <curl/curl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #endif
 
 
@@ -39,6 +40,7 @@ public:
 	virtual ~SeyconURLServiceIterator ();
 	const wchar_t *path;
 	SeyconResponse *result;
+	bool waitForNetwork = true;
 private:
 	static time_t lastError ;
 };
@@ -54,7 +56,8 @@ SeyconServiceIterator::~SeyconServiceIterator () {
 #ifdef WIN32
 
 
-static PCCERT_CONTEXT pSeyconRootCert = NULL;
+int nCerts = 0;
+static PCCERT_CONTEXT *pSeyconRootCert = NULL;
 
 ////////////////////////////////////////////////////////////////////////
 static void
@@ -93,7 +96,6 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 	bool firstTime = true;
 
 	do {
-
 		repeat = false;
 
 		HINTERNET hSession = WinHttpOpen(L"Mazinger Agent/1.1",
@@ -128,7 +130,6 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 		hConnect = WinHttpConnect(hSession, wsHost.c_str(), port, 0);
 
 		if (hConnect) {
-
 			hRequest = WinHttpOpenRequest(hConnect, L"GET", path, NULL,
 					WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES,
 					WINHTTP_FLAG_SECURE);
@@ -148,7 +149,7 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 
 		// Send a request.
 		if (hRequest) {
-			if (pSeyconRootCert != NULL) {
+			if (nCerts > 0) {
 				DWORD flags = SECURITY_FLAG_IGNORE_UNKNOWN_CA;
 				WinHttpSetOption(hRequest, WINHTTP_OPTION_SECURITY_FLAGS, (LPVOID)
 						& flags, sizeof flags);
@@ -156,40 +157,46 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* host, size_
 			bResults = WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS,
 					0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0);
 			// Verificar CA root
-			if (bResults && pSeyconRootCert != NULL) {
+			if (bResults && nCerts > 0) {
 				// Verificar la CA ROOT
 				PCCERT_CONTEXT context;
 				DWORD dwSize = sizeof context;
 				BOOL result = WinHttpQueryOption(hRequest,
 						WINHTTP_OPTION_SERVER_CERT_CONTEXT, &context, &dwSize);
 				if (!result || context == NULL) {
+					SeyconCommon::debug("No cert loaded");
 					bResults = NULL;
 				} else {
 					PCCERT_CONTEXT issuerContext = CertFindCertificateInStore(
 							context->hCertStore, X509_ASN_ENCODING, 0,
 							CERT_FIND_ISSUER_OF, context, NULL);
-					if (!CertComparePublicKeyInfo(X509_ASN_ENCODING
-							| PKCS_7_ASN_ENCODING,
-							&issuerContext->pCertInfo->SubjectPublicKeyInfo,
-							&pSeyconRootCert->pCertInfo->SubjectPublicKeyInfo)) {
+					if (issuerContext == NULL) {
+						issuerContext = context;
+					}
+					bool found = false;
+					for (int i = 0; !found && i < nCerts; i++) {
+						if (pSeyconRootCert[i] != NULL) {
+							if (CertComparePublicKeyInfo(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
+									&issuerContext->pCertInfo->SubjectPublicKeyInfo,
+									&pSeyconRootCert[i]->pCertInfo->SubjectPublicKeyInfo)) {
+								found = true;
+							}
+						}
+					}
+					if (! found) {
 						std::string ignore;
 						SeyconCommon::readProperty("ignoreCert", ignore);
 						if (ignore != "true")
 						{
 							SeyconCommon::info("Received certificate not allowed\n");
 							char pszNameString[256] = "<unknown>";
-							char pszNameString2[256] = "<unknown>";
-
-							CertGetNameStringA(pSeyconRootCert,
-									CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL,
-									pszNameString2, 128);
 
 							CertGetNameStringA(issuerContext,
 									CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL,
 									pszNameString, 128);
 
-							SeyconCommon::warn ("ERROR: Invalid CA %s. Should be %s\n",
-									pszNameString, pszNameString2);
+							SeyconCommon::warn ("ERROR: Invalid CA %s.\n",
+									pszNameString);
 							bResults = NULL;
 							SetLastError(ERROR_WINHTTP_SECURE_FAILURE);
 						}
@@ -320,19 +327,69 @@ static size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdat
 }
 
 static bool init = false;
+static std::string certsFileName;
+
 ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* hostName, size_t dwPort) {
+	std::string certs;
+	std::string fileName;
+	SeyconCommon::readProperty("CertificateFile", fileName);
+	SeyconCommon::readProperty("certs", certs);
+
 	if (!init) {
 		init = true;
 	    curl_global_init(CURL_GLOBAL_ALL);
 	}
-	std::string fileName;
-	SeyconCommon::readProperty("CertificateFile", fileName);
 
-	if (fileName.size() == 0) {
+	if (certs.size() > 0 && certsFileName.empty()) {
+		char *home = getenv("HOME");
+		if (home == NULL) {
+			certsFileName = "/etc/mazinger/certs.pem";
+		} else {
+			certsFileName = getenv("HOME");
+			SeyconCommon::warn("d3");
+			SeyconCommon::warn("HOME=%s", certsFileName.c_str());
+			certsFileName += "/.config";
+			SeyconCommon::warn("HOME=%s", certsFileName.c_str());
+			mkdir(certsFileName.c_str(), 0700);
+			SeyconCommon::warn("HOME=%s", certsFileName.c_str());
+			certsFileName += "/mazinger";
+			mkdir(certsFileName.c_str(), 0700);
+			SeyconCommon::warn("HOME=%s", certsFileName.c_str());
+			certsFileName += "/certs.pem";
+		}
+
+		FILE *f = fopen (certsFileName.c_str(), "w");
+		if (f != NULL) {
+			const char* dup = certs.c_str();
+			bool first = true;
+			int column = 0;
+			for (size_t i = 0; dup[i]; i++) {
+				if (first) {
+					fprintf(f , "-----BEGIN CERTIFICATE-----\n");
+					first = false;
+					column = 0;
+				}
+				if (dup[i] == ' ') {
+					fprintf(f , "\n-----END CERTIFICATE-----\n");
+					first = true;
+					column = 0;
+				} else {
+					if (column == 64) {
+						fprintf (f, "\n");
+						column = 0;
+					}
+					fwrite(&dup[i], 1, 1, f);
+					column ++;
+				}
+			}
+			fclose(f);
+		}
+	}
+
+	if (fileName.size() == 0 && certs.size() == 0) {
 		SeyconCommon::warn("Unknown certificate file. Please configure /etc/mazinger\n");
 		return SIR_ERROR;
 	}
-
 	std::string timeoutStr;
 	SeyconCommon::readProperty("Timeout", timeoutStr);
 	static int timeout = 60;
@@ -372,7 +429,12 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* hostName, s
 		//  curl_easy_setopt(ch, CURLOPT_SSLCERTTYPE, "PEM");
 		curl_easy_setopt(msg, CURLOPT_SSL_VERIFYPEER, 1L);
 		curl_easy_setopt(msg, CURLOPT_URL, szUrl.c_str());
-		curl_easy_setopt(msg, CURLOPT_CAINFO, fileName.c_str());
+		if (certs.size() > 0) {
+			SeyconCommon::debug("Using certs %s", certsFileName.c_str());
+			curl_easy_setopt(msg, CURLOPT_CAINFO, certsFileName.c_str());
+		} else {
+			curl_easy_setopt(msg, CURLOPT_CAINFO, fileName.c_str());
+		}
 		curl_easy_setopt(msg, CURLOPT_DNS_CACHE_TIMEOUT, 3);
 		curl_easy_setopt(msg, CURLOPT_CONNECTTIMEOUT, 3);
 		curl_easy_setopt(msg, CURLOPT_TIMEOUT, 10);
@@ -388,6 +450,7 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* hostName, s
 			curl_easy_cleanup(msg);
 			SeyconCommon::warn ("Error connecting to host: %s:%d: %s.", hostName, dwPort,
 					curl_easy_strerror(rv));
+			return SIR_RETRY;
 		} else {
 			long status;
 		    curl_easy_getinfo(msg, CURLINFO_RESPONSE_CODE, &status);
@@ -426,7 +489,7 @@ SeyconURLServiceIterator::~SeyconURLServiceIterator () {
 
 SeyconResponse*  SeyconService::sendUrlMessage(const char* host, int port, const wchar_t* url, ...) {
 #ifdef WIN32
-	if (pSeyconRootCert == NULL) {
+	if (nCerts == 0) {
 		return NULL;
 	}
 #endif
@@ -461,7 +524,7 @@ SeyconResponse*  SeyconService::sendUrlMessage(const char* host, int port, const
 
 SeyconResponse* SeyconService::sendUrlMessage(const wchar_t* url, ...) {
 #ifdef WIN32
-	if (pSeyconRootCert == NULL) {
+	if (nCerts == 0) {
 		return NULL;
 	}
 #endif
@@ -489,6 +552,15 @@ SeyconResponse* SeyconService::sendUrlMessage(const wchar_t* url, ...) {
 	}
 }
 
+
+void SeyconService::resetCertificates () {
+#ifdef WIN32
+	pSeyconRootCert = NULL;
+	nCerts = 0;
+#else
+	certsFileName.clear();
+#endif
+}
 
 void SeyconService::resetServerStatus () {
 
@@ -586,31 +658,56 @@ time_t SeyconService::lastError = 0;
 
 SeyconService::SeyconService() {
 #ifdef WIN32
-	if (pSeyconRootCert == NULL) {
-		std::string fileName;
-		SeyconCommon::readProperty ("CertificateFile", fileName);
-		if (fileName.size () == 0)
-			return;
-	
-		int allocated = 0;
-		BYTE *buffer = NULL;
-		int size = 0;
-		int chunk = 2048;
-		FILE *file = fopen(fileName.c_str(), "rb");
-		if (file != NULL) {
-			int read = 0;
-			do {
-				allocated += chunk - (allocated - size) + 1;
-				buffer = (BYTE*) realloc(buffer, allocated);
-				read = fread(&buffer[size], 1, chunk, file);
-				size += read;
-				buffer[size] = '\0';
-			} while (read > 0);
-			pSeyconRootCert = CertCreateCertificateContext(X509_ASN_ENCODING,
-					buffer, size);
-			fclose (file);
+	if (nCerts == 0) {
+		std::string certs;
+		SeyconCommon::readProperty ("certs", certs);
+		if (certs.size() > 0) {
+			int pos = 0;
+			char *dup = strdup(certs.c_str());
+			char *start = dup;
+			for (pos = 0; dup[pos]; pos++) {
+				if (dup[pos] == ' ') {
+					nCerts ++;
+				}
+			}
+			pSeyconRootCert = (PCCERT_CONTEXT *) malloc ( nCerts * sizeof (PCCERT_CONTEXT));
+			nCerts = 0;
+			for (pos = 0; dup[pos]; pos++) {
+				if (dup[pos] == ' ') {
+					dup[pos] = '\0';
+					std::string cert = SeyconCommon::fromBase64(start);
+					pSeyconRootCert[nCerts++] = CertCreateCertificateContext(X509_ASN_ENCODING, (PBYTE) cert.c_str(), cert.size());
+					start = &dup[pos+1];
+				}
+			}
 		} else {
-			SeyconCommon::warn("Unable to load certificate file %s\n", fileName.c_str());
+			std::string fileName;
+			SeyconCommon::readProperty ("CertificateFile", fileName);
+			if (fileName.size () == 0)
+				return;
+
+			int allocated = 0;
+			BYTE *buffer = NULL;
+			int size = 0;
+			int chunk = 2048;
+			FILE *file = fopen(fileName.c_str(), "rb");
+			if (file != NULL) {
+				int read = 0;
+				do {
+					allocated += chunk - (allocated - size) + 1;
+					buffer = (BYTE*) realloc(buffer, allocated);
+					read = fread(&buffer[size], 1, chunk, file);
+					size += read;
+					buffer[size] = '\0';
+				} while (read > 0);
+				nCerts = 1;
+				pSeyconRootCert = (PCCERT_CONTEXT *) malloc ( 1 * sizeof (PCCERT_CONTEXT));
+				pSeyconRootCert[0] = CertCreateCertificateContext(X509_ASN_ENCODING,
+						buffer, size);
+				fclose (file);
+			} else {
+				SeyconCommon::warn("Unable to load certificate file %s\n", fileName.c_str());
+			}
 		}
 	}
 #endif
@@ -665,8 +762,9 @@ std::wstring SeyconService::escapeString(const char* lpszSource) {
  *
  */
 SeyconResponse::SeyconResponse (char *utf8Result, int size) {
-	result = (char*) malloc(size);
+	result = (char*) malloc(size+1);
 	memcpy (result, utf8Result, size);
+	result[size] = '\0';
 	this->size = size;
 }
 

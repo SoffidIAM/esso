@@ -27,7 +27,6 @@
 #include "passwordbank.h"
 #include "mazinger.h"
 #include "ssodaemon.h"
-#include "crypt.h"
 #include "sessioncommon.h"
 #include "httpHandler.h"
 #include "appmenu.h"

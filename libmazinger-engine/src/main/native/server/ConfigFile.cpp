@@ -52,9 +52,9 @@ void ConfigFile::load (const char*file) {
 
 	FILE* f = fopen (file, "r");
 	if (f != NULL) {
-		char line[1024];
+		char line[60240];
 
-		while ( fgets(line, 1023, f) != NULL)
+		while ( fgets(line, 60239, f) != NULL)
 		{
 			for (int i = 0; line [i] ; i++)
 			{

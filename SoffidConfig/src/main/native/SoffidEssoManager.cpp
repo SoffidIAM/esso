@@ -345,6 +345,8 @@ LPSTR SoffidEssoManager::readURL (HINTERNET hSession, const wchar_t* host, int p
 
 		if (allowUnknownCA)
 		{
+			if (debug)
+				log("Using insecure connection ...\n");
 			DWORD flags = SECURITY_FLAG_IGNORE_UNKNOWN_CA;
 			WinHttpSetOption(hRequest, WINHTTP_OPTION_SECURITY_FLAGS, (LPVOID) &flags,
 					sizeof flags);
@@ -356,6 +358,8 @@ LPSTR SoffidEssoManager::readURL (HINTERNET hSession, const wchar_t* host, int p
 
 	if (bResults && allowUnknownCA)
 	{
+		if (debug)
+			log("Accepting certificate...\n", path);
 		// Agreagar la CA ROOT
 		PCERT_CONTEXT context;
 		DWORD dwSize = sizeof context;
@@ -489,8 +493,7 @@ CALLBACK asyncCallback(HINTERNET hInternet, DWORD_PTR dwContext,
 						"Invalid cert WINHTTP_CALLBACK_STATUS_FLAG_INVALID_CERT\n");
 			if (status & WINHTTP_CALLBACK_STATUS_FLAG_CERT_REVOKED)
 				SoffidEssoManager::log(
-						"Invalid cert WINHTTP_CALLBACK_STATUS_FLAG_CERT_REVOKED\n");
-			if (status & WINHTTP_CALLBACK_STATUS_FLAG_INVALID_CA)
+						"Invalid cert WINHTTP_CALLBACK_STATUS_FLAG_CERT_REVOKED\n");			if (status & WINHTTP_CALLBACK_STATUS_FLAG_INVALID_CA)
 				SoffidEssoManager::log(
 						"Invalid cert WINHTTP_CALLBACK_STATUS_FLAG_INVALID_CA\n");
 			if (status & WINHTTP_CALLBACK_STATUS_FLAG_CERT_CN_INVALID)
@@ -562,7 +565,7 @@ bool SoffidEssoManager::SaveURLServer (const char* url)
 	if (debug)
 		log("Connecting to https://%ls:%d/cert\n", szHostName, urlComp.nPort);
 
-	LPCSTR cert = readURL(hSession, szHostName, urlComp.nPort, L"/cert", true, &size);
+	LPCSTR cert = readURL(hSession, szHostName, urlComp.nPort, L"/cert?version=2", true, &size);
 
 	// Check error obtain certificate
 	if (cert == NULL)
@@ -571,27 +574,34 @@ bool SoffidEssoManager::SaveURLServer (const char* url)
 		return FALSE;
 	}
 
-//	DEBUG("save url");
-	std::string fileName = getMazingerDir();
-	fileName += SoffidEssoManager::DEF_CERTIFICATE_NAME;
-
-	FILE *f = fopen(fileName.c_str(), "wb");
-
-	if (f == NULL)
-	{
-		log("Error generating file %s", fileName.c_str());
-		return FALSE;
+	if (strncmp("------ CERTS ------\n", cert, 20) == 0) {
+		char *dup = strdup(&cert[20]);
+		for (int i = 0; dup[i]; i++)
+			if (dup[i] == '\n') dup[i] = ' ';
+		SeyconCommon::writeProperty("certs", dup);
 	}
-
 	else
 	{
-		fwrite(cert, size, 1, f);
-		fclose(f);
-	}
+	//	DEBUG("save url");
+		std::string fileName = getMazingerDir();
+		fileName += SoffidEssoManager::DEF_CERTIFICATE_NAME;
 
-//	DEBUG("save url");
+		FILE *f = fopen(fileName.c_str(), "wb");
+
+		if (f == NULL)
+		{
+			log("Error generating file %s", fileName.c_str());
+			return FALSE;
+		}
+
+		else
+		{
+			fwrite(cert, size, 1, f);
+			fclose(f);
+		}
+		SeyconCommon::writeProperty("CertificateFile", fileName.c_str());
+	}
 	// Write certificate
-	SeyconCommon::writeProperty("CertificateFile", fileName.c_str());
 
 	// Write ESSO Server
 	SeyconCommon::writeProperty("SSOServer", MZNC_wstrtostr(szHostName).c_str());
