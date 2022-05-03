@@ -31,6 +31,17 @@ HANDLE hEventLog;
 // una semana = 7 x 24 x 60 x 60
 #define PASSWORD_DURATION 604800
 
+void debugMessage(const wchar_t*msg) {
+	ReportEventW(hEventLog, EVENTLOG_INFORMATION_TYPE, SHIRO_CATEGORY,
+			SHIRO_DEBUG, NULL, 1, 0, &msg, NULL);
+}
+
+void debugMessage(int number, const wchar_t*msg) {
+	ReportEventW(hEventLog, EVENTLOG_INFORMATION_TYPE, SHIRO_CATEGORY,
+			number, NULL, 1, 0, &msg, NULL);
+}
+
+
 void OpenEventLog ()
 {
 	char achModule[MAX_PATH];
@@ -214,6 +225,7 @@ bool notifyNewPassword (const wchar_t* password)
 
 	std::wstring hostname = MZNC_strtowstr (MZNC_getHostName());
 
+	debugMessage(L"Sending password to Soffid sync server");
 	SeyconResponse *resp = service.sendUrlMessage(
 			L"/sethostadmin?host=%ls&user=%ls&pass=%ls&shiroId=%ls&serial=%ls",
 			service.escapeString(hostname.c_str()).c_str(), achShiroAccount,
@@ -234,15 +246,20 @@ bool notifyNewPassword (const wchar_t* password)
 		{
 			SeyconCommon::writeProperty(shiroIdEntry, shiroId.c_str());
 		}
+		debugMessage(L"New password accepted by Soffid sync server");
 		return true;
 	}
 
 	else
 	{
+		wchar_t ach[1000];
 		std::wstring cause;
 		resp->getToken(1, cause);
 		const wchar_t *params = cause.c_str();
 		delete resp;
+
+		wsprintfW(ach, L"Soffid sync server has rejected the password: %s", params);
+		debugMessage(ach);
 
 		if (!ReportEventW(hEventLog, EVENTLOG_ERROR_TYPE, SHIRO_CATEGORY,
 				SHIRO_REMOTEERROR, NULL, 1, 0, (LPCWSTR*) &params, NULL))
@@ -457,6 +474,8 @@ void loop ()
 	if (debug)
 		printf("Locating user ShiroKabuto\n");
 
+	debugMessage(L"Searching local user");
+
 	achShiroAccount = achOldlShiroAccount;
 	DWORD result = NetUserGetInfo(NULL, // Local Host
 			achShiroAccount, 2, // level
@@ -471,11 +490,13 @@ void loop ()
 	if (result == NERR_UserNotFound)
 	{
 		if (debug)
-			printf("Creating user %s\n", achShiroAccount);
+			printf("Creating user %ls\n", achShiroAccount);
 
+		debugMessage(L"Local user does not exist");
 		const wchar_t *pass = generatePassword();
 		if (notifyNewPassword(pass))
 		{
+			debugMessage(L"Trying to create local user");
 			USER_INFO_2 ui2;
 			memset(&ui2, 0, sizeof ui2);
 			ui2.usri2_name = (wchar_t*) achShiroAccount;
@@ -506,6 +527,8 @@ void loop ()
 				return;
 			}
 
+			debugMessage(SHIRO_CREATE_USER, achShiroAccount);
+
 			std::string currentHostName = MZNC_getHostName();
 			SeyconCommon::writeProperty("ShiroHostName", currentHostName.c_str());
 			updateOtherAccounts(pass, false);
@@ -514,7 +537,7 @@ void loop ()
 
 	else if (result == NERR_Success)
 	{
-
+		wchar_t ach[1000];
 		std::string oldHostName;
 		std::string currentHostName = MZNC_getHostName();
 		SeyconCommon::readProperty("ShiroHostName", oldHostName);
@@ -539,6 +562,7 @@ void loop ()
 		{
 			SeyconCommon::info(
 					"Host name changed. Shiro accounts needs to change password");
+			debugMessage(L"Host name has changed. Reseting all passwords");
 			force = true;
 		}
 
@@ -547,15 +571,13 @@ void loop ()
 			force = false;
 		}
 
-		if (debug)
-			printf("Buffer = %lx\n", buffer);
-
 		USER_INFO_2 *ui2 = (USER_INFO_2*) buffer;
-		if (debug)
-			printf("ui2 = %lx\n", ui2);
-
-		if (debug)
+		if (debug) {
 			printf("ui2->name = %ls\n", ui2->usri2_name);
+			printf("ui2->password_age = %d (%d days)\n", ui2->usri2_password_age, ui2->usri2_password_age / 60 / 60 / 24);
+		}
+		wsprintfW(ach, L"Current password age for user %s: %d days", ui2->usri2_full_name, ui2->usri2_password_age / 60 / 60 / 24);
+		debugMessage(ach);
 
 		if (ui2->usri2_password_age > PASSWORD_DURATION || force)
 		{
@@ -574,30 +596,8 @@ void loop ()
 
 				if (notifyNewPassword(pass))
 				{
-					if (debug)
-						printf("Sent passsword %ls\n", pass);
-
-					if (debug)
-						printf("ui2 = %lx\n", ui2);
-
-					if (debug)
-						printf("ui2->name = %ls\n", ui2->usri2_name);
-
 					ui2->usri2_password = (wchar_t*) pass;
-
-					if (debug)
-						printf("ui2 = %lx\n", ui2);
-
-					if (debug)
-						printf("ui2->name = %ls\n", ui2->usri2_name);
-
 					ui2->usri2_flags = UF_NORMAL_ACCOUNT;
-
-					if (debug)
-						printf("ui2 = %lx\n", ui2);
-
-					if (debug)
-						printf("ui2->name = %ls\n", ui2->usri2_name);
 
 					DWORD error;
 
@@ -612,6 +612,8 @@ void loop ()
 
 					if (result != NERR_Success)
 					{
+						wsprintfW(ach, L"Failed to set password: %d", GetLastError());
+						debugMessage(ach);
 						if (debug)
 							printf("Password change failed\n");
 
@@ -628,6 +630,7 @@ void loop ()
 
 					else
 					{
+						debugMessage(SHIRO_SUCCESS, achShiroAccount);
 						if (debug)
 							printf("Password changed\n");
 
@@ -704,6 +707,7 @@ void __stdcall shiroServiceStart (DWORD argc, LPTSTR *argv)
 	if (f != NULL)
 	setbuf(f, NULL);
 #endif
+	debugMessage(L"Starting service");
 
 	serviceStatus.dwServiceType = SERVICE_WIN32;
 	serviceStatus.dwCurrentState = SERVICE_START_PENDING;
@@ -719,20 +723,22 @@ void __stdcall shiroServiceStart (DWORD argc, LPTSTR *argv)
 	if (serviceStatusHandle == (SERVICE_STATUS_HANDLE) 0)
 	{
 		wprintf(L"Error installing handler %s\n", errorMessage(GetLastError()));
+		debugMessage(L"Error installing handler service");
 		return;
 	}
 
 	updateServiceStatus(SERVICE_START_PENDING);
-
-	init();
 
 
 	hStopEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	updateServiceStatus(SERVICE_RUNNING);
 
 
+	debugMessage(L"Starting local user daemon");
 	CreateUserDaemon cud;
 	cud.startDaemon();
+
+	debugMessage(L"Starting password loop");
 
 	time_t lastChange = 0;
 	time_t last = 0;
@@ -747,7 +753,8 @@ void __stdcall shiroServiceStart (DWORD argc, LPTSTR *argv)
 		}
 		time (&last);
 
-		if (now - lastChange < 1800) { // 30 minutes
+		if (now - lastChange > 1800) { // 30 minutes
+			debugMessage(L"Updating host address");
 			updateHostAddress();
 			loop();
 			time (&lastChange);
@@ -775,13 +782,14 @@ extern "C" int main (int argc, char **argv)
 {
 	lastSeed = GetCurrentProcessId();
 
+	init();
+	debugMessage(L"Starting Soffid local password manager");
 	if (registerService())
 	{
 		return 0;
 	}
 
 	printf("Executing manually\n");
-	init();
 	debug = true;
 	loop();
 	if (argc > 1)

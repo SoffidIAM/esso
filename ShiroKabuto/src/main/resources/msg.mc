@@ -48,3 +48,11 @@ Language=English
 Created temporary local (non administrator) user %1!s!%n
 .
 
+MessageId=199
+SymbolicName=SHIRO_DEBUG
+Severity=Success
+Facility=Application
+Language=English
+Debug: %1!s!%n
+.
+
