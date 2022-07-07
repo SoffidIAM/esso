@@ -346,15 +346,10 @@ ServiceIteratorResult SeyconURLServiceIterator::iterate (const char* hostName, s
 			certsFileName = "/etc/mazinger/certs.pem";
 		} else {
 			certsFileName = getenv("HOME");
-			SeyconCommon::warn("d3");
-			SeyconCommon::warn("HOME=%s", certsFileName.c_str());
 			certsFileName += "/.config";
-			SeyconCommon::warn("HOME=%s", certsFileName.c_str());
 			mkdir(certsFileName.c_str(), 0700);
-			SeyconCommon::warn("HOME=%s", certsFileName.c_str());
 			certsFileName += "/mazinger";
 			mkdir(certsFileName.c_str(), 0700);
-			SeyconCommon::warn("HOME=%s", certsFileName.c_str());
 			certsFileName += "/certs.pem";
 		}
 

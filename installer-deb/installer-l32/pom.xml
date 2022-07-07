@@ -123,12 +123,6 @@
 								</exec>
 								<exec executable="fakeroot">
 									<arg value="chmod" />
-									<arg value="644" />
-									<arg value="${deb.dir}/etc/mazinger/seycon.pem" />
-									<arg value="${deb.dir}/etc/mazinger/config" />
-								</exec>
-								<exec executable="fakeroot">
-									<arg value="chmod" />
 									<arg value="440" />
 									<arg value="${deb.dir}/etc/mazinger/sudoers.d/README" />
 								</exec>

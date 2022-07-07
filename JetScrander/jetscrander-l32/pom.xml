@@ -53,7 +53,6 @@
 						<linkerMiddleOption>--strip-all</linkerMiddleOption>
 					</linkerMiddleOptions>
 					<linkerEndOptions>
-						<linkerEndOption>-lsoup-2.4</linkerEndOption>
 						<linkerEndOption>-lglib-2.0</linkerEndOption>
 						<linkerEndOption>-lgtk-x11-2.0</linkerEndOption>
 						<linkerEndOption>-lsee</linkerEndOption>

@@ -395,6 +395,9 @@ int PamHandler::createSession()
 				pthread_create(&thread2, NULL, pamSocketDialogThread, this);
 
 				return PAM_SUCCESS;
+			} else if (r == LOGIN_UNKNOWNUSER){
+//				notify("Using local user"); Hack for sudo -i in Ubuntu
+				return PAM_SUCCESS;
 			} else {
 				notify(session.getErrorMessage());
 				return PAM_AUTH_ERR;
@@ -420,7 +423,7 @@ int PamHandler::closeSession()
 			listenSocket = -1;
 			close (l);
 		}
-		if (success) session.close();
+		if (success && session.isOpen()) session.close();
 
 		MZNC_setUserName(NULL);
 		ScriptDialog::setScriptDialog(NULL);

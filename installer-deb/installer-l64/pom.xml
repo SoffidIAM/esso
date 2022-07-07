@@ -103,6 +103,13 @@
 								</artifactItem>
 								<artifactItem>
 									<groupId>com.soffid.iam.esso.${architecture}</groupId>
+									<artifactId>pam_sayaka</artifactId>
+									<version>${pom.version}</version>
+									<type>${architecture.dll}</type>
+									<destFileName>/usr/lib/x86_64-linux-gnu/security/pam_sayaka.so</destFileName>
+								</artifactItem>
+								<artifactItem>
+									<groupId>com.soffid.iam.esso.${architecture}</groupId>
 									<artifactId>JetScrander</artifactId>
 									<version>${pom.version}</version>
 									<type>uexe</type>
@@ -134,12 +141,6 @@
 									<arg value="${deb.dir}/DEBIAN/postrm" />
 									<arg value="${deb.dir}/usr/bin/configure_esso" />
 									<arg value="${deb.dir}/etc/cron.weekly/soffid-purge-accounts" />
-								</exec>
-								<exec executable="fakeroot">
-									<arg value="chmod" />
-									<arg value="644" />
-									<arg value="${deb.dir}/etc/mazinger/seycon.pem" />
-									<arg value="${deb.dir}/etc/mazinger/config" />
 								</exec>
 								<exec executable="fakeroot">
 									<arg value="chmod" />
